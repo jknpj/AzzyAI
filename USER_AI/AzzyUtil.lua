@@ -1777,35 +1777,35 @@ function GetSAtkSkill(myid)
 			if htype==EIRA and UseEiraEraseCutter==1 then
 				skill=MH_ERASER_CUTTER
 				if EiraEraseCutterLevel==nil then
-					level=4
+					level=SkillList[EIRA][MH_ERASER_CUTTER]
 				else
 					level=EiraEraseCutterLevel
 				end
 			elseif htype==BAYERI and UseBayeriStahlHorn==1 then
 				skill=MH_STAHL_HORN
 				if BayeriStahlHornLevel==nil then
-					level=5
+					level=SkillList[BAYERI][MH_STAHL_HORN]
 				else
 					level=BayeriStahlHornLevel
 				end
 			elseif htype==SERA and UseSeraParalyze==1 then
 				skill=MH_NEEDLE_OF_PARALYZE
 				if SeraParalyzeLevel==nil then
-					level=5
+					level=SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
 				else
 					level=SeraParalyzeLevel
 				end
 			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and ( EleanorMode==0 or EleanorDoNotSwitchMode==1 ) then
 				skill=MH_SONIC_CRAW
 				if EleanorSonicClawLevel==nil then
-					level=5
+					level=SkillList[ELEANOR][MH_SONIC_CRAW]
 				else
 					level=EleanorSonicClawLevel
 				end
 			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==1 then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
-					level=5
+					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
 				else
 					level=EleanorTinderBreakerLevel
 				end
@@ -1828,14 +1828,14 @@ function GetComboSkill(myid)
 				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
-						level=5
+						level=SkillList[ELEANOR][MH_SILVERVEIN_RUSH]
 					else
 						level=EleanorSilverveinLevel
 					end
 				elseif ComboSVTimeout > GetTick()  then
 					skill=MH_MIDNIGHT_FRENZY
 					if EleanorMidnightLevel==nil then
-						level=5
+						level=SkillList[ELEANOR][MH_MIDNIGHT_FRENZY]
 					else
 						level=EleanorMidnightLevel
 					end
@@ -1860,7 +1860,7 @@ function GetGrappleSkill(myid)
 					if MySpheres >= AutoComboSpheres -1 then
 						skill=MH_CBC
 						if EleanorCBCLevel==nil then
-							level=5
+							level=SkillList[ELEANOR][MH_CBC]
 						else
 							level=EleanorCBCLevel
 						end
@@ -1869,7 +1869,7 @@ function GetGrappleSkill(myid)
 					if MySpheres >= AutoComboSpheres -1 then
 						skill=MH_EQC
 						if EleanorEQCLevel==nil then
-							level=5
+							level=SkillList[ELEANOR][MH_EQC]
 						else
 							level=EleanorEQCLevel
 						end
@@ -1877,7 +1877,7 @@ function GetGrappleSkill(myid)
 				elseif MySpheres >= AutoComboSpheres then
 					skill=MH_TINDER_BREAKER
 					if EleanorTinderBreakerLevel==nil then
-						level=5
+						level=SkillList[ELEANOR][MH_TINDER_BREAKER]
 					else
 						level=EleanorTinderBreakerLevel
 					end				
@@ -1901,23 +1901,23 @@ function GetAtkSkill(myid)
 		else
 			homuntype=modulo(OldHomunType,4)
 		end
-		if (homuntype==0) then -- It's a vani!
+		if (homuntype==0) then -- It's a vanil!
 			skill=HVAN_CAPRICE
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
 				skill=0
 			elseif (VanCapriceLevel==nil) then
-				level=5
+				level=SkillList[VANILMIRTH][HVAN_CAPRICE]
 			else
 				level=VanCapriceLevel
 			end
-		elseif	(homuntype==3) then -- It's a filer!
+		elseif	(homuntype==3) then -- It's a filir!
 			skill=HFLI_MOON
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
 				skill=0
 			elseif (FilerMoonlightLevel==nil) then
-				level=5
+				level=SkillList[FILIR][HFLI_MOON]
 			else
 				level=FilerMoonlightLevel
 			end
@@ -1958,14 +1958,14 @@ function GetDebuffSkill(myid)
 		if GetV(V_HOMUNTYPE,MyID)==EIRA and UseEiraSilentBreeze==1 then
 			skill=MH_SILENT_BREEZE
 			if EiraSilentBreezeLevel==nil then
-				level=5
+				level=SkillList[EIRA][MH_SILENT_BREEZE]
 			else
 				level=EiraSilentBreezeLevel
 			end
 			return skill,level
 		elseif GetV(V_HOMUNTYPE,MyID)==DIETER and UseDieterVolcanicAsh==1 then
 			skill=MH_VOLCANIC_ASH
-			level=5
+			level=SkillList[DIETER][MH_VOLCANIC_ASH]
 			local t = GetTick()
 			if (AshTimeout[1] < t or AshTimeout[2] < t or AshTimeout[3] < t) then
 				return skill,level
@@ -1992,11 +1992,11 @@ function GetMinionSkill(myid)
 			skill=MH_SUMMON_LEGION
 			TraceAI("GetMinionSkill"..skill)
 			if SeraCallLegionLevel == nil then
-				level=5
+				level=SkillList[SERA][MH_SUMMON_LEGION]
 			elseif SeraCallLegionLevel < 1 then
 				skill,level=0,0
 			elseif SeraCallLegionLevel > 5 then
-				level=5
+				level=SkillList[SERA][MH_SUMMON_LEGION]
 			else
 				level=SeraCallLegionLevel
 			end
@@ -2045,28 +2045,28 @@ function GetMobSkill(myid)
 			if htype==EIRA and UseEiraXenoSlasher==1 then
 				skill=MH_XENO_SLASHER
 				if EiraXenoSlasherLevel==nil then
-					level=4
+					level=SkillList[EIRA][MH_XENO_SLASHER]
 				else
 					level=EiraXenoSlasherLevel
 				end
 			elseif htype==BAYERI and UseBayeriHailegeStar==1 then
 				skill=MH_HEILIGE_STANGE
 				if BayeriHailegeStarLevel==nil then
-					level=5
+					level=SkillList[BAYERI][MH_HEILIGE_STANGE]
 				else
 					level=BayeriHailegeStarLevel
 				end
 			elseif htype==SERA and UseSeraPoisonMist==1 and PoisonMistMode==0 then
 				skill=MH_POISON_MIST
 				if SeraPoisonMistLevel==nil then
-					level=5
+					level=SkillList[SERA][MH_POISON_MIST]
 				else
 					level=SeraPoisonMistLevel
 				end
 			elseif htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode==0 then
 				skill=MH_LAVA_SLIDE
 				if DieterLavaSlideLevel==nil then
-					level=10
+					level=SkillList[DIETER][MH_LAVA_SLIDE]
 				else
 					level=DieterLavaSlideLevel
 				end
@@ -2104,17 +2104,17 @@ function	GetQuickenSkill(myid)
 		end
 		if (homuntype==1) then -- It's a lif!
 			skill=HLIF_CHANGE
-			level=3
+			level=SkillList[LIF][HLIF_CHANGE]
 		elseif	(homuntype==3) then -- It's a filer!
 			skill=HFLI_FLEET
 			if (FilirFlitLevel==nil) then
-				level=5
+				level=SkillList[FILIR][HFLI_FLEET]
 			else
 				level=FilirFlitLevel
 			end
 		elseif  (homuntype==2) then --it's an amistr
 			skill=HAMI_BLOODLUST
-			level=3
+			level=SkillList[AMISTR][HAMI_BLOODLUST]
 		end
 	else
 		level=SkillList[MercType][MER_QUICKEN]
@@ -2139,11 +2139,11 @@ function	GetSOffensiveSkill(myid)
 		htype=GetV(V_HOMUNTYPE,myid)
 		if (htype==BAYERI and UseBayeriAngriffModus~=0) then
 			skill=MH_ANGRIFFS_MODUS
-			level = 5
+			level = SkillList[BAYERI][MH_ANGRIFFS_MODUS]
 			skillopt=UseBayeriAngriffModus
 		elseif	(htype==DIETER and UseDieterMagmaFlow~=0) then
 			skill=MH_MAGMA_FLOW
-			level = 5
+			level = SkillList[DIETER][MH_MAGMA_FLOW]
 			skillopt=UseDieterMagmaFlow
 		end
 		return skill,level,skillopt
@@ -2166,11 +2166,11 @@ function	GetSDefensiveSkill(myid)
 		htype=GetV(V_HOMUNTYPE,myid)
 		if (htype==BAYERI and UseBayeriGoldenPherze~=0) then
 			skill=MH_GOLDENE_FERSE
-			level = 5
+			level = SkillList[BAYERI][MH_GOLDENE_FERSE]
 			skillopt=UseBayeriGoldenPherze
 		elseif	(htype==DIETER and UseDieterGraniticArmor~=0) then
 			skill=MH_GRANITIC_ARMOR
-			level = 5
+			level = SkillList[DIETER][MH_GRANITIC_ARMOR]
 			skillopt=UseDieterGraniticArmor
 		end
 		return skill,level,skillopt
@@ -2194,12 +2194,12 @@ function	GetSOwnerBuffSkill(myid)
 		htype=GetV(V_HOMUNTYPE,myid)
 		if (htype==EIRA and UseEiraOveredBoost~=0) then
 			skill=MH_OVERED_BOOST
-			level = 5
+			level = SkillList[EIRA][MH_OVERED_BOOST]
 			skillopt=UseEiraOveredBoost
 		elseif	(htype==DIETER and UseDieterPyroclastic~=0) then
 			skill=MH_PYROCLASTIC
 			if DieterPyroclasticLevel==nil then
-				level = 10
+				level = SkillList[DIETER][MH_PYROCLASTIC]
 			else
 				level=DieterPyroclasticLevel
 			end
@@ -2226,11 +2226,11 @@ function GetSightOrAoE(myid)
 		htype=GetV(V_HOMUNTYPE,myid)
 		if	(htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode~=0) then
 			skill=MH_LAVA_SLIDE
-			level = 10
+			level = SkillList[DIETER][MH_LAVA_SLIDE]
 			skillopt=LavaSlideMode
 		elseif (htype==SERA and PoisonMistMode~=0 and UseSeraPoisonMist==1) then
 			skill=MH_POISON_MIST
-			level = 5
+			level = SkillList[SERA][MH_POISON_MIST]
 			skillopt=PoisonMistMode
 		end
 	else
@@ -2261,21 +2261,21 @@ function	GetGuardSkill(myid)
 		if (homuntype==1) then -- It's a lif!
 			skill=HLIF_AVOID
 			if (LifEscapeLevel==nil) then
-				level=5
+				level=SkillList[LIF][HLIF_AVOID]
 			else
 				level=LifEscapeLevel
 			end
 		elseif (homuntype==2) then -- It's an amistr!
 			skill=HAMI_DEFENCE
 			if (AmiBulwarkLevel==nil) then
-				level=5
+				level=SkillList[AMISTR][HAMI_DEFENCE]
 			else
 				level=AmiBulwarkLevel
 			end
 		elseif (homuntype==3) then -- It's an filir!
 			skill=HFLI_SPEED
 			if (FilirAccelLevel==nil) then
-				level=5
+				level=SkillList[FILIR][HFLI_SPEED]
 			else
 				level=FilirAccelLevel
 			end
@@ -2315,7 +2315,7 @@ function	GetDefensiveOwnerSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraPainkiller~=0 then
-			level=5
+			level=SkillList[SERA][MH_PAIN_KILLER]
 			return MH_PAIN_KILLER,level,UseSeraPainkiller
 		else
 			return 0,0,0
@@ -2362,7 +2362,7 @@ function GetHealingSkill(myid)
 				if GetTick() < AutoSkillCooldown[skill] then
 					level=0
 				else
-					level=5
+					level=SkillList[EIRA][MH_SILENT_BREEZE]
 				end
 				return skill,level
 			end
@@ -2373,7 +2373,7 @@ function GetHealingSkill(myid)
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
 			elseif (LifHealLevel==nil) then
-				level=5
+				level=SkillList[LIF][HLIF_HEAL]
 			else
 				level=LifHealLevel
 			end
@@ -2382,7 +2382,7 @@ function GetHealingSkill(myid)
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
 			elseif (VaniChaoticLevel==nil) then
-				level=3
+				level=SkillList[VANILMIRTH][HVAN_CHAOTIC]
 			else
 				level=VaniChaoticLevel
 			end
