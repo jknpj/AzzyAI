@@ -40,9 +40,7 @@ function doInit(myid)
 	if loadtimesuccess==false then
 		logstring=logstring.."\nfailed to load timeouts for owner "..GetV(V_OWNER,MyID).." if this is the first time you've used this account with AzzyAI, disregard this message"
 	end
-	if GetV(V_SKILLATTACKRANGE,myid,HVAN_CAPRICE) > 1 then -- it was a vani
-		OldHomunType=VANILMIRTH
-	end
+	DiscoverOriginBySkill()
 	if GetV(V_SKILLATTACKRANGE,myid,MH_ERASER_CUTTER) == 1 then
 		if UseEiraEraseCutter and GetV(V_HOMUNTYPE,myid)==EIRA  then
 			logstring=logstring.."UseEiraEraseCutter disabled - you don't have the skill!"
