@@ -2830,16 +2830,16 @@ end
 
 function DiscoverOriginBySkill()
   -- 1. Check for Vanilmirth by checking the range of Caprice
-  if GetV(V_SKILLATTACKRANGE_LEVEL, MyID, HVAN_CAPRICE) == 9 then
+  if GetV(V_SKILLATTACKRANGE, MyID, HVAN_CAPRICE) == 9 then
     OldHomunType=VANILMIRTH
   -- 2. Check for Filir by checking the range of Moonlight
-  elseif GetV(V_SKILLATTACKRANGE_LEVEL, MyID, HFIL_MOONLIGHT) == 1 then
+  elseif GetV(V_SKILLATTACKRANGE, MyID, HFIL_MOONLIGHT) == 1 then
     OldHomunType=FILIR
   -- 3. Check for Lif by checking the range of Healing Hands
-  elseif GetV(V_SKILLATTACKRANGE_LEVEL, MyID, HLIF_HEAL_HANDS) == 101 then
+  elseif GetV(V_SKILLATTACKRANGE, MyID, HLIF_HEAL_HANDS) == 101 then
     OldHomunType=LIF
   -- 4. Check for Amistr by checking the range of Castling
-  elseif GetV(V_SKILLATTACKRANGE_LEVEL, MyID, HAMI_CASTLE) == 102 then
+  elseif GetV(V_SKILLATTACKRANGE, MyID, HAMI_CASTLE) == 102 then
     OldHomunType=AMISTR
   end
 end
