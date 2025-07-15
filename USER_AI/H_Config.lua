@@ -137,3 +137,25 @@ HealOwnerBreeze          = 0
 SteinWandTelePause       = 0
 DoNotAttackMoving        = 0
 UseSmartBulwark          = 0
+
+-- New Homunculus S Skills
+UseEiraTwisterCutter = 0
+EiraTwisterCutterLevel = 10
+UseEiraAbsoluteZephyr = 0
+EiraAbsoluteZephyrLevel = 10
+UseEleanorBlazingAndFurious = 0
+EleanorBlazingAndFuriousLevel = 10
+UseEleanorTheOneFighterRises = 0
+EleanorTheOneFighterRisesLevel = 10
+UseSeraToxinOfMandara = 0
+SeraToxinOfMandaraLevel = 10
+UseSeraNeedleStinger = 0
+SeraNeedleStingerLevel = 10
+UseBayeriGlanzenSpies = 0
+BayeriGlanzenSpiesLevel = 10
+UseBayeriHeiligePferd = 0
+BayeriHeiligePferdLevel = 10
+UseBayeriGoldeneTone = 0
+BayeriGoldeneToneLevel = 10
+UseDieterTempering = 0
+UseDieterBlastForge = 0

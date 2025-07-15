@@ -110,6 +110,7 @@ function doInit(myid)
 		SOffensiveTimeout=SOffensiveTimeout+500
 		SDefensiveTimeout=SDefensiveTimeout+500
 		SOwnerBuffTimeout=SOwnerBuffTimeout+500
+		SOwner2ndBuffTimeout=SOwner2ndBuffTimeout+500
 		GuardTimeout=GuardTimeout+500
 		QuickenTimeout=QuickenTimeout+500
 		OffensiveOwnerTimeout	= OffensiveOwnerTimeout+500
@@ -121,6 +122,7 @@ function doInit(myid)
 		SOffensiveTimeout=SOffensiveTimeout+timelag
 		SDefensiveTimeout=SDefensiveTimeout+timelag
 		SOwnerBuffTimeout=SOwnerBuffTimeout+timelag
+		SOwner2ndBuffTimeout=SOwner2ndBuffTimeout+timelag
 		GuardTimeout=GuardTimeout+timelag
 		QuickenTimeout=QuickenTimeout+timelag
 		OffensiveOwnerTimeout	= OffensiveOwnerTimeout+timelag
@@ -853,6 +855,28 @@ function	OnCHASE_ST ()
 					elseif (skilltype==MINION_ATK and UseHomunSSkillChase==1 and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1)) and (tact_skillclass==CLASS_MINION or tact_skillclass==CLASS_MIN_OLD or tact_skillclass==CLASS_MIN_S)) then
 						if (availsp-ReserveSP >= GetSkillInfo(v[2],3,math.min(v[3],skill_level))) then
 							skilltouse=v
+						end
+					elseif (skilltype==CLASS_NEW_S and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1)) and (tact_skillclass==CLASS_NEW_S or tact_skillclass==CLASS_BOTH)) then
+						if (availsp-ReserveSP >= GetSkillInfo(v[2],3,math.min(v[3],skill_level))) then
+							skilltouse=v
+						end
+					elseif (skilltype == CLASS_NEW_MOB and UseHomunSSkillChase==1 and AutoMobMode~=0  and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1))) then
+						local mobskill_level=skill_level
+						if AoEFixedLevel == 1 then
+							mobskill_level=v[3]
+						end
+						local mobmode=0
+						if AutoMobMode==2 then
+							mobmode=1
+						end
+						mobskillcount=GetMobCount(v[2],math.min(v[3],mobskill_level),MyEnemy,mobmode)
+						--TraceAI("mobskillcount="..mobskillcount.."tact_skillclass="..tact_skillclass.."class_mob="..CLASS_MOB.."AutoMobCount="..AutoMobCount.." "..FormatSkill(v[2],math.min(v[3],mobskill_level)))
+						if (mobskillcount >= AutoMobCount or tact_skillclass == CLASS_MOB) then
+							if (availsp >= GetSkillInfo(v[2],3,math.min(v[3],mobskill_level)))then
+								if (skilltouse[1] < 2) then
+									skilltouse=v
+								end
+							end
 						end
 					end
 				end
@@ -2451,6 +2475,22 @@ function DoAutoBuffs(buffmode)
 			end
 		end
 	end
+	if SOwner2ndBuffTimeout ~=-1 then
+		if (GetTick() > SOwner2ndBuffTimeout) then
+			local skill,level,opt = GetSOwner2ndBuffSkill(MyID)
+			if (skill <= 0) then
+				SOwner2ndBuffTimeout = -1
+			elseif level==0 or opt ~=buffmode then
+				-- do nothing, skill in cooldown
+			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
+				MyBuffSPCosts["SOwnerBuff"]=GetSkillInfo(skill,3,level)
+				DoSkill(skill,level,MyID,6)
+				SOwner2ndBuffTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
+				UpdateTimeoutFile()
+				return
+			end
+		end
+	end
 	if UseBayeriSteinWand == buffmode and SteinWandTimeout~=-1 then
 		if GetTick() > SteinWandTimeout  then
 			if GetV(V_HOMUNTYPE,MyID)~=BAYERI then
@@ -2606,7 +2646,7 @@ function UpdateTimeoutFile()
 		OutFile=io.open(ConfigPath.."data/M_"..GetV(V_OWNER,MyID).."Timeouts.lua","w")
 	end
 	if OutFile~=nil then
-		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..TimeoutConv(SOffensiveTimeout).."\nSDefensiveTimeout="..TimeoutConv(SDefensiveTimeout).."\nSOwnerBuffTimeout="..TimeoutConv(SOwnerBuffTimeout).."\nGuardTimeout="..TimeoutConv(GuardTimeout).."\nQuickenTimeout="..TimeoutConv(QuickenTimeout).."\nOffensiveOwnerTimeout="..TimeoutConv(OffensiveOwnerTimeout).."\nDefensiveOwnerTimeout="..TimeoutConv(DefensiveOwnerTimeout).."\nOtherOwnerTimeout="..TimeoutConv(OtherOwnerTimeout).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
+		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..TimeoutConv(SOffensiveTimeout).."\nSDefensiveTimeout="..TimeoutConv(SDefensiveTimeout).."\nSOwnerBuffTimeout="..TimeoutConv(SOwnerBuffTimeout).."\nSOwner2ndBuffTimeout="..TimeoutConv(SOwner2ndBuffTimeout).."\nGuardTimeout="..TimeoutConv(GuardTimeout).."\nQuickenTimeout="..TimeoutConv(QuickenTimeout).."\nOffensiveOwnerTimeout="..TimeoutConv(OffensiveOwnerTimeout).."\nDefensiveOwnerTimeout="..TimeoutConv(DefensiveOwnerTimeout).."\nOtherOwnerTimeout="..TimeoutConv(OtherOwnerTimeout).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
 		OutFile:close()
 	else
 		TraceAI("Failed to update timeout file")
@@ -3097,6 +3137,7 @@ function FailSkillUse(mode)
 			SDefensiveTimeout=1
 		elseif mode==6 then
 			SOwnerBuffTimeout=1
+			SOwner2ndBuffTimeout=1
 		elseif mode==7 then
 			SightTimeout=1
 		elseif mode==9 then
@@ -3233,6 +3274,10 @@ function AI(myid)
 	if SOwnerBuffTimeout-GetTick() > 6000000 then
 		logappend("AAI_ERROR","Homun S owner buff timeout was "..SOwnerBuffTimeout.." time is "..GetTick())
 		SOwnerBuffTimeout=1
+	end
+	if SOwner2ndBuffTimeout-GetTick() > 6000000 then
+		logappend("AAI_ERROR","Homun S owner buff timeout was "..SOwner2ndBuffTimeout.." time is "..GetTick())
+		SOwner2ndBuffTimeout=1
 	end
 	if OffensiveOwnerTimeout-GetTick() > 6000000 then
 		logappend("AAI_ERROR","Offensive owner buff timeout was "..OffensiveOwnerTimeout.." time is "..GetTick())
