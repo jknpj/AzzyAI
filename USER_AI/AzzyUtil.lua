@@ -2314,21 +2314,29 @@ function	GetDefensiveOwnerSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraPainkiller~=0 then
-			level=SkillList[SERA][MH_PAIN_KILLER]
-			return MH_PAIN_KILLER,level,UseSeraPainkiller
-		else
-			return 0,0,0
+		local htype=GetV(V_HOMUNTYPE,myid)
+		if htype==SERA and UseSeraPainkiller~=0 then
+			skill = MH_PAIN_KILLER
+			level = SkillList[htype][skill]
+			skillopt = UseSeraPainkiller
+			return skill,level,skillopt
+		elseif htype==BAYERI and UseBayeriGoldeneTone~=0 then
+			skill = MH_GOLDENE_TONE
+			level = SkillList[htype][skill]
+			skillopt = UseBayeriGoldeneTone
+			return skill,level,skillopt
 		end
 	else
-		level=SkillList[MercType][MER_KYRIE]
+		level = SkillList[MercType][MER_KYRIE]
 		if level~=nil then
 			skill=MER_KYRIE
 		else
 			level=0
 		end
-		return skill,level,UseKyrieOwner
+		skillopt = UseKyrieOwner
+		return skill,level,skillopt
 	end
+	return 0,0,0
 end
 function	GetOtherOwnerSkill(myid)
 	local level = 0
@@ -2412,7 +2420,11 @@ function GetTargetedSkills(myid)
 	Debuffatk={DEBUFF_ATK,s,l}
 	s,l=GetMinionSkill(myid)
 	Minionatk={MINION_ATK,s,l}
-	result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk}
+	s,l=GetNewSAtkSkill(myid)
+    NewSAtk={CLASS_NEW_S,s,l}
+	s,l=GetNewMobSkill(myid)
+    NewMobatk={CLASS_NEW_MOB,s,l}
+	result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
 	return result
 end
 
@@ -2826,4 +2838,82 @@ end
 function List.size (list)
 	local size = list.last - list.first + 1
 	return size
+end
+
+-- New Functions
+function GetSOwner2ndBuffSkill(myid)
+	local level = 0
+	local skill = 0
+	local skillopt = 0
+	if (IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,myid)
+		if	htype==DIETER and useDieterTempering~=0 then
+			skill = MH_TEMPERING
+			level = SkillList[htype][skill]
+			skillopt = UseDieterTempering
+		end
+	end
+	if level==0 then
+		return 0,0,0
+	end
+	return skill,level,skillopt
+end
+
+function GetNewSAtkSkill(myid)
+	local skill = 0
+	local level = 0
+	if (IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,myid)
+		if htype==EIRA and UseEiraTwisterCutter~=0 then
+			skill=MH_TWISTER_CUTTER
+			level=EiraTwisterCutterLevel or SkillList[htype][skill]
+		elseif htype==BAYERI and UseBayeriGlanzenSpies~=0 then
+			skill=MH_GLANZEN_SPIES
+			level=BayeriGlanzenSpiesLevel or SkillList[htype][skill]
+		elseif htype==SERA and UseSeraNeedleStinger~=0 then
+			skill=MH_NEEDLE_STINGER
+			level=SeraNeedleStingerLevel or SkillList[htype][skill]
+        elseif htype==ELEANOR and UseEleanorBlazingAndFurious~=0 then
+          skill=MH_BLAZING_AND_FURIOUS
+           level=EleanorBlazingAndFuriousLevel or SkillList[htype][skill]
+		elseif htype==ELEANOR and UseEleanorTheOneFighterRises~=0 then
+			skill=MH_THE_ONE_FIGHTER_RISES
+			level=EleanorTheOneFighterRisesLevel or SkillList[htype][skill]
+		end
+		if level==0 then
+			return 0,0
+		end
+	end
+	return skill,level
+end
+
+function GetNewMobSkill(myid)
+	local skill = 0
+	local level = 0
+	if(IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,MyID)
+		if htype==EIRA and UseEiraAbsoluteZephyr~=0 then
+			skill = MH_ABSOLUTE_ZEPHYR
+			level = EiraAbsoluteZephyrLevel or SkillList[htype][skill]
+		elseif htype==SERA and UseSeraToxinOfMandara~=0 then
+			skill = MH_TOXIN_OF_MANDARA
+			level = SeraToxinOfMandaraLevel or SkillList[htype][skill]
+		elseif UseBayeriHeiligePferd~=0 then
+			skill = MH_HEILIGE_PFERD
+			level = BayeriHeiligePferdLevel or SkillList[htype][skill]
+		elseif htype==DIETER and UseDieterBlastForge~=0 then
+			skill = MH_BLAST_FORGE
+			level = UseDieterBlastForge or SkillList[htype][skill]
+		end
+		if AutoSkillCooldown[skill]~=nil then
+			if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
+				level=0
+				skill=0
+			end
+		end
+	end
+	if level==0 then
+		return 0,0
+	end
+	return skill,level
 end
