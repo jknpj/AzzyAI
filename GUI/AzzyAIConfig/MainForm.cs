@@ -44,14 +44,45 @@ namespace AzzyAIConfig
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // Set the propertyGridHomunculus selected object to the homunculus configurations
-            propertyGridHomunculus.SelectedObject = _hconf;
+            // Set the homunculusConfigControl selected object to the homunculus configurations
+            homunculusConfigControl.SelectedObject = _hconf;
 
             // Set the propertyGridMercenary selected object to the mercanery configurations
             propertyGridMercenary.SelectedObject = _mconf;
         }
 
         private void ConfigChanged(object sender, EventArgs e)
+        {
+            // Check if buttonApply is not enabled
+            if (!buttonApply.Enabled)
+            {
+                // Enable buttonApply
+                buttonApply.Enabled = true;
+            }
+
+            // Check if the applySettingsToolStripMenuItem is not enabled
+            if (!applySettingsToolStripMenuItem.Enabled)
+            {
+                // Enable applySettingsToolStripMenuItem
+                applySettingsToolStripMenuItem.Enabled = true;
+            }
+
+            // Check if the revertToolStripMenuItem is not enabled
+            if (!revertToolStripMenuItem.Enabled)
+            {
+                // Enable reverToolStripMenuItem
+                revertToolStripMenuItem.Enabled = true;
+            }
+
+            // Check if the resetToDefaultsToolStripMenuItem is not enabled
+            if (!resetToDefaultsToolStripMenuItem.Enabled)
+            {
+                // Enable resetToDefaultsToolStripMenuItem
+                resetToDefaultsToolStripMenuItem.Enabled = true;
+            }
+        }
+
+        private void homunculusConfigControl_PropertyValueChanged(object sender, EventArgs e)
         {
             // Check if buttonApply is not enabled
             if (!buttonApply.Enabled)
@@ -196,6 +227,10 @@ namespace AzzyAIConfig
 
             // Revert the mercenary configurations
             _mconf.Revert();
+            
+            // Refresh the controls to show reverted values
+            homunculusConfigControl.Refresh();
+            propertyGridMercenary.Refresh();
         }
 
         private void resetToDefaultsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -205,6 +240,10 @@ namespace AzzyAIConfig
 
             // Reset the mercenary configurations to defaults
             _mconf.SetDefaults();
+            
+            // Refresh the controls to show default values
+            homunculusConfigControl.Refresh();
+            propertyGridMercenary.Refresh();
         }
 
         private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -254,8 +293,8 @@ namespace AzzyAIConfig
                 // Open the file
                 _hconf.Open(ofd.FileName);
 
-                // Update the propertyGridHomunculus values
-                propertyGridHomunculus.Update();
+                // Update the homunculusConfigControl values
+                homunculusConfigControl.UpdateData();
             }
         }
 
