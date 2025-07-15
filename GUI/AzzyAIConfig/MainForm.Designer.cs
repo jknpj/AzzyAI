@@ -60,7 +60,7 @@
             this.revertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToDefaultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
-            this.propertyGridHomunculus = new System.Windows.Forms.PropertyGrid();
+            this.homunculusConfigControl = new AzzyAIConfig.HomunculusConfigControl();
             this.propertyGridMercenary = new System.Windows.Forms.PropertyGrid();
             this.homTactControl1 = new AzzyAIConfig.HomTactControl();
             this.merTactControl1 = new AzzyAIConfig.MerTactControl();
@@ -334,7 +334,7 @@
             // 
             // tabPage1
             // 
-            tabPage1.Controls.Add(this.propertyGridHomunculus);
+            tabPage1.Controls.Add(this.homunculusConfigControl);
             tabPage1.Location = new System.Drawing.Point(4, 22);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
@@ -343,14 +343,14 @@
             tabPage1.Text = "Homunculus";
             tabPage1.UseVisualStyleBackColor = true;
             // 
-            // propertyGridHomunculus
+            // homunculusConfigControl
             // 
-            this.propertyGridHomunculus.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGridHomunculus.Location = new System.Drawing.Point(3, 3);
-            this.propertyGridHomunculus.Name = "propertyGridHomunculus";
-            this.propertyGridHomunculus.Size = new System.Drawing.Size(604, 351);
-            this.propertyGridHomunculus.TabIndex = 0;
-            this.propertyGridHomunculus.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGridHomunculus_PropertyValueChanged);
+            this.homunculusConfigControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.homunculusConfigControl.Location = new System.Drawing.Point(3, 3);
+            this.homunculusConfigControl.Name = "homunculusConfigControl";
+            this.homunculusConfigControl.Size = new System.Drawing.Size(604, 351);
+            this.homunculusConfigControl.TabIndex = 0;
+            this.homunculusConfigControl.PropertyValueChanged += new System.EventHandler(this.homunculusConfigControl_PropertyValueChanged);
             // 
             // tabPage2
             // 
@@ -548,7 +548,7 @@
 
         #endregion
 
-        private System.Windows.Forms.PropertyGrid propertyGridHomunculus;
+        private HomunculusConfigControl homunculusConfigControl;
         private System.Windows.Forms.PropertyGrid propertyGridMercenary;
         private System.Windows.Forms.Button buttonApply;
         private System.Windows.Forms.Button buttonQuit;
