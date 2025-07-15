@@ -93,7 +93,7 @@ UseBerserkAttack	=0
 UseBerserkMobbed	=0
 Berserk_SkillAlways	=0
 Berserk_Dance		=0
-Berserk_IgnoreMinSP 
+Berserk_IgnoreMinSP = 0 
 
 FleeHP			=0
 TankMonsterLimit	=4
