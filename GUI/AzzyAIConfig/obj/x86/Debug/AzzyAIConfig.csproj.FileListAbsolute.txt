@@ -124,3 +124,4 @@ C:\Gravity\Ragnarok\AI\GUI\AzzyAIConfig\bin\Debug\M_Tactics.lua
 C:\Gravity\Ragnarok\AI\GUI\AzzyAIConfig\bin\Debug\H_PVP_Tact.lua
 C:\Gravity\Ragnarok\AI\GUI\AzzyAIConfig\bin\Debug\AzzyAIConfig.exe
 C:\Gravity\Ragnarok\AI\GUI\AzzyAIConfig\bin\Debug\AzzyAIConfig.pdb
+C:\Gravity\Ragnarok\AI\GUI\AzzyAIConfig\bin\Debug\PVP_Tact.lua

@@ -26,5 +26,29 @@ namespace AzzyAIConfig.Properties
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("All Types")]
+        public string HomunculusSFilter {
+            get {
+                return ((string)(this["HomunculusSFilter"]));
+            }
+            set {
+                this["HomunculusSFilter"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("All Types")]
+        public string HomunculusBaseFilter {
+            get {
+                return ((string)(this["HomunculusBaseFilter"]));
+            }
+            set {
+                this["HomunculusBaseFilter"] = value;
+            }
+        }
     }
 }
