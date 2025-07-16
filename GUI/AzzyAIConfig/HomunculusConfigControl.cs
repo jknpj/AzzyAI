@@ -22,13 +22,14 @@ namespace AzzyAIConfig
         private TextBox helpTextBox;
         private Label helpLabel;
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
+        private bool _isInitialized = false;
 
         public event EventHandler PropertyValueChanged;
 
         public HomunculusConfigControl()
         {
             InitializeComponent();
-            SetupUI();
+            // Defer heavy initialization until first access
             categoryWrappers = new Dictionary<string, FilteredHomConfWrapper>();
         }
 
@@ -38,7 +39,17 @@ namespace AzzyAIConfig
             set
             {
                 _hconf = value;
+                EnsureInitialized();
                 RefreshAllTabs();
+            }
+        }
+
+        private void EnsureInitialized()
+        {
+            if (!_isInitialized)
+            {
+                SetupUI();
+                _isInitialized = true;
             }
         }
 
@@ -59,6 +70,9 @@ namespace AzzyAIConfig
 
         private void SetupUI()
         {
+            // Suspend layout during initialization for better performance
+            this.SuspendLayout();
+
             // Create search and filter controls
             searchLabel = new Label
             {
@@ -73,8 +87,8 @@ namespace AzzyAIConfig
                 Location = new Point(70, 10),
                 Size = new Size(150, 20)
             };
-            searchBox.TextChanged += SearchBox_TextChanged;
-
+            // Defer event handler to avoid triggering during initialization
+            
             homunculusSLabel = new Label
             {
                 Text = "Homunc S:",
@@ -91,7 +105,6 @@ namespace AzzyAIConfig
             };
             homunculusSFilter.Items.AddRange(new string[] { "All Types", "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" });
             homunculusSFilter.SelectedIndex = 0;
-            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
 
             homunculusBaseLabel = new Label
             {
@@ -109,7 +122,6 @@ namespace AzzyAIConfig
             };
             homunculusBaseFilter.Items.AddRange(new string[] { "All Types", "Lif", "Amistr", "Filir", "Vanilmirth" });
             homunculusBaseFilter.SelectedIndex = 0;
-            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
 
             // Create tab control
             tabControl = new TabControl
@@ -142,8 +154,6 @@ namespace AzzyAIConfig
                     ToolbarVisible = false,
                     HelpVisible = false
                 };
-                propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
-                propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
                 
                 tabPage.Controls.Add(propertyGrid);
                 tabControl.TabPages.Add(tabPage);
@@ -180,6 +190,25 @@ namespace AzzyAIConfig
             this.Controls.Add(tabControl);
             this.Controls.Add(helpLabel);
             this.Controls.Add(helpTextBox);
+
+            // Resume layout and add event handlers after initialization
+            this.ResumeLayout();
+
+            // Add event handlers after controls are created
+            searchBox.TextChanged += SearchBox_TextChanged;
+            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
+            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
+
+            // Add PropertyGrid event handlers
+            foreach (TabPage tabPage in tabControl.TabPages)
+            {
+                PropertyGrid propertyGrid = tabPage.Controls[0] as PropertyGrid;
+                if (propertyGrid != null)
+                {
+                    propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
+                    propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
+                }
+            }
 
             // Load saved filter settings
             LoadFilterSettings();
