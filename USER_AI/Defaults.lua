@@ -213,9 +213,9 @@ FastChangeLimit		=1
 AttackDebuffLimit	=1
 
 
-MagicNumber = 110000000
-MagicNumber2 = 2000000
-MagicNumber3 = 100000000
+MagicNumber		=42000
+MagicNumber2		=100000
+
 
 
 -- Homun S stuff

@@ -3387,7 +3387,7 @@ function AI(myid)
 						end
 					end
 				end
-				if (v >= MagicNumber2 and v <= MagicNumber3) then
+				if (v > MagicNumber2) then
 					Players[v]=1
 					if MyFriends[v]==FRIEND and GetV(V_OWNER,MyID)~=v then --Newly appeared on screen
 						if OldPlayers[v]~=1 or AggressiveAutofriend then
@@ -3421,7 +3421,7 @@ function AI(myid)
 						tMobID=tMobID.."MobID["..v.."]="..GetV(V_HOMUNTYPE,v).."\n"
 					end
 					Monsters[v]=1
-					if (v >= MagicNumber) then
+					if (v < MagicNumber) then
 						Summons[v]=1
 					end
 					if (AutoDetectPlant==1 and IsActive[v]~=1 and IsHomun(myid)~=1) then
@@ -3443,7 +3443,7 @@ function AI(myid)
 						--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." target added")
 						Targets[v]={motionclass,GetTargetClass(GetV(V_TARGET,v))}
 					end
-				elseif (v >= MagicNumber) then
+				elseif (v < MagicNumber) then		
 					Retainers[v]=1
 				end
 			end
