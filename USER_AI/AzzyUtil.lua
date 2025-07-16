@@ -207,7 +207,7 @@ function	GetPVPTact(t,m)
 end
 
 function	GetClass(m)
-	if (m >= MagicNumber) then
+	if (m < MagicNumber) then
 		return 10
 	elseif (IsActive[m]==0 and AutoDetectPlant==1) then
 		return 11
@@ -265,7 +265,7 @@ function GetTargetClass(id)
 		return 1
 	elseif id == 0 then
 		return 0
-	elseif (id >= MagicNumber2 and id <= MagicNumber3) then
+	elseif (id > MagicNumber2) then
 		if IsFriendOrSelf(id)==1 then
 			return 2
 		else
@@ -319,7 +319,7 @@ function IsFriendOrSelf(id)
 end
 
 function IsPlayer(id)
-	if (id>=MagicNumber2 and id <= MagicNumber3) then
+	if (id>MagicNumber2) then
 		return 1
 	else
 		return 0
