@@ -277,3 +277,9 @@ UseBayeriGoldeneTone = 0
 BayeriGoldeneToneLevel = 10
 UseDieterTempering = 0
 UseDieterBlastForge = 0
+
+---------------------------
+-- Eleanor Style Constants
+---------------------------
+FIGHTING_MODE = 0
+GRAPPLING_MODE = 1

@@ -1795,14 +1795,14 @@ function GetSAtkSkill(myid)
 				else
 					level=SeraParalyzeLevel
 				end
-			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and ( EleanorMode==0 or EleanorDoNotSwitchMode==1 ) then
+			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and EleanorMode==FIGHTING_MODE then
 				skill=MH_SONIC_CRAW
 				if EleanorSonicClawLevel==nil then
 					level=SkillList[ELEANOR][MH_SONIC_CRAW]
 				else
 					level=EleanorSonicClawLevel
 				end
-			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==1 then
+			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==GRAPPLING_MODE then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
@@ -1824,7 +1824,7 @@ function GetComboSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=GetV(V_HOMUNTYPE,myid)
 		if htype==ELEANOR then
-			if EleanorMode==0 or EleanorDoNotSwitchMode==1 then
+			if EleanorMode==FIGHTING_MODE then
 				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
@@ -1855,7 +1855,7 @@ function GetGrappleSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=GetV(V_HOMUNTYPE,myid)
 		if htype==ELEANOR and MySpheres >= AutoComboSpheres then
-			if EleanorMode==1 or EleanorDoNotSwitchMode==1 then
+			if EleanorMode==GRAPPLING_MODE then
 				if ComboSCTimeout > GetTick() then
 					if MySpheres >= AutoComboSpheres -1 then
 						skill=MH_CBC
