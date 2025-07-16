@@ -382,7 +382,7 @@ GUI:
 
 BayeriSteinWandLevel - Use this level of steinwand - useful if you want to use shorter lasting one (at the expense of a flimsy wall)
 UseStienWandTele - Use stienwand when you log in and when you land from teleport, but never any other time. I'd suggest using this with DoNotUseChase. 
-StienWandTelePause - stand still for this long after casting stienwand
+SteinWandTelePause - stand still for this long after casting stienwand
 
 The idea is that you would land, pop stienwand, and then pause for a second or few while the monsters run to you, and then the bay can drop a Heilage Star (Holy Rod) on the monsters that run to you. 
 

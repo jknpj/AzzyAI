@@ -52,6 +52,24 @@ This includes the following skills (Thanks to [SpaceKonde](https://github.com/Sp
    - Silvervein Rush
    - Midnight Frenzy
 
+Addionally, with the arrival of 4th jobs and new homunculus skills, the following new skills have been added:
+ - Dieter
+   - Tempering (Thanks to [Kisaro](https://github.com/Kisaro/AzzyAI))
+   - Blast Forge (Thanks to [vorpal1337](https://github.com/vorpal1337))
+- Eira
+   - Twister Cutter
+   - Absolute Zephyr
+- Eleanor
+   - Blazing And Furious
+   - The One Fighter Rise
+- Sera
+   - Toxin Of Mandara
+   - Needle Stinger
+- Bayeri
+   - Glanzen Spies
+   - Heilige Pferd
+   - Goldene Tone
+
 ## Configuration Guide
 
 To use the new skills, you must add and adjust their settings in your **`H_Config.lua`** file.
