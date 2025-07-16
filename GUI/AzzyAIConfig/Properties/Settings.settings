@@ -3,5 +3,12 @@
   <Profiles>
     <Profile Name="(Default)" />
   </Profiles>
-  <Settings />
+  <Settings>
+    <Setting Name="HomunculusSFilter" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All Types</Value>
+    </Setting>
+    <Setting Name="HomunculusBaseFilter" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All Types</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>
