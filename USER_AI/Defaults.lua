@@ -18,6 +18,8 @@ MyPVPTact={}
 AggroHP                  = 60
 AggroSP                  = 0
 OldHomunType			= 3
+-- This will store the detected type after the first run to prevent re-running.
+DetectedOldHomunType = nil
 UseSkillOnly			=-1 
 UseAttackSkill			=1
 OpportunisticTargeting  =0

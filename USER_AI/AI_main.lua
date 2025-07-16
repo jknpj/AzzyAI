@@ -40,7 +40,9 @@ function doInit(myid)
 	if loadtimesuccess==false then
 		logstring=logstring.."\nfailed to load timeouts for owner "..GetV(V_OWNER,MyID).." if this is the first time you've used this account with AzzyAI, disregard this message"
 	end
-	DiscoverOriginBySkill()
+--	DiscoverOriginBySkill()
+	GetDetectedHomunType(myid)
+	logstring = LintUserOptions(myid, logstring)
 	if GetV(V_SKILLATTACKRANGE,myid,MH_ERASER_CUTTER) == 1 then
 		if UseEiraEraseCutter and GetV(V_HOMUNTYPE,myid)==EIRA  then
 			logstring=logstring.."UseEiraEraseCutter disabled - you don't have the skill!"
@@ -2775,7 +2777,7 @@ function	OnIDLEWALK_ST ()
 	local ox,oy=GetV(V_POSITION,GetV(V_OWNER,MyID))
 	local motion=GetV(V_MOTION,MyID)
 	if (GetDistanceAPR(MyID,MyDestX,MyDestY)<=1) then --we're there.
-		if OldHomunType==AMISTR and UseCastleRoute==1 and (UseIdleWalk==5 or UseIdleWalk==6) and RelativeRoute==0 and GetDistanceP(x,y,ox,oy) > 2 then
+		if DetectedOldHomunType==AMISTR and UseCastleRoute==1 and (UseIdleWalk==5 or UseIdleWalk==6) and RelativeRoute==0 and GetDistanceP(x,y,ox,oy) > 2 then
 			if GetTick() > AutoSkillTimeout then
 				DoSkill(HAMI_CASTLE,5,MyID)
 				TraceAI("Castle Route: Casting castling on self")
@@ -2783,7 +2785,7 @@ function	OnIDLEWALK_ST ()
 				TraceAI("Castle Route: Skill timeout not OK - can't cast castling")
 			end
 			return
-		elseif UseCastleRoute==1 and OldHomunType==AMISTR and RelativeRoute==0 then
+		elseif UseCastleRoute==1 and DetectedOldHomunType==AMISTR and RelativeRoute==0 then
 			TraceAI("We're set to use castling route, but can't, UseIdleWalk="..UseIdleWalk.." distance: "..GetDistanceP(x,y,ox,oy))
 		end
 		MyDestX,MyDestY=GetIdleWalkDest(MyID)
@@ -3677,7 +3679,7 @@ function AI(myid)
 	if (GetTick() < (MyStart + SpawnDelay)) then
 		return
 	end
-	if OldHomunType==AMISTR and UseCastleDefend ==1 then
+	if DetectedOldHomunType==AMISTR and UseCastleDefend ==1 then
 		if GetTick() > AutoSkillTimeout then
 			local mytargetweight =0
 			local ownertargetweight =0
@@ -3747,7 +3749,7 @@ function AI(myid)
 					end
 				end
 			elseif tactcast == CAST_REACT_CASTLE then
-				if (modulo(GetV(V_HOMUNTYPE,MyID),4)==AMISTR or OldHomunType==AMISTR) and v[2]==2 then
+				if (modulo(GetV(V_HOMUNTYPE,MyID),4)==AMISTR or DetectedOldHomunType==AMISTR) and v[2]==2 then
 					if AutoSkillTimeout < GetTick() and GetSkillInfo(HAMI_CASTLE,3,5) < GetV(V_SP,MyID) then
 						DoSkill(HAMI_CASTLE,5,MyID)
 						TraceAI("CAST_REACT_CASTLE being enabled against target"..k.." with tactic "..tactcast)
