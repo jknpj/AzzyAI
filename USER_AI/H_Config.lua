@@ -21,7 +21,7 @@ LiveMobID                = 0
 AttackSkillReserveSP     = 0 
 AutoMobMode              = 2 
 AutoMobCount             = 2
-AutoComboMode            = 1
+AutoComboMode            = 2
 AutoComboSkill		=0
 AutoComboSpheres         = 10
 UseHomunSSkillChase      = 1
@@ -90,7 +90,7 @@ UseAvoid                 = 0
 TankMonsterLimit         = 4
 LavaSlideMode            = 1
 PoisonMistMode           = 1
-AoEReserveSP             = 1
+AoEReserveSP             = 0
 
 ChaseSPPause             = 0
 ChaseSPPauseSP 			= -60
