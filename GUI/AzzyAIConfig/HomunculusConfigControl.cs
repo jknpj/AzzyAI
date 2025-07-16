@@ -325,7 +325,7 @@ namespace AzzyAIConfig
             propertyGrid.SelectedObject = wrapper;
         }
 
-        public void Refresh()
+        public new void Refresh()
         {
             RefreshAllTabs();
         }
