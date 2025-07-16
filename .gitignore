@@ -1,0 +1,10 @@
+#ignore basic AI
+/AI.lua
+/AI_M.lua
+/Const.lua
+/Util.lua
+
+#ignore time-keeping files
+H_*.txt
+test.txt
+*Timeouts.lua
