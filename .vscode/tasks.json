@@ -7,9 +7,7 @@
       "command": "C:\\WINDOWS\\Microsoft.NET\\Framework\\v4.0.30319\\MSBuild.exe",
       "args": [
         "${workspaceFolder}\\GUI\\AzzyAIConfig\\AzzyAIConfig.csproj",
-        "/p:Configuration=Debug",
-        "/p:Platform=x86",
-        "/verbosity:minimal"
+        "/p:Configuration=Debug"
       ],
       "group": {
         "kind": "build",
@@ -36,6 +34,7 @@
         "${workspaceFolder}\\GUI\\AzzyAIConfig\\AzzyAIConfig.csproj",
         "/p:Configuration=Release",
         "/p:Platform=x86",
+        "/p:TargetFrameworkProfile=",
         "/verbosity:minimal"
       ],
       "group": "build",
@@ -97,11 +96,44 @@
     {
       "label": "Build and Run AzzyAI Config",
       "dependsOrder": "sequence",
-      "dependsOn": [
-        "Build AzzyAI Config - Debug",
-        "Run AzzyAI Config - Debug"
-      ],
+      "dependsOn": ["Build AzzyAI Config - Debug", "Run AzzyAI Config - Debug"],
       "group": "build"
+    },
+    {
+      "label": "Test Startup Performance",
+      "type": "shell",
+      "command": "${workspaceFolder}\\GUI\\AzzyAIConfig\\StartupTimer.exe",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "options": {
+        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
+      },
+      "dependsOn": "Build AzzyAI Config - Debug"
+    },
+    {
+      "label": "Manual Test Application",
+      "type": "shell",
+      "command": "${workspaceFolder}\\GUI\\AzzyAIConfig\\manual_test.bat",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "options": {
+        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
+      },
+      "dependsOn": "Build AzzyAI Config - Debug"
     }
   ]
 }

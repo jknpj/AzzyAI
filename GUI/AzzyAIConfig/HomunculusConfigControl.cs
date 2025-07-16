@@ -39,8 +39,21 @@ namespace AzzyAIConfig
             set
             {
                 _hconf = value;
-                EnsureInitialized();
-                RefreshAllTabs();
+                if (value != null)
+                {
+                    EnsureInitialized();
+                    // Use BeginInvoke for async UI updates to improve responsiveness
+                    // But only if the control handle is created and we're not in design mode
+                    if (this.IsHandleCreated && !this.DesignMode)
+                    {
+                        this.BeginInvoke(new Action(() => RefreshAllTabs()));
+                    }
+                    else
+                    {
+                        // If handle not created yet or in design mode, refresh synchronously
+                        RefreshAllTabs();
+                    }
+                }
             }
         }
 
@@ -376,6 +389,20 @@ namespace AzzyAIConfig
         private string _homunculusBaseType = "All";
         private PropertyDescriptorCollection _filteredProperties;
 
+        // Cache skill arrays for better performance
+        private static readonly Dictionary<string, string[]> SkillCache = new Dictionary<string, string[]>
+        {
+            { "sera", new[] { "paralyze", "poisonmist", "painkiller", "calllegion" } },
+            { "eira", new[] { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" } },
+            { "eleanor", new[] { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" } },
+            { "bayeri", new[] { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" } },
+            { "dieter", new[] { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" } },
+            { "lif", new[] { "escape", "breeze" } },
+            { "amistr", new[] { "bulwark", "castle", "bloodlust" } },
+            { "filir", new[] { "flit", "accel", "moon", "speed" } },
+            { "vanilmirth", new[] { "caprice", "chaotic", "selfdestruct" } }
+        };
+
         public FilteredHomConfWrapper(HomConf originalConf, string category)
         {
             _originalConf = originalConf;
@@ -438,46 +465,32 @@ namespace AzzyAIConfig
         {
             string propNameLower = propertyName.ToLower();
 
-            // Check if property belongs to any specific homunculus type
-            string[] homunculusSTypes = { "eira", "eleanor", "dieter", "bayeri", "sera" };
-            string[] homunculusBaseTypes = { "amistr", "vanilmirth", "filir", "lif" };
-            
-            // Check for Homunculus S specific skills
-            string[] seraSkills = { "paralyze", "poisonmist", "painkiller", "calllegion" };
-            string[] eiraSkills = { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
-            string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" };
-            string[] bayeriSkills = { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" };
-            string[] dieterSkills = { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" };
-            
-            // Check for Base Homunculus specific skills
-            string[] lifSkills = { "escape", "breeze" };
-            string[] amistrSkills = { "bulwark", "castle", "bloodlust" };
-            string[] filirSkills = { "flit", "accel", "moon", "speed" };
-            string[] vanilmirthSkills = { "caprice", "chaotic", "selfdestruct" };
-
-            // Check if this property belongs to a specific Homunculus S type
+            // Check if this property belongs to a specific Homunculus type
             string belongsToHomunculusS = null;
-            if (propNameLower.Contains("sera") || seraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "sera";
-            else if (propNameLower.Contains("eira") || eiraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eira";
-            else if (propNameLower.Contains("eleanor") || eleanorSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eleanor";
-            else if (propNameLower.Contains("bayeri") || bayeriSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "bayeri";
-            else if (propNameLower.Contains("dieter") || dieterSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "dieter";
-
-            // Check if this property belongs to a specific Base Homunculus type
             string belongsToHomunculusBase = null;
-            if (propNameLower.Contains("lif") || lifSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "lif";
-            else if (propNameLower.Contains("amistr") || amistrSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "amistr";
-            else if (propNameLower.Contains("filir") || filirSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "filir";
-            else if (propNameLower.Contains("vanilmirth") || vanilmirthSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "vanilmirth";
+
+            // Check Homunculus S types using cached skills
+            foreach (var kvp in SkillCache.Where(k => k.Key == "sera" || k.Key == "eira" || k.Key == "eleanor" || k.Key == "bayeri" || k.Key == "dieter"))
+            {
+                if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                {
+                    belongsToHomunculusS = kvp.Key;
+                    break;
+                }
+            }
+
+            // Check Base Homunculus types using cached skills
+            if (belongsToHomunculusS == null) // Avoid double-checking if already found
+            {
+                foreach (var kvp in SkillCache.Where(k => k.Key == "lif" || k.Key == "amistr" || k.Key == "filir" || k.Key == "vanilmirth"))
+                {
+                    if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                    {
+                        belongsToHomunculusBase = kvp.Key;
+                        break;
+                    }
+                }
+            }
 
             // Apply Homunculus S filter
             if (homunculusSType != "All Types")
