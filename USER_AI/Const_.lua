@@ -224,6 +224,14 @@ TACT_ATTACK_LAST = 14
 TACT_ATTACK_TOP = 15
 
 
+-- Server Type Constants
+SERVER_OFFICIAL         = 0
+SERVER_PRIVATE          = 1
+
+-- Eleanor Style Constants
+FIGHTING_MODE 			= 0
+GRAPPLING_MODE			= 1
+
 ---------------------------
 --Tactics (skill use)
 --In tact lists, put another number in this field 
