@@ -206,14 +206,21 @@ function	GetPVPTact(t,m)
 	end
 end
 
-function	GetClass(m)
-	if (m < MagicNumber) then
-		return 10
-	elseif (IsActive[m]==0 and AutoDetectPlant==1) then
-		return 11
-	else
-		return 0
-	end
+function GetClass(m)
+    local isSummon
+    if ServerType == SERVER_PRIVATE then
+        isSummon = (m >= MagicNumber) -- Private server check
+    else
+        isSummon = (m < MagicNumber) -- Official server check
+    end
+
+    if isSummon then
+        return 10
+    elseif (IsActive[m] == 0 and AutoDetectPlant == 1) then
+        return 11
+    else
+        return 0
+    end
 end
 
 function IsRescueTarget(id)
@@ -265,7 +272,7 @@ function GetTargetClass(id)
 		return 1
 	elseif id == 0 then
 		return 0
-	elseif (id > MagicNumber2) then
+	elseif IsPlayer(id) == 1 then -- This now correctly uses the server-aware IsPlayer function
 		if IsFriendOrSelf(id)==1 then
 			return 2
 		else
@@ -319,11 +326,16 @@ function IsFriendOrSelf(id)
 end
 
 function IsPlayer(id)
-	if (id>MagicNumber2) then
-		return 1
-	else
-		return 0
-	end
+    if ServerType == SERVER_PRIVATE then
+        if (id >= MagicNumber2 and id <= MagicNumber3) then -- Private server check
+            return 1
+        end
+    else
+        if (id > MagicNumber2) then -- Official server check
+            return 1
+        end
+    end
+    return 0
 end
 
 function UpdateFriends() 
@@ -2967,30 +2979,41 @@ function LintUserOptions(myid, logstring)
             { "UseEiraEraseCutter", "EiraEraseCutterLevel", MH_ERASER_CUTTER, "Eraser Cutter" },
             { "UseEiraXenoSlasher", "EiraXenoSlasherLevel", MH_XENO_SLASHER, "Xeno Slasher" },
             { "UseEiraSilentBreeze", "EiraSilentBreezeLevel", MH_SILENT_BREEZE, "Silent Breeze" },
-            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" }
+            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" },
+            { "UseEiraTwisterCutter", "EiraTwisterCutterLevel", MH_TWISTER_CUTTER, "Twister Cutter" },
+            { "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel", MH_ABSOLUTE_ZEPHYR, "Absolute Zephyr" }
         },
         [BAYERI] = {
             { "UseBayeriStahlHorn", "BayeriStahlHornLevel", MH_STAHL_HORN, "Stahl Horn" },
             { "UseBayeriHailegeStar", "BayeriHailegeStarLevel", MH_HEILIGE_STANGE, "Heilige Stange" },
             { "UseBayeriAngriffModus", nil, MH_ANGRIFFS_MODUS, "Angriffs Modus" },
             { "UseBayeriGoldenPherze", nil, MH_GOLDENE_FERSE, "Goldene Ferse" },
-            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" }
+            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" },
+            { "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel", MH_GLANZEN_SPIES, "Glanzen Spies" },
+            { "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel", MH_HEILIGE_PFERD, "Heilige Pferd" },
+            { "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel", MH_GOLDENE_TONE, "Goldene Tone" }
         },
         [SERA] = {
             { "UseSeraParalyze", "SeraParalyzeLevel", MH_NEEDLE_OF_PARALYZE, "Needle of Paralyze" },
             { "UseSeraPoisonMist", "SeraPoisonMistLevel", MH_POISON_MIST, "Poison Mist" },
             { "UseSeraPainkiller", nil, MH_PAIN_KILLER, "Pain Killer" },
-            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" }
+            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" },
+            { "UseSeraToxinOfMandara", "SeraToxinOfMandaraLevel", MH_TOXIN_OF_MANDARA, "Toxin of Mandara" },
+            { "UseSeraNeedleStinger", "SeraNeedleStingerLevel", MH_NEEDLE_STINGER, "Needle Stinger" }
         },
         [DIETER] = {
             { "UseDieterLavaSlide", "DieterLavaSlideLevel", MH_LAVA_SLIDE, "Lava Slide" },
             { "UseDieterVolcanicAsh", nil, MH_VOLCANIC_ASH, "Volcanic Ash" },
             { "UseDieterMagmaFlow", nil, MH_MAGMA_FLOW, "Magma Flow" },
             { "UseDieterGraniticArmor", nil, MH_GRANITIC_ARMOR, "Granitic Armor" },
-            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" }
+            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" },
+            { "UseDieterTempering", nil, MH_TEMPERING, "Tempering" },
+            { "UseDieterBlastForge", "UseDieterBlastForge", MH_BLAST_FORGE, "Blast Forge" }
         },
         [ELEANOR] = {
-            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" }
+            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" },
+            { "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel", MH_BLAZING_AND_FURIOUS, "Blazing and Furious" },
+            { "UseEleanorTheOneFighterRises", "EleanorTheOneFighterRisesLevel", MH_THE_ONE_FIGHTER_RISES, "The One Fighter Rises" }
         }
     }
 
@@ -2999,7 +3022,7 @@ function LintUserOptions(myid, logstring)
         if homunType ~= htype then
             for _, optionData in ipairs(options) do
                 local useOptionName = optionData[1]
-                if _G[useOptionName] == 1 then
+                if _G[useOptionName] and _G[useOptionName] ~= 0 then
                     logstring = logstring .. "Disabling irrelevant option: " .. useOptionName .. "\n"
                     _G[useOptionName] = 0
                 end
@@ -3019,10 +3042,10 @@ function LintUserOptions(myid, logstring)
 
             if learnedLevel == 0 then
                 -- Skill is not learned at all.
-                if _G[useOptionName] == 1 then
+                if _G[useOptionName] and _G[useOptionName] ~= 0 then
                     logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned.\n"
+                    _G[useOptionName] = 0
                 end
-                _G[useOptionName] = 0
             else
                 -- Skill is learned. Check if the configured level is too high (if a level option exists).
                 if levelOptionName and _G[levelOptionName] and _G[levelOptionName] > learnedLevel then
@@ -3066,6 +3089,9 @@ function GetNewSAtkSkill(myid)
 		elseif htype==BAYERI and UseBayeriGlanzenSpies~=0 then
 			skill=MH_GLANZEN_SPIES
 			level=BayeriGlanzenSpiesLevel or SkillList[htype][skill]
+		elseif htype==SERA and UseSeraToxinOfMandara~=0 then
+			skill = MH_TOXIN_OF_MANDARA
+			level = SeraToxinOfMandaraLevel or SkillList[htype][skill]
 		elseif htype==SERA and UseSeraNeedleStinger~=0 then
 			skill=MH_NEEDLE_STINGER
 			level=SeraNeedleStingerLevel or SkillList[htype][skill]
@@ -3091,9 +3117,6 @@ function GetNewMobSkill(myid)
 		if htype==EIRA and UseEiraAbsoluteZephyr~=0 then
 			skill = MH_ABSOLUTE_ZEPHYR
 			level = EiraAbsoluteZephyrLevel or SkillList[htype][skill]
-		elseif htype==SERA and UseSeraToxinOfMandara~=0 then
-			skill = MH_TOXIN_OF_MANDARA
-			level = SeraToxinOfMandaraLevel or SkillList[htype][skill]
 		elseif UseBayeriHeiligePferd~=0 then
 			skill = MH_HEILIGE_PFERD
 			level = BayeriHeiligePferdLevel or SkillList[htype][skill]

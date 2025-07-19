@@ -95,7 +95,6 @@ DieterLavaSlideLevel		=10
 
 
 --Autobuff options
-
 UseDefensiveBuff		=1
 UseOffensiveBuff		=1 
 UseProvokeOwner     =0
@@ -150,7 +149,6 @@ KiteParanoid             = 0
 DefendStandby            = 0 
 StickyStandby            = 1 
 
-
 --Advanced Timing settings 
 SpawnDelay               = 1000
 AutoSkillDelay		= 400
@@ -161,14 +159,12 @@ FollowTryPanic		=3
 SphereTrackFactor	=3 
 
 --Berzerk Settings:
-
 UseBerzerkMobbed         = 0 
 UseBerzerkSkill          = 0 
 UseBerzerkAttack         = 0 
 Berzerk_SkillAlways      = 0 
 Berzerk_Dance            = 0
 Berzerk_IgnoreMinSP      = 0 
-
 
 --Misc settings:
 StandbyFriending         = 1  
@@ -180,15 +176,6 @@ AggressiveRelogTracking = 0
 AggressiveRelogPath = "./AI/USER_AI/"
 ConfigPath = "./AI/USER_AI/"
 AttackLastFullSP = 0
-
-
-
-
-
-
-
-
-
 
 DoNotChase 		=0
 KSMercHomun		=0
@@ -209,19 +196,22 @@ FastChange_I2C		=0
 FastChange_F2I		=0
 
 FastChangeLimit		=1
-
 AttackDebuffLimit	=1
 
+-- Set to SERVER_PRIVATE(1) for private servers or SERVER_OFFICIAL(0) for official servers.
+ServerType = SERVER_PRIVATE
 
-MagicNumber		=42000
-MagicNumber2		=100000
-
-
-
--- Homun S stuff
-
-
-
+-- ServerType-dependent Magic Numbers
+-- These numbers are used for object identification and differ between servers.
+if ServerType == 0 then -- SERVER_OFFICIAL
+	MagicNumber		=	42000
+	MagicNumber2	=	100000
+	MagicNumber3    =   nil -- Not used on official
+else -- SERVER_PRIVATE
+	MagicNumber		= 110000000
+	MagicNumber2	= 2000000
+	MagicNumber3	= 100000000
+end
 
 FriendAttack={}			--Set these to 1 to have homun attack 
 				--the target of a friend/owner when the friend is:
@@ -246,14 +236,16 @@ BasicDebuffs[MER_DECAGI]=	1
 BasicDebuffs[MA_SANDMAN]=	1
 BasicDebuffs[MA_FREEZINGTRAP]=	1
 
-SkillRetryLimit={4,4,4,3,3,3,3,0,2,2,3,3,3} --Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
+--Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
+SkillRetryLimit = {
+  [1]=4, [2]=4, [3]=4, [4]=3, [5]=3, [6]=3, [7]=3, [8]=0, [9]=2, [10]=2, [11]=3, [12]=3, [13]=3
+}
 SkillRetryLimit[-1]=2 -- for atk skills
 
 LogEnable={}
 LogEnable["AAI_ERROR"]=1
 LogEnable["AAI_SKILLFAIL"]=0
 LogEnable["AAI_CLOSEST"]=0
-
 LogEnable["AAI_Lag"]=0
 
 -- New Homunculus S Skills Defaults
@@ -278,8 +270,10 @@ BayeriGoldeneToneLevel = 10
 UseDieterTempering = 0
 UseDieterBlastForge = 0
 
----------------------------
--- Eleanor Style Constants
----------------------------
-FIGHTING_MODE = 0
-GRAPPLING_MODE = 1
+-- New Eleanor Defaults
+UseEleanorTinderBreaker		=1
+EleanorTinderBreakerLevel	=5
+UseEleanorCBC				=1
+EleanorCBCLevel				=5
+UseEleanorEQC				=5
+EleanorEQCLevel				=5
