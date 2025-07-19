@@ -41,7 +41,9 @@ function doInit(myid)
 		logstring=logstring.."\nfailed to load timeouts for owner "..GetV(V_OWNER,MyID).." if this is the first time you've used this account with AzzyAI, disregard this message"
 	end
 	GetDetectedHomunType(myid)
-	logstring = LintUserOptions(myid, logstring)
+	if LintUserOptions == 1 then
+		logstring = LintUserOptions(myid, logstring)
+	end
 	OutFile=io.open("AAIStartH.txt","a")
 	if OutFile == nil then
 		Error("No write permissions for RO folder, please fix permissions on the RO folder in order to use AzzyAI. Version Info: "..OutString)
