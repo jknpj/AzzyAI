@@ -198,6 +198,7 @@ FastChange_F2I		=0
 FastChangeLimit		=1
 AttackDebuffLimit	=1
 
+LintUserOptions		=0
 -- Set to SERVER_PRIVATE(1) for private servers or SERVER_OFFICIAL(0) for official servers.
 ServerType = SERVER_OFFICIAL
 
