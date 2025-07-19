@@ -199,7 +199,7 @@ FastChangeLimit		=1
 AttackDebuffLimit	=1
 
 -- Set to SERVER_PRIVATE(1) for private servers or SERVER_OFFICIAL(0) for official servers.
-ServerType = SERVER_PRIVATE
+ServerType = SERVER_OFFICIAL
 
 -- ServerType-dependent Magic Numbers
 -- These numbers are used for object identification and differ between servers.
