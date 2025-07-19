@@ -277,3 +277,6 @@ UseEleanorCBC				=1
 EleanorCBCLevel				=5
 UseEleanorEQC				=5
 EleanorEQCLevel				=5
+-- New Amistr Defaults
+AllowBloodlust            	=0
+AllowSBR44					=0
