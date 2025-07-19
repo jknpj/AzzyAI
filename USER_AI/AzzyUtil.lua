@@ -2002,16 +2002,7 @@ function GetMinionSkill(myid)
 	if (IsHomun(myid)==1) then
 		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraCallLegion==1 then
 			skill=MH_SUMMON_LEGION
-			TraceAI("GetMinionSkill"..skill)
-			if SeraCallLegionLevel == nil then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			elseif SeraCallLegionLevel < 1 then
-				skill,level=0,0
-			elseif SeraCallLegionLevel > 5 then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			else
-				level=SeraCallLegionLevel
-			end
+			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
 			TraceAI("GetMinionSkill "..skill..level)
 			if AutoSkillCooldown[skill]~=nil then
 				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
@@ -2124,7 +2115,7 @@ function	GetQuickenSkill(myid)
 			else
 				level=FilirFlitLevel
 			end
-		elseif  (homuntype==2) then --it's an amistr
+		elseif  (homuntype==2) and AllowBloodlust == 1 then --it's an amistr
 			skill=HAMI_BLOODLUST
 			level=SkillList[AMISTR][HAMI_BLOODLUST]
 		end
@@ -2321,6 +2312,7 @@ function	GetOffensiveOwnerSkill(myid)
 		return skill,level,UseBlessingOwner
 	end
 end
+
 function	GetDefensiveOwnerSkill(myid)
 	local level = 0
 	local skill = 0
@@ -2350,6 +2342,7 @@ function	GetDefensiveOwnerSkill(myid)
 	end
 	return 0,0,0
 end
+
 function	GetOtherOwnerSkill(myid)
 	local level = 0
 	local skill = 0
@@ -2537,7 +2530,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	end
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
-		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1 in H_Extra")
+		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
 	elseif targetmode==0 then
 		SkillObject(MyID,level,skill,MyID)
 	elseif targetmode==1 then
