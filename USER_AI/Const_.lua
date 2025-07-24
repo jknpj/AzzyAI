@@ -13,7 +13,7 @@ function	GetMsg (id) end
 function	GetResMsg (id) end
 function	SkillObject (id,level,skill,target) end
 function	SkillGround (id,level,skill,x,y) end
-function	IsMonster (id) end								-- id´Â ¸ó½ºÅÍÀÎ°¡? yes -> 1 no -> 0
+function	IsMonster (id) end								-- idï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½? yes -> 1 no -> 0
 
 --]]
 --GetV() first argument--
@@ -224,6 +224,14 @@ TACT_ATTACK_LAST = 14
 TACT_ATTACK_TOP = 15
 
 
+-- Server Type Constants
+SERVER_OFFICIAL         = 0
+SERVER_PRIVATE          = 1
+
+-- Eleanor Style Constants
+FIGHTING_MODE 			= 0
+GRAPPLING_MODE			= 1
+
 ---------------------------
 --Tactics (skill use)
 --In tact lists, put another number in this field 
@@ -311,6 +319,9 @@ CLASS_GRAPPLE_1 =7
 CLASS_GRAPPLE_2 =8
 CLASS_MIN_OLD = 9
 CLASS_MIN_S = 10
+CLASS_NEW_S = 11
+CLASS_NEW_MOB = 12
+
 ---------------------------
 --Tactics (RESCUE)
 ---------------------------
@@ -432,6 +443,7 @@ SightTimeout			= 0
 SOffensiveTimeout		= 0
 SDefensiveTimeout		= 0
 SOwnerBuffTimeout		= 0
+SOwner2ndBuffTimeout    = 0
 SkillTimeout			= 0
 ProvokeOwnerTimeout		= 0
 ProvokeSelfTimeout		= 0
