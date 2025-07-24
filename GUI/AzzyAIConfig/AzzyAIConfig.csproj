@@ -16,6 +16,8 @@
     <AssemblyCompany>Dr. Azzy</AssemblyCompany>
     <AssemblyProduct>AzzyAI Configuration Utility</AssemblyProduct>
     <AssemblyCopyright>Copyright © AzzyAI 2010</AssemblyCopyright>
+    <AssemblyInformationalVersion>1.5.0 (.NET 9.0)</AssemblyInformationalVersion>
+    <AssemblyConfiguration>Release</AssemblyConfiguration>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <TrimMode>partial</TrimMode>
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
@@ -26,6 +28,20 @@
     <ApplicationVisualStyles>true</ApplicationVisualStyles>
   </PropertyGroup>
 
+  <!-- Optimized single file publishing configuration -->
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- Size and performance optimizations -->
+    <DebuggerSupport>false</DebuggerSupport>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="*.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -34,5 +50,17 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!-- Post-publish: Copy single file executable to USER_AI directory -->
+  <Target Name="CopyToUserAI" AfterTargets="Publish" Condition="'$(PublishSingleFile)' == 'true'">
+    <PropertyGroup>
+      <UserAIPath>$(MSBuildProjectDirectory)\..\..\USER_AI</UserAIPath>
+      <SourceExe>$(PublishDir)$(AssemblyName).exe</SourceExe>
+      <DestExe>$(UserAIPath)\$(AssemblyName).exe</DestExe>
+    </PropertyGroup>
+    <Exec Command="powershell -Command &quot;Copy-Item '$(SourceExe)' '$(DestExe)' -Force&quot;" 
+          ContinueOnError="false" />
+    <Message Text="Copied $(AssemblyName).exe to USER_AI directory" Importance="high" />
+  </Target>
 
 </Project>

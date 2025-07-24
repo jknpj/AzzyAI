@@ -43,6 +43,27 @@
       "group": "build",
       "problemMatcher": [],
       "isBackground": false
+    },
+    {
+      "label": "Publish Single File (Self-Contained)",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "--configuration",
+        "Release",
+        "--runtime",
+        "win-x86",
+        "--self-contained",
+        "true",
+        "-p:PublishSingleFile=true"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/GUI/AzzyAIConfig"
+      },
+      "group": "build",
+      "problemMatcher": ["$msCompile"],
+      "isBackground": false
     }
   ]
 }
