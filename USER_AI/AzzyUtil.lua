@@ -279,14 +279,21 @@ function	GetPVPTact(t,m)
 	end
 end
 
-function	GetClass(m)
-	if (m < MagicNumber) then
-		return 10
-	elseif (IsActive[m]==0 and AutoDetectPlant==1) then
-		return 11
-	else
-		return 0
-	end
+function GetClass(m)
+    local isSummon
+    if ServerType == SERVER_PRIVATE then
+        isSummon = (m >= MagicNumber) -- Private server check
+    else
+        isSummon = (m < MagicNumber) -- Official server check
+    end
+
+    if isSummon then
+        return 10
+    elseif (IsActive[m] == 0 and AutoDetectPlant == 1) then
+        return 11
+    else
+        return 0
+    end
 end
 
 function IsRescueTarget(id)
@@ -338,7 +345,7 @@ function GetTargetClass(id)
 		return 1
 	elseif id == 0 then
 		return 0
-	elseif (id > MagicNumber2) then
+	elseif IsPlayer(id) == 1 then -- This now correctly uses the server-aware IsPlayer function
 		if IsFriendOrSelf(id)==1 then
 			return 2
 		else
@@ -392,11 +399,16 @@ function IsFriendOrSelf(id)
 end
 
 function IsPlayer(id)
-	if (id>MagicNumber2) then
-		return 1
-	else
-		return 0
-	end
+    if ServerType == SERVER_PRIVATE then
+        if (id >= MagicNumber2 and id <= MagicNumber3) then -- Private server check
+            return 1
+        end
+    else
+        if (id > MagicNumber2) then -- Official server check
+            return 1
+        end
+    end
+    return 0
 end
 
 function UpdateFriends() 
@@ -1868,14 +1880,14 @@ function GetSAtkSkill(myid)
                 else
                     level = SeraParalyzeLevel
 				end
-			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and ( EleanorMode==0 or EleanorDoNotSwitchMode==1 ) then
+			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and EleanorMode==FIGHTING_MODE then
 				skill=MH_SONIC_CRAW
 				if EleanorSonicClawLevel==nil then
 					level=SkillList[ELEANOR][MH_SONIC_CRAW]
 				else
 					level=EleanorSonicClawLevel
 				end
-			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==1 then
+			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==GRAPPLING_MODE then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
@@ -1897,7 +1909,7 @@ function GetComboSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=DetectAndLogHomunculusType(myid)
 		if htype==ELEANOR then
-			if EleanorMode==0 or EleanorDoNotSwitchMode==1 then
+			if EleanorMode==FIGHTING_MODE then
 				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
@@ -1928,7 +1940,7 @@ function GetGrappleSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=DetectAndLogHomunculusType(myid)
 		if htype==ELEANOR and MySpheres >= AutoComboSpheres then
-			if EleanorMode==1 or EleanorDoNotSwitchMode==1 then
+			if EleanorMode==GRAPPLING_MODE then
 				if ComboSCTimeout > GetTick() then
 					if MySpheres >= AutoComboSpheres -1 then
 						skill=MH_CBC
@@ -1972,7 +1984,7 @@ function GetAtkSkill(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
-			homuntype=modulo(OldHomunType,4)
+			homuntype=modulo(DetectedOldHomunType,4)
 		end
 		if (homuntype==0) then -- It's a vanil!
 			skill=HVAN_CAPRICE
@@ -2063,16 +2075,7 @@ function GetMinionSkill(myid)
 	if (IsHomun(myid)==1) then
 		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraCallLegion==1 then
 			skill=MH_SUMMON_LEGION
-			TraceAI("GetMinionSkill"..skill)
-			if SeraCallLegionLevel == nil then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			elseif SeraCallLegionLevel < 1 then
-				skill,level=0,0
-			elseif SeraCallLegionLevel > 5 then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			else
-				level=SeraCallLegionLevel
-			end
+			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
 			TraceAI("GetMinionSkill "..skill..level)
 			if AutoSkillCooldown[skill]~=nil then
 				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
@@ -2173,7 +2176,7 @@ function	GetQuickenSkill(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
-			homuntype=modulo(OldHomunType,4)
+			homuntype=modulo(DetectedOldHomunType,4)
 		end
 		if (homuntype==1) then -- It's a lif!
 			skill=HLIF_CHANGE
@@ -2185,7 +2188,7 @@ function	GetQuickenSkill(myid)
 			else
 				level=FilirFlitLevel
 			end
-		elseif  (homuntype==2) then --it's an amistr
+		elseif  (homuntype==2) and AllowBloodlust == 1 then --it's an amistr
 			skill=HAMI_BLOODLUST
 			level=SkillList[AMISTR][HAMI_BLOODLUST]
 		end
@@ -2329,7 +2332,7 @@ function	GetGuardSkill(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
-			homuntype=modulo(OldHomunType,4)
+			homuntype=modulo(DetectedOldHomunType,4)
 		end
 		if (homuntype==1) then -- It's a lif!
 			skill=HLIF_AVOID
@@ -2382,27 +2385,37 @@ function	GetOffensiveOwnerSkill(myid)
 		return skill,level,UseBlessingOwner
 	end
 end
+
 function	GetDefensiveOwnerSkill(myid)
 	local level = 0
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraPainkiller~=0 then
-			level=SkillList[SERA][MH_PAIN_KILLER]
-			return MH_PAIN_KILLER,level,UseSeraPainkiller
-		else
-			return 0,0,0
+		local htype=GetV(V_HOMUNTYPE,myid)
+		if htype==SERA and UseSeraPainkiller~=0 then
+			skill = MH_PAIN_KILLER
+			level = SkillList[htype][skill]
+			skillopt = UseSeraPainkiller
+			return skill,level,skillopt
+		elseif htype==BAYERI and UseBayeriGoldeneTone~=0 then
+			skill = MH_GOLDENE_TONE
+			level = SkillList[htype][skill]
+			skillopt = UseBayeriGoldeneTone
+			return skill,level,skillopt
 		end
 	else
-		level=SkillList[MercType][MER_KYRIE]
+		level = SkillList[MercType][MER_KYRIE]
 		if level~=nil then
 			skill=MER_KYRIE
 		else
 			level=0
 		end
-		return skill,level,UseKyrieOwner
+		skillopt = UseKyrieOwner
+		return skill,level,skillopt
 	end
+	return 0,0,0
 end
+
 function	GetOtherOwnerSkill(myid)
 	local level = 0
 	local skill = 0
@@ -2439,7 +2452,7 @@ function GetHealingSkill(myid)
 				end
 				return skill,level
 			end
-			homuntype=modulo(OldHomunType,4)
+			homuntype=modulo(DetectedOldHomunType,4)
 		end
 		if (homuntype==1) then -- It's a lif
 			skill=HLIF_HEAL
@@ -2485,7 +2498,11 @@ function GetTargetedSkills(myid)
 	Debuffatk={DEBUFF_ATK,s,l}
 	s,l=GetMinionSkill(myid)
 	Minionatk={MINION_ATK,s,l}
-	result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk}
+	s,l=GetNewSAtkSkill(myid)
+    NewSAtk={CLASS_NEW_S,s,l}
+	s,l=GetNewMobSkill(myid)
+    NewMobatk={CLASS_NEW_MOB,s,l}
+	result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
 	return result
 end
 
@@ -2586,7 +2603,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	end
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
-		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1 in H_Extra")
+		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
 	elseif targetmode==0 then
 		SkillObject(MyID,level,skill,MyID)
 	elseif targetmode==1 then
@@ -2899,4 +2916,289 @@ end
 function List.size (list)
 	local size = list.last - list.first + 1
 	return size
+end
+
+---
+-- Gets the actual learned level of a given skill for a homunculus or mercenary.
+-- This is the definitive, corrected version that uses the modern V_SKILLATTACKRANGE_LEVEL
+-- constant, correctly handles Homunculus S types checking old skills, and correctly
+-- interprets the API's return value of 1 for "not learned".
+--
+-- @param myid (number): The ID of the homunculus or mercenary.
+-- @param skillID (number): The constant for the skill to check (e.g., HFLI_MOON).
+-- @return (number): The learned level of the skill (1-10), or 0 if not learned.
+---
+function GetLearnedSkillLevel(myid, skillID)
+    local maxLevel = 0
+    
+    if IsHomun(myid) == 1 then
+        -- For homunculi, we need to determine which type to use for the lookup.
+        local htype = GetV(V_HOMUNTYPE, myid)
+        local typeForLookup = htype -- Default to the current type (EIRA, BAYERI, etc.)
+
+        -- Check if the skill belongs to one of the original four homunculi.
+        if SkillList[LIF][skillID] or SkillList[AMISTR][skillID] or SkillList[FILIR][skillID] or SkillList[VANILMIRTH][skillID] then
+            -- It's an old skill. Use our reliable detection function to get the base type.
+            typeForLookup = GetDetectedHomunType(myid)
+        end
+        
+        -- Now, get the max possible level for this skill from the correct table entry.
+        if SkillList[typeForLookup] and SkillList[typeForLookup][skillID] then
+            maxLevel = SkillList[typeForLookup][skillID]
+        end
+    else
+        -- Mercenary logic remains the same.
+        local mtype = GetMerType(myid)
+        if SkillListM and SkillListM[mtype] and SkillListM[mtype][skillID] then
+            maxLevel = SkillListM[mtype][skillID]
+        end
+    end
+
+    -- If the skill doesn't exist for this unit type, it can't be learned.
+    if maxLevel == 0 then
+        return 0
+    end
+
+    -- Loop downwards from the max level to find the actual learned level.
+    for level = maxLevel, 1, -1 do
+        -- As you correctly stated, this is the correct check.
+        -- It returns 1 if the skill is NOT known at this level.
+        if GetV(V_SKILLATTACKRANGE_LEVEL, myid, skillID, level) ~= 1 then
+            -- We found the highest level that is known. Return it.
+            return level
+        end
+    end
+
+    -- If the loop completes, the skill is not learned at any level.
+    return 0
+end
+
+---
+-- Gets the fundamental base type for ANY homunculus.
+-- This is the final, corrected version that uses unambiguous skill checks
+-- and the correct API return value logic.
+-- It runs a detection check only on the very first call. If detection
+-- fails, it uses the global OldHomunType as a failsafe.
+-- @param myid (number): The ID of the homunculus.
+-- @return (number): The numeric constant for the homunculus base type (LIF, AMISTR, etc.).
+---
+function GetDetectedHomunType(myid)
+    -- If we have already run the detection, return the stored result instantly.
+    if DetectedOldHomunType ~= nil then
+        return DetectedOldHomunType
+    end
+
+    TraceAI("=== Running Homunculus Type Detection (v5) ===")
+
+    -- THE FIX: We check for a single, defining skill for each type.
+    -- The check `GetV(V_SKILLATTACKRANGE, myid, SKILL_ID) ~= 1` is the correct
+    -- way to see if a skill is known, as it returns 1 if not learned.
+    -- We prioritize checking skills that do NOT have a range of 1 to avoid ambiguity.
+    
+    -- Check for Filir using a buff (range 0) first. This is the most reliable check.
+    if GetV(V_SKILLATTACKRANGE, myid, HFLI_FLEET) ~= 1 then
+        DetectedOldHomunType = FILIR
+        TraceAI("Homunculus base type auto-detected as: Filir")
+        return DetectedOldHomunType
+    -- Check for Vanilmirth (range 9)
+    elseif GetV(V_SKILLATTACKRANGE, myid, HVAN_CAPRICE) ~= 1 then
+        DetectedOldHomunType = VANILMIRTH
+        TraceAI("Homunculus base type auto-detected as: Vanilmirth")
+        return DetectedOldHomunType
+    -- Check for Amistr using a buff (range 0)
+    elseif GetV(V_SKILLATTACKRANGE, myid, HAMI_DEFENCE) ~= 1 then
+        DetectedOldHomunType = AMISTR
+        TraceAI("Homunculus base type auto-detected as: Amistr")
+        return DetectedOldHomunType
+    -- Check for Lif using a buff (range 0)
+    elseif GetV(V_SKILLATTACKRANGE, myid, HLIF_HEAL) ~= 1 then
+        DetectedOldHomunType = LIF
+        TraceAI("Homunculus base type auto-detected as: Lif")
+        return DetectedOldHomunType
+    end
+
+    -- Failsafe: If auto-detection fails (e.g., no skills learned),
+    -- fall back to the user's manually configured setting.
+    TraceAI("Auto-detection failed. Using manually configured OldHomunType as failsafe.")
+    DetectedOldHomunType = OldHomunType -- The global variable from the config
+    return DetectedOldHomunType
+end
+
+---
+-- Checks and corrects user configuration at startup. This is the definitive version.
+-- 1. Disables all skill options not relevant to the current homunculus type.
+-- 2. For relevant skills, it uses GetLearnedSkillLevel to find the actual learned level.
+-- 3. If the user's configured level is higher than the learned level, it adjusts it down.
+-- 4. If a skill is not learned at all (level 0), it disables the 'Use' option for it.
+--
+-- @param myid (number): The ID of the homunculus.
+-- @param logstring (string): The existing log string to append messages to.
+-- @return (string): The updated log string with any new messages.
+---
+function LintUserOptions(myid, logstring)
+    local htype = GetV(V_HOMUNTYPE, myid)
+    
+    -- A master list of all homunculus-specific skill options, grouped by type.
+    -- { "Use" option, "Level" option (or nil), skill_constant, friendly_skill_name }
+    local allSkillOptions = {
+        [EIRA] = {
+            { "UseEiraEraseCutter", "EiraEraseCutterLevel", MH_ERASER_CUTTER, "Eraser Cutter" },
+            { "UseEiraXenoSlasher", "EiraXenoSlasherLevel", MH_XENO_SLASHER, "Xeno Slasher" },
+            { "UseEiraSilentBreeze", "EiraSilentBreezeLevel", MH_SILENT_BREEZE, "Silent Breeze" },
+            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" },
+            { "UseEiraTwisterCutter", "EiraTwisterCutterLevel", MH_TWISTER_CUTTER, "Twister Cutter" },
+            { "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel", MH_ABSOLUTE_ZEPHYR, "Absolute Zephyr" }
+        },
+        [BAYERI] = {
+            { "UseBayeriStahlHorn", "BayeriStahlHornLevel", MH_STAHL_HORN, "Stahl Horn" },
+            { "UseBayeriHailegeStar", "BayeriHailegeStarLevel", MH_HEILIGE_STANGE, "Heilige Stange" },
+            { "UseBayeriAngriffModus", nil, MH_ANGRIFFS_MODUS, "Angriffs Modus" },
+            { "UseBayeriGoldenPherze", nil, MH_GOLDENE_FERSE, "Goldene Ferse" },
+            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" },
+            { "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel", MH_GLANZEN_SPIES, "Glanzen Spies" },
+            { "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel", MH_HEILIGE_PFERD, "Heilige Pferd" },
+            { "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel", MH_GOLDENE_TONE, "Goldene Tone" }
+        },
+        [SERA] = {
+            { "UseSeraParalyze", "SeraParalyzeLevel", MH_NEEDLE_OF_PARALYZE, "Needle of Paralyze" },
+            { "UseSeraPoisonMist", "SeraPoisonMistLevel", MH_POISON_MIST, "Poison Mist" },
+            { "UseSeraPainkiller", nil, MH_PAIN_KILLER, "Pain Killer" },
+            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" },
+            { "UseSeraToxinOfMandara", "SeraToxinOfMandaraLevel", MH_TOXIN_OF_MANDARA, "Toxin of Mandara" },
+            { "UseSeraNeedleStinger", "SeraNeedleStingerLevel", MH_NEEDLE_STINGER, "Needle Stinger" }
+        },
+        [DIETER] = {
+            { "UseDieterLavaSlide", "DieterLavaSlideLevel", MH_LAVA_SLIDE, "Lava Slide" },
+            { "UseDieterVolcanicAsh", nil, MH_VOLCANIC_ASH, "Volcanic Ash" },
+            { "UseDieterMagmaFlow", nil, MH_MAGMA_FLOW, "Magma Flow" },
+            { "UseDieterGraniticArmor", nil, MH_GRANITIC_ARMOR, "Granitic Armor" },
+            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" },
+            { "UseDieterTempering", nil, MH_TEMPERING, "Tempering" },
+            { "UseDieterBlastForge", "UseDieterBlastForge", MH_BLAST_FORGE, "Blast Forge" }
+        },
+        [ELEANOR] = {
+            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" },
+            { "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel", MH_BLAZING_AND_FURIOUS, "Blazing and Furious" },
+            { "UseEleanorTheOneFighterRises", "EleanorTheOneFighterRisesLevel", MH_THE_ONE_FIGHTER_RISES, "The One Fighter Rises" }
+        }
+    }
+
+    -- Stage 1: Disable all options for homunculus types that we are NOT.
+    for homunType, options in pairs(allSkillOptions) do
+        if homunType ~= htype then
+            for _, optionData in ipairs(options) do
+                local useOptionName = optionData[1]
+                if _G[useOptionName] and _G[useOptionName] ~= 0 then
+                    logstring = logstring .. "Disabling irrelevant option: " .. useOptionName .. "\n"
+                    _G[useOptionName] = 0
+                end
+            end
+        end
+    end
+
+    -- Stage 2: For our current homunculus type, check skills and adjust levels.
+    if allSkillOptions[htype] then
+        for _, optionData in ipairs(allSkillOptions[htype]) do
+            local useOptionName = optionData[1]
+            local levelOptionName = optionData[2]
+            local skillConst = optionData[3]
+            local skillName  = optionData[4]
+
+            local learnedLevel = GetLearnedSkillLevel(myid, skillConst)
+
+            if learnedLevel == 0 then
+                -- Skill is not learned at all.
+                if _G[useOptionName] and _G[useOptionName] ~= 0 then
+                    logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned.\n"
+                    _G[useOptionName] = 0
+                end
+            else
+                -- Skill is learned. Check if the configured level is too high (if a level option exists).
+                if levelOptionName and _G[levelOptionName] and _G[levelOptionName] > learnedLevel then
+                    logstring = logstring .. "Adjusting " .. levelOptionName .. " from " .. _G[levelOptionName] .. " to learned level " .. learnedLevel .. ".\n"
+                    _G[levelOptionName] = learnedLevel
+                end
+            end
+        end
+    end
+
+    return logstring
+end
+
+-- New Functions
+function GetSOwner2ndBuffSkill(myid)
+	local level = 0
+	local skill = 0
+	local skillopt = 0
+	if (IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,myid)
+		if	htype==DIETER and useDieterTempering~=0 then
+			skill = MH_TEMPERING
+			level = SkillList[htype][skill]
+			skillopt = UseDieterTempering
+		end
+	end
+	if level==0 then
+		return 0,0,0
+	end
+	return skill,level,skillopt
+end
+
+function GetNewSAtkSkill(myid)
+	local skill = 0
+	local level = 0
+	if (IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,myid)
+		if htype==EIRA and UseEiraTwisterCutter~=0 then
+			skill=MH_TWISTER_CUTTER
+			level=EiraTwisterCutterLevel or SkillList[htype][skill]
+		elseif htype==BAYERI and UseBayeriGlanzenSpies~=0 then
+			skill=MH_GLANZEN_SPIES
+			level=BayeriGlanzenSpiesLevel or SkillList[htype][skill]
+		elseif htype==SERA and UseSeraToxinOfMandara~=0 then
+			skill = MH_TOXIN_OF_MANDARA
+			level = SeraToxinOfMandaraLevel or SkillList[htype][skill]
+		elseif htype==SERA and UseSeraNeedleStinger~=0 then
+			skill=MH_NEEDLE_STINGER
+			level=SeraNeedleStingerLevel or SkillList[htype][skill]
+        elseif htype==ELEANOR and UseEleanorBlazingAndFurious~=0 then
+          skill=MH_BLAZING_AND_FURIOUS
+           level=EleanorBlazingAndFuriousLevel or SkillList[htype][skill]
+		elseif htype==ELEANOR and UseEleanorTheOneFighterRises~=0 then
+			skill=MH_THE_ONE_FIGHTER_RISES
+			level=EleanorTheOneFighterRisesLevel or SkillList[htype][skill]
+		end
+		if level==0 then
+			return 0,0
+		end
+	end
+	return skill,level
+end
+
+function GetNewMobSkill(myid)
+	local skill = 0
+	local level = 0
+	if(IsHomun(myid)==1) then
+		htype=GetV(V_HOMUNTYPE,MyID)
+		if htype==EIRA and UseEiraAbsoluteZephyr~=0 then
+			skill = MH_ABSOLUTE_ZEPHYR
+			level = EiraAbsoluteZephyrLevel or SkillList[htype][skill]
+		elseif UseBayeriHeiligePferd~=0 then
+			skill = MH_HEILIGE_PFERD
+			level = BayeriHeiligePferdLevel or SkillList[htype][skill]
+		elseif htype==DIETER and UseDieterBlastForge~=0 then
+			skill = MH_BLAST_FORGE
+			level = UseDieterBlastForge or SkillList[htype][skill]
+		end
+		if AutoSkillCooldown[skill]~=nil then
+			if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
+				level=0
+				skill=0
+			end
+		end
+	end
+	if level==0 then
+		return 0,0
+	end
+	return skill,level
 end
