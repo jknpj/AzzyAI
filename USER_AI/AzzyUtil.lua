@@ -1772,7 +1772,7 @@ function GetSAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+        htype = GetV(V_HOMUNTYPE, myid)
 		if htype > 47 then -- it's a Homun S
 			if htype==EIRA and UseEiraEraseCutter==1 then
 				skill=MH_ERASER_CUTTER
@@ -1790,10 +1790,10 @@ function GetSAtkSkill(myid)
 				end
 			elseif htype==SERA and UseSeraParalyze==1 then
 				skill=MH_NEEDLE_OF_PARALYZE
-				if SeraParalyzeLevel==nil then
-					level=SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
-				else
-					level=SeraParalyzeLevel
+                if SeraParalyzeLevel == nil then
+                    level = SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
+                else
+                    level = SeraParalyzeLevel
 				end
 			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and ( EleanorMode==0 or EleanorDoNotSwitchMode==1 ) then
 				skill=MH_SONIC_CRAW
@@ -2038,7 +2038,7 @@ function GetMobSkill(myid)
 	local level = 0
 	if (IsHomun(myid)==1) then
 	
-		htype=GetV(V_HOMUNTYPE,MyID)
+        htype = GetV(V_HOMUNTYPE, MyID)
 		if htype <17 then
 			skill=0
 		else -- it's a homun s
@@ -2063,7 +2063,7 @@ function GetMobSkill(myid)
 				else
 					level=SeraPoisonMistLevel
 				end
-			elseif htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode==0 then
+			elseif htype==DIETER and UseDieterLavaSlide==1 then
 				skill=MH_LAVA_SLIDE
 				if DieterLavaSlideLevel==nil then
 					level=SkillList[DIETER][MH_LAVA_SLIDE]
@@ -2400,13 +2400,13 @@ end
 function GetTargetedSkills(myid)
 	s,l=GetAtkSkill(myid)
 	Mainatk={MAIN_ATK,s,l}
-	s,l=GetSAtkSkill(myid)
+    s, l = GetSAtkSkill(myid)
 	Satk={S_ATK,s,l}
 	s,l=GetComboSkill(myid)
 	ComboAtk={COMBO_ATK,s,l}
 	s,l=GetGrappleSkill(myid)
 	GrappleAtk={GRAPPLE_ATK,s,l}
-	s,l=GetMobSkill(myid)
+    s, l = GetMobSkill(myid)
 	Mobatk={MOB_ATK,s,l}
 	s,l=GetDebuffSkill(myid)
 	Debuffatk={DEBUFF_ATK,s,l}
