@@ -1,4 +1,4 @@
-﻿// H_Config.cs
+// H_Config.cs
 //
 // Programmed by Machiavellian of iRO Chaos
 //
@@ -859,7 +859,7 @@ namespace AzzyAIConfig
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "LiveMobID", LiveMobID);
             }
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveAutoSkillOptions(string file)
@@ -1184,7 +1184,7 @@ namespace AzzyAIConfig
             }
 
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveWalkFollowOptions(string file)
@@ -1334,7 +1334,7 @@ namespace AzzyAIConfig
             }
 
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveAutobuffOptions(string file)
@@ -1585,7 +1585,7 @@ namespace AzzyAIConfig
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseSmartBulwark", UseSmartBulwark);
             }
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveKitingOptions(string file)
@@ -1660,7 +1660,7 @@ namespace AzzyAIConfig
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "FleeHP", FleeHP);
             }
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveFriendingOptions(string file)
@@ -1688,7 +1688,7 @@ namespace AzzyAIConfig
             }
 
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveStandbyOptions(string file)
@@ -1716,7 +1716,7 @@ namespace AzzyAIConfig
             }
 
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SaveBerserkOptions(string file)
@@ -1783,7 +1783,7 @@ namespace AzzyAIConfig
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "Berserk_ComboAlways", Berserk_ComboAlways);
             }
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
 
         static string SavePVPOptions(string file)
@@ -1803,7 +1803,7 @@ namespace AzzyAIConfig
             }
 
             // Return the new file contents
-            return string.Copy(file);
+            return file;
         }
         #endregion
 

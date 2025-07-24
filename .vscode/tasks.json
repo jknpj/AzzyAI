@@ -2,138 +2,68 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build AzzyAI Config - Debug",
+      "label": "Build AzzyAIConfig",
       "type": "shell",
-      "command": "C:\\WINDOWS\\Microsoft.NET\\Framework\\v4.0.30319\\MSBuild.exe",
+      "command": "dotnet",
       "args": [
-        "${workspaceFolder}\\GUI\\AzzyAIConfig\\AzzyAIConfig.csproj",
-        "/p:Configuration=Debug"
-      ],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
-      },
-      "problemMatcher": ["$msCompile"]
-    },
-    {
-      "label": "Build AzzyAI Config - Release",
-      "type": "shell",
-      "command": "C:\\WINDOWS\\Microsoft.NET\\Framework\\v4.0.30319\\MSBuild.exe",
-      "args": [
-        "${workspaceFolder}\\GUI\\AzzyAIConfig\\AzzyAIConfig.csproj",
-        "/p:Configuration=Release",
-        "/p:Platform=x86",
-        "/p:TargetFrameworkProfile=",
-        "/verbosity:minimal"
+        "build",
+        "GUI/AzzyAIConfig/AzzyAIConfig.csproj",
+        "--configuration",
+        "Debug"
       ],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
-      },
-      "problemMatcher": ["$msCompile"]
+      "problemMatcher": ["$msCompile"],
+      "isBackground": false
     },
     {
-      "label": "Clean AzzyAI Config",
+      "label": "Build AzzyAIConfig Release",
       "type": "shell",
-      "command": "C:\\WINDOWS\\Microsoft.NET\\Framework\\v4.0.30319\\MSBuild.exe",
+      "command": "dotnet",
       "args": [
-        "${workspaceFolder}\\GUI\\AzzyAIConfig\\AzzyAIConfig.csproj",
-        "/t:Clean",
-        "/p:Configuration=Debug",
-        "/p:Platform=x86"
+        "build",
+        "GUI/AzzyAIConfig/AzzyAIConfig.csproj",
+        "--configuration",
+        "Release"
       ],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
-      },
-      "problemMatcher": ["$msCompile"]
+      "problemMatcher": ["$msCompile"],
+      "isBackground": false
     },
     {
-      "label": "Run AzzyAI Config - Debug",
+      "label": "Run AzzyAIConfig",
       "type": "shell",
-      "command": "${workspaceFolder}\\GUI\\AzzyAIConfig\\bin\\Debug\\AzzyAIConfig.exe",
-      "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig\\bin\\Debug"
-      },
-      "dependsOn": "Build AzzyAI Config - Debug"
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "GUI/AzzyAIConfig/AzzyAIConfig.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "isBackground": false
     },
     {
-      "label": "Build and Run AzzyAI Config",
-      "dependsOrder": "sequence",
-      "dependsOn": ["Build AzzyAI Config - Debug", "Run AzzyAI Config - Debug"],
-      "group": "build"
-    },
-    {
-      "label": "Test Startup Performance",
+      "label": "Publish Single File (Self-Contained)",
       "type": "shell",
-      "command": "${workspaceFolder}\\GUI\\AzzyAIConfig\\StartupTimer.exe",
-      "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared",
-        "showReuseMessage": false,
-        "clear": true
-      },
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "--configuration",
+        "Release",
+        "--runtime",
+        "win-x86",
+        "--self-contained",
+        "true",
+        "-p:PublishSingleFile=true"
+      ],
       "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
+        "cwd": "${workspaceFolder}/GUI/AzzyAIConfig"
       },
-      "dependsOn": "Build AzzyAI Config - Debug"
-    },
-    {
-      "label": "Manual Test Application",
-      "type": "shell",
-      "command": "${workspaceFolder}\\GUI\\AzzyAIConfig\\manual_test.bat",
-      "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared",
-        "showReuseMessage": false,
-        "clear": true
-      },
-      "options": {
-        "cwd": "${workspaceFolder}\\GUI\\AzzyAIConfig"
-      },
-      "dependsOn": "Build AzzyAI Config - Debug"
+      "group": "build",
+      "problemMatcher": ["$msCompile"],
+      "isBackground": false
     }
   ]
 }
