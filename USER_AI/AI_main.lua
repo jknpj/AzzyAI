@@ -88,7 +88,7 @@ function doInit(myid)
 		if UseDieterLavaSlide and GetV(V_HOMUNTYPE,myid)==DIETER then
 			logstring=logstring.."UseDieterLavaSlide disabled - you don't have the skill!"
 		end
-		UseDieterLavaSlide=0
+		-- UseDieterLavaSlide=0
 	end
 	OutFile=io.open("AAIStartH.txt","a")
 	if OutFile == nil then

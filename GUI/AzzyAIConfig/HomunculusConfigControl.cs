@@ -22,13 +22,14 @@ namespace AzzyAIConfig
         private TextBox helpTextBox;
         private Label helpLabel;
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
+        private bool _isInitialized = false;
 
         public event EventHandler PropertyValueChanged;
 
         public HomunculusConfigControl()
         {
             InitializeComponent();
-            SetupUI();
+            // Defer heavy initialization until first access
             categoryWrappers = new Dictionary<string, FilteredHomConfWrapper>();
         }
 
@@ -38,7 +39,30 @@ namespace AzzyAIConfig
             set
             {
                 _hconf = value;
-                RefreshAllTabs();
+                if (value != null)
+                {
+                    EnsureInitialized();
+                    // Use BeginInvoke for async UI updates to improve responsiveness
+                    // But only if the control handle is created and we're not in design mode
+                    if (this.IsHandleCreated && !this.DesignMode)
+                    {
+                        this.BeginInvoke(new Action(() => RefreshAllTabs()));
+                    }
+                    else
+                    {
+                        // If handle not created yet or in design mode, refresh synchronously
+                        RefreshAllTabs();
+                    }
+                }
+            }
+        }
+
+        private void EnsureInitialized()
+        {
+            if (!_isInitialized)
+            {
+                SetupUI();
+                _isInitialized = true;
             }
         }
 
@@ -59,6 +83,9 @@ namespace AzzyAIConfig
 
         private void SetupUI()
         {
+            // Suspend layout during initialization for better performance
+            this.SuspendLayout();
+
             // Create search and filter controls
             searchLabel = new Label
             {
@@ -73,8 +100,8 @@ namespace AzzyAIConfig
                 Location = new Point(70, 10),
                 Size = new Size(150, 20)
             };
-            searchBox.TextChanged += SearchBox_TextChanged;
-
+            // Defer event handler to avoid triggering during initialization
+            
             homunculusSLabel = new Label
             {
                 Text = "Homunc S:",
@@ -91,7 +118,6 @@ namespace AzzyAIConfig
             };
             homunculusSFilter.Items.AddRange(new string[] { "All Types", "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" });
             homunculusSFilter.SelectedIndex = 0;
-            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
 
             homunculusBaseLabel = new Label
             {
@@ -109,7 +135,6 @@ namespace AzzyAIConfig
             };
             homunculusBaseFilter.Items.AddRange(new string[] { "All Types", "Lif", "Amistr", "Filir", "Vanilmirth" });
             homunculusBaseFilter.SelectedIndex = 0;
-            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
 
             // Create tab control
             tabControl = new TabControl
@@ -142,8 +167,6 @@ namespace AzzyAIConfig
                     ToolbarVisible = false,
                     HelpVisible = false
                 };
-                propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
-                propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
                 
                 tabPage.Controls.Add(propertyGrid);
                 tabControl.TabPages.Add(tabPage);
@@ -180,6 +203,25 @@ namespace AzzyAIConfig
             this.Controls.Add(tabControl);
             this.Controls.Add(helpLabel);
             this.Controls.Add(helpTextBox);
+
+            // Resume layout and add event handlers after initialization
+            this.ResumeLayout();
+
+            // Add event handlers after controls are created
+            searchBox.TextChanged += SearchBox_TextChanged;
+            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
+            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
+
+            // Add PropertyGrid event handlers
+            foreach (TabPage tabPage in tabControl.TabPages)
+            {
+                PropertyGrid propertyGrid = tabPage.Controls[0] as PropertyGrid;
+                if (propertyGrid != null)
+                {
+                    propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
+                    propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
+                }
+            }
 
             // Load saved filter settings
             LoadFilterSettings();
@@ -347,6 +389,20 @@ namespace AzzyAIConfig
         private string _homunculusBaseType = "All";
         private PropertyDescriptorCollection _filteredProperties;
 
+        // Cache skill arrays for better performance
+        private static readonly Dictionary<string, string[]> SkillCache = new Dictionary<string, string[]>
+        {
+            { "sera", new[] { "paralyze", "poisonmist", "painkiller", "calllegion" } },
+            { "eira", new[] { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" } },
+            { "eleanor", new[] { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" } },
+            { "bayeri", new[] { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" } },
+            { "dieter", new[] { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" } },
+            { "lif", new[] { "escape", "breeze" } },
+            { "amistr", new[] { "bulwark", "castle", "bloodlust" } },
+            { "filir", new[] { "flit", "accel", "moon", "speed" } },
+            { "vanilmirth", new[] { "caprice", "chaotic", "selfdestruct" } }
+        };
+
         public FilteredHomConfWrapper(HomConf originalConf, string category)
         {
             _originalConf = originalConf;
@@ -409,46 +465,32 @@ namespace AzzyAIConfig
         {
             string propNameLower = propertyName.ToLower();
 
-            // Check if property belongs to any specific homunculus type
-            string[] homunculusSTypes = { "eira", "eleanor", "dieter", "bayeri", "sera" };
-            string[] homunculusBaseTypes = { "amistr", "vanilmirth", "filir", "lif" };
-            
-            // Check for Homunculus S specific skills
-            string[] seraSkills = { "paralyze", "poisonmist", "painkiller", "calllegion" };
-            string[] eiraSkills = { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
-            string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" };
-            string[] bayeriSkills = { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" };
-            string[] dieterSkills = { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" };
-            
-            // Check for Base Homunculus specific skills
-            string[] lifSkills = { "escape", "breeze" };
-            string[] amistrSkills = { "bulwark", "castle", "bloodlust" };
-            string[] filirSkills = { "flit", "accel", "moon", "speed" };
-            string[] vanilmirthSkills = { "caprice", "chaotic", "selfdestruct" };
-
-            // Check if this property belongs to a specific Homunculus S type
+            // Check if this property belongs to a specific Homunculus type
             string belongsToHomunculusS = null;
-            if (propNameLower.Contains("sera") || seraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "sera";
-            else if (propNameLower.Contains("eira") || eiraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eira";
-            else if (propNameLower.Contains("eleanor") || eleanorSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eleanor";
-            else if (propNameLower.Contains("bayeri") || bayeriSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "bayeri";
-            else if (propNameLower.Contains("dieter") || dieterSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "dieter";
-
-            // Check if this property belongs to a specific Base Homunculus type
             string belongsToHomunculusBase = null;
-            if (propNameLower.Contains("lif") || lifSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "lif";
-            else if (propNameLower.Contains("amistr") || amistrSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "amistr";
-            else if (propNameLower.Contains("filir") || filirSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "filir";
-            else if (propNameLower.Contains("vanilmirth") || vanilmirthSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "vanilmirth";
+
+            // Check Homunculus S types using cached skills
+            foreach (var kvp in SkillCache.Where(k => k.Key == "sera" || k.Key == "eira" || k.Key == "eleanor" || k.Key == "bayeri" || k.Key == "dieter"))
+            {
+                if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                {
+                    belongsToHomunculusS = kvp.Key;
+                    break;
+                }
+            }
+
+            // Check Base Homunculus types using cached skills
+            if (belongsToHomunculusS == null) // Avoid double-checking if already found
+            {
+                foreach (var kvp in SkillCache.Where(k => k.Key == "lif" || k.Key == "amistr" || k.Key == "filir" || k.Key == "vanilmirth"))
+                {
+                    if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                    {
+                        belongsToHomunculusBase = kvp.Key;
+                        break;
+                    }
+                }
+            }
 
             // Apply Homunculus S filter
             if (homunculusSType != "All Types")
