@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -23,6 +24,15 @@ namespace AzzyAIConfig
         private Label helpLabel;
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
         private bool _isInitialized = false;
+
+        // Variables to track last detected homunculus types
+        private string lastHomunculusS = "";
+        private string lastHomunculusBase = "";
+        
+        // File monitoring for htype detection from Lua
+        private FileSystemWatcher fileWatcher;
+        private Timer fileCheckTimer;
+        private readonly string htypeFilePath = Path.Combine(Application.StartupPath, "data", "detected_htype.txt");
 
         public event EventHandler PropertyValueChanged;
 
@@ -62,6 +72,7 @@ namespace AzzyAIConfig
             if (!_isInitialized)
             {
                 SetupUI();
+                SetupFileMonitoring();
                 _isInitialized = true;
             }
         }
@@ -223,8 +234,6 @@ namespace AzzyAIConfig
                 }
             }
 
-            // Load saved filter settings
-            LoadFilterSettings();
         }
 
         private void SearchBox_TextChanged(object sender, EventArgs e)
@@ -235,7 +244,6 @@ namespace AzzyAIConfig
         private void Filter_Changed(object sender, EventArgs e)
         {
             ApplyFilters();
-            SaveFilterSettings();
         }
 
         private void PropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -263,60 +271,6 @@ namespace AzzyAIConfig
             else
             {
                 helpTextBox.Text = "Select a property to see its description here.";
-            }
-        }
-
-        private void LoadFilterSettings()
-        {
-            try
-            {
-                // Load saved filter settings
-                string savedHomunculusS = Properties.Settings.Default.HomunculusSFilter;
-                string savedHomunculusBase = Properties.Settings.Default.HomunculusBaseFilter;
-
-                if (!string.IsNullOrEmpty(savedHomunculusS))
-                {
-                    for (int i = 0; i < homunculusSFilter.Items.Count; i++)
-                    {
-                        if (homunculusSFilter.Items[i].ToString() == savedHomunculusS)
-                        {
-                            homunculusSFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(savedHomunculusBase))
-                {
-                    for (int i = 0; i < homunculusBaseFilter.Items.Count; i++)
-                    {
-                        if (homunculusBaseFilter.Items[i].ToString() == savedHomunculusBase)
-                        {
-                            homunculusBaseFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // If settings don't exist or are invalid, use defaults
-                homunculusSFilter.SelectedIndex = 0;
-                homunculusBaseFilter.SelectedIndex = 0;
-            }
-        }
-
-        private void SaveFilterSettings()
-        {
-            try
-            {
-                Properties.Settings.Default.HomunculusSFilter = homunculusSFilter.SelectedItem != null ? homunculusSFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.HomunculusBaseFilter = homunculusBaseFilter.SelectedItem != null ? homunculusBaseFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.Save();
-            }
-            catch
-            {
-                // Ignore save errors
             }
         }
 
@@ -375,6 +329,134 @@ namespace AzzyAIConfig
         public void UpdateData()
         {
             RefreshAllTabs();
+        }
+
+        private void UpdateFilterToType(ComboBox filterComboBox, string targetType)
+        {
+            if (filterComboBox == null) return;
+
+            for (int i = 0; i < filterComboBox.Items.Count; i++)
+            {
+                if (filterComboBox.Items[i].ToString() == targetType)
+                {
+                    filterComboBox.SelectedIndex = i;
+                    ApplyFilters();
+                    break;
+                }
+            }
+        }
+
+        private void SetupFileMonitoring()
+        {
+            try
+            {
+                // Ensure the data directory exists
+                string dataDir = Path.GetDirectoryName(htypeFilePath);
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+
+                // Setup file system watcher
+                fileWatcher = new FileSystemWatcher();
+                fileWatcher.Path = dataDir;
+                fileWatcher.Filter = "detected_htype.txt";
+                fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime;
+                fileWatcher.Changed += OnHTypeFileChanged;
+                fileWatcher.Created += OnHTypeFileChanged;
+                fileWatcher.EnableRaisingEvents = true;
+
+                // Setup timer for periodic checks (fallback)
+                fileCheckTimer = new Timer();
+                fileCheckTimer.Interval = 5000; // Check every 5 seconds
+                fileCheckTimer.Tick += OnFileCheckTimer;
+                fileCheckTimer.Start();
+
+                // Initial check
+                CheckHTypeFile();
+            }
+            catch
+            {
+                // Silently handle setup errors
+            }
+        }
+
+        private void OnHTypeFileChanged(object sender, FileSystemEventArgs e)
+        {
+            // Use BeginInvoke to handle file changes on UI thread
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() => CheckHTypeFile()));
+            }
+        }
+
+        private void OnFileCheckTimer(object sender, EventArgs e)
+        {
+            CheckHTypeFile();
+        }
+
+        private void CheckHTypeFile()
+        {
+            try
+            {
+                if (File.Exists(htypeFilePath))
+                {
+                    string[] lines = File.ReadAllLines(htypeFilePath);
+                    string detectedHomunculusS = "";
+                    string detectedHomunculusBase = "";
+
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("HomunculusS="))
+                        {
+                            detectedHomunculusS = line.Substring("HomunculusS=".Length);
+                        }
+                        else if (line.StartsWith("HomunculusBase="))
+                        {
+                            detectedHomunculusBase = line.Substring("HomunculusBase=".Length);
+                        }
+                    }
+
+                    // Update filters if types changed
+                    bool filtersChanged = false;
+
+                    if (!string.IsNullOrEmpty(detectedHomunculusS) && detectedHomunculusS != lastHomunculusS)
+                    {
+                        lastHomunculusS = detectedHomunculusS;
+                        UpdateFilterToType(homunculusSFilter, detectedHomunculusS);
+                        filtersChanged = true;
+                    }
+
+                    if (!string.IsNullOrEmpty(detectedHomunculusBase) && detectedHomunculusBase != lastHomunculusBase)
+                    {
+                        lastHomunculusBase = detectedHomunculusBase;
+                        UpdateFilterToType(homunculusBaseFilter, detectedHomunculusBase);
+                        filtersChanged = true;
+                    }
+                }
+            }
+            catch
+            {
+                // Silently handle file read errors
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (fileWatcher != null)
+                {
+                    fileWatcher.Dispose();
+                    fileWatcher = null;
+                }
+                if (fileCheckTimer != null)
+                {
+                    fileCheckTimer.Dispose();
+                    fileCheckTimer = null;
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 

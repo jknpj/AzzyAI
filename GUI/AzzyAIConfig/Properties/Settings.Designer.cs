@@ -50,5 +50,29 @@ namespace AzzyAIConfig.Properties
                 this["HomunculusBaseFilter"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastHomunculusS {
+            get {
+                return ((string)(this["LastHomunculusS"]));
+            }
+            set {
+                this["LastHomunculusS"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastHomunculusBase {
+            get {
+                return ((string)(this["LastHomunculusBase"]));
+            }
+            set {
+                this["LastHomunculusBase"] = value;
+            }
+        }
     }
 }

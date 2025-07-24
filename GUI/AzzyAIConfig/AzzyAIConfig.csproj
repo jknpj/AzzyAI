@@ -5,6 +5,7 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <PlatformTarget>x86</PlatformTarget>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <AssemblyName>AzzyAIConfig</AssemblyName>
     <RootNamespace>AzzyAIConfig</RootNamespace>
     <ApplicationIcon>qNANE39 (1).ico</ApplicationIcon>
