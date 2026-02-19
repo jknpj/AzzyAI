@@ -20,9 +20,31 @@ namespace AzzyAIConfig
 {
     public partial class MainForm : Form
     {
-        // Custom controls for H_Config and M_Config
-        HomConf _hconf = new HomConf();
-        MerConf _mconf = new MerConf();
+        // Custom controls for H_Config and M_Config - use lazy loading
+        private HomConf _hconf = null;
+        private MerConf _mconf = null;
+        private bool _initialized = false;
+
+        // Lazy properties
+        private HomConf HomunculusConfig
+        {
+            get
+            {
+                if (_hconf == null)
+                    _hconf = new HomConf();
+                return _hconf;
+            }
+        }
+
+        private MerConf MercenaryConfig
+        {
+            get
+            {
+                if (_mconf == null)
+                    _mconf = new MerConf();
+                return _mconf;
+            }
+        }
 
         public MainForm()
         {
@@ -32,9 +54,9 @@ namespace AzzyAIConfig
 
         void SaveChanges()
         {
-            // Save the configurations
-            _hconf.Save();
-            _mconf.Save();
+            // Save the configurations only if they were initialized
+            if (_hconf != null) _hconf.Save();
+            if (_mconf != null) _mconf.Save();
             homTactControl1.Save();
             merTactControl1.Save();
             extraControl1.Save();
@@ -44,11 +66,78 @@ namespace AzzyAIConfig
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // Set the homunculusConfigControl selected object to the homunculus configurations
-            homunculusConfigControl.SelectedObject = _hconf;
+            // Delay initialization to improve startup performance
+            // The data will be loaded when tabs are first accessed
+            
+            // Hook up the tab control event handler
+            var tabControls = this.Controls.Find("tabControl1", true);
+            if (tabControls.Length > 0 && tabControls[0] is TabControl)
+            {
+                var tabControl = (TabControl)tabControls[0];
+                tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
+            }
+        }
 
-            // Set the propertyGridMercenary selected object to the mercanery configurations
-            propertyGridMercenary.SelectedObject = _mconf;
+        protected override void SetVisibleCore(bool value)
+        {
+            // Perform one-time initialization when the form becomes visible
+            if (value && !_initialized)
+            {
+                InitializeData();
+                _initialized = true;
+            }
+            base.SetVisibleCore(value);
+        }
+
+        private void InitializeData()
+        {
+            // Initialize only the visible tab's data
+            var tabControls = this.Controls.Find("tabControl1", true);
+            if (tabControls.Length == 0) return;
+            
+            var selectedTab = ((TabControl)tabControls[0]).SelectedTab;
+            
+            if (selectedTab != null && selectedTab.Text == "Homunculus")
+            {
+                // Initialize the homunculus tab data
+                if (homunculusConfigControl != null)
+                {
+                    homunculusConfigControl.SelectedObject = HomunculusConfig;
+                }
+            }
+            else if (selectedTab != null && selectedTab.Text == "Mercenary")
+            {
+                // Initialize the mercenary tab data
+                if (propertyGridMercenary != null)
+                {
+                    propertyGridMercenary.SelectedObject = MercenaryConfig;
+                }
+            }
+        }
+
+        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var tabControl = sender as TabControl;
+            if (tabControl == null || tabControl.SelectedTab == null) return;
+
+            // Load data for the selected tab on demand
+            switch (tabControl.SelectedTab.Text)
+            {
+                case "Homunculus":
+                    if (homunculusConfigControl != null && 
+                        homunculusConfigControl.SelectedObject == null)
+                    {
+                        homunculusConfigControl.SelectedObject = HomunculusConfig;
+                    }
+                    break;
+                case "Mercenary":
+                    if (propertyGridMercenary != null && 
+                        propertyGridMercenary.SelectedObject == null)
+                    {
+                        propertyGridMercenary.SelectedObject = MercenaryConfig;
+                    }
+                    break;
+            }
         }
 
         private void ConfigChanged(object sender, EventArgs e)
@@ -222,28 +311,32 @@ namespace AzzyAIConfig
 
         private void revertToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Revert the homunculus configurations
-            _hconf.Revert();
-
-            // Revert the mercenary configurations
-            _mconf.Revert();
-            
-            // Refresh the controls to show reverted values
-            homunculusConfigControl.Refresh();
-            propertyGridMercenary.Refresh();
+            // Revert the configurations only if they were initialized
+            if (_hconf != null)
+            {
+                _hconf.Revert();
+                homunculusConfigControl.Refresh();
+            }
+            if (_mconf != null)
+            {
+                _mconf.Revert();
+                propertyGridMercenary.Refresh();
+            }
         }
 
         private void resetToDefaultsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Reset the homunculus configurations to defaults
-            _hconf.SetDefaults();
-
-            // Reset the mercenary configurations to defaults
-            _mconf.SetDefaults();
-            
-            // Refresh the controls to show default values
-            homunculusConfigControl.Refresh();
-            propertyGridMercenary.Refresh();
+            // Reset the configurations to defaults only if they were initialized
+            if (_hconf != null)
+            {
+                _hconf.SetDefaults();
+                homunculusConfigControl.Refresh();
+            }
+            if (_mconf != null)
+            {
+                _mconf.SetDefaults();
+                propertyGridMercenary.Refresh();
+            }
         }
 
         private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -291,7 +384,7 @@ namespace AzzyAIConfig
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 // Open the file
-                _hconf.Open(ofd.FileName);
+                HomunculusConfig.Open(ofd.FileName);
 
                 // Update the homunculusConfigControl values
                 homunculusConfigControl.UpdateData();
@@ -316,7 +409,7 @@ namespace AzzyAIConfig
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 // Open the file
-                _mconf.Open(ofd.FileName);
+                MercenaryConfig.Open(ofd.FileName);
 
                 // Update the propertyGridHomunculus values
                 propertyGridMercenary.Update();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -22,13 +23,23 @@ namespace AzzyAIConfig
         private TextBox helpTextBox;
         private Label helpLabel;
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
+        private bool _isInitialized = false;
+
+        // Variables to track last detected homunculus types
+        private string lastHomunculusS = "";
+        private string lastHomunculusBase = "";
+        
+        // File monitoring for htype detection from Lua
+        private FileSystemWatcher fileWatcher;
+        private Timer fileCheckTimer;
+        private readonly string htypeFilePath = Path.Combine(Application.StartupPath, "data", "detected_htype.txt");
 
         public event EventHandler PropertyValueChanged;
 
         public HomunculusConfigControl()
         {
             InitializeComponent();
-            SetupUI();
+            // Defer heavy initialization until first access
             categoryWrappers = new Dictionary<string, FilteredHomConfWrapper>();
         }
 
@@ -38,7 +49,31 @@ namespace AzzyAIConfig
             set
             {
                 _hconf = value;
-                RefreshAllTabs();
+                if (value != null)
+                {
+                    EnsureInitialized();
+                    // Use BeginInvoke for async UI updates to improve responsiveness
+                    // But only if the control handle is created and we're not in design mode
+                    if (this.IsHandleCreated && !this.DesignMode)
+                    {
+                        this.BeginInvoke(new Action(() => RefreshAllTabs()));
+                    }
+                    else
+                    {
+                        // If handle not created yet or in design mode, refresh synchronously
+                        RefreshAllTabs();
+                    }
+                }
+            }
+        }
+
+        private void EnsureInitialized()
+        {
+            if (!_isInitialized)
+            {
+                SetupUI();
+                SetupFileMonitoring();
+                _isInitialized = true;
             }
         }
 
@@ -59,6 +94,9 @@ namespace AzzyAIConfig
 
         private void SetupUI()
         {
+            // Suspend layout during initialization for better performance
+            this.SuspendLayout();
+
             // Create search and filter controls
             searchLabel = new Label
             {
@@ -73,8 +111,8 @@ namespace AzzyAIConfig
                 Location = new Point(70, 10),
                 Size = new Size(150, 20)
             };
-            searchBox.TextChanged += SearchBox_TextChanged;
-
+            // Defer event handler to avoid triggering during initialization
+            
             homunculusSLabel = new Label
             {
                 Text = "Homunc S:",
@@ -91,7 +129,6 @@ namespace AzzyAIConfig
             };
             homunculusSFilter.Items.AddRange(new string[] { "All Types", "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" });
             homunculusSFilter.SelectedIndex = 0;
-            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
 
             homunculusBaseLabel = new Label
             {
@@ -109,7 +146,6 @@ namespace AzzyAIConfig
             };
             homunculusBaseFilter.Items.AddRange(new string[] { "All Types", "Lif", "Amistr", "Filir", "Vanilmirth" });
             homunculusBaseFilter.SelectedIndex = 0;
-            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
 
             // Create tab control
             tabControl = new TabControl
@@ -142,8 +178,6 @@ namespace AzzyAIConfig
                     ToolbarVisible = false,
                     HelpVisible = false
                 };
-                propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
-                propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
                 
                 tabPage.Controls.Add(propertyGrid);
                 tabControl.TabPages.Add(tabPage);
@@ -181,8 +215,25 @@ namespace AzzyAIConfig
             this.Controls.Add(helpLabel);
             this.Controls.Add(helpTextBox);
 
-            // Load saved filter settings
-            LoadFilterSettings();
+            // Resume layout and add event handlers after initialization
+            this.ResumeLayout();
+
+            // Add event handlers after controls are created
+            searchBox.TextChanged += SearchBox_TextChanged;
+            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
+            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
+
+            // Add PropertyGrid event handlers
+            foreach (TabPage tabPage in tabControl.TabPages)
+            {
+                PropertyGrid propertyGrid = tabPage.Controls[0] as PropertyGrid;
+                if (propertyGrid != null)
+                {
+                    propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
+                    propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
+                }
+            }
+
         }
 
         private void SearchBox_TextChanged(object sender, EventArgs e)
@@ -193,7 +244,6 @@ namespace AzzyAIConfig
         private void Filter_Changed(object sender, EventArgs e)
         {
             ApplyFilters();
-            SaveFilterSettings();
         }
 
         private void PropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -221,60 +271,6 @@ namespace AzzyAIConfig
             else
             {
                 helpTextBox.Text = "Select a property to see its description here.";
-            }
-        }
-
-        private void LoadFilterSettings()
-        {
-            try
-            {
-                // Load saved filter settings
-                string savedHomunculusS = Properties.Settings.Default.HomunculusSFilter;
-                string savedHomunculusBase = Properties.Settings.Default.HomunculusBaseFilter;
-
-                if (!string.IsNullOrEmpty(savedHomunculusS))
-                {
-                    for (int i = 0; i < homunculusSFilter.Items.Count; i++)
-                    {
-                        if (homunculusSFilter.Items[i].ToString() == savedHomunculusS)
-                        {
-                            homunculusSFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(savedHomunculusBase))
-                {
-                    for (int i = 0; i < homunculusBaseFilter.Items.Count; i++)
-                    {
-                        if (homunculusBaseFilter.Items[i].ToString() == savedHomunculusBase)
-                        {
-                            homunculusBaseFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // If settings don't exist or are invalid, use defaults
-                homunculusSFilter.SelectedIndex = 0;
-                homunculusBaseFilter.SelectedIndex = 0;
-            }
-        }
-
-        private void SaveFilterSettings()
-        {
-            try
-            {
-                Properties.Settings.Default.HomunculusSFilter = homunculusSFilter.SelectedItem != null ? homunculusSFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.HomunculusBaseFilter = homunculusBaseFilter.SelectedItem != null ? homunculusBaseFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.Save();
-            }
-            catch
-            {
-                // Ignore save errors
             }
         }
 
@@ -325,7 +321,7 @@ namespace AzzyAIConfig
             propertyGrid.SelectedObject = wrapper;
         }
 
-        public void Refresh()
+        public new void Refresh()
         {
             RefreshAllTabs();
         }
@@ -333,6 +329,134 @@ namespace AzzyAIConfig
         public void UpdateData()
         {
             RefreshAllTabs();
+        }
+
+        private void UpdateFilterToType(ComboBox filterComboBox, string targetType)
+        {
+            if (filterComboBox == null) return;
+
+            for (int i = 0; i < filterComboBox.Items.Count; i++)
+            {
+                if (filterComboBox.Items[i].ToString() == targetType)
+                {
+                    filterComboBox.SelectedIndex = i;
+                    ApplyFilters();
+                    break;
+                }
+            }
+        }
+
+        private void SetupFileMonitoring()
+        {
+            try
+            {
+                // Ensure the data directory exists
+                string dataDir = Path.GetDirectoryName(htypeFilePath);
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+
+                // Setup file system watcher
+                fileWatcher = new FileSystemWatcher();
+                fileWatcher.Path = dataDir;
+                fileWatcher.Filter = "detected_htype.txt";
+                fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime;
+                fileWatcher.Changed += OnHTypeFileChanged;
+                fileWatcher.Created += OnHTypeFileChanged;
+                fileWatcher.EnableRaisingEvents = true;
+
+                // Setup timer for periodic checks (fallback)
+                fileCheckTimer = new Timer();
+                fileCheckTimer.Interval = 5000; // Check every 5 seconds
+                fileCheckTimer.Tick += OnFileCheckTimer;
+                fileCheckTimer.Start();
+
+                // Initial check
+                CheckHTypeFile();
+            }
+            catch
+            {
+                // Silently handle setup errors
+            }
+        }
+
+        private void OnHTypeFileChanged(object sender, FileSystemEventArgs e)
+        {
+            // Use BeginInvoke to handle file changes on UI thread
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() => CheckHTypeFile()));
+            }
+        }
+
+        private void OnFileCheckTimer(object sender, EventArgs e)
+        {
+            CheckHTypeFile();
+        }
+
+        private void CheckHTypeFile()
+        {
+            try
+            {
+                if (File.Exists(htypeFilePath))
+                {
+                    string[] lines = File.ReadAllLines(htypeFilePath);
+                    string detectedHomunculusS = "";
+                    string detectedHomunculusBase = "";
+
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("HomunculusS="))
+                        {
+                            detectedHomunculusS = line.Substring("HomunculusS=".Length);
+                        }
+                        else if (line.StartsWith("HomunculusBase="))
+                        {
+                            detectedHomunculusBase = line.Substring("HomunculusBase=".Length);
+                        }
+                    }
+
+                    // Update filters if types changed
+                    bool filtersChanged = false;
+
+                    if (!string.IsNullOrEmpty(detectedHomunculusS) && detectedHomunculusS != lastHomunculusS)
+                    {
+                        lastHomunculusS = detectedHomunculusS;
+                        UpdateFilterToType(homunculusSFilter, detectedHomunculusS);
+                        filtersChanged = true;
+                    }
+
+                    if (!string.IsNullOrEmpty(detectedHomunculusBase) && detectedHomunculusBase != lastHomunculusBase)
+                    {
+                        lastHomunculusBase = detectedHomunculusBase;
+                        UpdateFilterToType(homunculusBaseFilter, detectedHomunculusBase);
+                        filtersChanged = true;
+                    }
+                }
+            }
+            catch
+            {
+                // Silently handle file read errors
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (fileWatcher != null)
+                {
+                    fileWatcher.Dispose();
+                    fileWatcher = null;
+                }
+                if (fileCheckTimer != null)
+                {
+                    fileCheckTimer.Dispose();
+                    fileCheckTimer = null;
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 
@@ -346,6 +470,20 @@ namespace AzzyAIConfig
         private string _homunculusSType = "All";
         private string _homunculusBaseType = "All";
         private PropertyDescriptorCollection _filteredProperties;
+
+        // Cache skill arrays for better performance
+        private static readonly Dictionary<string, string[]> SkillCache = new Dictionary<string, string[]>
+        {
+            { "sera", new[] { "paralyze", "poisonmist", "painkiller", "calllegion" } },
+            { "eira", new[] { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" } },
+            { "eleanor", new[] { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" } },
+            { "bayeri", new[] { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" } },
+            { "dieter", new[] { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" } },
+            { "lif", new[] { "escape", "breeze" } },
+            { "amistr", new[] { "bulwark", "castle", "bloodlust" } },
+            { "filir", new[] { "flit", "accel", "moon", "speed" } },
+            { "vanilmirth", new[] { "caprice", "chaotic", "selfdestruct" } }
+        };
 
         public FilteredHomConfWrapper(HomConf originalConf, string category)
         {
@@ -409,46 +547,32 @@ namespace AzzyAIConfig
         {
             string propNameLower = propertyName.ToLower();
 
-            // Check if property belongs to any specific homunculus type
-            string[] homunculusSTypes = { "eira", "eleanor", "dieter", "bayeri", "sera" };
-            string[] homunculusBaseTypes = { "amistr", "vanilmirth", "filir", "lif" };
-            
-            // Check for Homunculus S specific skills
-            string[] seraSkills = { "paralyze", "poisonmist", "painkiller", "calllegion" };
-            string[] eiraSkills = { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
-            string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" };
-            string[] bayeriSkills = { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" };
-            string[] dieterSkills = { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" };
-            
-            // Check for Base Homunculus specific skills
-            string[] lifSkills = { "escape", "breeze" };
-            string[] amistrSkills = { "bulwark", "castle", "bloodlust" };
-            string[] filirSkills = { "flit", "accel", "moon", "speed" };
-            string[] vanilmirthSkills = { "caprice", "chaotic", "selfdestruct" };
-
-            // Check if this property belongs to a specific Homunculus S type
+            // Check if this property belongs to a specific Homunculus type
             string belongsToHomunculusS = null;
-            if (propNameLower.Contains("sera") || seraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "sera";
-            else if (propNameLower.Contains("eira") || eiraSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eira";
-            else if (propNameLower.Contains("eleanor") || eleanorSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "eleanor";
-            else if (propNameLower.Contains("bayeri") || bayeriSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "bayeri";
-            else if (propNameLower.Contains("dieter") || dieterSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusS = "dieter";
-
-            // Check if this property belongs to a specific Base Homunculus type
             string belongsToHomunculusBase = null;
-            if (propNameLower.Contains("lif") || lifSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "lif";
-            else if (propNameLower.Contains("amistr") || amistrSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "amistr";
-            else if (propNameLower.Contains("filir") || filirSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "filir";
-            else if (propNameLower.Contains("vanilmirth") || vanilmirthSkills.Any(skill => propNameLower.Contains(skill)))
-                belongsToHomunculusBase = "vanilmirth";
+
+            // Check Homunculus S types using cached skills
+            foreach (var kvp in SkillCache.Where(k => k.Key == "sera" || k.Key == "eira" || k.Key == "eleanor" || k.Key == "bayeri" || k.Key == "dieter"))
+            {
+                if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                {
+                    belongsToHomunculusS = kvp.Key;
+                    break;
+                }
+            }
+
+            // Check Base Homunculus types using cached skills
+            if (belongsToHomunculusS == null) // Avoid double-checking if already found
+            {
+                foreach (var kvp in SkillCache.Where(k => k.Key == "lif" || k.Key == "amistr" || k.Key == "filir" || k.Key == "vanilmirth"))
+                {
+                    if (propNameLower.Contains(kvp.Key) || kvp.Value.Any(skill => propNameLower.Contains(skill)))
+                    {
+                        belongsToHomunculusBase = kvp.Key;
+                        break;
+                    }
+                }
+            }
 
             // Apply Homunculus S filter
             if (homunculusSType != "All Types")

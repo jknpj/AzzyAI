@@ -25,8 +25,11 @@ namespace AzzyAIConfig
         {
             try
             {
+                // Enable modern visual styles and DPI awareness for .NET 9.0
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                
                 Application.Run(new MainForm());
             }
             catch (Exception e)

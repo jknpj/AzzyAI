@@ -7,6 +7,79 @@
 AUVersion="1.56"
 -------------------------------
 
+-- Global variables to track detected homunculus type
+LastDetectedHType = 0
+LastDetectedHomunculusS = ""
+LastDetectedHomunculusBase = ""
+
+-- Function to detect and log homunculus type information
+function DetectAndLogHomunculusType(myid)
+    local htype = GetV(V_HOMUNTYPE, myid)
+    
+    -- Only process if htype changed
+    if htype ~= LastDetectedHType then
+        LastDetectedHType = htype
+        
+        -- Determine Homunculus S type and Base type
+        local homunculusS = ""
+        local homunculusBase = ""
+        
+        if htype > 47 then -- Homunculus S
+            if htype == EIRA then
+                homunculusS = "Eira"
+            elseif htype == BAYERI then
+                homunculusS = "Bayeri"
+            elseif htype == SERA then
+                homunculusS = "Sera"
+            elseif htype == DIETER then
+                homunculusS = "Dieter"
+            elseif htype == ELEANOR then
+                homunculusS = "Eleanor"
+            end
+            
+            -- For Homunculus S, determine base type from OldHomunType if available
+            if OldHomunType ~= nil then
+                if OldHomunType == 1 then
+                    homunculusBase = "Lif"
+                elseif OldHomunType == 2 then
+                    homunculusBase = "Amistr"
+                elseif OldHomunType == 3 then
+                    homunculusBase = "Filir"
+                end
+            end
+        else -- Base Homunculus
+            homunculusS = ""
+            if htype >= 1 and htype <= 16 then
+                if htype >= 1 and htype <= 4 then
+                    homunculusBase = "Lif"
+                elseif htype >= 5 and htype <= 8 then
+                    homunculusBase = "Amistr"
+                elseif htype >= 9 and htype <= 12 then
+                    homunculusBase = "Filir"
+                elseif htype >= 13 and htype <= 16 then
+                    homunculusBase = "Vanilmirth"
+                end
+            end
+        end
+        
+        -- Update global variables
+        LastDetectedHomunculusS = homunculusS
+        LastDetectedHomunculusBase = homunculusBase
+        
+        -- Write to data file for GUI to read
+        local file = io.open("./AI/USER_AI/data/detected_htype.txt", "w")
+        if file then
+            file:write("HomunculusS=" .. homunculusS .. "\n")
+            file:write("HomunculusBase=" .. homunculusBase .. "\n")
+            file:write("HType=" .. htype .. "\n")
+            file:write("Timestamp=" .. os.date("%c") .. "\n")
+            file:close()
+        end
+    end
+    
+    return htype
+end
+
 
 
 
@@ -1784,7 +1857,7 @@ function GetSAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+        htype = DetectAndLogHomunculusType(myid)
 		if htype > 47 then -- it's a Homun S
 			if htype==EIRA and UseEiraEraseCutter==1 then
 				skill=MH_ERASER_CUTTER
@@ -1802,10 +1875,10 @@ function GetSAtkSkill(myid)
 				end
 			elseif htype==SERA and UseSeraParalyze==1 then
 				skill=MH_NEEDLE_OF_PARALYZE
-				if SeraParalyzeLevel==nil then
-					level=SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
-				else
-					level=SeraParalyzeLevel
+                if SeraParalyzeLevel == nil then
+                    level = SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
+                else
+                    level = SeraParalyzeLevel
 				end
 			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and EleanorMode==FIGHTING_MODE then
 				skill=MH_SONIC_CRAW
@@ -1834,7 +1907,7 @@ function GetComboSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype==ELEANOR then
 			if EleanorMode==FIGHTING_MODE then
 				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
@@ -1865,7 +1938,7 @@ function GetGrappleSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype==ELEANOR and MySpheres >= AutoComboSpheres then
 			if EleanorMode==GRAPPLING_MODE then
 				if ComboSCTimeout > GetTick() then
@@ -1907,7 +1980,7 @@ function GetAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
@@ -2041,7 +2114,7 @@ function GetMobSkill(myid)
 	local level = 0
 	if (IsHomun(myid)==1) then
 	
-		htype=GetV(V_HOMUNTYPE,MyID)
+        htype = DetectAndLogHomunculusType(myid)
 		if htype <17 then
 			skill=0
 		else -- it's a homun s
@@ -2066,7 +2139,7 @@ function GetMobSkill(myid)
 				else
 					level=SeraPoisonMistLevel
 				end
-			elseif htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode==0 then
+			elseif htype==DIETER and UseDieterLavaSlide==1 then
 				skill=MH_LAVA_SLIDE
 				if DieterLavaSlideLevel==nil then
 					level=SkillList[DIETER][MH_LAVA_SLIDE]
@@ -2099,7 +2172,7 @@ function	GetQuickenSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
@@ -2139,7 +2212,7 @@ function	GetSOffensiveSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if (htype==BAYERI and UseBayeriAngriffModus~=0) then
 			skill=MH_ANGRIFFS_MODUS
 			level = SkillList[BAYERI][MH_ANGRIFFS_MODUS]
@@ -2166,7 +2239,7 @@ function	GetSDefensiveSkill(myid)
 	local skill = 0
 	local skillopt=0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if (htype==BAYERI and UseBayeriGoldenPherze~=0) then
 			skill=MH_GOLDENE_FERSE
 			level = SkillList[BAYERI][MH_GOLDENE_FERSE]
@@ -2194,7 +2267,7 @@ function	GetSOwnerBuffSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if (htype==EIRA and UseEiraOveredBoost~=0) then
 			skill=MH_OVERED_BOOST
 			level = SkillList[EIRA][MH_OVERED_BOOST]
@@ -2226,7 +2299,7 @@ function GetSightOrAoE(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if	(htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode~=0) then
 			skill=MH_LAVA_SLIDE
 			level = SkillList[DIETER][MH_LAVA_SLIDE]
@@ -2255,7 +2328,7 @@ function	GetGuardSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype < 17 then
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else
@@ -2366,7 +2439,7 @@ function GetHealingSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=DetectAndLogHomunculusType(myid)
 		if htype < 17 then --if it's not a homun S just run it through modulo. 
 			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
 		else --If it's a homun S, get the OldHomunType
@@ -2413,13 +2486,13 @@ end
 function GetTargetedSkills(myid)
 	s,l=GetAtkSkill(myid)
 	Mainatk={MAIN_ATK,s,l}
-	s,l=GetSAtkSkill(myid)
+    s, l = GetSAtkSkill(myid)
 	Satk={S_ATK,s,l}
 	s,l=GetComboSkill(myid)
 	ComboAtk={COMBO_ATK,s,l}
 	s,l=GetGrappleSkill(myid)
 	GrappleAtk={GRAPPLE_ATK,s,l}
-	s,l=GetMobSkill(myid)
+    s, l = GetMobSkill(myid)
 	Mobatk={MOB_ATK,s,l}
 	s,l=GetDebuffSkill(myid)
 	Debuffatk={DEBUFF_ATK,s,l}
