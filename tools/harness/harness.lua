@@ -37,6 +37,9 @@ end
 -- Client API mocks ----------------------------------------------------------
 
 function GetTick() return now end
+-- wall clock follows the simulated time, so "once per hour" logic can be tested
+local realtime = os.time
+os.time = function(t) if t then return realtime(t) end return 1700000000 + math.floor(now / 1000) end
 local keepTraces = os.getenv("HARNESS_TRACE") == "1"
 function TraceAI(s) if keepTraces then traces[#traces + 1] = now .. " " .. tostring(s) end end
 function GetMsg(id) return { 0 } end
@@ -72,13 +75,13 @@ function GetV(v, id, extra, extra2)
 	if v == V_MOTION then return e.dead and MOTION_DEAD or (e.motion or MOTION_STAND) end
 	if v == V_ATTACKRANGE then return e.atkrange or 1 end
 	if v == V_TARGET then return e.target or 0 end
-	-- like the client: unknown skills report range 1
+	-- like the client: unknown skills (or levels above the learned one) report range 1
 	if v == V_SKILLATTACKRANGE then
-		if skillKnown[extra] then return math.max(rangeOf(extra), 2) end
+		if skillKnown[extra] then return math.max(rangeOf(extra, skillKnown[extra]), 2) end
 		return 1
 	end
 	if v == V_SKILLATTACKRANGE_LEVEL then
-		if skillKnown[extra] then return rangeOf(extra, extra2) end
+		if skillKnown[extra] and (extra2 or 1) <= skillKnown[extra] then return rangeOf(extra, extra2) end
 		return 1
 	end
 	if v == V_HOMUNTYPE then return e.homuntype or e.class end
@@ -100,14 +103,24 @@ end
 local function recordCast(kind, id, lvl, skill, a, b)
 	local e = world[id]
 	local name = (SkillInfo and SkillInfo[skill] and SkillInfo[skill][1]) or tostring(skill)
-	local ok = e.sp >= skillField(skill, 3, lvl)
+	-- like the server: a skill or level the homunculus hasn't learned is refused ("Skill failed")
+	local learned = id ~= HOMUN or (skillKnown[skill] and lvl <= skillKnown[skill])
+	local ok = learned and e.sp >= skillField(skill, 3, lvl)
 	if ok then
 		e.sp = e.sp - skillField(skill, 3, lvl)
 		e.motion = MOTION_SKILL
 		-- the client stops calling AI() while casting and during after-cast delay
 		e.busyUntil = now + skillField(skill, 4, lvl) + skillField(skill, 5, lvl) + skillField(skill, 6, lvl)
 	end
-	casts[#casts + 1] = { t = now, kind = kind, skill = skill, name = name, lvl = lvl, a = a, b = b, ok = ok, sp = e.sp }
+	casts[#casts + 1] = { t = now, kind = kind, skill = skill, name = name, lvl = lvl, a = a, b = b, ok = ok,
+		refused = not learned, sp = e.sp }
+end
+HarnessCasts = casts
+-- refused casts at or after game time t (for checks after an AI reload)
+function HarnessRefusedSince(t)
+	local n = 0
+	for _, c in ipairs(casts) do if c.refused and c.t >= t then n = n + 1 end end
+	return n
 end
 function SkillObject(id, lvl, skill, target) recordCast("obj", id, lvl, skill, target) end
 function SkillGround(id, lvl, skill, x, y) recordCast("gnd", id, lvl, skill, x, y) end
@@ -120,6 +133,7 @@ if not sc then
 	print("unknown scenario " .. scenario)
 	os.exit(2)
 end
+if sc.ticks then TICKS = math.max(TICKS, sc.ticks) end
 
 -- Monster IDs must be outside the summon ID range of the selected server type
 local mobBase = sc.private and 110000000 or 60000
@@ -134,19 +148,31 @@ end
 -- Config overrides go in right after H_Config.lua, before AI_main.lua applies them,
 -- exactly as if the user had saved them in the config file.
 local realdofile = dofile
-dofile = function(path)
-	local r = realdofile(path)
-	if path:find("H_Config.lua", 1, true) then
-		if sc.private then ServerType = SERVER_PRIVATE end
-		if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
+-- the client starts every AI load in a fresh Lua state; without this, wrappers such as
+-- OldSkillGround=SkillGround would wrap themselves on reload and recurse forever
+local cleanG = {}
+for k, v in pairs(_G) do cleanG[k] = v end
+local function loadAI()
+	for k in pairs(_G) do if cleanG[k] == nil then _G[k] = nil end end
+	for k, v in pairs(cleanG) do _G[k] = v end
+	dofile = function(path)
+		local r = realdofile(path)
+		if path:find("H_Config.lua", 1, true) then
+			if sc.private then ServerType = SERVER_PRIVATE end
+			if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
+		end
+		return r
 	end
-	return r
+	local ok, e = pcall(realdofile, "./AI/USER_AI/AI.lua")
+	dofile = realdofile
+	if not ok then error(e, 0) end
 end
-dofile("./AI/USER_AI/AI.lua")
-dofile = realdofile
-for _, name in ipairs(sc.skills) do
+loadAI()
+for _, entry in ipairs(sc.skills) do
+	-- "MH_TOXIN_OF_MANDARA:3" = learned at level 3; no suffix = every level
+	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
 	assert(_G[name], "unknown skill constant " .. name)
-	skillKnown[_G[name]] = true
+	skillKnown[_G[name]] = tonumber(lvl) or 99
 end
 
 -- Simulation loop -----------------------------------------------------------
@@ -183,6 +209,11 @@ local runtimeError
 local sizesEarly
 for tick = 1, TICKS do
 	if profile and tick == 20 then sizesEarly = globalTableSizes() end
+	-- the client reloads the AI on every map change/teleport; only files in data/ survive
+	if sc.reloadAt and tick == sc.reloadAt then
+		loadAI()
+		if sc.afterReload then sc.afterReload(skillKnown) end
+	end
 	local h = world[HOMUN]
 	if not h.busyUntil or now >= h.busyUntil then
 		local t0 = profile and os.clock()
@@ -209,7 +240,7 @@ end
 -- Report --------------------------------------------------------------------
 
 local verbose = os.getenv("HARNESS_VERBOSE") == "1"
-local counts, lastCast, failures = {}, {}, {}
+local counts, lastCast, failures, refused = {}, {}, {}, {}
 local function fail(msg) failures[#failures + 1] = msg end
 
 for _, c in ipairs(casts) do
@@ -217,7 +248,9 @@ for _, c in ipairs(casts) do
 		print(("  t=%6d %-3s %-24s Lv%-2d target=%s,%s ok=%s sp=%d"):format(
 			c.t, c.kind, c.name, c.lvl, tostring(c.a), tostring(c.b), tostring(c.ok), c.sp))
 	end
-	if c.ok then
+	if c.refused then
+		refused[#refused + 1] = c.name .. " Lv" .. c.lvl
+	elseif c.ok then
 		counts[c.name] = (counts[c.name] or 0) + 1
 		-- skills tracked by AutoSkillCooldown must never be recast before their reuse delay
 		local reuse = skillField(c.skill, 9, c.lvl)
@@ -231,6 +264,11 @@ for _, c in ipairs(casts) do
 end
 
 if runtimeError then fail("runtime error: " .. tostring(runtimeError)) end
+-- every refused cast is a "Skill failed" message in the client
+if #refused > (sc.maxRefused or 0) then
+	fail(("%d casts refused by the server (max %d): %s"):format(#refused, sc.maxRefused or 0,
+		table.concat(refused, ", ", 1, math.min(#refused, 8))))
+end
 for _, name in ipairs(sc.expect or {}) do
 	if not counts[name] then fail("expected skill never cast: " .. name) end
 end

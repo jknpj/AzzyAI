@@ -38,6 +38,30 @@ SCENARIOS = {
 	-- regression: Stein Wand used to be spammed without checking SP (the harness fails any cast without SP)
 	bayeri_low_sp = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster, sp = 150, spregen = 5,
 			minAttacks = 100 },
+	-- partly levelled homunculus: hard-coded Lv5 casts (Stein Wand) and configured levels above the
+	-- learned one must be lowered before casting, never refused by the server
+	bayeri_partial = { homuntype = 49, mobs = cluster,
+		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
+			"MH_STEINWAND:1", "MH_GLANZEN_SPIES", "MH_GOLDENE_TONE" },
+		set = { UseBayeriHeiligePferd = 1 },
+		expect = { "Heilige Stange", "Stein Wand" }, forbid = { "Heilige Pferd" },
+		checks = {
+			["learned levels detected"] = function()
+				return GetSkillLevelCap(MH_STAHL_HORN) == 3 and GetSkillLevelCap(MH_HEILIGE_STANGE) == 2
+					and GetSkillLevelCap(MH_STEINWAND) == 1
+			end,
+		} },
+	-- Heilige Pferd not learned but enabled: its Lv1-4 have range 1 so the probe can't tell. The AI
+	-- steps down after refusals and remembers it in data/; after a map change (AI reload) it doesn't
+	-- try again until LEARNED_SKILL_RECHECK_SECONDS have passed.
+	bayeri_pferd_unlearned = { homuntype = 49, mobs = cluster, maxRefused = 8, ticks = 500, reloadAt = 400,
+		skills = { "MH_STAHL_HORN", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS", "MH_STEINWAND", "MH_GOLDENE_TONE" },
+		set = { UseBayeriHeiligePferd = 1, UseBayeriHailegeStar = 0 },
+		forbid = { "Heilige Pferd" },
+		checks = {
+			["no refused casts after reload"] = function() return HarnessRefusedSince(1000 + 399 * 100) == 0 end,
+			["Pferd known as not learned"] = function() return LearnedSkill[MH_HEILIGE_PFERD].cap == 0 end,
+		} },
 
 	-- regression: swapped duration/reuse made Magma Flow recast forever and Dieter never attacked
 	dieter = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, minAttacks = 20,
@@ -55,6 +79,35 @@ SCENARIOS = {
 
 	sera = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster,
 		expect = { "Needle of Paralyze", "Poison Mist", "Pain Killer" } },
+	-- regression: Toxin Lv1-4 has range 1, so its learned level can't be probed; the old check
+	-- reported Lv4 and the AI spammed refused casts ("Skill failed") forever
+	sera_toxin_low = { homuntype = 50, mobs = cluster, maxRefused = 4,
+		skills = { "MH_SUMMON_LEGION", "MH_NEEDLE_OF_PARALYZE", "MH_POISON_MIST", "MH_PAIN_KILLER",
+			"MH_TOXIN_OF_MANDARA:2", "MH_NEEDLE_STINGER" },
+		set = { UseSeraToxinOfMandara = 1, SeraToxinOfMandaraLevel = 10, UseSeraParalyze = 0 },
+		expect = { "Toxin Of Mandara" },
+		checks = {
+			["Toxin settles on the learned level"] = function() return LearnedSkill[MH_TOXIN_OF_MANDARA].cap == 2 end,
+		} },
+	-- after a map change the saved level is used right away: no refused casts
+	sera_toxin_reload = { homuntype = 50, mobs = cluster, maxRefused = 4, reloadAt = 200,
+		skills = { "MH_SUMMON_LEGION", "MH_POISON_MIST", "MH_PAIN_KILLER", "MH_TOXIN_OF_MANDARA:2", "MH_NEEDLE_STINGER" },
+		set = { UseSeraToxinOfMandara = 1, SeraToxinOfMandaraLevel = 10, UseSeraParalyze = 0 },
+		expect = { "Toxin Of Mandara" },
+		checks = {
+			["no refused casts after reload"] = function() return HarnessRefusedSince(1000 + 199 * 100) == 0 end,
+			["Toxin still Lv2"] = function() return LearnedSkill[MH_TOXIN_OF_MANDARA].cap == 2 end,
+		} },
+	-- the player levelled Toxin between sessions: the periodic level-up try picks it up
+	sera_toxin_levelup = { homuntype = 50, mobs = cluster, maxRefused = 5, reloadAt = 200,
+		skills = { "MH_SUMMON_LEGION", "MH_POISON_MIST", "MH_PAIN_KILLER", "MH_TOXIN_OF_MANDARA:2", "MH_NEEDLE_STINGER" },
+		set = { UseSeraToxinOfMandara = 1, SeraToxinOfMandaraLevel = 10, UseSeraParalyze = 0,
+			LEARNED_SKILL_RECHECK_SECONDS = 0 },
+		afterReload = function(known) known[MH_TOXIN_OF_MANDARA] = 3 end,
+		expect = { "Toxin Of Mandara" },
+		checks = {
+			["Toxin raised to Lv3"] = function() return LearnedSkill[MH_TOXIN_OF_MANDARA].cap == 3 end,
+		} },
 	sera_s = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster,
 		set = { UseSeraToxinOfMandara = 1, UseSeraNeedleStinger = 1, UseSeraParalyze = 0 },
 		expect = { "Toxin Of Mandara", "Needle Stinger" },
