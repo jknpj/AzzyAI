@@ -293,6 +293,14 @@ namespace AzzyAIConfig
             {
                 DieterLavaSlideLevel = Convert.ToInt32(Regex.Match(file, "DieterLavaSlideLevel\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
             }
+            if (Regex.IsMatch(file, "UseDieterBlastForge\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                UseDieterBlastForge = Convert.ToInt32(Regex.Match(file, "UseDieterBlastForge\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "UseDieterTempering\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                UseDieterTempering = Convert.ToInt32(Regex.Match(file, "UseDieterTempering\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
             if (Regex.IsMatch(file, "UseSeraCallLegion\\s*=\\s*-?\\d+", RegexOptions.Multiline))
             {
                 UseSeraCallLegion = Convert.ToInt32(Regex.Match(file, "UseSeraCallLegion\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
@@ -1165,6 +1173,22 @@ namespace AzzyAIConfig
             else
             {
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "DieterLavaSlideLevel", DieterLavaSlideLevel);
+            }
+            if (Regex.IsMatch(file, "UseDieterBlastForge\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
+            {
+                file = Regex.Replace(file, "(UseDieterBlastForge\\s*=\\s*)(\\d+|-\\d+)", string.Format("{0,-25}= {1}", "UseDieterBlastForge", UseDieterBlastForge), RegexOptions.Multiline);
+            }
+            else
+            {
+                file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseDieterBlastForge", UseDieterBlastForge);
+            }
+            if (Regex.IsMatch(file, "UseDieterTempering\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
+            {
+                file = Regex.Replace(file, "(UseDieterTempering\\s*=\\s*)(\\d+|-\\d+)", string.Format("{0,-25}= {1}", "UseDieterTempering", UseDieterTempering), RegexOptions.Multiline);
+            }
+            else
+            {
+                file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseDieterTempering", UseDieterTempering);
             }
             if (Regex.IsMatch(file, "UseSeraCallLegion\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
             {
@@ -2195,6 +2219,18 @@ namespace AzzyAIConfig
         {
             get { return _DieterLavaSlideLevel; }
             set { _DieterLavaSlideLevel = value; }
+        }
+        static int _UseDieterBlastForge = 0;
+        public static int UseDieterBlastForge
+        {
+            get { return _UseDieterBlastForge; }
+            set { _UseDieterBlastForge = value; }
+        }
+        static int _UseDieterTempering = 0;
+        public static int UseDieterTempering
+        {
+            get { return _UseDieterTempering; }
+            set { _UseDieterTempering = value; }
         }
         static int _UseSeraCallLegion = 1;
         public static int UseSeraCallLegion

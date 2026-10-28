@@ -206,8 +206,52 @@ function	GetPVPTact(t,m)
 	end
 end
 
+function ApplyServerType()
+	if ServerType ~= SERVER_PRIVATE then
+		ServerType = SERVER_OFFICIAL
+	end
+	if ServerType == SERVER_PRIVATE then
+		-- rAthena/Hercules: accounts 2000000-100000000, npcs/mobs/summons from 110000000
+		MagicNumber  = MagicNumber  or 110000000
+		MagicNumber2 = MagicNumber2 or 2000000
+		MagicNumber3 = MagicNumber3 or 100000000
+	else
+		MagicNumber  = MagicNumber  or 42000
+		MagicNumber2 = MagicNumber2 or 100000
+	end
+	ApplyServerSkillOverrides()
+end
+
+-- Swaps per-server skill data (range, cooldown, targeting) defined in the SkillList files
+function ApplyServerSkillOverrides()
+	if ServerSkillOverrides==nil or ServerSkillOverrides[ServerType]==nil or SkillInfo==nil then
+		return
+	end
+	for skill,o in pairs(ServerSkillOverrides[ServerType]) do
+		if SkillInfo[skill]~=nil and o.info~=nil then
+			for idx,value in pairs(o.info) do
+				SkillInfo[skill][idx]=value
+			end
+		end
+		if o.aoe~=nil and SkillAOEInfo~=nil then
+			SkillAOEInfo[skill]=o.aoe
+		end
+	end
+end
+
+-- Low actor IDs are summons/retainers on official servers only; private servers
+-- share one ID range for monsters and summons, so they can't be told apart by ID.
+function IsSummonID(id)
+	if ServerType == SERVER_PRIVATE then
+		return 0
+	elseif id < MagicNumber then
+		return 1
+	end
+	return 0
+end
+
 function	GetClass(m)
-	if (m < MagicNumber) then
+	if (IsSummonID(m)==1) then
 		return 10
 	elseif (IsActive[m]==0 and AutoDetectPlant==1) then
 		return 11
@@ -265,7 +309,7 @@ function GetTargetClass(id)
 		return 1
 	elseif id == 0 then
 		return 0
-	elseif (id > MagicNumber2) then
+	elseif (IsPlayer(id)==1) then
 		if IsFriendOrSelf(id)==1 then
 			return 2
 		else
@@ -319,11 +363,14 @@ function IsFriendOrSelf(id)
 end
 
 function IsPlayer(id)
-	if (id>MagicNumber2) then
+	if ServerType == SERVER_PRIVATE then
+		if (id >= MagicNumber2 and id <= MagicNumber3) then
+			return 1
+		end
+	elseif (id>MagicNumber2) then
 		return 1
-	else
-		return 0
 	end
+	return 0
 end
 
 function UpdateFriends() 
@@ -373,7 +420,7 @@ function GetMobCount(skill,level,target,aggro)
 	if skill==0 or level==0 then 
 		return 0
 	end
-	local skillaoe=SkillAOEInfo[skill][1][level]
+	local skillaoe=GetSkillAoESize(skill,level)
 	local x,y=GetV(V_POSITION,MyID)
 	if skillaoe==nil then
 		if skill == ML_BRANDISH then
@@ -416,7 +463,7 @@ function GetMobCount(skill,level,target,aggro)
 			end
 		end
 	else -- we have a wellbehaved skill
-		if GetSkillInfo(skill,7)==0 then
+		if IsCasterCenteredAoE(skill) then
 			target=MyID
 		end
 		range=(skillaoe-1)/2
@@ -439,9 +486,12 @@ function GetBestAoETarget(myid,skill,level)
 	local mcount=0
 	local result=-1
 	for k,v in pairs(Targets) do
-		if mcount < GetMobCount(skill,level,k,1) then
-			result=k
-			mcount=GetMobCount(skill,level,k,1)
+		if GetTact(TACT_BASIC,k)~=0 and IsInAttackSight(myid,k,skill,level)==true then
+			local count=GetMobCount(skill,level,k,1)
+			if mcount < count then
+				result=k
+				mcount=count
+			end
 		end
 	end
 	return result
@@ -452,7 +502,7 @@ function GetBestAoECoord(myid,skill,level)
 	local resultx = -1
 	local resulty = -1
 	local range=GetSkillInfo(skill,2,level)
-	local aoesize=(SkillAOEInfo[skill][1][level]-1)/2
+	local aoesize=((GetSkillAoESize(skill,level) or 1)-1)/2
 	local myx
 	local myy
 	myx,myy=GetV(V_POSITION,myid)
@@ -1811,7 +1861,7 @@ function GetSAtkSkill(myid)
 				end
 			end
 		end
-		if level ~=0 then
+		if level ~=0 and IsSkillReady(skill) then
 			return skill,level
 		end
 	end
@@ -1854,33 +1904,28 @@ function GetGrappleSkill(myid)
 	local level = 0
 	if (IsHomun(myid)==1) then
 		htype=GetV(V_HOMUNTYPE,myid)
-		if htype==ELEANOR and MySpheres >= AutoComboSpheres then
-			if EleanorMode==GRAPPLING_MODE then
-				if ComboSCTimeout > GetTick() then
-					if MySpheres >= AutoComboSpheres -1 then
-						skill=MH_CBC
-						if EleanorCBCLevel==nil then
-							level=SkillList[ELEANOR][MH_CBC]
-						else
-							level=EleanorCBCLevel
-						end
-					end
-				elseif ComboSVTimeout > GetTick() then
-					if MySpheres >= AutoComboSpheres -1 then
-						skill=MH_EQC
-						if EleanorEQCLevel==nil then
-							level=SkillList[ELEANOR][MH_EQC]
-						else
-							level=EleanorEQCLevel
-						end
-					end
-				elseif MySpheres >= AutoComboSpheres then
-					skill=MH_TINDER_BREAKER
-					if EleanorTinderBreakerLevel==nil then
-						level=SkillList[ELEANOR][MH_TINDER_BREAKER]
-					else
-						level=EleanorTinderBreakerLevel
-					end				
+		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
+			local comboFollowupSpheres = math.max(0, AutoComboSpheres - 1)
+			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres then
+				skill=MH_CBC
+				if EleanorCBCLevel==nil then
+					level=SkillList[ELEANOR][MH_CBC]
+				else
+					level=EleanorCBCLevel
+				end
+			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres then
+				skill=MH_EQC
+				if EleanorEQCLevel==nil then
+					level=SkillList[ELEANOR][MH_EQC]
+				else
+					level=EleanorEQCLevel
+				end
+			elseif MySpheres >= AutoComboSpheres then
+				skill=MH_TINDER_BREAKER
+				if EleanorTinderBreakerLevel==nil then
+					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
+				else
+					level=EleanorTinderBreakerLevel
 				end
 			end
 		end
@@ -2322,7 +2367,7 @@ function	GetDefensiveOwnerSkill(myid)
 			return skill,level,skillopt
 		elseif htype==BAYERI and UseBayeriGoldeneTone~=0 then
 			skill = MH_GOLDENE_TONE
-			level = SkillList[htype][skill]
+			level = BayeriGoldeneToneLevel or SkillList[htype][skill]
 			skillopt = UseBayeriGoldeneTone
 			return skill,level,skillopt
 		end
@@ -2403,6 +2448,69 @@ end
 
 function GetSnipeSkill(myid)
 	return GetAtkSkill(myid)
+end
+
+-- When several skill types are usable on the same cycle, the higher priority wins.
+-- Types not listed (debuff, combo, grapple, minion) are never overridden by damage skills.
+SkillTypePriority={}
+SkillTypePriority[-1]=-1
+SkillTypePriority[MAIN_ATK]=0
+SkillTypePriority[S_ATK]=1
+SkillTypePriority[CLASS_NEW_S]=2
+SkillTypePriority[MOB_ATK]=3
+SkillTypePriority[CLASS_NEW_MOB]=4
+
+function SkillTypeOutranks(newtype,curtype)
+	local newp=SkillTypePriority[newtype] or 10
+	local curp=SkillTypePriority[curtype] or 10
+	return newp > curp
+end
+
+function IsMobSkillType(skilltype)
+	return skilltype==MOB_ATK or skilltype==CLASS_NEW_MOB
+end
+
+function IsSkillReady(skill)
+	if AutoSkillCooldown~=nil and AutoSkillCooldown[skill]~=nil and GetTick() < AutoSkillCooldown[skill] then
+		return false
+	end
+	return true
+end
+
+function GetSkillAoESize(skill,level)
+	local aoeinfo=SkillAOEInfo[skill]
+	if aoeinfo==nil or type(aoeinfo[1])~="table" then
+		return nil
+	end
+	local size=aoeinfo[1][level]
+	if size==nil then
+		size=aoeinfo[1][#aoeinfo[1]]
+	end
+	return size
+end
+
+function IsCasterCenteredAoE(skill)
+	local aoeinfo=SkillAOEInfo[skill]
+	if aoeinfo~=nil and aoeinfo[2]==1 then
+		return true
+	end
+	return GetSkillInfo(skill,7)==0
+end
+
+-- Decides whether an AoE skill is worth casting on target this cycle
+function ShouldUseMobSkill(skill,level,target,tact_skillclass)
+	local size=GetSkillAoESize(skill,level)
+	if size~=nil and IsCasterCenteredAoE(skill) and GetDistanceAR(MyID,target) > (size-1)/2 then
+		return false -- the current target would not even be hit
+	end
+	if tact_skillclass==CLASS_MOB then
+		return true
+	end
+	local mobmode=0
+	if AutoMobMode==2 then
+		mobmode=1
+	end
+	return GetMobCount(skill,level,target,mobmode) >= AutoMobCount
 end
 
 function GetTargetedSkills(myid)
@@ -2883,10 +2991,14 @@ function GetLearnedSkillLevel(myid, skillID)
 
     -- Loop downwards from the max level to find the actual learned level.
     for level = maxLevel, 1, -1 do
-        -- As you correctly stated, this is the correct check.
         -- It returns 1 if the skill is NOT known at this level.
         if GetV(V_SKILLATTACKRANGE_LEVEL, myid, skillID, level) ~= 1 then
             -- We found the highest level that is known. Return it.
+            return level
+        end
+        -- Skills whose real range is 1 (e.g. Blast Forge) also return 1 when learned,
+        -- so the check can't tell; trust the configured skill list for those.
+        if SkillInfo[skillID] ~= nil and GetSkillInfo(skillID, 2, level) == 1 then
             return level
         end
     end
@@ -2987,7 +3099,9 @@ function LintUserOptions(myid, logstring)
             { "UseDieterVolcanicAsh", nil, MH_VOLCANIC_ASH, "Volcanic Ash" },
             { "UseDieterMagmaFlow", nil, MH_MAGMA_FLOW, "Magma Flow" },
             { "UseDieterGraniticArmor", nil, MH_GRANITIC_ARMOR, "Granitic Armor" },
-            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" }
+            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" },
+            { "UseDieterTempering", nil, MH_TEMPERING, "Tempering" },
+            { "UseDieterBlastForge", nil, MH_BLAST_FORGE, "Blast Forge" }
         },
         [ELEANOR] = {
             { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" }
@@ -2999,7 +3113,7 @@ function LintUserOptions(myid, logstring)
         if homunType ~= htype then
             for _, optionData in ipairs(options) do
                 local useOptionName = optionData[1]
-                if _G[useOptionName] == 1 then
+                if _G[useOptionName] ~= nil and _G[useOptionName] ~= 0 then
                     logstring = logstring .. "Disabling irrelevant option: " .. useOptionName .. "\n"
                     _G[useOptionName] = 0
                 end
@@ -3043,7 +3157,7 @@ function GetSOwner2ndBuffSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=GetV(V_HOMUNTYPE,myid)
-		if	htype==DIETER and useDieterTempering~=0 then
+		if	htype==DIETER and UseDieterTempering~=0 then
 			skill = MH_TEMPERING
 			level = SkillList[htype][skill]
 			skillopt = UseDieterTempering
@@ -3055,61 +3169,51 @@ function GetSOwner2ndBuffSkill(myid)
 	return skill,level,skillopt
 end
 
-function GetNewSAtkSkill(myid)
-	local skill = 0
-	local level = 0
-	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
-		if htype==EIRA and UseEiraTwisterCutter~=0 then
-			skill=MH_TWISTER_CUTTER
-			level=EiraTwisterCutterLevel or SkillList[htype][skill]
-		elseif htype==BAYERI and UseBayeriGlanzenSpies~=0 then
-			skill=MH_GLANZEN_SPIES
-			level=BayeriGlanzenSpiesLevel or SkillList[htype][skill]
-		elseif htype==SERA and UseSeraNeedleStinger~=0 then
-			skill=MH_NEEDLE_STINGER
-			level=SeraNeedleStingerLevel or SkillList[htype][skill]
-        elseif htype==ELEANOR and UseEleanorBlazingAndFurious~=0 then
-          skill=MH_BLAZING_AND_FURIOUS
-           level=EleanorBlazingAndFuriousLevel or SkillList[htype][skill]
-		elseif htype==ELEANOR and UseEleanorTheOneFighterRises~=0 then
-			skill=MH_THE_ONE_FIGHTER_RISES
-			level=EleanorTheOneFighterRisesLevel or SkillList[htype][skill]
-		end
-		if level==0 then
-			return 0,0
-		end
-	end
-	return skill,level
-end
-
-function GetNewMobSkill(myid)
-	local skill = 0
-	local level = 0
-	if(IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,MyID)
-		if htype==EIRA and UseEiraAbsoluteZephyr~=0 then
-			skill = MH_ABSOLUTE_ZEPHYR
-			level = EiraAbsoluteZephyrLevel or SkillList[htype][skill]
-		elseif htype==SERA and UseSeraToxinOfMandara~=0 then
-			skill = MH_TOXIN_OF_MANDARA
-			level = SeraToxinOfMandaraLevel or SkillList[htype][skill]
-		elseif UseBayeriHeiligePferd~=0 then
-			skill = MH_HEILIGE_PFERD
-			level = BayeriHeiligePferdLevel or SkillList[htype][skill]
-		elseif htype==DIETER and UseDieterBlastForge~=0 then
-			skill = MH_BLAST_FORGE
-			level = UseDieterBlastForge or SkillList[htype][skill]
-		end
-		if AutoSkillCooldown[skill]~=nil then
-			if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
-				level=0
-				skill=0
+-- Returns the first enabled, off-cooldown skill from {enabled, skill, configuredLevel} entries
+function PickReadySkill(htype,candidates)
+	for i,c in ipairs(candidates) do
+		if c[1]~=nil and c[1]~=0 and c[2]~=nil and IsSkillReady(c[2]) then
+			local level=c[3] or SkillList[htype][c[2]] or 0
+			if level~=0 then
+				return c[2],level
 			end
 		end
 	end
-	if level==0 then
+	return 0,0
+end
+
+function GetNewSAtkSkill(myid)
+	if IsHomun(myid)~=1 then
 		return 0,0
 	end
-	return skill,level
+	local htype=GetV(V_HOMUNTYPE,myid)
+	if htype==EIRA then
+		return PickReadySkill(htype,{{UseEiraTwisterCutter,MH_TWISTER_CUTTER,EiraTwisterCutterLevel}})
+	elseif htype==BAYERI then
+		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
+	elseif htype==SERA then
+		return PickReadySkill(htype,{{UseSeraNeedleStinger,MH_NEEDLE_STINGER,SeraNeedleStingerLevel}})
+	elseif htype==ELEANOR then
+		return PickReadySkill(htype,{
+			{UseEleanorBlazingAndFurious,MH_BLAZING_AND_FURIOUS,EleanorBlazingAndFuriousLevel},
+			{UseEleanorTheOneFighterRises,MH_THE_ONE_FIGHTER_RISES,EleanorTheOneFighterRisesLevel}})
+	end
+	return 0,0
+end
+
+function GetNewMobSkill(myid)
+	if IsHomun(myid)~=1 then
+		return 0,0
+	end
+	local htype=GetV(V_HOMUNTYPE,myid)
+	if htype==EIRA then
+		return PickReadySkill(htype,{{UseEiraAbsoluteZephyr,MH_ABSOLUTE_ZEPHYR,EiraAbsoluteZephyrLevel}})
+	elseif htype==SERA then
+		return PickReadySkill(htype,{{UseSeraToxinOfMandara,MH_TOXIN_OF_MANDARA,SeraToxinOfMandaraLevel}})
+	elseif htype==BAYERI then
+		return PickReadySkill(htype,{{UseBayeriHeiligePferd,MH_HEILIGE_PFERD,BayeriHeiligePferdLevel}})
+	elseif htype==DIETER then
+		return PickReadySkill(htype,{{UseDieterBlastForge,MH_BLAST_FORGE,nil}})
+	end
+	return 0,0
 end

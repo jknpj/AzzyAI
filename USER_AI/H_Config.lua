@@ -1,3 +1,4 @@
+ServerType               = SERVER_OFFICIAL -- SERVER_PRIVATE for rAthena/Hercules servers
 AggroHP                  = 0
 AggroSP                  = 0
 OldHomunType             = 2

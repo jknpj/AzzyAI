@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <!-- Ensure Lua parser is loaded as a classic script and attaches to window BEFORE any module scripts -->
+  <script src="luaParser.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AzzyAI Config Web GUI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding-top: 56px; }
+    .container.mt-4 { margin-top: 1.5rem !important; }
+    .tab-content { min-height: 300px; margin-top: 0 !important; padding-top: 0 !important; }
+    @media (max-width: 767px) {
+      .container.mt-4 { margin-top: 1rem !important; }
+    }
+  </style>
+  <meta charset="utf-8">
+  <title>AzzyAIConfig Web GUI</title>
+</head>
+<body>
+<!-- Hidden file input for folder import -->
+<input type="file" id="importAllConfigsInput" webkitdirectory directory multiple style="display:none" />
+<!-- Bootstrap 5 JS bundle (required for tab and dropdown functionality) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">AzzyAI Config</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="fileMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">File</a>
+            <ul class="dropdown-menu" aria-labelledby="fileMenu">
+              <li><a class="dropdown-item fw-bold text-primary" id="importAllConfigs" href="#" title="Import all AzzyAI config files from a folder.">Import All Configs (Folder)</a></li>
+              <li><a class="dropdown-item fw-bold text-success" id="saveAllConfigsZip" href="#" title="Save all loaded configs as USER_AI.zip">Save All Configs (Zip)</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="editMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Edit</a>
+            <ul class="dropdown-menu" aria-labelledby="editMenu">
+              <li><a class="dropdown-item" href="#">Apply Settings</a></li>
+              <li><a class="dropdown-item" href="#">Revert</a></li>
+              <li><a class="dropdown-item" href="#">Reset to Defaults</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="helpMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Help</a>
+            <ul class="dropdown-menu" aria-labelledby="helpMenu">
+              <li><a class="dropdown-item" href="#">Documentation</a></li>
+              <li><a class="dropdown-item" href="#">About</a></li>
+            </ul>
+          </li>
+        </ul>
+</nav>
+<!-- Removed Import All Configs (Folder) button and navbar for clean layout -->
+<div class="container mt-4">
+    <ul class="nav nav-tabs" id="azzyTabs" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" id="homunculus-tab" data-bs-toggle="tab" data-bs-target="#homunculus" type="button" role="tab">Homunculus</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="mercenary-tab" data-bs-toggle="tab" data-bs-target="#mercenary" type="button" role="tab">Mercenary</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="hom-tactics-tab" data-bs-toggle="tab" data-bs-target="#hom-tactics" type="button" role="tab">Homunculus Tactics</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="mer-tactics-tab" data-bs-toggle="tab" data-bs-target="#mer-tactics" type="button" role="tab">Mercenary Tactics</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="pvp-tactics-tab" data-bs-toggle="tab" data-bs-target="#pvp-tactics" type="button" role="tab">PVP Tactics</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="extra-tab" data-bs-toggle="tab" data-bs-target="#extra" type="button" role="tab">Extra</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="m-pvp-tactics-tab" data-bs-toggle="tab" data-bs-target="#m-pvp-tactics" type="button" role="tab">Mercenary PVP Tactics</button></li>
+    </ul>
+    <div class="tab-content" id="azzyTabsContent">
+      <div class="tab-pane fade show active" id="homunculus" role="tabpanel">
+        <h4>Homunculus Settings</h4>
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="searchBox" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="searchBox" placeholder="Search options..." oninput="filterOptions()">
+          </div>
+          <div class="col-md-4">
+            <label for="homuncS" class="form-label">Homunc S:</label>
+            <select class="form-select" id="homuncS">
+              <option>All Types</option>
+              <option>Amistr</option>
+              <option>Filir</option>
+              <option>Vanilmirth</option>
+              <option>Lif</option>
+              <option>Sera</option>
+              <option>Eira</option>
+              <option>Eleanor</option>
+              <option>Bayeri</option>
+              <option>Dieter</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="homuncBase" class="form-label">Homunc Base:</label>
+            <select class="form-select" id="homuncBase">
+              <option>All Types</option>
+              <option>Amistr</option>
+              <option>Filir</option>
+              <option>Vanilmirth</option>
+              <option>Lif</option>
+            </select>
+          </div>
+        </div>
+        <ul class="nav nav-pills mb-2" id="homunculusOptionTabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#basic-options" type="button" role="tab">Basic Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#autoskill-options" type="button" role="tab">AutoSkill Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#walk-options" type="button" role="tab">Walk/Follow Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#autobuff-options" type="button" role="tab">Autobuff Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#berserk-options" type="button" role="tab">Berserk Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#friending-options" type="button" role="tab">Friending Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pvp-options" type="button" role="tab">PVP Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#standby-options" type="button" role="tab">Standby Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#kiting-options" type="button" role="tab">Kiting Options</button></li>
+         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#hom-skill-list-options" type="button" role="tab">Skill List Options</button></li>
+        </ul>
+        <div class="tab-content" id="homunculusOptionTabsContent">
+          <div class="tab-pane fade show active" id="basic-options" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="optionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="optionsTableBody">
+                  <!-- Options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="autoskill-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-4">
+                <label for="autoskillSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="autoskillSearchBox" placeholder="Search autoskill options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="autoskillOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="autoskillOptionsTableBody">
+                  <!-- Autoskill options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="autoskillOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="autoskillOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Autoskill options logic is now loaded from autoskillOptionsInit.js -->
+        </div>
+        <div class="tab-pane fade" id="walk-options" role="tabpanel">
+          <label for="walkSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="walkSearchBox" placeholder="Search walk/follow options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="walkOptionsTableBody"></tbody></table></div>
+          <label for="walkOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="walkOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="autobuff-options" role="tabpanel">
+          <label for="autobuffSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="autobuffSearchBox" placeholder="Search autobuff options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="autobuffOptionsTableBody"></tbody></table></div>
+          <label for="autobuffOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="autobuffOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="berserk-options" role="tabpanel">
+          <label for="berserkSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="berserkSearchBox" placeholder="Search berserk options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="berserkOptionsTableBody"></tbody></table></div>
+          <label for="berserkOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="berserkOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="friending-options" role="tabpanel">
+          <label for="friendingSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="friendingSearchBox" placeholder="Search friending options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="friendingOptionsTableBody"></tbody></table></div>
+          <label for="friendingOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="friendingOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="pvp-options" role="tabpanel">
+          <label for="pvpSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="pvpSearchBox" placeholder="Search PVP options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="pvpOptionsTableBody"></tbody></table></div>
+          <label for="pvpOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="pvpOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="standby-options" role="tabpanel">
+          <label for="standbySearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="standbySearchBox" placeholder="Search standby options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="standbyOptionsTableBody"></tbody></table></div>
+          <label for="standbyOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="standbyOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="kiting-options" role="tabpanel">
+          <label for="kitingSearchBox" class="form-label">Search:</label>
+          <input type="text" class="form-control mb-2" id="kitingSearchBox" placeholder="Search kiting options...">
+          <div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Option</th><th>Value</th></tr></thead><tbody id="kitingOptionsTableBody"></tbody></table></div>
+          <label for="kitingOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="kitingOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <div class="tab-pane fade" id="hom-skill-list-options" role="tabpanel">
+          <div class="row mb-2">
+            <div class="col-md-4">
+              <label for="homSkillListSearchBox" class="form-label">Search:</label>
+              <input type="text" class="form-control" id="homSkillListSearchBox" placeholder="Search skill list options...">
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle" id="homSkillListOptionsTable">
+              <thead class="table-light">
+                <tr><th>Option</th><th>Value</th></tr>
+              </thead>
+              <tbody id="homSkillListOptionsTableBody">
+                <!-- Homunculus skill list options will be rendered here by JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2">
+            <label for="homSkillListOptionDescription" class="form-label">Description:</label>
+            <textarea class="form-control" id="homSkillListOptionDescription" rows="2" readonly></textarea>
+          </div>
+        <!-- Homunculus skill list options logic is now loaded from homSkillListOptionsInit.js -->
+        </div>
+        <!-- Homunculus options logic is now loaded from optionsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="homunculusMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="homunculusMainDescription" rows="2" readonly>Configure your Homunculus AI settings here. Use the sub-tabs for advanced options.</textarea>
+        </div>
+      </div>
+      </div>
+
+      <div class="tab-pane fade" id="mercenary" role="tabpanel">
+        <h4>Mercenary Settings</h4>
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="mercSearchBox" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="mercSearchBox" placeholder="Search options...">
+          </div>
+        </div>
+        <div class="table-responsive mb-3">
+          <table class="table table-bordered table-sm align-middle" id="mercOptionsTable">
+            <thead class="table-light">
+              <tr><th>Option</th><th>Value</th></tr>
+            </thead>
+            <tbody id="mercOptionsTableBody">
+              <!-- Mercenary options will be rendered here by JS -->
+            </tbody>
+          </table>
+        </div>
+        <ul class="nav nav-pills mb-2" id="mercenaryOptionTabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#merc-walk-options" type="button" role="tab">Walk/Follow Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-autobuff-options" type="button" role="tab">Autobuff Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-berserk-options" type="button" role="tab">Berserk Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-friending-options" type="button" role="tab">Friending Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-pvp-options" type="button" role="tab">PVP Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-standby-options" type="button" role="tab">Standby Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-kiting-options" type="button" role="tab">Kiting Options</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#merc-skill-list-options" type="button" role="tab">Skill List Options</button></li>
+        </ul>
+        <div class="tab-content" id="mercenaryOptionTabsContent">
+          <div class="tab-pane fade show active" id="merc-walk-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercWalkSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercWalkSearchBox" placeholder="Search walk/follow options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercWalkOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercWalkOptionsTableBody">
+                  <!-- Mercenary walk/follow options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercWalkOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercWalkOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary walk/follow options logic is now loaded from mercWalkOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-autobuff-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercAutobuffSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercAutobuffSearchBox" placeholder="Search autobuff options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercAutobuffOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercAutobuffOptionsTableBody">
+                  <!-- Mercenary autobuff options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercAutobuffOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercAutobuffOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary autobuff options logic is now loaded from mercAutobuffOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-berserk-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercBerserkSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercBerserkSearchBox" placeholder="Search berserk options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercBerserkOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercBerserkOptionsTableBody">
+                  <!-- Mercenary berserk options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercBerserkOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercBerserkOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary berserk options logic is now loaded from mercBerserkOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-friending-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercFriendingSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercFriendingSearchBox" placeholder="Search friending options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercFriendingOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercFriendingOptionsTableBody">
+                  <!-- Mercenary friending options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercFriendingOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercFriendingOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary friending options logic is now loaded from mercFriendingOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-pvp-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercPvpSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercPvpSearchBox" placeholder="Search PVP options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercPvpOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercPvpOptionsTableBody">
+                  <!-- Mercenary PVP options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercPvpOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercPvpOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary PVP options logic is now loaded from mercPvpOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-standby-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercStandbySearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercStandbySearchBox" placeholder="Search standby options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercStandbyOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercStandbyOptionsTableBody">
+                  <!-- Mercenary standby options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercStandbyOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercStandbyOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary standby options logic is now loaded from mercStandbyOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-kiting-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercKitingSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercKitingSearchBox" placeholder="Search kiting options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercKitingOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercKitingOptionsTableBody">
+                  <!-- Mercenary kiting options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercKitingOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercKitingOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary kiting options logic is now loaded from mercKitingOptionsInit.js -->
+          </div>
+          <div class="tab-pane fade" id="merc-skill-list-options" role="tabpanel">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label for="mercSkillListSearchBox" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="mercSkillListSearchBox" placeholder="Search skill list options...">
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="mercSkillListOptionsTable">
+                <thead class="table-light">
+                  <tr><th>Option</th><th>Value</th></tr>
+                </thead>
+                <tbody id="mercSkillListOptionsTableBody">
+                  <!-- Mercenary skill list options will be rendered here by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2">
+              <label for="mercSkillListOptionDescription" class="form-label">Description:</label>
+              <textarea class="form-control" id="mercSkillListOptionDescription" rows="2" readonly></textarea>
+            </div>
+            <!-- Mercenary skill list options logic is now loaded from mercSkillListOptionsInit.js -->
+          </div>
+        </div>
+        <div class="mb-2 mt-3">
+          <label for="mercenaryMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="mercenaryMainDescription" rows="2" readonly>Configure your Mercenary AI settings here. Use the sub-tabs for advanced options.</textarea>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="m-pvp-tactics" role="tabpanel">
+        <h4>Mercenary PVP Tactics</h4>
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="mPvpTactSearch" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="mPvpTactSearch" placeholder="Search tactics..." oninput="filterMPvpTactics()">
+          </div>
+          <div class="col-md-8 d-flex align-items-end justify-content-end">
+            <button class="btn btn-success me-2" id="mPvpTactAddBtn">Add</button>
+            <button class="btn btn-danger" id="mPvpTactDeleteBtn">Delete</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <ul class="list-group" id="mPvpTactList">
+              <!-- Mercenary PVP tactics list rendered by JS -->
+            </ul>
+          </div>
+          <div class="col-md-8">
+            <form id="mPvpTactForm">
+              <div class="mb-2">
+                <label for="mPvpTactName" class="form-label">Name:</label>
+                <input type="text" class="form-control" id="mPvpTactName">
+              </div>
+              <div class="mb-2">
+                <label for="mPvpTactType" class="form-label">Type:</label>
+                <select class="form-select" id="mPvpTactType">
+                  <option value="Tank">Tank</option>
+                  <option value="Ignore">Ignore</option>
+                  <option value="Attack">Attack</option>
+                  <option value="React">React</option>
+                  <option value="Snipe">Snipe</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label for="mPvpTactSkill" class="form-label">Skill:</label>
+                <input type="text" class="form-control" id="mPvpTactSkill">
+              </div>
+              <div class="mb-2">
+                <label for="mPvpTactNotes" class="form-label">Notes:</label>
+                <textarea class="form-control" id="mPvpTactNotes" rows="2"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary" id="mPvpTactSaveBtn">Save</button>
+            </form>
+          </div>
+        </div>
+        <!-- Mercenary PVP tactics logic is now loaded from tacticsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="mPvpTactMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="mPvpTactMainDescription" rows="2" readonly>Edit Mercenary PVP tactics for special PVP AI behavior.</textarea>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="hom-tactics" role="tabpanel">
+        <h4>Homunculus Tactics</h4>
+        <!-- ...existing content... -->
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="homTactSearch" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="homTactSearch" placeholder="Search tactics..." oninput="filterHomTactics()">
+          </div>
+          <div class="col-md-8 d-flex align-items-end justify-content-end">
+            <button class="btn btn-success me-2" id="homTactAddBtn">Add</button>
+            <button class="btn btn-danger" id="homTactDeleteBtn">Delete</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <ul class="list-group" id="homTactList">
+              <!-- Tactics list rendered by JS -->
+            </ul>
+          </div>
+          <div class="col-md-8">
+            <form id="homTactForm">
+              <div class="mb-2">
+                <label for="tactName" class="form-label">Name:</label>
+                <input type="text" class="form-control" id="tactName">
+              </div>
+              <div class="mb-2">
+                <label for="tactType" class="form-label">Type:</label>
+                <select class="form-select" id="tactType">
+                  <option value="Tank">Tank</option>
+                  <option value="Ignore">Ignore</option>
+                  <option value="Attack">Attack</option>
+                  <option value="React">React</option>
+                  <option value="Snipe">Snipe</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label for="tactSkill" class="form-label">Skill:</label>
+                <input type="text" class="form-control" id="tactSkill">
+              </div>
+              <div class="mb-2">
+                <label for="tactNotes" class="form-label">Notes:</label>
+                <textarea class="form-control" id="tactNotes" rows="2"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary" id="homTactSaveBtn">Save</button>
+            </form>
+          </div>
+        </div>
+        <!-- Homunculus tactics logic is now loaded from tacticsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="homTacticsMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="homTacticsMainDescription" rows="2" readonly>Edit Homunculus tactics for specific monsters or situations.</textarea>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="mer-tactics" role="tabpanel">
+        <h4>Mercenary Tactics</h4>
+        <!-- ...existing content... -->
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="merTactSearch" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="merTactSearch" placeholder="Search tactics..." oninput="filterMerTactics()">
+          </div>
+          <div class="col-md-8 d-flex align-items-end justify-content-end">
+            <button class="btn btn-success me-2" id="merTactAddBtn">Add</button>
+            <button class="btn btn-danger" id="merTactDeleteBtn">Delete</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <ul class="list-group" id="merTactList">
+              <!-- Mercenary tactics list rendered by JS -->
+            </ul>
+          </div>
+          <div class="col-md-8">
+            <form id="merTactForm">
+              <div class="mb-2">
+                <label for="merTactName" class="form-label">Name:</label>
+                <input type="text" class="form-control" id="merTactName">
+              </div>
+              <div class="mb-2">
+                <label for="merTactType" class="form-label">Type:</label>
+                <select class="form-select" id="merTactType">
+                  <option value="Tank">Tank</option>
+                  <option value="Ignore">Ignore</option>
+                  <option value="Attack">Attack</option>
+                  <option value="React">React</option>
+                  <option value="Snipe">Snipe</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label for="merTactSkill" class="form-label">Skill:</label>
+                <input type="text" class="form-control" id="merTactSkill">
+              </div>
+              <div class="mb-2">
+                <label for="merTactNotes" class="form-label">Notes:</label>
+                <textarea class="form-control" id="merTactNotes" rows="2"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary" id="merTactSaveBtn">Save</button>
+            </form>
+          </div>
+        </div>
+        <!-- Mercenary tactics logic is now loaded from tacticsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="merTacticsMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="merTacticsMainDescription" rows="2" readonly>Edit Mercenary tactics for specific monsters or situations.</textarea>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="pvp-tactics" role="tabpanel">
+        <h4>PVP Tactics</h4>
+        <!-- ...existing content... -->
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="pvpTactSearch" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="pvpTactSearch" placeholder="Search tactics..." oninput="filterPvpTactics()">
+          </div>
+          <div class="col-md-8 d-flex align-items-end justify-content-end">
+            <button class="btn btn-success me-2" id="pvpTactAddBtn">Add</button>
+            <button class="btn btn-danger" id="pvpTactDeleteBtn">Delete</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <ul class="list-group" id="pvpTactList">
+              <!-- PVP tactics list rendered by JS -->
+            </ul>
+          </div>
+          <div class="col-md-8">
+            <form id="pvpTactForm">
+              <div class="mb-2">
+                <label for="pvpTactName" class="form-label">Name:</label>
+                <input type="text" class="form-control" id="pvpTactName">
+              </div>
+              <div class="mb-2">
+                <label for="pvpTactType" class="form-label">Type:</label>
+                <select class="form-select" id="pvpTactType">
+                  <option value="Tank">Tank</option>
+                  <option value="Ignore">Ignore</option>
+                  <option value="Attack">Attack</option>
+                  <option value="React">React</option>
+                  <option value="Snipe">Snipe</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label for="pvpTactSkill" class="form-label">Skill:</label>
+                <input type="text" class="form-control" id="pvpTactSkill">
+              </div>
+              <div class="mb-2">
+                <label for="pvpTactNotes" class="form-label">Notes:</label>
+                <textarea class="form-control" id="pvpTactNotes" rows="2"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary" id="pvpTactSaveBtn">Save</button>
+            </form>
+          </div>
+        </div>
+        <!-- PVP tactics logic is now loaded from tacticsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="pvpTacticsMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="pvpTacticsMainDescription" rows="2" readonly>Edit PVP tactics for your AI in player-vs-player scenarios.</textarea>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="extra" role="tabpanel">
+        <h4>Extra Settings</h4>
+        <!-- ...existing content... -->
+        <div class="row mb-2">
+          <div class="col-md-4">
+            <label for="extraSearchBox" class="form-label">Search:</label>
+            <input type="text" class="form-control" id="extraSearchBox" placeholder="Search extra options...">
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle" id="extraOptionsTable">
+            <thead class="table-light">
+              <tr><th>Option</th><th>Value</th></tr>
+            </thead>
+            <tbody id="extraOptionsTableBody">
+              <!-- Extra options will be rendered here by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-2">
+          <label for="extraOptionDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="extraOptionDescription" rows="2" readonly></textarea>
+        </div>
+        <!-- Extra options logic is now loaded from extraOptionsInit.js -->
+        <div class="mb-2 mt-3">
+          <label for="extraMainDescription" class="form-label">Description:</label>
+          <textarea class="form-control" id="extraMainDescription" rows="2" readonly>Extra settings and advanced configuration for AzzyAI.</textarea>
+        </div>
+      </div>
+      <!-- Duplicate Mercenary PVP Tactics tab removed to fix tab toggling -->
+    </div>
+
+    <!-- Modular JS includes: load after all tab content for best practice -->
+    <script type="module" src="optionsTable.js"></script>
+    <!-- <script type="module" src="optionsInit.js"></script> (removed, now imported only in main logic) -->
+    <script type="module" src="autoskillOptionsInit.js"></script>
+    <script type="module" src="walkOptionsInit.js"></script>
+    <script type="module" src="autobuffOptionsInit.js"></script>
+    <script type="module" src="berserkOptionsInit.js"></script>
+    <script type="module" src="friendingOptionsInit.js"></script>
+    <script type="module" src="pvpOptionsInit.js"></script>
+    <script type="module" src="standbyOptionsInit.js"></script>
+    <script type="module" src="kitingOptionsInit.js"></script>
+    <script type="module" src="mercWalkOptionsInit.js"></script>
+    <script type="module" src="mercAutobuffOptionsInit.js"></script>
+    <script type="module" src="mercBerserkOptionsInit.js"></script>
+    <script type="module" src="mercFriendingOptionsInit.js"></script>
+    <script type="module" src="mercPvpOptionsInit.js"></script>
+    <script type="module" src="mercStandbyOptionsInit.js"></script>
+    <script type="module" src="mercKitingOptionsInit.js"></script>
+    <script type="module" src="extraOptionsInit.js"></script>
+    <script type="module" src="tacticsEditor.js"></script>
+    <!-- <script type="module" src="tacticsInit.js"></script> (removed, now imported only in main logic) -->
+    <script type="module" src="mercSkillListOptionsInit.js"></script>
+    <script type="module" src="homSkillListOptionsInit.js"></script>
+    <script type="module" src="importExport.js"></script>
+
+    <!-- Main logic: moved inside body for correct execution -->
+    <script type="module">
+    import { setHomunculusOptions, setMercenaryOptions, getHomunculusOptions, getMercenaryOptions } from './optionsInit.js';
+    import * as tactics from './tacticsInit.js';
+    // Attach all setters/getters to window immediately in this module scope
+    window.setHomunculusOptions = setHomunculusOptions;
+    window.setMercenaryOptions = setMercenaryOptions;
+    window.getHomunculusOptions = getHomunculusOptions;
+    window.getMercenaryOptions = getMercenaryOptions;
+    window.setHomunculusTactics = tactics.setHomunculusTactics;
+    window.setMercenaryTactics = tactics.setMercenaryTactics;
+    window.setPvpTactics = tactics.setPvpTactics;
+    window.setMPvpTactics = tactics.setMPvpTactics;
+    window.getHomunculusTactics = tactics.getHomunculusTactics;
+    window.getMercenaryTactics = tactics.getMercenaryTactics;
+    window.getPvpTactics = tactics.getPvpTactics;
+    window.getMPvpTactics = tactics.getMPvpTactics;
+
+    // --- Helper: Convert JS object to Lua table string ---
+    function toLuaTable(obj, indent = 0) {
+      if (typeof obj !== 'object' || obj === null) return JSON.stringify(obj);
+      const pad = '  '.repeat(indent);
+      if (Array.isArray(obj)) {
+        return '{' + obj.map(v => toLuaTable(v, indent + 1)).join(', ') + '}';
+      }
+      let s = '{\n';
+      for (const k in obj) {
+        if (!Object.hasOwn(obj, k)) continue;
+        s += pad + '  ' + k + ' = ' + toLuaTable(obj[k], indent + 1) + ',\n';
+      }
+      s += pad + '}';
+      return s;
+    }
+
+    function toLuaConfig(options) {
+      return options.map(option => {
+        const value = typeof option.value === 'boolean'
+          ? Number(option.value)
+          : typeof option.value === 'string'
+            ? JSON.stringify(option.value)
+            : option.value;
+        return `${option.name} = ${value}`;
+      }).join('\n') + '\n';
+    }
+
+    // (parseLuaTable is now loaded from luaParser.js and attached to window)
+
+    // --- Save All Configs (Zip) and Import logic: only attach after DOMContentLoaded ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // Save All Configs (Zip) logic
+      document.getElementById('saveAllConfigsZip').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const zip = new JSZip();
+        const files = [];
+        if (typeof window.getHomunculusOptions === 'function') {
+          const data = window.getHomunculusOptions();
+          if (data) files.push({name: 'H_Config.lua', content: toLuaConfig(data)});
+        }
+        if (typeof window.getMercenaryOptions === 'function') {
+          const data = window.getMercenaryOptions();
+          if (data) files.push({name: 'M_Config.lua', content: toLuaConfig(data)});
+        }
+        if (typeof window.getHomunculusTactics === 'function') {
+          const data = window.getHomunculusTactics();
+          if (data) files.push({name: 'H_Tactics.lua', content: 'return ' + toLuaTable(data)});
+        }
+        if (typeof window.getMercenaryTactics === 'function') {
+          const data = window.getMercenaryTactics();
+          if (data) files.push({name: 'M_Tactics.lua', content: 'return ' + toLuaTable(data)});
+        }
+        if (typeof window.getPvpTactics === 'function') {
+          const data = window.getPvpTactics();
+          if (data) files.push({name: 'PVP_Tact.lua', content: 'return ' + toLuaTable(data)});
+        }
+        if (typeof window.getMPvpTactics === 'function') {
+          const data = window.getMPvpTactics();
+          if (data) files.push({name: 'M_PVP_Tact.lua', content: 'return ' + toLuaTable(data)});
+        }
+        if (!files.length) {
+          alert('No config data to save.');
+          return;
+        }
+        for (const f of files) zip.file(f.name, f.content);
+        const blob = await zip.generateAsync({type: 'blob'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'USER_AI.zip';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); }, 100);
+      });
+
+      // Main Import All Configs logic
+      document.getElementById('importAllConfigs').addEventListener('click', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('importAllConfigsInput');
+        input.value = '';
+        input.click();
+      });
+
+      document.getElementById('importAllConfigsInput').addEventListener('change', (e) => {
+        try {
+          alert('[DEBUG] ImportAllConfigs handler fired.');
+          const files = Array.from(e.target.files);
+          alert('[DEBUG] files.length = ' + files.length);
+          if (!files.length) { alert('[DEBUG] No files selected.'); return; }
+          let loaded = 0, failed = 0, processed = 0;
+          const results = [];
+          let anyMatched = false;
+          const seenFiles = [];
+          const total = files.length;
+          if (!window._importAllConfigsDebug) window._importAllConfigsDebug = [];
+          alert('[DEBUG] Starting files.forEach loop');
+          files.forEach(file => {
+            alert('[DEBUG] Processing file: ' + file.name);
+            // Only use the base filename, not the full path
+            const baseName = file.name.split(/[/\\]/).pop();
+            seenFiles.push(baseName);
+            // Only process .lua files, skip all others
+            if (!baseName.toLowerCase().endsWith('.lua')) {
+              failed++;
+              results.push(`Skipped (not Lua): ${baseName}`);
+              processed++;
+              window._importAllConfigsDebug.push({file: baseName, status: 'skipped (not lua)'});
+              if (processed === total) finishImport();
+              return;
+            }
+            const type = getConfigTypeFromFilename(baseName);
+            if (!type) {
+              failed++;
+              results.push(`Skipped: ${baseName}`);
+              processed++;
+              window._importAllConfigsDebug.push({file: baseName, status: 'skipped'});
+              if (processed === total) finishImport();
+              return;
+            }
+            anyMatched = true;
+            const reader = new FileReader();
+            reader.onload = evt => {
+              alert('[DEBUG] FileReader.onload for: ' + baseName);
+              let data = null;
+              data = window.parseLuaTable(evt.target.result);
+              alert('[DEBUG] Parsed Lua for ' + baseName + ' (type: ' + type + '):\n' + JSON.stringify(data));
+              if (data === null) { failed++; results.push(`Invalid Lua: ${baseName}`); window._importAllConfigsDebug.push({file: baseName, status: 'invalid lua'}); processed++; if (processed === total) finishImport(); return; }
+
+              // Helper: Wait for a setter to be available, then call it
+              function callSetterWhenReady(setterName, getterName, data, maxWait = 2000) {
+                const start = Date.now();
+                function tryCall() {
+                  if (typeof window[setterName] === 'function') {
+                    window[setterName](data);
+                    if (typeof window[getterName] === 'function') setTimeout(() => window[getterName](), 0);
+                    loaded++;
+                    results.push(`Loaded: ${baseName}`);
+                    window._importAllConfigsDebug.push({file: baseName, status: 'loaded', type});
+                    processed++;
+                    if (processed === total) finishImport();
+                    return;
+                  } else if (Date.now() - start < maxWait) {
+                    setTimeout(tryCall, 50);
+                  } else {
+                    alert(`[DEBUG] ${setterName} is not a function after waiting!`);
+                    failed++;
+                    results.push(`Failed: ${baseName}`);
+                    window._importAllConfigsDebug.push({file: baseName, status: 'failed', error: setterName + ' not available'});
+                    processed++;
+                    if (processed === total) finishImport();
+                  }
+                }
+                tryCall();
+              }
+
+              // Dispatch to correct setter and refresh UI
+              try {
+                switch(type) {
+                  case 'homSettings':
+                    alert('[DEBUG] setHomunculusOptions: ' + JSON.stringify(data));
+                    // Convert object to array of {name, value, desc} using options template
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                      let optsTemplate = window.options || (window.getHomunculusOptions && window.getHomunculusOptions());
+                      if (optsTemplate && Array.isArray(optsTemplate)) {
+                        data = optsTemplate.map(opt => ({
+                          name: opt.name,
+                          value: data.hasOwnProperty(opt.name) ? data[opt.name] : opt.value,
+                          desc: opt.desc
+                        }));
+                      } else {
+                        // fallback: just convert keys
+                        data = Object.keys(data).map(k => ({ name: k, value: data[k], desc: '' }));
+                      }
+                    }
+                    callSetterWhenReady('setHomunculusOptions', 'getHomunculusOptions', data);
+                    break;
+                  case 'mercSettings':
+                    alert('[DEBUG] setMercenaryOptions: ' + JSON.stringify(data));
+                    // Convert object to array of {name, value, desc} using mercOptions template
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                      let optsTemplate = window.mercOptions || (window.getMercenaryOptions && window.getMercenaryOptions());
+                      if (optsTemplate && Array.isArray(optsTemplate)) {
+                        data = optsTemplate.map(opt => ({
+                          name: opt.name,
+                          value: data.hasOwnProperty(opt.name) ? data[opt.name] : opt.value,
+                          desc: opt.desc
+                        }));
+                      } else {
+                        data = Object.keys(data).map(k => ({ name: k, value: data[k], desc: '' }));
+                      }
+                    }
+                    callSetterWhenReady('setMercenaryOptions', 'getMercenaryOptions', data);
+                    break;
+                  case 'homTactics':
+                    alert('[DEBUG] setHomunculusTactics: ' + JSON.stringify(data));
+                    callSetterWhenReady('setHomunculusTactics', 'getHomunculusTactics', data);
+                    break;
+                  case 'mercTactics':
+                    alert('[DEBUG] setMercenaryTactics: ' + JSON.stringify(data));
+                    callSetterWhenReady('setMercenaryTactics', 'getMercenaryTactics', data);
+                    break;
+                  case 'pvpTactics':
+                    alert('[DEBUG] setPvpTactics: ' + JSON.stringify(data));
+                    callSetterWhenReady('setPvpTactics', 'getPvpTactics', data);
+                    break;
+                  case 'mpvpTactics':
+                    alert('[DEBUG] setMPvpTactics: ' + JSON.stringify(data));
+                    callSetterWhenReady('setMPvpTactics', 'getMPvpTactics', data);
+                    break;
+                  default:
+                    failed++;
+                    results.push(`Unknown config: ${baseName}`);
+                    window._importAllConfigsDebug.push({file: baseName, status: 'unknown config'});
+                    processed++;
+                    if (processed === total) finishImport();
+                    return;
+                }
+              } catch (err) {
+                failed++;
+                results.push(`Failed: ${baseName}`);
+                window._importAllConfigsDebug.push({file: baseName, status: 'failed', error: err && err.message});
+                processed++;
+                if (processed === total) finishImport();
+              }
+            };
+            reader.readAsText(file);
+          });
+
+          function finishImport() {
+            let debugMsg = 'Files seen in folder:\n' + seenFiles.join('\n');
+            debugMsg += '\n\nDetails:';
+            window._importAllConfigsDebug.forEach(entry => {
+              debugMsg += `\n${entry.file}: ${entry.status}${entry.type ? ' ('+entry.type+')' : ''}${entry.error ? ' [Error: '+entry.error+']' : ''}`;
+            });
+            alert(debugMsg);
+            if (!anyMatched) {
+              alert('No recognized config files found in the selected folder.\nSupported: H_Config.lua/json, M_Config.lua/json, H_Tactics.lua/json, M_Tactics.lua/json, PVP_Tact.lua/json, M_PVP_Tact.lua/json');
+            } else {
+              alert(`Import complete.\n${results.join('\n')}`);
+            }
+            // Refresh UI for all types
+            if (typeof getHomunculusOptions === 'function') setTimeout(() => getHomunculusOptions(), 0);
+            if (typeof getMercenaryOptions === 'function') setTimeout(() => getMercenaryOptions(), 0);
+            if (typeof getHomunculusTactics === 'function') setTimeout(() => getHomunculusTactics(), 0);
+            if (typeof getMercenaryTactics === 'function') setTimeout(() => getMercenaryTactics(), 0);
+            if (typeof getPvpTactics === 'function') setTimeout(() => getPvpTactics(), 0);
+            if (typeof getMPvpTactics === 'function') setTimeout(() => getMPvpTactics(), 0);
+            // Clear debug for next import
+            window._importAllConfigsDebug = [];
+          }
+        } catch (err) {
+          alert('[ERROR] Exception in ImportAllConfigs handler: ' + (err && err.message ? err.message : err));
+        }
+      });
+    });
+    </script>
+
+    <!-- All single-file import JS handlers removed: only folder import logic remains -->
+</body>
