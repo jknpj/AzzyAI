@@ -137,13 +137,13 @@ end
 if sc.ticks then TICKS = math.max(TICKS, sc.ticks) end
 
 -- Monster IDs must be outside the summon ID range of the selected server type
-local mobBase = sc.private and 110000000 or 60000
+local mobBase = (sc.private or sc.privateIds) and 110000000 or 60000
 ent(OWNER, { x = 100, y = 100, hp = 10000, maxhp = 10000, sp = 500, maxsp = 500, class = 4060 })
 ent(HOMUN, { x = 101, y = 100, hp = 20000, maxhp = 20000, sp = sc.sp or 800, maxsp = sc.sp or 800,
 	homuntype = sc.homuntype, atkrange = 1 })
 for i, m in ipairs(sc.mobs) do
 	ent(mobBase + i, { monster = true, x = m[1], y = m[2], hp = 99999, maxhp = 99999, sp = 0, maxsp = 0,
-		class = 1002, target = OWNER, motion = MOTION_ATTACK, atkrange = 1 })
+		class = 1002, target = sc.passive and 0 or OWNER, motion = sc.passive and MOTION_STAND or MOTION_ATTACK, atkrange = 1 })
 end
 
 -- Config overrides go in right after H_Config.lua, before AI_main.lua applies them,

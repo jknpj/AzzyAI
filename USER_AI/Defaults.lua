@@ -206,6 +206,10 @@ LintUserOptions		=1
 -- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
 -- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).
 ServerType		=SERVER_OFFICIAL
+-- 1 = switch to SERVER_PRIVATE by itself on seeing a monster with an rAthena/Hercules ID
+-- (110000000+); official monster IDs are far below that. Otherwise, with the wrong ServerType,
+-- every monster looks like a player and the homunculus never attacks.
+AutoDetectServerType	=1
 -- Actor ID thresholds; filled by ApplyServerType() after the config is loaded
 -- unless the config sets them explicitly.
 MagicNumber		=nil

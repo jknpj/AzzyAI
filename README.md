@@ -104,9 +104,11 @@ Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release.
 ## Configuration Guide
 
 ### Server Type Configuration
-To ensure the AI functions correctly on your server, you must set the `ServerType` variable in your `Defaults.lua` file.
+To ensure the AI functions correctly on your server, set the `ServerType` variable in `H_Config.lua` (and `M_Config.lua` for mercenaries).
 * For **official servers**, set `ServerType = SERVER_OFFICIAL`.
 * For **private servers**, set `ServerType = SERVER_PRIVATE`.
+
+With the wrong value on a private server every monster looks like a player and the homunculus never attacks. To avoid that, `AutoDetectServerType = 1` (default) switches to `SERVER_PRIVATE` by itself as soon as it sees a monster with an rAthena/Hercules ID (110000000 or more) and logs it in `AAI_ERROR`. It is skipped if the config sets `MagicNumber`/`MagicNumber2`/`MagicNumber3`.
 
 ### Skill Configuration
 To use the new skills, you must add and adjust their settings in your **`H_Config.lua`** file. The AI will automatically disable any skills that are misconfigured or not learned by your homunculus.
