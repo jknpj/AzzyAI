@@ -2035,16 +2035,7 @@ function GetMinionSkill(myid)
 	if (IsHomun(myid)==1) then
 		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraCallLegion==1 then
 			skill=MH_SUMMON_LEGION
-			TraceAI("GetMinionSkill"..skill)
-			if SeraCallLegionLevel == nil then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			elseif SeraCallLegionLevel < 1 then
-				skill,level=0,0
-			elseif SeraCallLegionLevel > 5 then
-				level=SkillList[SERA][MH_SUMMON_LEGION]
-			else
-				level=SeraCallLegionLevel
-			end
+			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
 			TraceAI("GetMinionSkill "..skill..level)
 			if AutoSkillCooldown[skill]~=nil then
 				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
@@ -2157,7 +2148,7 @@ function	GetQuickenSkill(myid)
 			else
 				level=FilirFlitLevel
 			end
-		elseif  (homuntype==2) then --it's an amistr
+		elseif  (homuntype==2) and AllowBloodlust == 1 then --it's an amistr
 			skill=HAMI_BLOODLUST
 			level=SkillList[AMISTR][HAMI_BLOODLUST]
 		end
@@ -2354,6 +2345,7 @@ function	GetOffensiveOwnerSkill(myid)
 		return skill,level,UseBlessingOwner
 	end
 end
+
 function	GetDefensiveOwnerSkill(myid)
 	local level = 0
 	local skill = 0
@@ -2383,6 +2375,7 @@ function	GetDefensiveOwnerSkill(myid)
 	end
 	return 0,0,0
 end
+
 function	GetOtherOwnerSkill(myid)
 	local level = 0
 	local skill = 0
@@ -2633,7 +2626,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	end
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
-		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1 in H_Extra")
+		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
 	elseif targetmode==0 then
 		SkillObject(MyID,level,skill,MyID)
 	elseif targetmode==1 then
@@ -3069,7 +3062,7 @@ end
 -- @param logstring (string): The existing log string to append messages to.
 -- @return (string): The updated log string with any new messages.
 ---
-function LintUserOptions(myid, logstring)
+function LintSkillOptions(myid, logstring)
     local htype = GetV(V_HOMUNTYPE, myid)
     
     -- A master list of all homunculus-specific skill options, grouped by type.
@@ -3079,20 +3072,27 @@ function LintUserOptions(myid, logstring)
             { "UseEiraEraseCutter", "EiraEraseCutterLevel", MH_ERASER_CUTTER, "Eraser Cutter" },
             { "UseEiraXenoSlasher", "EiraXenoSlasherLevel", MH_XENO_SLASHER, "Xeno Slasher" },
             { "UseEiraSilentBreeze", "EiraSilentBreezeLevel", MH_SILENT_BREEZE, "Silent Breeze" },
-            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" }
+            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" },
+            { "UseEiraTwisterCutter", "EiraTwisterCutterLevel", MH_TWISTER_CUTTER, "Twister Cutter" },
+            { "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel", MH_ABSOLUTE_ZEPHYR, "Absolute Zephyr" }
         },
         [BAYERI] = {
             { "UseBayeriStahlHorn", "BayeriStahlHornLevel", MH_STAHL_HORN, "Stahl Horn" },
             { "UseBayeriHailegeStar", "BayeriHailegeStarLevel", MH_HEILIGE_STANGE, "Heilige Stange" },
             { "UseBayeriAngriffModus", nil, MH_ANGRIFFS_MODUS, "Angriffs Modus" },
             { "UseBayeriGoldenPherze", nil, MH_GOLDENE_FERSE, "Goldene Ferse" },
-            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" }
+            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" },
+            { "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel", MH_GLANZEN_SPIES, "Glanzen Spies" },
+            { "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel", MH_HEILIGE_PFERD, "Heilige Pferd" },
+            { "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel", MH_GOLDENE_TONE, "Goldene Tone" }
         },
         [SERA] = {
             { "UseSeraParalyze", "SeraParalyzeLevel", MH_NEEDLE_OF_PARALYZE, "Needle of Paralyze" },
             { "UseSeraPoisonMist", "SeraPoisonMistLevel", MH_POISON_MIST, "Poison Mist" },
             { "UseSeraPainkiller", nil, MH_PAIN_KILLER, "Pain Killer" },
-            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" }
+            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" },
+            { "UseSeraToxinOfMandara", "SeraToxinOfMandaraLevel", MH_TOXIN_OF_MANDARA, "Toxin of Mandara" },
+            { "UseSeraNeedleStinger", "SeraNeedleStingerLevel", MH_NEEDLE_STINGER, "Needle Stinger" }
         },
         [DIETER] = {
             { "UseDieterLavaSlide", "DieterLavaSlideLevel", MH_LAVA_SLIDE, "Lava Slide" },
@@ -3104,7 +3104,9 @@ function LintUserOptions(myid, logstring)
             { "UseDieterBlastForge", nil, MH_BLAST_FORGE, "Blast Forge" }
         },
         [ELEANOR] = {
-            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" }
+            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" },
+            { "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel", MH_BLAZING_AND_FURIOUS, "Blazing and Furious" },
+            { "UseEleanorTheOneFighterRises", "EleanorTheOneFighterRisesLevel", MH_THE_ONE_FIGHTER_RISES, "The One Fighter Rises" }
         }
     }
 
@@ -3133,10 +3135,10 @@ function LintUserOptions(myid, logstring)
 
             if learnedLevel == 0 then
                 -- Skill is not learned at all.
-                if _G[useOptionName] == 1 then
+                if _G[useOptionName] and _G[useOptionName] ~= 0 then
                     logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned.\n"
+                    _G[useOptionName] = 0
                 end
-                _G[useOptionName] = 0
             else
                 -- Skill is learned. Check if the configured level is too high (if a level option exists).
                 if levelOptionName and _G[levelOptionName] and _G[levelOptionName] > learnedLevel then

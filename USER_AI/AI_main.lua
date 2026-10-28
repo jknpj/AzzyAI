@@ -50,55 +50,9 @@ function doInit(myid)
 	if loadtimesuccess==false then
 		logstring=logstring.."\nfailed to load timeouts for owner "..GetV(V_OWNER,MyID).." if this is the first time you've used this account with AzzyAI, disregard this message"
 	end
---	DiscoverOriginBySkill()
 	GetDetectedHomunType(myid)
-	logstring = LintUserOptions(myid, logstring)
-	if GetV(V_SKILLATTACKRANGE,myid,MH_ERASER_CUTTER) == 1 then
-		if UseEiraEraseCutter and GetV(V_HOMUNTYPE,myid)==EIRA  then
-			logstring=logstring.."UseEiraEraseCutter disabled - you don't have the skill!"
-		end
-		UseEiraEraseCutter=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_XENO_SLASHER) == 1 then 
-		if UseEiraXenoSlasher and GetV(V_HOMUNTYPE,myid)==EIRA then
-			logstring=logstring.."UseEiraXenoSlasher disabled - you don't have the skill!"
-		end
-		UseEiraXenoSlasher=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_STAHL_HORN) == 1 then 
-		if UseEiraEraseCutter and GetV(V_HOMUNTYPE,myid)==EIRA then
-			logstring=logstring.."UseBayeriStahlHorn disabled - you don't have the skill!"
-		end
-		UseBayeriStahlHorn=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_HEILIGE_STANGE) == 1 then
-		if UseBayeriHailegeStar and GetV(V_HOMUNTYPE,myid)==BAYERI then
-			logstring=logstring.."UseBayeriHailegeStar disabled - you don't have the skill!"
-		end
-		UseBayeriHailegeStar=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_NEEDLE_OF_PARALYZE) == 1 then
-		if UseSeraParalyze and GetV(V_HOMUNTYPE,myid)==SERA then
-			UseSeraParalyze=0
-			logstring=logstring.."UseSeraParalyze disabled - you don't have the skill!"
-		end
-		UseSeraParalyze=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_POISON_MIST) < 2 then 
-		if UseSeraPoisonMist and GetV(V_HOMUNTYPE,myid)==SERA then
-			logstring=logstring.."UseSeraPoisonMist disabled - you don't have the skill!"
-		end
-		if UseSeraPainkiller and GetV(V_HOMUNTYPE,myid)==SERA then
-			logstring=logstring.."UseSeraPainkiller disabled - you don't have the skill!"
-		end
-		UseSeraPoisonMist=0
-		UseSeraPainkiller=0
-	end
-	if GetV(V_SKILLATTACKRANGE,myid,MH_LAVA_SLIDE) == 1 then
-		if UseDieterLavaSlide and GetV(V_HOMUNTYPE,myid)==DIETER then
-			logstring=logstring.."UseDieterLavaSlide disabled - you don't have the skill!"
-		end
-		UseDieterLavaSlide=0
+	if LintUserOptions ~= 0 then
+		logstring = LintSkillOptions(myid, logstring)
 	end
 	OutFile=io.open("AAIStartH.txt","a")
 	if OutFile == nil then
@@ -3317,33 +3271,34 @@ function AI(myid)
 	SeraLegionList=""
 	local seralegionActive=0
 	local seralegionBugged=0
-	for i,v in ipairs(actors) do
-		local x,y = GetV(V_POSITION,v)
-		TakenCells[x.."_"..y]=1
-		if AAIActors[v]~=1 then
-			if IsHomun(myid)==1 then
-				logappend("AAI_ACTORS","Actor "..v.." type "..GetV(V_HOMUNTYPE,v).." at "..x..","..y.." Is M="..IsMonster(v))
+
+	for i, v in ipairs(actors) do
+		local x, y = GetV(V_POSITION, v)
+		TakenCells[x .. "_" .. y] = 1
+		if AAIActors[v] ~= 1 then
+			if IsHomun(myid) == 1 then
+				logappend("AAI_ACTORS", "Actor " .. v .. " type " .. GetV(V_HOMUNTYPE, v) .. " at " .. x .. "," .. y .. " Is M=" .. IsMonster(v))
 			else
-				logappend("AAI_ACTORS","Actor "..v.." mertype "..GetV(V_MERTYPE,v).." at "..x..","..y.." Is M="..IsMonster(v))
+				logappend("AAI_ACTORS", "Actor " .. v .. " mertype " .. GetV(V_MERTYPE, v) .. " at " .. x .. "," .. y .. " Is M=" .. IsMonster(v))
 			end
-			AAIActors[v]=1
+			AAIActors[v] = 1
 		end
-		local x,y = GetV(V_POSITION,v)
-		if GetV(V_HOMUNTYPE,v)==1102 and x==174 and 33==y and GetV(V_MOTION,v)==MOTION_STAND then
-			-- This is the eden group bathory, ignore it. 
-		else	
-			if (false == IsOutOfSight(myid,v)) then
-				Actors[v]=1
+		local x, y = GetV(V_POSITION, v)
+		if GetV(V_HOMUNTYPE, v) == 1102 and x == 174 and 33 == y and GetV(V_MOTION, v) == MOTION_STAND then
+			-- This is the eden group bathory, ignore it.
+		else
+			if (false == IsOutOfSight(myid, v)) then
+				Actors[v] = 1
 				--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." in sight")
-				if GetV(V_HOMUNTYPE,MyID)==SERA then
-					local actortype=GetV(V_HOMUNTYPE,v)
+				if GetV(V_HOMUNTYPE, MyID) == SERA then
+					local actortype = GetV(V_HOMUNTYPE, v)
 					if (actortype > 2157 and actortype < 2161) then
-						seralegionCount=seralegionCount+1
-						SeraLegionList=SeraLegionList..v.." "
-						if GetV(V_MOTION,v)==MOTION_STAND and GetDistanceAR(MyID,v)>3 then
-							seralegionBugged=seralegionBugged+1
-						else 
-							seralegionActive=seralegionActive+1
+						seralegionCount = seralegionCount + 1
+						SeraLegionList = SeraLegionList .. v .. " "
+						if GetV(V_MOTION, v) == MOTION_STAND and GetDistanceAR(MyID, v) > 3 then
+							seralegionBugged = seralegionBugged + 1
+						else
+							seralegionActive = seralegionActive + 1
 						end
 					end
 				end
@@ -3363,13 +3318,13 @@ function AI(myid)
 								end
 								newfriendhidfile:close()
 							end
-							if newfriendmidfile~=nil then
-							TraceAI("new friend on screen, checking M_ID"..v)
-								local newfriendmid=newfriendmidfile:read("*line")
-								TraceAI("m_id found"..v)
-								if newfriendmid~=nil then
-									TraceAI("m_id: "..newfriendmid)
-									MyFriends[newfriendmid+1-1]=RETAINER
+							if newfriendmidfile ~= nil then
+								TraceAI("new friend on screen, checking M_ID" .. v)
+								local newfriendmid = newfriendmidfile:read("*line")
+								TraceAI("m_id found" .. v)
+								if newfriendmid ~= nil then
+									TraceAI("m_id: " .. newfriendmid)
+									MyFriends[newfriendmid + 1 - 1] = RETAINER
 								end
 								newfriendmidfile:close()
 							end
@@ -3406,9 +3361,11 @@ function AI(myid)
 				elseif IsSummonID(v)==1 or (ServerType==SERVER_PRIVATE and v~=MyID and v~=GetV(V_OWNER,MyID)) then
 					Retainers[v]=1
 				end
+				
 			end
 		end
 	end
+
 	if LiveMobID == 1 and IsHomun(MyID)==1 and tMobID ~="" then
 		local midoutfile=io.open(AggressiveRelogPath.."MobID.lua","w")
 		if midoutfile~=nil then
