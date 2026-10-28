@@ -39,6 +39,12 @@ SCENARIOS = {
 				if f then f:close(); return false end
 				return LastTargetingLogTick == nil
 			end,
+			["AAIStartH.txt reports a clean install"] = function()
+				local f = assert(io.open("AAIStartH.txt", "r"))
+				local text = f:read("*a")
+				f:close()
+				return text:find("started successfully", 1, true) ~= nil and text:find("Logs enabled: AAI_ERROR", 1, true) ~= nil
+			end,
 		} },
 	amistr_fresh_alt = { homuntype = 6, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
 	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },

@@ -31,7 +31,7 @@ function WriteStartupLog(Version,ErrorCode,ErrorInfo)
 		AUVersion="1.30b or earlier"
 		ErrorCode="File version error"
 		ErrorInfo=ErrorInfo.."AzzyUtil.lua no version found"
-	elseif string.gfind(AUVersion,verspattern)()~="1.552" then
+	elseif string.gfind(AUVersion,verspattern)()~="1.56" then
 		ErrorCode="File version error"
 		ErrorInfo=ErrorInfo.."AzzyUtil.lua wrong version "..string.gfind(AUVersion,verspattern)().."\n"
 	end
@@ -88,6 +88,7 @@ function WriteStartupLog(Version,ErrorCode,ErrorInfo)
 	else
 		OutString="AzzyAI (hom) version "..Version.."\nMain version:"..MainVersion.."\nAzzyUtil version:"..AUVersion.."\nConstant version:"..CVersion.."\nConfig: "..ConfigVers.."\nTactics: "..TacticVers.." \nTime: "..os.date("%c").."\nLua Version".._VERSION.."\nError: "..ErrorCode.." "..ErrorInfo
 	end
+	OutString = OutString..StartupDiagnostics()
 	OutFile=io.open("AAIStartH.txt","w")
 	if OutFile == nil then
 		Error("No write permissions for RO folder, please fix permissions on the RO folder in order to use AzzyAI. Version Info: "..OutString)

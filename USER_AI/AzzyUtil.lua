@@ -212,6 +212,19 @@ function	GetPVPTact(t,m)
 	end
 end
 
+-- Extra lines for AAIStartH.txt / AAIStartM.txt, so a user can see which code and logs are active
+function StartupDiagnostics()
+	local logs = {}
+	for name, on in pairs(LogEnable or {}) do
+		if on == 1 then logs[#logs + 1] = name end
+	end
+	table.sort(logs)
+	return "\nBuild: LATAM-HG (self-target fix, targeting log)"
+		.."\nServerType: "..tostring(ServerType).." (auto-detect "..tostring(AutoDetectServerType)..")"
+		.."\nLogs enabled: "..(#logs > 0 and table.concat(logs, ", ") or "none")
+		.."\nLogs are written to: the RO client folder (next to this file)"
+end
+
 function LogTargetingSnapshot(actors)
 	if LogEnable["AAI_TARGETING"] ~= 1 then
 		return
