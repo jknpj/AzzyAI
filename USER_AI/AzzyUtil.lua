@@ -2647,6 +2647,13 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		end
 		return 0
 	end
+	-- the server needs MORE SP than the cost for homunculus/mercenary skills (rAthena
+	-- skill_check_condition_mercenary: sp <= cost fails); at exactly the cost the request
+	-- would only produce "Skill failed" until the next SP regen tick
+	if GetV(V_SP,MyID) <= GetSkillInfo(skill,3,level) then
+		TraceAI("DoSkill: "..FormatSkill(skill,level).." skipped, SP not above cost")
+		return 0
+	end
 	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target))
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then

@@ -91,6 +91,8 @@ The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACK
 
 Long cooldowns (10 s or more) are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change.
 
+The simulator follows rAthena's rules (`clif_parse_UseSkillToId_homun`, `skill_check_condition_mercenary`): homunculus/mercenary skills need **more** SP than their cost, so `DoSkill` never sends a skill at exactly its SP cost. rAthena silently lowers a level above the learned one, so the level step-down above only matters on servers that refuse such casts.
+
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
 - Lua syntax check and simulator;
