@@ -96,7 +96,6 @@ DieterLavaSlideLevel		=10
 
 
 --Autobuff options
-
 UseDefensiveBuff		=1
 UseOffensiveBuff		=1 
 UseProvokeOwner     =0
@@ -151,7 +150,6 @@ KiteParanoid             = 0
 DefendStandby            = 0 
 StickyStandby            = 1 
 
-
 --Advanced Timing settings 
 SpawnDelay               = 1000
 AutoSkillDelay		= 400
@@ -162,14 +160,12 @@ FollowTryPanic		=3
 SphereTrackFactor	=3 
 
 --Berzerk Settings:
-
 UseBerzerkMobbed         = 0 
 UseBerzerkSkill          = 0 
 UseBerzerkAttack         = 0 
 Berzerk_SkillAlways      = 0 
 Berzerk_Dance            = 0
 Berzerk_IgnoreMinSP      = 0 
-
 
 --Misc settings:
 StandbyFriending         = 1  
@@ -181,15 +177,6 @@ AggressiveRelogTracking = 0
 AggressiveRelogPath = "./AI/USER_AI/"
 ConfigPath = "./AI/USER_AI/"
 AttackLastFullSP = 0
-
-
-
-
-
-
-
-
-
 
 DoNotChase 		=0
 KSMercHomun		=0
@@ -210,9 +197,11 @@ FastChange_I2C		=0
 FastChange_F2I		=0
 
 FastChangeLimit		=1
-
 AttackDebuffLimit	=1
 
+-- 1 = on startup, disable skill options for skills the homunculus has not learned
+-- and clamp configured levels to the learned level (see LintSkillOptions in AzzyUtil).
+LintUserOptions		=1
 
 -- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
 -- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).
@@ -253,14 +242,16 @@ BasicDebuffs[MER_DECAGI]=	1
 BasicDebuffs[MA_SANDMAN]=	1
 BasicDebuffs[MA_FREEZINGTRAP]=	1
 
-SkillRetryLimit={4,4,4,3,3,3,3,0,2,2,3,3,3} --Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
+--Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
+SkillRetryLimit = {
+  [1]=4, [2]=4, [3]=4, [4]=3, [5]=3, [6]=3, [7]=3, [8]=0, [9]=2, [10]=2, [11]=3, [12]=3, [13]=3
+}
 SkillRetryLimit[-1]=2 -- for atk skills
 
 LogEnable={}
 LogEnable["AAI_ERROR"]=1
 LogEnable["AAI_SKILLFAIL"]=0
 LogEnable["AAI_CLOSEST"]=0
-
 LogEnable["AAI_Lag"]=0
 
 -- New Homunculus S Skills Defaults
@@ -285,8 +276,13 @@ BayeriGoldeneToneLevel = 10
 UseDieterTempering = 0
 UseDieterBlastForge = 0
 
----------------------------
--- Eleanor Style Constants
----------------------------
-FIGHTING_MODE = 0
-GRAPPLING_MODE = 1
+-- New Eleanor Defaults
+UseEleanorTinderBreaker		=1
+EleanorTinderBreakerLevel	=5
+UseEleanorCBC				=1
+EleanorCBCLevel				=5
+UseEleanorEQC				=5
+EleanorEQCLevel				=5
+-- New Amistr Defaults
+AllowBloodlust            	=0
+AllowSBR44					=0
