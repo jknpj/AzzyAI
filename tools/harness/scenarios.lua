@@ -5,6 +5,7 @@
 --   private    true to run with ServerType = SERVER_PRIVATE
 --   privateIds rAthena-style actor IDs without changing ServerType (wrong-config check)
 --   passive    monsters stand still and attack nobody
+--   selfMonster the client's IsMonster() also returns 1 for our own homunculus
 --   sp/spregen homunculus max SP and SP regained per second
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
@@ -31,7 +32,14 @@ local ELEANOR_SKILLS = { "MH_STYLE_CHANGE", "MH_SONIC_CLAW", "MH_SILVERVEIN_RUSH
 
 SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
-	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
+		checks = {
+			["targeting diagnostics are off by default"] = function()
+				local f = io.open("AAI_TARGETING.log", "r")
+				if f then f:close(); return false end
+				return LastTargetingLogTick == nil
+			end,
+		} },
 	amistr_fresh_alt = { homuntype = 6, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
 	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },
 	-- passive monsters (nobody attacking): the homunculus must still go and attack them
@@ -42,6 +50,38 @@ SCENARIOS = {
 	-- rAthena IDs but the config was left on SERVER_OFFICIAL: monsters looked like players and were never attacked
 	amistr_private_ids_official_config = { homuntype = 2, skills = {}, mobs = cluster, privateIds = true, passive = true,
 		sp = 20, spregen = 1, minAttacks = 50 },
+	-- the client's IsMonster() reports our own homunculus as a monster: it used to target itself
+	-- (always the closest "monster") and never attack anything
+	amistr_self_reported_monster = { homuntype = 2, skills = {}, mobs = cluster, private = true, passive = true,
+		selfMonster = true, sp = 20, spregen = 1, minAttacks = 50 },
+	amistr_self_reported_monster_official = { homuntype = 2, skills = {}, mobs = cluster, passive = true,
+		selfMonster = true, sp = 20, spregen = 1, minAttacks = 50 },
+	amistr_targeting_log = { homuntype = 2, skills = {}, mobs = single, privateIds = true, passive = true,
+		sp = 20, spregen = 1, minAttacks = 50,
+		set = { LogEnable = { AAI_ERROR = 1, AAI_TARGETING = 1 } },
+		checks = {
+			["targeting snapshots include classification and are rate limited"] = function()
+				local f = assert(io.open("AAI_TARGETING.log", "r"))
+				local text = f:read("*a")
+				f:close()
+				local _, count = text:gsub("Snapshot tick=", "")
+				return count == 6 and text:find("Actor 110000001 nativeMonster=1 player=0", 1, true) ~= nil
+					and text:find("inTargets=true", 1, true) ~= nil
+					and text:find("KS=not KS, not targeted by anything", 1, true) ~= nil
+			end,
+		} },
+	amistr_targeting_passive_log = { homuntype = 2, skills = {}, mobs = single, private = true, passive = true,
+		sp = 20, spregen = 1, minAttacks = 0,
+		set = { SuperPassive = 1, LogEnable = { AAI_ERROR = 1, AAI_TARGETING = 1 } },
+		checks = {
+			["passive blocker is visible without changing targeting"] = function()
+				local f = assert(io.open("AAI_TARGETING.log", "r"))
+				local text = f:read("*a")
+				f:close()
+				return MyEnemy == 0 and text:find("SuperPassive=1", 1, true) ~= nil
+					and text:find("inTargets=true", 1, true) ~= nil
+			end,
+		} },
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)

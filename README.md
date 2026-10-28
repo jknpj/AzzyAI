@@ -110,5 +110,24 @@ To ensure the AI functions correctly on your server, set the `ServerType` variab
 
 With the wrong value on a private server every monster looks like a player and the homunculus never attacks. To avoid that, `AutoDetectServerType = 1` (default) switches to `SERVER_PRIVATE` by itself as soon as it sees a monster with an rAthena/Hercules ID (110000000 or more) and logs it in `AAI_ERROR`. It is skipped if the config sets `MagicNumber`/`MagicNumber2`/`MagicNumber3`.
 
+### Troubleshooting automatic attacks
+
+Some clients report the player's own homunculus/mercenary as a monster through `IsMonster()`.
+The AI used to add itself to its target list, pick itself as the closest "monster" and send
+attacks the server ignores, so the homunculus only walked around. The actor loop now never
+treats the owner, the homunculus itself or friends/retainers as monsters.
+
+If manual attacks work but automatic attacks still do not, enable targeting diagnostics by
+adding `LogEnable["AAI_TARGETING"] = 1` to the installed `H_Extra.lua`. Reload the
+custom AI (relog if unsure), stand near an untouched monster for 10-15 seconds,
+and collect `AAI_TARGETING.log` and `AAIStartH.txt` from the Ragnarok client folder.
+The targeting log records a snapshot every 5 seconds, with up to 20 actors:
+native monster detection, player classification, target-list membership, tactics,
+kill-steal checks, distance, and passive/standby/HP/SP settings.
+If no log is created, check the installed AI path, custom-AI selection (`/hoai`),
+and folder write permissions. Disable the option after testing; logs are appended.
+The offline harness cannot verify what a particular client reports or whether the
+server accepts AI-issued attack commands.
+
 ### Skill Configuration
 To use the new skills, you must add and adjust their settings in your **`H_Config.lua`** file. The AI will automatically disable any skills that are misconfigured or not learned by your homunculus.
