@@ -105,7 +105,8 @@ local function recordCast(kind, id, lvl, skill, a, b)
 	local name = (SkillInfo and SkillInfo[skill] and SkillInfo[skill][1]) or tostring(skill)
 	-- like the server: a skill or level the homunculus hasn't learned is refused ("Skill failed")
 	local learned = id ~= HOMUN or (skillKnown[skill] and lvl <= skillKnown[skill])
-	local ok = learned and e.sp >= skillField(skill, 3, lvl)
+	-- rAthena skill_check_condition_mercenary: homunculus/mercenary need MORE SP than the cost
+	local ok = learned and e.sp > skillField(skill, 3, lvl)
 	if ok then
 		e.sp = e.sp - skillField(skill, 3, lvl)
 		e.motion = MOTION_SKILL
