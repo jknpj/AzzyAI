@@ -80,6 +80,7 @@ def main():
     parser.add_argument("--ticks", type=int, default=300, help="AI calls per scenario, 100 ms each")
     parser.add_argument("--verbose", action="store_true", help="print every cast")
     parser.add_argument("--trace", action="store_true", help="print TraceAI output")
+    parser.add_argument("--profile", action="store_true", help="print time per AI() call and the hottest functions")
     parser.add_argument("--skip-syntax", action="store_true")
     args = parser.parse_args()
 
@@ -89,7 +90,8 @@ def main():
     if not args.skip_syntax:
         ok = check_syntax(luac)
 
-    env = dict(os.environ, HARNESS_VERBOSE="1" if args.verbose else "0", HARNESS_TRACE="1" if args.trace else "0")
+    env = dict(os.environ, HARNESS_VERBOSE="1" if args.verbose else "0", HARNESS_TRACE="1" if args.trace else "0",
+               HARNESS_PROFILE="1" if args.profile else "0")
     names = args.scenarios or all_scenarios()
     passed = sum(run_scenario(lua, n, args.ticks, env) for n in names)
     print(f"scenarios: {passed}/{len(names)} passed")

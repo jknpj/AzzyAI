@@ -42,7 +42,7 @@ GetMobCount(id,range,[id2])
 Returns the number of monsters within range cells of the actor id, and the number of said monsters which are currently targeting id. If id2 is specified, monsters which are targeting id2 will also be included in the second value returned. 
 Useful for deciding whether to use anti-mob skills.
 ex:
-local mobcount,aggrocount = GetMobCount(MyID,1,GetV(V_OWNER,MyID))
+local mobcount,aggrocount = GetMobCount(MyID,1,OwnerID)
 
 GetBestBrandishTarget(id)
 Returns the id of the best monster adjacent to the mercenary to use brandish spear on (that is, the target that will result in the most monsters being hit). 
@@ -98,6 +98,7 @@ function 	GetTact(t,m)
 	if m==nil then
 		TraceAI("GetTact: Error - nil target")
 		logappend("AAI_ERROR","GetTact: Error - nil target")
+		return 0
 	end
 	if t==nil then
 		TraceAI("GetTact: Error - nil tactic target:"..m)
@@ -108,34 +109,39 @@ function 	GetTact(t,m)
 			TraceAI("GetTact: Returning pvp tactic")
 			return GetPVPTact(t,m)
 		else
-			TraceAI("GetTact: not pvp mode returning 0")
 			return 0
 		end
 	end
+	-- The tactic row only depends on the actor's class, which can't change within one AI() call.
+	-- AI() empties TactRowCache at the start of every tick.
+	local temp = TactRowCache and TactRowCache[m]
 	local e = 0
-	if (IsHomun(MyID)==0) then 
-		if (MobID[m]==nil) then
-			e=GetClass(m)
+	if temp == nil then
+		if (IsHomun(MyID)==0) then 
+			if (MobID[m]==nil) then
+				e=GetClass(m)
+			else
+				e=MobID[m]
+			end
 		else
-			e=MobID[m]
+			e=GetV(V_HOMUNTYPE,m)
 		end
-	else
-		e=GetV(V_HOMUNTYPE,m)
-	end
-	temp=GetMyTact(e)
-	if (temp==nil) then
-		if (e >= 1324 and e <= 1363) or (e >= 1938 and e <=1946) then
-			temp=GetMyTact(13)
-			TraceAI("GetTact: No tactic "..t.." for "..e.."actor: "..m.." but it's a treasure chest.")
+		temp=GetMyTact(e)
+		if (temp==nil) then
+			if (e >= 1324 and e <= 1363) or (e >= 1938 and e <=1946) then
+				temp=GetMyTact(13) -- treasure chest
+			end
+			if temp==nil then
+				temp=GetMyTact(0)
+			end
 		end
-		if temp==nil then
-			temp=GetMyTact(0)
-			--TraceAI("GetTact: No tactic "..t.." for "..e.."actor: "..m.." using default instead")
+		if TactRowCache then
+			TactRowCache[m] = temp
 		end
 	end
 	if (temp[t]==nil) then
 		temp=GetMyTact(0)
-		TraceAI("GetTact: Undefined tactic "..t.." for "..e.."actor: "..m.." using default instead")
+		TraceAI("GetTact: Undefined tactic "..t.." for actor: "..m.." using default instead")
 	end
 	x=temp[t]
 	if (x==nil) then
@@ -263,7 +269,7 @@ end
 function IsRescueTarget(id)
 	local tactrescue=GetTact(TACT_RESCUE,id)
 	local target=GetV(V_TARGET,id)
-	local owner=GetV(V_OWNER,MyID)
+	local owner=OwnerID
 	if target==owner then
 		local hp = HPPercent(owner)
 		if RescueOwnerLowHP > hp then
@@ -291,7 +297,7 @@ function IsRescueTarget(id)
 				return 1
 			end
 		elseif tactrescue==RESCUE_OWNER then
-			if target==GetV(V_OWNER,MyID) then
+			if target==OwnerID then
 				return 1
 			end
 		elseif tactrescue==RESCUE_SELF then
@@ -328,7 +334,7 @@ end
 
 
 function IsFriend(id)
-	if (id==GetV(V_OWNER,MyID)) then
+	if (id==OwnerID) then
 		return 1
 	elseif (id~= MyID) then
 		friendclass=MyFriends[id]
@@ -340,7 +346,7 @@ function IsFriend(id)
 end
 
 function IsPVPFriend(id)
-	if (id==GetV(V_OWNER,MyID)) then
+	if (id==OwnerID) then
 		return 1
 	elseif (id~= MyID) then
 		friendclass=MyFriends[id]
@@ -352,7 +358,7 @@ function IsPVPFriend(id)
 end
 
 function IsFriendOrSelf(id)
-	if (id==GetV(V_OWNER,MyID) or id == MyID) then
+	if (id==OwnerID or id == MyID) then
 		return 1
 	else
 		if (MyFriends[id]~=nil) then
@@ -399,7 +405,7 @@ function GetAggroCount(target)
 	if target ==nil then
 		for k,v in pairs(Targets) do
 			if v[2] > 0 then -- it's aggressive
-				distance = GetDistanceA(GetV(V_OWNER,MyID),k)
+				distance = GetDistanceA(OwnerID,k)
 				if (distance <= GetMoveBounds()) then
 					aggrocount=aggrocount+1*GetTact(TACT_WEIGHT,k)
 				end
@@ -426,9 +432,9 @@ function GetMobCount(skill,level,target,aggro)
 		if skill == ML_BRANDISH then
 			for k,v in pairs (Targets) do
 				if GetV(V_MOTION,k)~=MOTION_DEAD then
-					if (GetDistanceA(myid,k)<=1 and GetDistanceA(target,k) <=1 and (v[2]>0 or aggro~=0)) then
+					if (GetDistanceA(MyID,k)<=1 and GetDistanceA(target,k) <=1 and (v[2]>0 or aggro~=0)) then
 						mobcount=mobcount+1*GetTact(TACT_WEIGHT,k)
-					elseif (GetDistanceA(myid,k) ==2 and GetDistance3(myid,k) < 2.5 and GetDistance3(target,k) < 2.5 and (v[2]>0 or aggro~=0)) then -- sides, 2 cells to either side of target/merc
+					elseif (GetDistanceA(MyID,k) ==2 and GetDistance3(MyID,k) < 2.5 and GetDistance3(target,k) < 2.5 and (v[2]>0 or aggro~=0)) then -- sides, 2 cells to either side of target/merc
 						mobcount=mobcount+1*GetTact(TACT_WEIGHT,k)
 					end
 				end
@@ -506,7 +512,7 @@ function GetBestAoECoord(myid,skill,level)
 	local myx
 	local myy
 	myx,myy=GetV(V_POSITION,myid)
-	local ox,oy=GetV(V_POSITION,GetV(V_OWNER,MyID))
+	local ox,oy=GetV(V_POSITION,OwnerID)
 	grid={}
 	for xx=ox-20,ox+20 do
 		grid[xx]={}
@@ -791,6 +797,13 @@ function IsHiddenOnScreen(myid) --Currently disabled - assume there is never hid
 end
 
 function IsHomun(myid)
+	-- AI.lua and AI_M.lua run in separate Lua states, so our own answer never changes
+	if myid==MyID and myid~=nil then
+		if IsHomunSelf==nil then
+			IsHomunSelf = (GetV(V_HOMUNTYPE,myid)~=nil) and 1 or 0
+		end
+		return IsHomunSelf
+	end
 	if (GetV(V_HOMUNTYPE,myid)~=nil) then
 		return 1
 	end
@@ -959,7 +972,7 @@ OldMove=Move
 function Move(myid,x,y)
 	local ox,oy = GetV(V_POSITION,myid)
 	local dis = GetDistance(ox,oy,x,y)
-	local dis2owner=GetDistanceAPR(GetV(V_OWNER,myid),x,y)
+	local dis2owner=GetDistanceAPR(OwnerID,x,y)
 	local newx,newy=x,y
 	if dis2owner > 14 then 
 		logappend("AAI_ERROR","Attempt to move to location "..x..","..y.." which is "..dis2owner.." cells from owner, call disregarded")
@@ -1199,7 +1212,7 @@ function BetterMoveToOwner(myid,range)
 		range=1
 	end
 	local x,y = GetV(V_POSITION,myid)
-	local ox,oy = GetV(V_POSITION,GetV(V_OWNER,myid))
+	local ox,oy = GetV(V_POSITION,OwnerID)
 	local destx,desty=0,0
 	if (x > ox+range) then
 		destx=ox+range
@@ -1224,7 +1237,7 @@ function BetterMoveToOwnerXY(myid,range)
 		range=1
 	end
 	local x,y = GetV(V_POSITION,myid)
-	local ox,oy = GetV(V_POSITION,GetV(V_OWNER,myid))
+	local ox,oy = GetV(V_POSITION,OwnerID)
 	local destx,desty=0,0
 	if (x > ox+range) then
 		destx=ox+range
@@ -1247,7 +1260,7 @@ function BetterMoveToLoc(myid,range,ox,oy)
 		range=1
 	end
 	local x,y = GetV(V_POSITION,myid)
-	--local ox,oy = GetV(V_POSITION,GetV(V_OWNER,myid))
+	--local ox,oy = GetV(V_POSITION,OwnerID)
 	local destx,desty=0,0
 	if (x > ox+range) then
 		destx=ox+range
@@ -1272,7 +1285,7 @@ function BetterMoveToLocXY(myid,range,ox,oy)
 		range=1
 	end
 	local x,y = GetV(V_POSITION,myid)
-	--local ox,oy = GetV(V_POSITION,GetV(V_OWNER,myid))
+	--local ox,oy = GetV(V_POSITION,OwnerID)
 	local destx,desty=0,0
 	if (x > ox+range) then
 		destx=ox+range
@@ -1431,12 +1444,12 @@ function AdjustStandPoint (x,y,tx,ty,r,alt)
 		end
 		local i=0
 		
-		while (TakenCells[x.."_"..y] or GetDistanceAPR(GetV(V_OWNER,MyID),x,y) > bounds) do
+		while (TakenCells[x.."_"..y] or GetDistanceAPR(OwnerID,x,y) > bounds) do
 			i=i+1
 			if (TakenCells[x.."_"..y]) then
-				logstring=logstring.."i="..i.."tc="..TakenCells[x.."_"..y].."d ".. GetDistanceAPR(GetV(V_OWNER,MyID),x,y).." :"
+				logstring=logstring.."i="..i.."tc="..TakenCells[x.."_"..y].."d ".. GetDistanceAPR(OwnerID,x,y).." :"
 			else 
-				logstring=logstring.."i="..i.."tc= nil d ".. GetDistanceAPR(GetV(V_OWNER,MyID),x,y).." :"
+				logstring=logstring.."i="..i.."tc= nil d ".. GetDistanceAPR(OwnerID,x,y).." :"
 			end
 			if r==1 then
 				if alt==nil or alt==0 then
@@ -1822,7 +1835,7 @@ function GetSAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype > 47 then -- it's a Homun S
 			if htype==EIRA and UseEiraEraseCutter==1 then
 				skill=MH_ERASER_CUTTER
@@ -1872,7 +1885,7 @@ function GetComboSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype==ELEANOR then
 			if EleanorMode==FIGHTING_MODE then
 				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
@@ -1903,7 +1916,7 @@ function GetGrappleSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
 			local comboFollowupSpheres = math.max(0, AutoComboSpheres - 1)
 			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres then
@@ -1940,9 +1953,9 @@ function GetAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype < 17 then
-			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
+			homuntype=modulo(MyHomunType,4)
 		else
 			homuntype=modulo(DetectedOldHomunType,4)
 		end
@@ -1961,6 +1974,8 @@ function GetAtkSkill(myid)
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
 				skill=0
+			elseif (FilirMoonlightLevel~=nil) then
+				level=FilirMoonlightLevel
 			elseif (FilerMoonlightLevel==nil) then
 				level=SkillList[FILIR][HFLI_MOON]
 			else
@@ -2000,7 +2015,7 @@ end
 
 function GetDebuffSkill(myid)
 	if (IsHomun(myid)==1) then
-		if GetV(V_HOMUNTYPE,MyID)==EIRA and UseEiraSilentBreeze==1 then
+		if MyHomunType==EIRA and UseEiraSilentBreeze==1 then
 			skill=MH_SILENT_BREEZE
 			if EiraSilentBreezeLevel==nil then
 				level=SkillList[EIRA][MH_SILENT_BREEZE]
@@ -2008,7 +2023,7 @@ function GetDebuffSkill(myid)
 				level=EiraSilentBreezeLevel
 			end
 			return skill,level
-		elseif GetV(V_HOMUNTYPE,MyID)==DIETER and UseDieterVolcanicAsh==1 then
+		elseif MyHomunType==DIETER and UseDieterVolcanicAsh==1 then
 			skill=MH_VOLCANIC_ASH
 			level=SkillList[DIETER][MH_VOLCANIC_ASH]
 			local t = GetTick()
@@ -2033,7 +2048,7 @@ end
 function GetMinionSkill(myid)
 	local level,skill=0,0
 	if (IsHomun(myid)==1) then
-		if GetV(V_HOMUNTYPE,MyID)==SERA and UseSeraCallLegion==1 then
+		if MyHomunType==SERA and UseSeraCallLegion==1 then
 			skill=MH_SUMMON_LEGION
 			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
 			TraceAI("GetMinionSkill "..skill..level)
@@ -2074,7 +2089,7 @@ function GetMobSkill(myid)
 	local level = 0
 	if (IsHomun(myid)==1) then
 	
-		htype=GetV(V_HOMUNTYPE,MyID)
+		htype=MyHomunType
 		if htype <17 then
 			skill=0
 		else -- it's a homun s
@@ -2132,9 +2147,9 @@ function	GetQuickenSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype < 17 then
-			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
+			homuntype=modulo(MyHomunType,4)
 		else
 			homuntype=modulo(DetectedOldHomunType,4)
 		end
@@ -2172,7 +2187,7 @@ function	GetSOffensiveSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if (htype==BAYERI and UseBayeriAngriffModus~=0) then
 			skill=MH_ANGRIFFS_MODUS
 			level = SkillList[BAYERI][MH_ANGRIFFS_MODUS]
@@ -2199,7 +2214,7 @@ function	GetSDefensiveSkill(myid)
 	local skill = 0
 	local skillopt=0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if (htype==BAYERI and UseBayeriGoldenPherze~=0) then
 			skill=MH_GOLDENE_FERSE
 			level = SkillList[BAYERI][MH_GOLDENE_FERSE]
@@ -2227,7 +2242,7 @@ function	GetSOwnerBuffSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if (htype==EIRA and UseEiraOveredBoost~=0) then
 			skill=MH_OVERED_BOOST
 			level = SkillList[EIRA][MH_OVERED_BOOST]
@@ -2259,7 +2274,7 @@ function GetSightOrAoE(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if	(htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode~=0) then
 			skill=MH_LAVA_SLIDE
 			level = SkillList[DIETER][MH_LAVA_SLIDE]
@@ -2288,9 +2303,9 @@ function	GetGuardSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype < 17 then
-			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
+			homuntype=modulo(MyHomunType,4)
 		else
 			homuntype=modulo(DetectedOldHomunType,4)
 		end
@@ -2351,7 +2366,7 @@ function	GetDefensiveOwnerSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		local htype=GetV(V_HOMUNTYPE,myid)
+		local htype=MyHomunType
 		if htype==SERA and UseSeraPainkiller~=0 then
 			skill = MH_PAIN_KILLER
 			level = SkillList[htype][skill]
@@ -2399,9 +2414,9 @@ function GetHealingSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if htype < 17 then --if it's not a homun S just run it through modulo. 
-			homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
+			homuntype=modulo(MyHomunType,4)
 		else --If it's a homun S, get the OldHomunType
 			if homuntype == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
 				skill=MH_SILENT_BREEZE
@@ -2605,7 +2620,7 @@ end
 function KiteOK(myid)
 	mertype=GetV(V_MERTYPE,myid)
 	if (mertype==nil) then
-		homuntype=modulo(GetV(V_HOMUNTYPE,myid),4)
+		homuntype=modulo(MyHomunType,4)
 		if ((homuntype==0 or homuntype==3 )and DoNotChase==1) then
 			return 1
 		else
@@ -2956,7 +2971,7 @@ function GetLearnedSkillLevel(myid, skillID)
     
     if IsHomun(myid) == 1 then
         -- For homunculi, we need to determine which type to use for the lookup.
-        local htype = GetV(V_HOMUNTYPE, myid)
+        local htype = MyHomunType
         local typeForLookup = htype -- Default to the current type (EIRA, BAYERI, etc.)
 
         -- Check if the skill belongs to one of the original four homunculi.
@@ -3063,7 +3078,7 @@ end
 -- @return (string): The updated log string with any new messages.
 ---
 function LintSkillOptions(myid, logstring)
-    local htype = GetV(V_HOMUNTYPE, myid)
+    local htype = MyHomunType
     
     -- A master list of all homunculus-specific skill options, grouped by type.
     -- { "Use" option, "Level" option (or nil), skill_constant, friendly_skill_name }
@@ -3158,7 +3173,7 @@ function GetSOwner2ndBuffSkill(myid)
 	local skill = 0
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
-		htype=GetV(V_HOMUNTYPE,myid)
+		htype=MyHomunType
 		if	htype==DIETER and UseDieterTempering~=0 then
 			skill = MH_TEMPERING
 			level = SkillList[htype][skill]
@@ -3188,7 +3203,7 @@ function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then
 		return 0,0
 	end
-	local htype=GetV(V_HOMUNTYPE,myid)
+	local htype=MyHomunType
 	if htype==EIRA then
 		return PickReadySkill(htype,{{UseEiraTwisterCutter,MH_TWISTER_CUTTER,EiraTwisterCutterLevel}})
 	elseif htype==BAYERI then
@@ -3207,7 +3222,7 @@ function GetNewMobSkill(myid)
 	if IsHomun(myid)~=1 then
 		return 0,0
 	end
-	local htype=GetV(V_HOMUNTYPE,myid)
+	local htype=MyHomunType
 	if htype==EIRA then
 		return PickReadySkill(htype,{{UseEiraAbsoluteZephyr,MH_ABSOLUTE_ZEPHYR,EiraAbsoluteZephyrLevel}})
 	elseif htype==SERA then
