@@ -216,6 +216,7 @@ function ApplyServerType()
 	if ServerType ~= SERVER_PRIVATE then
 		ServerType = SERVER_OFFICIAL
 	end
+	MagicNumbersFromConfig = MagicNumber ~= nil or MagicNumber2 ~= nil or MagicNumber3 ~= nil
 	if ServerType == SERVER_PRIVATE then
 		-- rAthena/Hercules: accounts 2000000-100000000, npcs/mobs/summons from 110000000
 		MagicNumber  = MagicNumber  or 110000000
@@ -226,6 +227,18 @@ function ApplyServerType()
 		MagicNumber2 = MagicNumber2 or 100000
 	end
 	ApplyServerSkillOverrides()
+end
+
+-- Called for every actor in sight while ServerType is official (see AI()).
+function DetectPrivateServer(id)
+	if AutoDetectServerType ~= 1 or MagicNumbersFromConfig or id < 110000000 or IsMonster(id) ~= 1 then
+		return
+	end
+	logappend("AAI_ERROR", "Monster ID "..id.." is from an rAthena/Hercules server: switching to ServerType = SERVER_PRIVATE. Set it in H_Config.lua to skip this check.")
+	TraceAI("Private server detected from monster ID "..id)
+	ServerType = SERVER_PRIVATE
+	MagicNumber, MagicNumber2, MagicNumber3 = nil, nil, nil
+	ApplyServerType()
 end
 
 -- Swaps per-server skill data (range, cooldown, targeting) defined in the SkillList files

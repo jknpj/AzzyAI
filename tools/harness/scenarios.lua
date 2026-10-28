@@ -3,6 +3,9 @@
 --   skills     skills the homunculus has learned
 --   mobs       monster positions (owner stands at 100,100, all monsters attack the owner)
 --   private    true to run with ServerType = SERVER_PRIVATE
+--   privateIds rAthena-style actor IDs without changing ServerType (wrong-config check)
+--   passive    monsters stand still and attack nobody
+--   sp/spregen homunculus max SP and SP regained per second
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -27,6 +30,18 @@ local ELEANOR_SKILLS = { "MH_STYLE_CHANGE", "MH_SONIC_CLAW", "MH_SILVERVEIN_RUSH
 	"MH_TINDER_BREAKER", "MH_CBC", "MH_EQC", "MH_BLAZING_AND_FURIOUS", "MH_THE_ONE_FIGHTER_RISES" }
 
 SCENARIOS = {
+	-- freshly made homunculus: no skills learned, little SP; it must still fight
+	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_fresh_alt = { homuntype = 6, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },
+	-- passive monsters (nobody attacking): the homunculus must still go and attack them
+	amistr_fresh_passive = { homuntype = 2, skills = {}, mobs = cluster, passive = true, sp = 20, spregen = 1, minAttacks = 50 },
+	amistr_fresh_private = { homuntype = 2, skills = {}, mobs = cluster, private = true, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_fresh_private_passive = { homuntype = 2, skills = {}, mobs = cluster, private = true, passive = true,
+		sp = 20, spregen = 1, minAttacks = 50 },
+	-- rAthena IDs but the config was left on SERVER_OFFICIAL: monsters looked like players and were never attacked
+	amistr_private_ids_official_config = { homuntype = 2, skills = {}, mobs = cluster, privateIds = true, passive = true,
+		sp = 20, spregen = 1, minAttacks = 50 },
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)

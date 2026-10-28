@@ -3339,6 +3339,9 @@ function AI(myid)
 						end
 					end
 				end
+				if ServerType ~= SERVER_PRIVATE then
+					DetectPrivateServer(v)
+				end
 				if (IsPlayer(v)==1) then
 					Players[v]=1
 					if MyFriends[v]==FRIEND and OwnerID~=v then --Newly appeared on screen
