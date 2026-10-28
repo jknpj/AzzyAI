@@ -1953,7 +1953,7 @@ function GetFriendTargets() -- returns list of targets of friends who are attack
 		if (IsFriend(v) == 1) then
 			motion=GetV(V_MOTION,v)
 			target=GetV(V_TARGET,v)
-			if (IsMonster(target)==1) then
+			if (IsMonster(target)==1 and IsFriendOrSelf(target)==0) then
 				tact=GetTact(TACT_BASIC,target)
 				if (FriendAttack[motion]==1 and tact > 0 and tact ~=9) then
 					targets[target]={MotionClassLU[GetV(V_MOTION,target)],GetTargetClass(target),GetTact(TACT_BASIC,target),GetTact(TACT_CAST,target)}
@@ -2937,7 +2937,7 @@ function DoAutoPushback(myid)
 	local actors = GetActors()
 	local x,y=GetV(V_POSITION,myid)
 	for i,v in ipairs(actors) do
-		if (IsMonster(v)==1) then
+		if (IsMonster(v)==1 and IsFriendOrSelf(v)==0) then
 			local tact= GetTact(TACT_PUSHBACK,v)
 			local target =GetV(V_TARGET,v)
 			if (tact==2 or (tact==1 and IsFriendOrSelf(target)==1))then				
@@ -3370,7 +3370,9 @@ function AI(myid)
 							end
 						end	
 					end
-				elseif IsMonster(v)==1 then
+				-- some clients report our own homunculus/mercenary as a monster; without the
+				-- friend check it targets itself (always the closest) and never attacks anything
+				elseif IsMonster(v)==1 and IsFriendOrSelf(v)==0 then
 					--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." is a monster")
 					if LiveMobID == 1 and IsHomun(MyID)==1 then
 						tMobID=tMobID.."MobID["..v.."]="..GetV(V_HOMUNTYPE,v).."\n"
@@ -3405,6 +3407,8 @@ function AI(myid)
 			end
 		end
 	end
+
+	LogTargetingSnapshot(actors)
 
 	if LiveMobID == 1 and IsHomun(MyID)==1 and tMobID ~="" then
 		local midoutfile=io.open(AggressiveRelogPath.."MobID.lua","w")
@@ -3785,7 +3789,7 @@ function AI(myid)
 			local actors = GetActors()
 			kitecalled=0
 			for i,v in ipairs(actors) do
-				if (IsMonster(v)==1 and GetV(V_MOTION,v) ~= MOTION_DEAD) then
+				if (IsMonster(v)==1 and IsFriendOrSelf(v)==0 and GetV(V_MOTION,v) ~= MOTION_DEAD) then
 					local target=GetV(V_TARGET,v)
 					local tact = GetTact(TACT_KITE,v)
 					if ((IsFriendOrSelf(target)==1 and tact==1) or tact==2) then

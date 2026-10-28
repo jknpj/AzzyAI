@@ -46,6 +46,7 @@ Dr. Azzy takes no responsibility for your lua programming; I barely take respons
 --LogEnable["AAI_CLOSEST"]=1
 --LogEnable["AAI_DANCE"]=1
 --LogEnable["AAI_ACTORS"]=1
+--LogEnable["AAI_TARGETING"]=1 -- targeting snapshot every 5 seconds (up to 20 actors)
 
 --Uncomment this line to suppress AAI_ERROR logging. This should only be done as a stop-gap measure; if your AAI_ERROR log is filling up with messages, please report this to the developer. 
 --LogEnable["AAI_ERROR"]=0

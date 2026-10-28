@@ -50,7 +50,11 @@ function GetActors()
 	table.sort(r)
 	return r
 end
-function IsMonster(id) local e = world[id]; return (e and e.monster) and 1 or 0 end
+local selfMonster = false -- scenario option: the client reports our own homunculus as a monster
+function IsMonster(id)
+	if selfMonster and id == HOMUN then return 1 end
+	local e = world[id]; return (e and e.monster) and 1 or 0
+end
 function GetDistance(x1, y1, x2, y2) return math.floor(math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2)) end
 function IsInAttackSight(a, b, skill, lvl)
 	local A, B = world[a], world[b]
@@ -96,8 +100,14 @@ end
 function Move(id, x, y) local e = world[id]; if e then e.destx, e.desty = x, y; e.motion = MOTION_MOVE end end
 function MoveToOwner(id) local o = world[OWNER]; Move(id, o.x, o.y) end
 function Attack(id, target)
-	local e = world[id]
-	if e then e.motion = MOTION_ATTACK; e.attacks = (e.attacks or 0) + 1 end
+	local e, t = world[id], world[target]
+	if not e then return end
+	-- only attacks on real monsters count; anything else (self, owner, players) is a bug
+	if t and t.monster then
+		e.motion = MOTION_ATTACK; e.attacks = (e.attacks or 0) + 1
+	else
+		e.badAttacks = (e.badAttacks or 0) + 1; e.badTarget = target
+	end
 end
 
 local function recordCast(kind, id, lvl, skill, a, b)
@@ -135,6 +145,7 @@ if not sc then
 	os.exit(2)
 end
 if sc.ticks then TICKS = math.max(TICKS, sc.ticks) end
+selfMonster = sc.selfMonster == true
 
 -- Monster IDs must be outside the summon ID range of the selected server type
 local mobBase = (sc.private or sc.privateIds) and 110000000 or 60000
@@ -279,6 +290,9 @@ end
 local attacks = world[HOMUN].attacks or 0
 if attacks < (sc.minAttacks or 1) then
 	fail(("only %d normal attacks, expected at least %d"):format(attacks, sc.minAttacks or 1))
+end
+if (world[HOMUN].badAttacks or 0) > 0 then
+	fail(("%d attacks on non-monster actor %s"):format(world[HOMUN].badAttacks, tostring(world[HOMUN].badTarget)))
 end
 for desc, check in pairs(sc.checks or {}) do
 	local ok, res = pcall(check)

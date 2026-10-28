@@ -212,6 +212,54 @@ function	GetPVPTact(t,m)
 	end
 end
 
+function LogTargetingSnapshot(actors)
+	if LogEnable["AAI_TARGETING"] ~= 1 then
+		return
+	end
+	local now = GetTick()
+	if LastTargetingLogTick and now >= LastTargetingLogTick and now - LastTargetingLogTick < 5000 then
+		return
+	end
+	LastTargetingLogTick = now
+	local monsters, targets = 0, 0
+	for _ in pairs(Monsters) do monsters = monsters + 1 end
+	for _ in pairs(Targets) do targets = targets + 1 end
+	local lines = {
+		"Snapshot tick="..now.." homun="..tostring(MyID).." owner="..tostring(OwnerID)
+			.." state="..tostring(MyState).." enemy="..tostring(MyEnemy)
+			.." ServerType="..tostring(ServerType).." actors="..#actors.." monsters="..monsters.." targets="..targets,
+		"Thresholds MagicNumber="..tostring(MagicNumber).." MagicNumber2="..tostring(MagicNumber2)
+			.." MagicNumber3="..tostring(MagicNumber3),
+		"Settings SuperPassive="..tostring(SuperPassive).." ShouldStandby="..tostring(ShouldStandby)
+			.." StickyStandby="..tostring(StickyStandby).." HP="..HPPercent(MyID).." AggroHP="..tostring(AggroHP)
+			.." SP="..SPPercent(MyID).." AggroSP="..tostring(AggroSP)
+			.." aggroDistance="..GetAggroDist().." moveBounds="..GetMoveBounds()
+			.." DoNotAttackMoving="..tostring(DoNotAttackMoving).." UseSkillOnly="..tostring(UseSkillOnly),
+	}
+	local logged = 0
+	for _, id in ipairs(actors) do
+		if id ~= MyID and id ~= OwnerID then
+			if logged == 20 then
+				lines[#lines + 1] = "Remaining actors omitted (20-actor limit)"
+				break
+			end
+			local monster = IsMonster(id)
+			local x, y = GetV(V_POSITION, id)
+			local detail = "Actor "..id.." nativeMonster="..tostring(monster).." player="..IsPlayer(id)
+				.." class="..tostring(GetV(V_HOMUNTYPE, id)).." pos="..x..","..y
+				.." motion="..tostring(GetV(V_MOTION, id)).." target="..tostring(GetV(V_TARGET, id))
+				.." inTargets="..tostring(Targets[id] ~= nil).." ownerDistance="..GetDistanceA(OwnerID, id)
+				.." unreachable="..tostring(Unreachable[id])
+			if monster == 1 then
+				detail = detail.." tactic="..GetTact(TACT_BASIC, id).." KS="..GetKSReason(MyID, id)
+			end
+			lines[#lines + 1] = detail
+			logged = logged + 1
+		end
+	end
+	logappend("AAI_TARGETING", table.concat(lines, "\n"))
+end
+
 function ApplyServerType()
 	if ServerType ~= SERVER_PRIVATE then
 		ServerType = SERVER_OFFICIAL
