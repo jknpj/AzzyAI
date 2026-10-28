@@ -6,6 +6,9 @@
 -- You may expand the AI freely through the M_Extra and H_Extra files
 MainVersion="1.56"
 
+-- AI_main is loaded after H_Config/M_Config, so ServerType is final here
+ApplyServerType()
+
 ResCmdList			= List.new()
 -- As of dev 15, global variables are now in Const_.lua
 AutoSkillCooldown		= {}
@@ -17,6 +20,13 @@ AutoSkillCooldown[MH_POISON_MIST]=0
 AutoSkillCooldown[MH_LAVA_SLIDE]=0
 AutoSkillCooldown[MH_STEINWAND]=0 	
 AutoSkillCooldown[MH_SUMMON_LEGION]=0
+-- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
+-- Eleanor combo skills are left out on purpose; their chain is timed by ComboSCTimeout/ComboSVTimeout.
+for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIGE_STANGE,MH_NEEDLE_OF_PARALYZE,
+	MH_TWISTER_CUTTER,MH_ABSOLUTE_ZEPHYR,MH_GLANZEN_SPIES,MH_HEILIGE_PFERD,MH_NEEDLE_STINGER,
+	MH_TOXIN_OF_MANDARA,MH_BLAZING_AND_FURIOUS,MH_THE_ONE_FIGHTER_RISES,MH_BLAST_FORGE}) do
+	AutoSkillCooldown[cdskill]=0
+end
 -----------Config checking----------------
 
 function doInit(myid)
@@ -793,7 +803,7 @@ function OnCHASE_ST()
         dist = GetDistanceA(MyID, MyEnemy)
         local tact_skill, tact_debuff, tact_sp, tact_skillclass = GetTact(TACT_SKILL, MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
         skilltouse = {-1, 0, 0}
-        local SkillList = GetTargetedSkills(MyID)
+        local TargetedSkills = GetTargetedSkills(MyID)
         local availsp = GetV(V_SP, MyID)
         if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
             availsp = availsp - tact_sp
@@ -805,26 +815,18 @@ function OnCHASE_ST()
         else
             skill_level = 11
         end
-        for i, v in ipairs(SkillList) do
+        for i, v in ipairs(TargetedSkills) do
             skilltype = v[1]
             if v[2] ~= 0 then
                 if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                    if (skilltype == MOB_ATK and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                    if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                         local mobskill_level = skill_level
                         if AoEFixedLevel == 1 then
                             mobskill_level = v[3]
                         end
-                        local mobmode = 0
-                        if AutoMobMode == 2 then
-                            mobmode = 1
-                        end
-                        mobskillcount = GetMobCount(v[2], math.min(v[3], mobskill_level), MyEnemy, mobmode)
-                        if (mobskillcount >= AutoMobCount or tact_skillclass == CLASS_MOB) then
-                            if (availsp >= GetSkillInfo(v[2], 3, math.min(v[3], mobskill_level))) then
-                                if (skilltouse[1] < 2) then
-                                    skilltouse = v
-                                end
-                            end
+                        mobskill_level = math.min(v[3], mobskill_level)
+                        if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
+                            skilltouse = v
                         end
                     elseif (skilltype == DEBUFF_ATK and ChaseDebuffUsed == 0) then
                         if (tact_debuff * -1 == v[2] or (tact_debuff == -1 and BasicDebuffs[v[2]] ~= nil)) then
@@ -852,26 +854,9 @@ function OnCHASE_ST()
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
-                    elseif (skilltype == CLASS_NEW_S and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH)) then
+                    elseif (skilltype == CLASS_NEW_S and UseHomunSSkillChase == 1 and SkillTypeOutranks(skilltype, skilltouse[1]) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
-                        end
-                    elseif (skilltype == CLASS_NEW_MOB and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
-                        local mobskill_level = skill_level
-                        if AoEFixedLevel == 1 then
-                            mobskill_level = v[3]
-                        end
-                        local mobmode = 0
-                        if AutoMobMode == 2 then
-                            mobmode = 1
-                        end
-                        mobskillcount = GetMobCount(v[2], math.min(v[3], mobskill_level), MyEnemy, mobmode)
-                        if (mobskillcount >= AutoMobCount or tact_skillclass == CLASS_MOB) then
-                            if (availsp >= GetSkillInfo(v[2], 3, math.min(v[3], mobskill_level))) then
-                                if (skilltouse[1] < 2) then
-                                    skilltouse = v
-                                end
-                            end
                         end
                     end
                 end
@@ -880,7 +865,7 @@ function OnCHASE_ST()
         
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
-        if skilltouse[2] == 0 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+        if skilltouse[2] == 0 and GetV(V_HOMUNTYPE, MyID) == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
             TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -897,7 +882,7 @@ function OnCHASE_ST()
         if skilltouse[2] ~= 0 then
             TraceAI("Using skill while chasing:"..skilltouse[2])
             local slvl = skilltouse[3]
-            if skill_level ~= 11 and (AoEFixedLevel ~= 1 or skilltouse[1] ~= MOB_ATK) then
+            if skill_level ~= 11 and (AoEFixedLevel ~= 1 or not IsMobSkillType(skilltouse[1])) then
                 slvl = skill_level
             end
             DoSkill(skilltouse[2], slvl, MyEnemy)
@@ -1112,33 +1097,25 @@ function OnATTACK_ST()
             else
                 skill_level = 11
             end
-            local SkillList = GetTargetedSkills(MyID)
+            local TargetedSkills = GetTargetedSkills(MyID)
             TraceAI("Begin autoskill routine")
             local availsp = GetV(V_SP, MyID)
             if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
                 availsp = availsp - tact_sp
             end
-            for i, v in ipairs(SkillList) do
+            for i, v in ipairs(TargetedSkills) do
                 skilltype = v[1]
                 TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
                 if v[2] ~= 0 then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                        if (skilltype == MOB_ATK and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                        if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                             local mobskill_level = skill_level
                             if AoEFixedLevel == 1 then
                                 mobskill_level = v[3]
                             end
-                            local mobmode = 0
-                            if AutoMobMode == 2 then
-                                mobmode = 1
-                            end
-                            mobskillcount = GetMobCount(v[2], math.min(v[3], mobskill_level), MyEnemy, mobmode)
-                            if (mobskillcount >= AutoMobCount or tact_skillclass == CLASS_MOB) then
-                                if (availsp >= GetSkillInfo(v[2], 3, math.min(v[3], mobskill_level))) then
-                                    if (skilltouse[1] < 2) then
-                                        skilltouse = v
-                                    end
-                                end
+                            mobskill_level = math.min(v[3], mobskill_level)
+                            if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
+                                skilltouse = v
                             end
                         elseif (skilltype == DEBUFF_ATK and AttackDebuffUsed < AttackDebuffLimit and (IsFriendOrSelf(GetV(V_TARGET, MyEnemy)) == 1 or AttackDebuffWhenAttacked ~= 1)) then
                             if (tact_debuff == v[2] or (tact_debuff == 1 and BasicDebuffs[v[2]] ~= nil)) then
@@ -1166,6 +1143,10 @@ function OnATTACK_ST()
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
+                        elseif (skilltype == CLASS_NEW_S and UseHomunSSkillAttack == 1 and SkillTypeOutranks(skilltype, skilltouse[1]) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
+                            if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
+                                skilltouse = v
+                            end
                         end
                     end
                 end
@@ -1174,7 +1155,7 @@ function OnATTACK_ST()
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
-            if skilltouse[2] == 0 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+            if skilltouse[2] == 0 and GetV(V_HOMUNTYPE, MyID) == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
                 TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -1191,7 +1172,7 @@ function OnATTACK_ST()
         -- Now we finalize the selection
         if skilltouse[1] ~= -1 then
             MySkill = skilltouse[2]
-            if (IsHomun(MyID) == 1 and skill_level ~= 11 and (skilltouse[1] ~= MOB_ATK or AoEFixedLevel ~= 1)) then --no need to check what skill
+            if (IsHomun(MyID) == 1 and skill_level ~= 11 and (not IsMobSkillType(skilltouse[1]) or AoEFixedLevel ~= 1)) then --no need to check what skill
                 MySkillLevel = skill_level --Only homuns can use non-max level
             else --and they dont have any mob/debuffs
                 MySkillLevel = skilltouse[3]
@@ -1217,6 +1198,7 @@ function OnATTACK_ST()
     if (MySkill ~= 0) then
         TraceAI("Skill Attack: "..MySkill.." target: "..MyEnemy.." level:"..MySkillLevel)
         SkillTarget = MyEnemy
+        SkillTargetX, SkillTargetY = nil, nil
         if (MySkill == MA_SHARPSHOOTING and AoEMaximizeTargets == 1) then
             target, hitcount = GetBestFASTarget(MyID)
             TraceAI(target.." - "..hitcount)
@@ -1232,13 +1214,13 @@ function OnATTACK_ST()
                 SkillTarget = target
             end
             TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
-        elseif (MySkill == MH_HAILAGE_STAR or MySkill == MS_BOWLING_BASH) and AoEMaximizeTargets == 1 then
+        elseif (MySkill == MH_HEILIGE_STANGE or MySkill == MS_BOWLING_BASH or (MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 1 and not IsCasterCenteredAoE(MySkill))) and AoEMaximizeTargets == 1 then
             target = GetBestAoETarget(MyID, MySkill, MySkillLevel)
             if target ~= -1 then
                 SkillTarget = target
             end
-            TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
-        elseif ((MySkill == MH_XENO_SLASHER or MySkill == MH_LAVA_SLIDE or MySkill == MA_SHOWER or MySkill == MH_POISON_MIST) and AoEMaximizeTargets == 1) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1) then
+            TraceAI("Skill Attack: "..MySkill.." (aoe target) target: "..SkillTarget.." enemy: "..MyEnemy)
+        elseif ((MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 2 and MySkill ~= MH_VOLCANIC_ASH and AoEMaximizeTargets == 1) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1)) then
             targx, targy = GetBestAoECoord(MyID, MySkill, MySkillLevel)
             if targx ~= -1 then
                 SkillTargetX, SkillTargetY = targx, targy
@@ -2470,9 +2452,11 @@ function DoAutoBuffs(buffmode)
 			if GetV(V_HOMUNTYPE,MyID)~=BAYERI then
 				SteinWandTimeout=-1
 			else
-				if (GetAggroCount(MyID) >= UseSteinWandSelfMob and UseSteinWandSelfMob~=0) or (GetAggroCount(GetV(V_OWNER,MyID)) >= UseSteinWandOwnerMob and UseSteinWandOwnerMob~=0) then
+				if ((GetAggroCount(MyID) >= UseSteinWandSelfMob and UseSteinWandSelfMob~=0) or (GetAggroCount(GetV(V_OWNER,MyID)) >= UseSteinWandOwnerMob and UseSteinWandOwnerMob~=0))
+					and GetSkillInfo(MH_STEINWAND,3,BayeriSteinWandLevel) <= GetV(V_SP,MyID) then
 					DoSkill(MH_STEINWAND,BayeriSteinWandLevel,MyID,10)
-					SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,8,BayeriSteinWandLevel)
+					-- the wall breaks after 4+lv hits, so retry once the reuse delay is over instead of waiting the whole duration
+					SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,9,BayeriSteinWandLevel)
 					return
 				end
 			end
@@ -2528,6 +2512,8 @@ function DoAutoBuffs(buffmode)
 		if skill <=0 then 
 			--logappend("AAI_PKF","Painkiller friends disabled, don't have skill")
 			PainkillerFriends=0
+		elseif skill ~= MH_PAIN_KILLER then
+			-- Goldene Tone only buffs the master, it can't be cast on friends
 		elseif level==0 or opt~=buffmode then
 			--logappend("AAI_PKF","not time to use it")
 			-- skill in cooldown
@@ -3361,7 +3347,7 @@ function AI(myid)
 						end
 					end
 				end
-				if (v > MagicNumber2) then
+				if (IsPlayer(v)==1) then
 					Players[v]=1
 					if MyFriends[v]==FRIEND and GetV(V_OWNER,MyID)~=v then --Newly appeared on screen
 						if OldPlayers[v]~=1 or AggressiveAutofriend then
@@ -3395,7 +3381,7 @@ function AI(myid)
 						tMobID=tMobID.."MobID["..v.."]="..GetV(V_HOMUNTYPE,v).."\n"
 					end
 					Monsters[v]=1
-					if (v < MagicNumber) then
+					if (IsSummonID(v)==1) then
 						Summons[v]=1
 					end
 					if (AutoDetectPlant==1 and IsActive[v]~=1 and IsHomun(myid)~=1) then
@@ -3417,7 +3403,7 @@ function AI(myid)
 						--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." target added")
 						Targets[v]={motionclass,GetTargetClass(GetV(V_TARGET,v))}
 					end
-				elseif (v < MagicNumber) then		
+				elseif IsSummonID(v)==1 or (ServerType==SERVER_PRIVATE and v~=MyID and v~=GetV(V_OWNER,MyID)) then
 					Retainers[v]=1
 				end
 			end

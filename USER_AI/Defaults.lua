@@ -90,6 +90,7 @@ UseEleanorSonicClaw			=1
 EleanorSonicClawLevel		=5
 EleanorSilverveinLevel		=5
 EleanorMidnightLevel		=5
+UseEleanorTinderBreaker		=1
 UseDieterLavaSlide			=1 
 DieterLavaSlideLevel		=10
 
@@ -213,8 +214,14 @@ FastChangeLimit		=1
 AttackDebuffLimit	=1
 
 
-MagicNumber		=42000
-MagicNumber2		=100000
+-- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
+-- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).
+ServerType		=SERVER_OFFICIAL
+-- Actor ID thresholds; filled by ApplyServerType() after the config is loaded
+-- unless the config sets them explicitly.
+MagicNumber		=nil
+MagicNumber2		=nil
+MagicNumber3		=nil
 
 
 

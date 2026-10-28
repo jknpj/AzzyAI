@@ -55,6 +55,11 @@ BEYERI			= 49
 SERA			= 50
 DIETER			= 51
 ELEANOR			= 52
+
+-- Server type (controls actor ID ranges used to tell players/monsters/summons apart)
+SERVER_OFFICIAL		= 0
+SERVER_PRIVATE		= 1
+
 ARCHER01	= 1		
 ARCHER02	= 2			
 ARCHER03	= 3	

@@ -126,6 +126,15 @@ namespace AzzyAIConfig
         Berserk = 2,
         ASAP = 3
 	}
+	enum UseDieterTemperingOptions : sbyte
+	{
+	    Never = 0,
+	    Idle = 1,
+	    Chase = -1,
+	    Idle_Low = -2,
+	    Berserk = 2,
+	    ASAP = 3
+	}
 	enum UseEiraOveredBoostOptions : sbyte
 	{
 		Never = 0,
@@ -370,6 +379,8 @@ namespace AzzyAIConfig
             _UseDieterLavaSlide = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterLavaSlide"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseDieterVolcanicAsh = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterVolcanicAsh"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _DieterLavaSlideLevel = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["DieterLavaSlideLevel"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _UseDieterBlastForge = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterBlastForge"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _UseDieterTempering = (UseDieterTemperingOptions)((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterTempering"].Attributes[typeof(DefaultValueAttribute)]).Value;
             _UseSeraCallLegion = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseSeraCallLegion"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _SeraCallLegionLevel = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["SeraCallLegionLevel"].Attributes[typeof(DefaultValueAttribute)]).Value);
 
@@ -531,6 +542,8 @@ namespace AzzyAIConfig
             H_Config.UseDieterLavaSlide = Convert.ToInt32(_UseDieterLavaSlide);
             H_Config.UseDieterVolcanicAsh = Convert.ToInt32(_UseDieterVolcanicAsh);
             H_Config.DieterLavaSlideLevel = _DieterLavaSlideLevel;
+            H_Config.UseDieterBlastForge = Convert.ToInt32(_UseDieterBlastForge);
+            H_Config.UseDieterTempering = Convert.ToInt32(_UseDieterTempering);
             H_Config.UseSeraCallLegion = Convert.ToInt32(_UseSeraCallLegion);
             H_Config.SeraCallLegionLevel = _SeraCallLegionLevel;
 
@@ -695,6 +708,8 @@ namespace AzzyAIConfig
             _UseDieterLavaSlide = Convert.ToBoolean(H_Config.UseDieterLavaSlide);
             _UseDieterVolcanicAsh = Convert.ToBoolean(H_Config.UseDieterVolcanicAsh);
             _DieterLavaSlideLevel = H_Config.DieterLavaSlideLevel;
+            _UseDieterBlastForge = Convert.ToBoolean(H_Config.UseDieterBlastForge);
+            _UseDieterTempering = (UseDieterTemperingOptions)H_Config.UseDieterTempering;
             _UseSeraCallLegion = Convert.ToBoolean(H_Config.UseSeraCallLegion);
             _SeraCallLegionLevel = H_Config.SeraCallLegionLevel;
 
@@ -1776,10 +1791,10 @@ namespace AzzyAIConfig
         bool _EleanorDoNotSwitchMode = false;
         [Category("AutoSkill Options"),
         Description(
-            "If this is true, the homun will never automantically use style change." +
+            "If this is true, the homun will never automatically use style change." +
             "                                                              "
             ),
-        DefaultValue(true)]
+        DefaultValue(false)]
         public bool EleanorDoNotSwitchMode
         {
             get { return _EleanorDoNotSwitchMode; }
@@ -1867,6 +1882,16 @@ namespace AzzyAIConfig
             }
         }
 
+        bool _UseDieterBlastForge = false;
+        [Category("AutoSkill Options"),
+        Description("Enable Blast Forge as an attack skill."),
+        DefaultValue(false)]
+        public bool UseDieterBlastForge
+        {
+            get { return _UseDieterBlastForge; }
+            set { _UseDieterBlastForge = value; }
+        }
+
         bool _UseDieterLavaSlide = false;
         [Category("AutoSkill Options"),
         Description(
@@ -1905,6 +1930,7 @@ namespace AzzyAIConfig
                 {
                     _DieterLavaSlideLevel = 1;
                 }
+
                 else if (value > 10)
                 {
                     _DieterLavaSlideLevel = 10;
@@ -1914,6 +1940,16 @@ namespace AzzyAIConfig
                     _DieterLavaSlideLevel = value;
                 }
             }
+        }
+
+        UseDieterTemperingOptions _UseDieterTempering = UseDieterTemperingOptions.Never;
+        [Category("Autobuff Options"),
+        Description("Use Tempering in the selected AI states."),
+        DefaultValue(UseDieterTemperingOptions.Never)]
+        public UseDieterTemperingOptions UseDieterTempering
+        {
+            get { return _UseDieterTempering; }
+            set { _UseDieterTempering = value; }
         }
 
         bool _UseSeraCallLegion = true;
@@ -2606,7 +2642,7 @@ namespace AzzyAIConfig
         UseBayeriAngriffModusOptions _UseBayeriAngriffModus = UseBayeriAngriffModusOptions.Never;
         [Category("Autobuff Options"),
         Description(
-            "Use the buff skill Angriff Modus in the following states" +
+            "Use the Dieter buff Magma Flow in the following states." +
             "                                                              "
             ),
         DefaultValue(UseBayeriAngriffModusOptions.Never)]
@@ -2645,8 +2681,8 @@ namespace AzzyAIConfig
         UseDieterGraniticArmorOptions _UseDieterGraniticArmor = UseDieterGraniticArmorOptions.Never;
         [Category("Autobuff Options"),
         Description(
-            "Use the buff skill Angriff Modus in the following states" +
-            "Be aware that this skill drains hp when it wears off."
+            "Use the Dieter buff Granitic Armor in the following states. " +
+            "Be aware that this skill drains HP when it wears off."
             ),
         DefaultValue(UseDieterGraniticArmorOptions.Never)]
         public UseDieterGraniticArmorOptions UseDieterGraniticArmor
@@ -2658,7 +2694,7 @@ namespace AzzyAIConfig
         UseDieterPyroclasticOptions _UseDieterPyroclastic = UseDieterPyroclasticOptions.Never;
         [Category("Autobuff Options"),
         Description(
-            "Use the buff skill Pyroclastic in the following states" +
+            "Use the Dieter buff Pyroclastic in the following states. " +
             "Be aware that this skill breaks your weapon when it ends."
             ),
         DefaultValue(UseDieterPyroclasticOptions.Never)]

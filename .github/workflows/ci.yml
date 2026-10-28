@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lua:
+    name: Lua syntax + AI simulation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run harness
+        run: python tools/harness/run.py
+
+  webgui:
+    name: Web GUI syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: node --check
+        shell: bash
+        run: |
+          if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
+          find webgui -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+
+  gui:
+    name: Build config GUI (.NET 4.0)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - uses: nuget/setup-nuget@v2
+      - name: Reference assemblies for .NET 4.0
+        run: nuget install Microsoft.NETFramework.ReferenceAssemblies.net40 -Version 1.0.3 -OutputDirectory "$env:RUNNER_TEMP\refasm"
+      - name: Build
+        run: >
+          msbuild GUI/AzzyAIConfig/AzzyAIConfig.sln /nologo /v:minimal
+          /p:Configuration=Release /p:Platform=x86
+          "/p:TargetFrameworkRootPath=$env:RUNNER_TEMP\refasm\Microsoft.NETFramework.ReferenceAssemblies.net40.1.0.3\build"
+          "/p:OutDir=$env:RUNNER_TEMP\guiout\\"
+      - name: Package
+        run: |
+          $pkg = "$env:RUNNER_TEMP\pkg\USER_AI"
+          New-Item -ItemType Directory -Force $pkg | Out-Null
+          Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
+          Copy-Item "$env:RUNNER_TEMP\guiout\AzzyAIConfig.exe" $pkg -Force
+          Compress-Archive -Path $pkg -DestinationPath AzzyAI.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AzzyAI
+          path: AzzyAI.zip
+
+  release:
+    name: GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lua, webgui, gui]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: AzzyAI
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: AzzyAI.zip
+          generate_release_notes: true
