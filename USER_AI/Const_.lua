@@ -274,6 +274,10 @@ CAST_REACT_LEXDIV 	= 8236
 CAST_REACT_BREEZE	=8026
 CAST_REACT	= 1
 CAST_PASSIVE	= 0
+-- Homunculus self-defence reactions (set by hand in H_Tactics): cast Stein Wand / Castling
+-- when this monster targets us. Kept below CAST_REACT so they don't change target selection.
+CAST_REACT_STIEN	= -1
+CAST_REACT_CASTLE	= -2
 
 ---------------------------
 --Tactics (Pushback)

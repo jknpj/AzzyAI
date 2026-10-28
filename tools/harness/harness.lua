@@ -37,7 +37,8 @@ end
 -- Client API mocks ----------------------------------------------------------
 
 function GetTick() return now end
-function TraceAI(s) traces[#traces + 1] = now .. " " .. tostring(s) end
+local keepTraces = os.getenv("HARNESS_TRACE") == "1"
+function TraceAI(s) if keepTraces then traces[#traces + 1] = now .. " " .. tostring(s) end end
 function GetMsg(id) return { 0 } end
 function GetResMsg(id) return { 0 } end
 function GetActors()
@@ -57,7 +58,9 @@ function IsInAttackSight(a, b, skill, lvl)
 end
 
 local skillKnown = {}
+local getvCalls = {}
 function GetV(v, id, extra, extra2)
+	getvCalls[v] = (getvCalls[v] or 0) + 1
 	local e = world[id]
 	if v == V_OWNER then return OWNER end
 	if not e then
@@ -148,11 +151,49 @@ end
 
 -- Simulation loop -----------------------------------------------------------
 
+-- HARNESS_PROFILE=1: time every AI() call and sample which functions run (every 100 VM instructions)
+local profile = os.getenv("HARNESS_PROFILE") == "1"
+local samples, aiTime, aiMax, aiCalls = {}, 0, 0, 0
+local function sampler()
+	local info = debug.getinfo(2, "S")
+	if info then
+		local key = info.short_src:match("[^/\\]*$") .. ":" .. info.linedefined
+		samples[key] = (samples[key] or 0) + 1
+	end
+end
+collectgarbage("collect")
+local memStart = collectgarbage("count")
+
+local function globalTableSizes()
+	local sizes = {}
+	for k, v in pairs(_G) do
+		if type(v) == "table" and v ~= _G and type(k) == "string" then
+			local n = 0
+			for _, vv in pairs(v) do
+				n = n + 1
+				if type(vv) == "table" then for _ in pairs(vv) do n = n + 1 end end
+			end
+			sizes[k] = n
+		end
+	end
+	return sizes
+end
+
 local runtimeError
-for _ = 1, TICKS do
+local sizesEarly
+for tick = 1, TICKS do
+	if profile and tick == 20 then sizesEarly = globalTableSizes() end
 	local h = world[HOMUN]
 	if not h.busyUntil or now >= h.busyUntil then
+		local t0 = profile and os.clock()
+		if profile then debug.sethook(sampler, "", 100) end
 		local ok, e = pcall(AI, HOMUN)
+		if profile then
+			debug.sethook()
+			local dt = os.clock() - t0
+			aiTime, aiCalls = aiTime + dt, aiCalls + 1
+			if dt > aiMax then aiMax = dt end
+		end
 		if not ok then runtimeError = e; break end
 	end
 	if h.destx then
@@ -214,4 +255,35 @@ print(("%-16s %s attacks=%d casts: %s"):format(scenario, #failures == 0 and "PAS
 	table.concat(summary, ", ")))
 for _, f in ipairs(failures) do print("    - " .. f) end
 if os.getenv("HARNESS_TRACE") == "1" then for _, t in ipairs(traces) do print("  TRACE " .. t) end end
+if profile and aiCalls > 0 then
+	collectgarbage("collect")
+	print(("    profile: %d AI calls, avg %.3f ms, max %.3f ms, heap %+.0f KB after GC"):format(
+		aiCalls, aiTime / aiCalls * 1000, aiMax * 1000, collectgarbage("count") - memStart))
+	local vnames = {}
+	for k, val in pairs(_G) do
+		if type(k) == "string" and k:sub(1, 2) == "V_" and type(val) == "number" then vnames[val] = k end
+	end
+	local gv, gtotal = {}, 0
+	for v, n in pairs(getvCalls) do gv[#gv + 1] = v; gtotal = gtotal + n end
+	table.sort(gv, function(a, b) return getvCalls[a] > getvCalls[b] end)
+	local parts = {}
+	for i = 1, math.min(6, #gv) do
+		parts[#parts + 1] = (vnames[gv[i]] or tostring(gv[i])) .. "=" .. math.floor(getvCalls[gv[i]] / aiCalls)
+	end
+	print(("    GetV per AI call: %d (%s)"):format(math.floor(gtotal / aiCalls), table.concat(parts, ", ")))
+	local keys, total = {}, 0
+	for k, n in pairs(samples) do keys[#keys + 1] = k; total = total + n end
+	table.sort(keys, function(a, b) return samples[a] > samples[b] end)
+	for i = 1, math.min(15, #keys) do
+		print(("      %5.1f%%  %s"):format(samples[keys[i]] * 100 / total, keys[i]))
+	end
+	-- global tables that keep growing during the run are memory leaks
+	if sizesEarly then
+		for k, n in pairs(globalTableSizes()) do
+			if n - (sizesEarly[k] or 0) > 50 then
+				print(("    growing table: %s %d -> %d entries"):format(k, sizesEarly[k] or 0, n))
+			end
+		end
+	end
+end
 os.exit(#failures == 0 and 0 or 1)

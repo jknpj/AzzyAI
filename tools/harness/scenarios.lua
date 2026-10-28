@@ -11,6 +11,9 @@
 
 local cluster = { {103,100}, {104,101}, {104,99}, {103,102}, {105,100} }
 local single = { {103,100} }
+-- 40 monsters spread around the owner, for profiling the per-tick cost
+local crowd = {}
+for i = 0, 39 do crowd[#crowd + 1] = { 100 + (i % 8) * 2 - 7, 100 + math.floor(i / 8) * 3 - 6 } end
 
 local BAYERI_SKILLS = { "MH_STAHL_HORN", "MH_HEILIGE_STANGE", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
 	"MH_STEINWAND", "MH_GLANZEN_SPIES", "MH_HEILIGE_PFERD", "MH_GOLDENE_TONE" }
@@ -82,4 +85,8 @@ SCENARIOS = {
 
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" } },
+
+	-- many monsters on screen: must keep fighting and not error out
+	crowd_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = crowd, expect = { "Heilige Stange" } },
+	crowd_sera = { homuntype = 50, skills = SERA_SKILLS, mobs = crowd, expect = { "Poison Mist" } },
 }

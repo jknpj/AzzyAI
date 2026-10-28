@@ -72,7 +72,10 @@ Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 python tools/harness/run.py              # syntax check of all .lua + all scenarios
 python tools/harness/run.py dieter sera  # only some scenarios
 python tools/harness/run.py --verbose --trace bayeri
+python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
+
+`--profile` reports time per `AI()` call, the hottest functions (sampled), `GetV` calls per tick by type, Lua heap after GC and global tables that keep growing (leak check). The `crowd_*` scenarios put 40 monsters on screen to stress the per-tick loops. Absolute times are relative to the mock, not the RO client.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
