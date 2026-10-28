@@ -117,6 +117,13 @@ function loadtimeouts()
 	else
 		dofile(ConfigPath.."data/M_"..OwnerID.."Timeouts.lua")
 	end
+	-- GetTick() restarts with Windows; a saved cooldown further away than any reuse delay is stale
+	local tick=GetTick()
+	for skill,cooldown in pairs(AutoSkillCooldown) do
+		if cooldown > tick + 600000 then
+			AutoSkillCooldown[skill]=0
+		end
+	end
 	if AggressiveRelogTracking==1 then
 		if IsHomun(MyID)==1 then
 			dofile(AggressiveRelogPath.."H_"..OwnerID.."Time.lua")
@@ -2584,6 +2591,12 @@ function UpdateTimeoutFile()
 	end
 	if OutFile~=nil then
 		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..TimeoutConv(SOffensiveTimeout).."\nSDefensiveTimeout="..TimeoutConv(SDefensiveTimeout).."\nSOwnerBuffTimeout="..TimeoutConv(SOwnerBuffTimeout).."\nSOwner2ndBuffTimeout="..TimeoutConv(SOwner2ndBuffTimeout).."\nGuardTimeout="..TimeoutConv(GuardTimeout).."\nQuickenTimeout="..TimeoutConv(QuickenTimeout).."\nOffensiveOwnerTimeout="..TimeoutConv(OffensiveOwnerTimeout).."\nDefensiveOwnerTimeout="..TimeoutConv(DefensiveOwnerTimeout).."\nOtherOwnerTimeout="..TimeoutConv(OtherOwnerTimeout).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
+		local tick=GetTick()
+		for skill,cooldown in pairs(AutoSkillCooldown) do
+			if cooldown > tick then
+				OutFile:write("\nAutoSkillCooldown["..skill.."]="..cooldown)
+			end
+		end
 		OutFile:close()
 	else
 		TraceAI("Failed to update timeout file")
@@ -3087,7 +3100,7 @@ function FailSkillUse(mode)
 			DefensiveOwnerTimeout = 1
 		elseif mode==13 then
 			OtherOwnerTimeout = 1
-		elseif IsPlayer(modex) then
+		elseif IsPlayer(modex)==1 then
 			--logappend("AAI_PKF","skill failed on"..mode)
 			PKFriendsTimeout[modex]=1
 		else
@@ -3602,6 +3615,7 @@ function AI(myid)
 		end
 	end
 	if clearcastskill==1 then
+		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
 		--LavaSlideMode=constant
 		if (LavaSlideMode==4 and CastSkill==MH_LAVA_SLIDE) then
@@ -3613,7 +3627,16 @@ function AI(myid)
 		CastSkillTime=0
 		CastSkillState=0	
 	elseif clearcastskill==2 then
+		-- Only a cast that never started can be a refused level; a broken cast was accepted.
+		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
+		if CastSkillMode==0 then
+			CastSkill=0
+			CastSkillLevel=0
+			CastSkillTime=0
+			CastSkillState=0
+		else
 			FailSkillUse(CastSkillMode)
+		end
 	end
 	MyLastSP=sp
 	--###COMMAND PROCESSING###

@@ -64,7 +64,8 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 - expected skills are cast and forbidden ones aren't;
 - no skill is cast without enough SP or before its cooldown;
 - the homunculus still does normal attacks;
-- official/private server overrides are applied.
+- official/private server overrides are applied;
+- casts the server would refuse ("Skill failed": level not learned) stay within `maxRefused`, also across a simulated map change (`reloadAt`).
 
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
@@ -76,6 +77,19 @@ python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
 `--profile` reports time per `AI()` call, the hottest functions (sampled), `GetV` calls per tick by type, Lua heap after GC and global tables that keep growing (leak check). The `crowd_*` scenarios put 40 monsters on screen to stress the per-tick loops. Absolute times are relative to the mock, not the RO client.
+
+In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level.
+
+### Learned skill levels
+
+The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACKRANGE_LEVEL)`. For skills whose low levels all have range 1 (Toxin of Mandara, Heilige Pferd, The One Fighter Rises Lv1-4, Moonlight) the client can't tell the learned level apart, so the AI:
+
+- never casts above the configured level or the highest level the client confirms;
+- lowers the level by one after 2 refused casts at it (never below a level that already worked);
+- saves that level in `data/H_<owner>Skills.lua`, so map changes don't start over;
+- tries one level higher at most once per hour (`LEARNED_SKILL_RECHECK_SECONDS`), in case the skill was levelled.
+
+Long cooldowns (10 s or more) are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 

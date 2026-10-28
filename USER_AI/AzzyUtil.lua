@@ -2634,11 +2634,20 @@ function KiteOK(myid)
 end
 
 function DoSkill(skill,level,target,mode,targx,targy)
-	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..target)
 	if skill==0 or level==0 or skill==nil or level==nil then
-		logappend("AAI_ERROR","doskill called skill:"..skill.."level:"..level.."target"..target.."mode"..mode.."state "..MyState.."pstate "..MyPState)
+		logappend("AAI_ERROR","doskill called skill:"..tostring(skill).."level:"..tostring(level).."target"..tostring(target).."mode"..tostring(mode).."state "..MyState.."pstate "..MyPState)
 		return 0
 	end
+	-- Never request a level the server will refuse (each refusal is a "Skill failed" message)
+	level = GetCastableSkillLevel(skill, level)
+	if level <= 0 then
+		logappend("AAI_SKILLFAIL", "DoSkill: "..FormatSkill(skill,1).." not learned, skipped")
+		if AutoSkillCooldown[skill] ~= nil then
+			AutoSkillCooldown[skill] = GetTick() + 60000
+		end
+		return 0
+	end
+	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target))
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
 		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
@@ -2654,17 +2663,26 @@ function DoSkill(skill,level,target,mode,targx,targy)
 			SkillGround(MyID,level,skill,targx,targy)
 		end
 	end
-	if mode~=nil then
-		if mode > 0 then
-			CastSkillMode=mode
+	if mode~=nil and mode > 0 then
+		CastSkillMode=mode
+		CastSkill=skill
+		CastSkillLevel=level
+		CastSkillTime=GetTick()
+		CastSkillState=0
+		logappend("AAI_SKILLFAIL", "Mode set "..mode.." skill "..skill.." level "..level)
+	else
+		if mode~=nil then --mode is negative, call the plugin mode handler.
+			DoSkillHandleMode(skill,level,target,mode,targx,targy)
+			logappend("AAI_SKILLFAIL", "Mode set "..mode.." skill "..skill.." level "..level)
+		end
+		-- Attack skills: watch them too (mode 0) so refused levels can be detected, unless a
+		-- buff cast is already being watched.
+		if CastSkill==0 then
+			CastSkillMode=0
 			CastSkill=skill
 			CastSkillLevel=level
 			CastSkillTime=GetTick()
 			CastSkillState=0
-			logappend("AAI_SKILLFAIL", "Mode set "..mode.." skill "..skill.." level "..level)
-		else --mode is negative, call the plugin mode handler. 
-			DoSkillHandleMode(skill,level,target,mode,targx,targy)
-			logappend("AAI_SKILLFAIL", "Mode set "..mode.." skill "..skill.." level "..level)
 		end
 	end
 	local t=GetTick();
@@ -2672,6 +2690,11 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	AutoSkillCastTimeout=delay+t
 	if AutoSkillCooldown[skill]~=nil then
 		AutoSkillCooldown[skill]=t+GetSkillInfo(skill,9,level)+delay
+		-- cooldowns survive map changes on the server; save the long ones so the reloaded AI
+		-- doesn't recast early and get "Skill failed"
+		if GetSkillInfo(skill,9,level) >= 10000 then
+			UpdateTimeoutFile()
+		end
 	elseif (skill==MH_VOLCANIC_ASH) then --handle the three ash timeouts
 		if (AshTimeout[1] < t) then
 			AshTimeout[1]=t+GetSkillInfo(skill,9,level)+delay
@@ -2964,7 +2987,11 @@ end
 --
 -- @param myid (number): The ID of the homunculus or mercenary.
 -- @param skillID (number): The constant for the skill to check (e.g., HFLI_MOON).
--- @return (number): The learned level of the skill (1-10), or 0 if not learned.
+-- @return (number): The learned level of the skill (1-10), 0 if not learned, nil if unknown
+--         (no skill list for this unit).
+-- @return (boolean): true if the level is certain. The client reports range 1 both for
+--         "not learned" and for levels whose real range is 1, so for those skills the
+--         first value is only an upper bound.
 ---
 function GetLearnedSkillLevel(myid, skillID)
     local maxLevel = 0
@@ -2981,38 +3008,162 @@ function GetLearnedSkillLevel(myid, skillID)
         end
         
         -- Now, get the max possible level for this skill from the correct table entry.
-        if SkillList[typeForLookup] and SkillList[typeForLookup][skillID] then
-            maxLevel = SkillList[typeForLookup][skillID]
+        if SkillList[typeForLookup] == nil then
+            return nil, false
         end
+        maxLevel = SkillList[typeForLookup][skillID] or 0
     else
-        -- Mercenary logic remains the same.
         local mtype = GetMerType(myid)
-        if SkillListM and SkillListM[mtype] and SkillListM[mtype][skillID] then
-            maxLevel = SkillListM[mtype][skillID]
+        if not (SkillListM and SkillListM[mtype]) then
+            return nil, false
         end
+        maxLevel = SkillListM[mtype][skillID] or 0
     end
 
     -- If the skill doesn't exist for this unit type, it can't be learned.
     if maxLevel == 0 then
-        return 0
+        return 0, true
     end
 
     -- Loop downwards from the max level to find the actual learned level.
+    local ambiguous = 0
     for level = maxLevel, 1, -1 do
         -- It returns 1 if the skill is NOT known at this level.
         if GetV(V_SKILLATTACKRANGE_LEVEL, myid, skillID, level) ~= 1 then
-            -- We found the highest level that is known. Return it.
-            return level
+            return level, true
         end
-        -- Skills whose real range is 1 (e.g. Blast Forge) also return 1 when learned,
-        -- so the check can't tell; trust the configured skill list for those.
-        if SkillInfo[skillID] ~= nil and GetSkillInfo(skillID, 2, level) == 1 then
-            return level
+        -- Levels whose real range is 1 (e.g. Blast Forge, Toxin Lv1-4) also return 1 when learned.
+        -- The highest such level is an upper bound; lower levels must still be probed.
+        if ambiguous == 0 and SkillInfo[skillID] ~= nil and GetSkillInfo(skillID, 2, level) == 1 then
+            ambiguous = level
         end
     end
 
-    -- If the loop completes, the skill is not learned at any level.
-    return 0
+    if ambiguous > 0 then
+        return ambiguous, false
+    end
+    return 0, true
+end
+
+-- What the AI knows about the learned level of each skill, used by DoSkill() so it never asks the
+-- server for a level the homunculus doesn't have (each refusal shows "Skill failed" in the client).
+--   cap      highest level we may request (0 = not learned)
+--   upper    upper bound from the client probe
+--   exact    cap came from an unambiguous probe (cap == upper)
+--   ok       highest level seen succeeding this session (never step below it)
+--   rejects  consecutive refused casts at the current cap
+--   probeUp  may try cap+1 once (the skill may have been levelled since it was saved)
+-- Skills whose level can't be probed (range 1) are saved per owner in data/H_<owner>Skills.lua as
+-- {cap, os.time() of the last check}, so the stepping down isn't repeated on every map change and
+-- the level-up try happens at most once per LEARNED_SKILL_RECHECK_SECONDS.
+LearnedSkill = {}
+LearnedSkillSaved = nil
+SKILL_REJECTS_TO_STEP_DOWN = 2
+LEARNED_SKILL_RECHECK_SECONDS = 3600
+
+function LearnedSkillFile()
+	return ConfigPath.."data/H_"..OwnerID.."Skills.lua"
+end
+
+function SaveLearnedSkills()
+	local OutFile = io.open(LearnedSkillFile(), "w")
+	if OutFile == nil then
+		logappend("AAI_ERROR", "Failed to save learned skill levels for owner "..OwnerID)
+		return
+	end
+	for skill, saved in pairs(LearnedSkillSaved) do
+		OutFile:write("LearnedSkillSaved["..skill.."]={"..saved[1]..","..saved[2].."}\n")
+	end
+	OutFile:close()
+end
+
+function SaveLearnedSkillCap(skill, cap)
+	LearnedSkillSaved[skill] = { cap, os.time() }
+	SaveLearnedSkills()
+end
+
+function SetLearnedSkillCap(skill, info, cap)
+	info.cap = cap
+	info.rejects = 0
+	if not info.exact then
+		SaveLearnedSkillCap(skill, cap)
+	end
+end
+
+function GetSkillLevelCap(skill)
+	local info = LearnedSkill[skill]
+	if info == nil then
+		local cap, exact = nil, false
+		if IsHomun(MyID) == 1 then
+			cap, exact = GetLearnedSkillLevel(MyID, skill)
+		end
+		info = { cap = cap, upper = cap, exact = exact, ok = 0, rejects = 0, probeUp = false }
+		LearnedSkill[skill] = info
+		if cap ~= nil and not exact then
+			if LearnedSkillSaved == nil then
+				LearnedSkillSaved = {}
+				pcall(dofile, LearnedSkillFile())
+			end
+			local saved = LearnedSkillSaved[skill]
+			if type(saved) == "table" and type(saved[1]) == "number" and saved[1] < cap then
+				info.cap = math.max(saved[1], 0)
+				info.probeUp = os.time() - (tonumber(saved[2]) or 0) >= LEARNED_SKILL_RECHECK_SECONDS
+			end
+		end
+		if cap ~= nil then
+			logappend("AAI_SKILLFAIL", "Learned level of "..FormatSkill(skill, info.cap).." upper "..cap.." exact="..tostring(exact))
+		end
+	end
+	return info.cap
+end
+
+-- Level DoSkill() should actually request (0 = don't cast).
+function GetCastableSkillLevel(skill, level)
+	local cap = GetSkillLevelCap(skill)
+	if cap == nil or level <= cap then
+		return level
+	end
+	local info = LearnedSkill[skill]
+	if info.probeUp and cap < info.upper then
+		info.probeUp = false
+		SaveLearnedSkillCap(skill, cap)
+		logappend("AAI_SKILLFAIL", "Trying "..FormatSkill(skill, cap + 1).." in case it was levelled up")
+		return cap + 1
+	end
+	return cap
+end
+
+-- Called by the skill watcher once it knows whether a cast went through.
+function SkillCastResult(skill, level, success)
+	local info = LearnedSkill[skill]
+	if info == nil or info.cap == nil then
+		return
+	end
+	if success then
+		info.rejects = 0
+		if level > info.ok then
+			info.ok = level
+		end
+		if level > info.cap then
+			SetLearnedSkillCap(skill, info, level)
+			info.probeUp = true
+		end
+		return
+	end
+	-- A refused level-up probe just confirms the saved level.
+	-- Probed levels are trusted; failures there are range/interrupt problems, not the level.
+	if level > info.cap or info.exact or level ~= info.cap or level <= info.ok then
+		return
+	end
+	info.rejects = info.rejects + 1
+	if info.rejects >= SKILL_REJECTS_TO_STEP_DOWN then
+		TraceAI("Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1))
+		logappend("AAI_SKILLFAIL", "Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1))
+		SetLearnedSkillCap(skill, info, level - 1)
+		if info.cap > 0 and AutoSkillCooldown[skill] ~= nil then
+			AutoSkillCooldown[skill] = 1
+		end
+	end
 end
 
 ---
@@ -3146,19 +3297,26 @@ function LintSkillOptions(myid, logstring)
             local skillConst = optionData[3]
             local skillName  = optionData[4]
 
-            local learnedLevel = GetLearnedSkillLevel(myid, skillConst)
+            local learnedLevel = GetSkillLevelCap(skillConst)
+            local info = LearnedSkill[skillConst]
 
-            if learnedLevel == 0 then
+            if learnedLevel == nil then
+                -- No skill list for this unit, nothing to check.
+            elseif learnedLevel == 0 and info.exact then
                 -- Skill is not learned at all.
                 if _G[useOptionName] and _G[useOptionName] ~= 0 then
                     logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned.\n"
                     _G[useOptionName] = 0
                 end
             else
-                -- Skill is learned. Check if the configured level is too high (if a level option exists).
-                if levelOptionName and _G[levelOptionName] and _G[levelOptionName] > learnedLevel then
-                    logstring = logstring .. "Adjusting " .. levelOptionName .. " from " .. _G[levelOptionName] .. " to learned level " .. learnedLevel .. ".\n"
-                    _G[levelOptionName] = learnedLevel
+                -- Check if the configured level is too high (if a level option exists). For skills whose
+                -- level can't be probed keep the upper bound, so DoSkill() can still try one level up.
+                if levelOptionName and _G[levelOptionName] and _G[levelOptionName] > info.upper then
+                    logstring = logstring .. "Adjusting " .. levelOptionName .. " from " .. _G[levelOptionName] .. " to learned level " .. info.upper .. ".\n"
+                    _G[levelOptionName] = info.upper
+                end
+                if not info.exact then
+                    logstring = logstring .. skillName .. ": learned level can't be read exactly (range 1); using level " .. learnedLevel .. " (at most " .. info.upper .. "), adjusted if the server refuses it.\n"
                 end
             end
         end
