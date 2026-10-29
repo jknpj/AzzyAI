@@ -174,6 +174,8 @@ To ensure the AI functions correctly on your server, set the `ServerType` variab
 
 With the wrong value on a private server every monster looks like a player and the homunculus never attacks. To avoid that, `AutoDetectServerType = 1` (default) switches to `SERVER_PRIVATE` by itself as soon as it sees a monster with an rAthena/Hercules ID (110000000 or more) and logs it in `AAI_ERROR`. It is skipped if the config sets `MagicNumber`/`MagicNumber2`/`MagicNumber3`.
 
+`ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026), which follows kRO: durations, AoE sizes and the cooldowns stated in the current kRO client skill descriptions, with the remaining numbers (range, cast times, SP) taken from bROWiki; `ServerSkillOverrides` lists only the rAthena Renewal values that differ (mostly cast-time splits, plus a few cooldowns, durations and AoE sizes) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
+
 ### Troubleshooting automatic attacks
 
 Some clients report the player's own homunculus/mercenary as a monster through `IsMonster()`.
