@@ -54,6 +54,21 @@ SCENARIOS = {
 		sp = 20, spregen = 0, minAttacks = 100, startTick = 10000000, set = { AmiBulwarkLevel = 1 } },
 	amistr_bulwark_learned = { homuntype = 2, skills = { "HAMI_DEFENCE" }, mobs = single,
 		sp = 100, spregen = 1, minAttacks = 100, startTick = 10000000, expect = { "Amistr Bulwark" } },
+	-- rAthena Bulwark Lv5 lasts 20 s but has a 30 s cooldown; recasting when the buff dropped
+	-- (and again after every resurrection/relog) only got "Skill failed". The AI is reloaded
+	-- mid-run like after a resurrection; the saved cooldown must still be honoured.
+	amistr_bulwark_private_cooldown = { homuntype = 2, skills = { "HAMI_DEFENCE" }, mobs = single,
+		private = true, sp = 300, spregen = 5, minAttacks = 100, startTick = 10000000,
+		ticks = 1300, reloadAt = 450, expect = { "Amistr Bulwark" },
+		checks = {
+			["Bulwark is recast as soon as its rAthena cooldown ends"] = function()
+				local n = 0
+				for _, c in ipairs(HarnessCasts) do
+					if c.ok and c.skill == HAMI_DEFENCE then n = n + 1 end
+				end
+				return n >= 4 and GetSkillInfo(HAMI_DEFENCE, 9, 5) == 30000
+			end,
+		} },
 	amistr_unlearned_smart_bulwark = { homuntype = 2, skills = {}, mobs = single,
 		sp = 300, spregen = 1, minAttacks = 100, startTick = 10000000, set = { UseSmartBulwark = 1 } },
 	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },

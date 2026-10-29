@@ -2247,10 +2247,10 @@ function	GetQuickenSkill(myid)
 			skill=MER_QUICKEN
 		end
 	end
+	-- keep the skill id: callers read skill==0 as "no buff available" and stop trying for good
 	if AutoSkillCooldown[skill]~=nil then
 		if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
 			level=0
-			skill=0
 		end
 	end
 	return skill,level
@@ -2404,6 +2404,9 @@ function	GetGuardSkill(myid)
 			else
 				level=FilirAccelLevel
 			end
+		end
+		if AutoSkillCooldown[skill]~=nil and GetTick() < AutoSkillCooldown[skill] then
+			level=0 -- in cooldown
 		end
 		return skill,level
 	else
