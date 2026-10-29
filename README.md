@@ -10,6 +10,7 @@ For more information, see the official website: [http://drazzy.com/ro/ai](http:/
 
 * `DEFAULT` contains the default AI
 * `USER_AI` contains AzzyAI
+* `webgui` is a git submodule with the browser configuration GUI ([jknpj/AzzyAI-webgui](https://github.com/jknpj/AzzyAI-webgui)). Clone with `git clone --recursive`, or run `git submodule update --init` in an existing clone.
 
 ## Key Features
 
@@ -158,7 +159,7 @@ The simulator follows rAthena's rules (`clif_parse_UseSkillToId_homun`, `skill_c
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
 - Lua syntax check and simulator;
-- `node --check` on the web GUI;
+- `node --check` on the web GUI (checked out from the `webgui` submodule);
 - build of the .NET 4.0 config GUI, packaging `USER_AI` + `AzzyAIConfig.exe` as the `AzzyAI` artifact.
 
 Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release.
