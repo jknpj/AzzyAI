@@ -1993,21 +1993,21 @@ function GetGrappleSkill(myid)
 		htype=MyHomunType
 		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
 			local comboFollowupSpheres = math.max(0, AutoComboSpheres - 1)
-			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres then
+			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorCBC == 1 then
 				skill=MH_CBC
 				if EleanorCBCLevel==nil then
 					level=SkillList[ELEANOR][MH_CBC]
 				else
 					level=EleanorCBCLevel
 				end
-			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres then
+			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorEQC == 1 then
 				skill=MH_EQC
 				if EleanorEQCLevel==nil then
 					level=SkillList[ELEANOR][MH_EQC]
 				else
 					level=EleanorEQCLevel
 				end
-			elseif MySpheres >= AutoComboSpheres then
+			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]

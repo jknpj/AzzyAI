@@ -142,6 +142,7 @@
     </Compile>
     <Compile Include="MerConf.cs" />
     <Compile Include="HomConf.cs" />
+    <Compile Include="HomConf.Additional.cs" />
     <Compile Include="HomunculusConfigControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

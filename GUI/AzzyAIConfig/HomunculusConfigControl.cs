@@ -59,67 +59,90 @@ namespace AzzyAIConfig
 
         private void SetupUI()
         {
-            // Create search and filter controls
+            var layout = new TableLayoutPanel
+            {
+                Name = "homunculusLayout",
+                Dock = DockStyle.Fill,
+                Padding = new Padding(8),
+                ColumnCount = 1,
+                RowCount = 5
+            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90));
+
+            var searchRow = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 3, Margin = new Padding(0)
+            };
+            searchRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            searchRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            searchRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             searchLabel = new Label
             {
-                Text = "Search:",
-                Location = new Point(10, 10),
-                Size = new Size(50, 20),
-                TextAlign = ContentAlignment.MiddleLeft
+                Text = "Search settings:", AutoSize = true, Anchor = AnchorStyles.Left
             };
-
             searchBox = new TextBox
             {
-                Location = new Point(70, 10),
-                Size = new Size(150, 20)
+                Name = "settingsSearch", Dock = DockStyle.Fill,
+                AccessibleName = "Search setting names and descriptions", TabIndex = 0
             };
             searchBox.TextChanged += SearchBox_TextChanged;
+            var clearButton = new Button
+            {
+                Name = "clearFilters", Text = "Clear filters", AutoSize = true, TabIndex = 1
+            };
+            clearButton.Click += delegate
+            {
+                searchBox.Clear();
+                homunculusSFilter.SelectedIndex = 0;
+                homunculusBaseFilter.SelectedIndex = 0;
+            };
+            searchRow.Controls.Add(searchLabel, 0, 0);
+            searchRow.Controls.Add(searchBox, 1, 0);
+            searchRow.Controls.Add(clearButton, 2, 0);
 
+            var filters = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill, AutoSize = true, WrapContents = true,
+                Margin = new Padding(0, 4, 0, 4)
+            };
             homunculusSLabel = new Label
             {
-                Text = "Homunc S:",
-                Location = new Point(240, 10),
-                Size = new Size(60, 20),
-                TextAlign = ContentAlignment.MiddleLeft
+                Text = "Homunculus S:", AutoSize = true, Margin = new Padding(3, 6, 3, 0)
             };
-
             homunculusSFilter = new ComboBox
             {
-                Location = new Point(305, 10),
-                Size = new Size(80, 20),
-                DropDownStyle = ComboBoxStyle.DropDownList
+                Name = "homunculusSFilter", Width = 120, DropDownStyle = ComboBoxStyle.DropDownList,
+                AccessibleName = "Filter Homunculus S settings", TabIndex = 2
             };
             homunculusSFilter.Items.AddRange(new string[] { "All Types", "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" });
             homunculusSFilter.SelectedIndex = 0;
             homunculusSFilter.SelectedIndexChanged += Filter_Changed;
-
             homunculusBaseLabel = new Label
             {
-                Text = "Homunc Base:",
-                Location = new Point(400, 10),
-                Size = new Size(80, 20),
-                TextAlign = ContentAlignment.MiddleLeft
+                Text = "Base homunculus:", AutoSize = true, Margin = new Padding(15, 6, 3, 0)
             };
-
             homunculusBaseFilter = new ComboBox
             {
-                Location = new Point(485, 10),
-                Size = new Size(80, 20),
-                DropDownStyle = ComboBoxStyle.DropDownList
+                Name = "homunculusBaseFilter", Width = 120, DropDownStyle = ComboBoxStyle.DropDownList,
+                AccessibleName = "Filter inherited base homunculus settings", TabIndex = 3
             };
             homunculusBaseFilter.Items.AddRange(new string[] { "All Types", "Lif", "Amistr", "Filir", "Vanilmirth" });
             homunculusBaseFilter.SelectedIndex = 0;
             homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
+            filters.Controls.AddRange(new Control[] {
+                homunculusSLabel, homunculusSFilter, homunculusBaseLabel, homunculusBaseFilter
+            });
 
-            // Create tab control
             tabControl = new TabControl
             {
-                Location = new Point(10, 40),
-                Size = new Size(this.Width - 20, this.Height - 150),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
+                Name = "homunculusCategories", Dock = DockStyle.Fill, Multiline = true, TabIndex = 4
             };
 
-            // Create tabs for each category
             string[] categories = {
                 "Basic Options",
                 "AutoSkill Options", 
@@ -140,7 +163,8 @@ namespace AzzyAIConfig
                     Dock = DockStyle.Fill,
                     PropertySort = PropertySort.Alphabetical,
                     ToolbarVisible = false,
-                    HelpVisible = false
+                    HelpVisible = false,
+                    Name = "settingsGrid"
                 };
                 propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
                 propertyGrid.SelectedGridItemChanged += PropertyGrid_SelectedGridItemChanged;
@@ -149,37 +173,23 @@ namespace AzzyAIConfig
                 tabControl.TabPages.Add(tabPage);
             }
 
-            // Create help text area
             helpLabel = new Label
             {
-                Text = "Description:",
-                Location = new Point(10, this.Height - 100),
-                Size = new Size(80, 20),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
-                TextAlign = ContentAlignment.MiddleLeft
+                Name = "settingsSummary", Text = "Description:", AutoSize = true,
+                Margin = new Padding(3, 6, 3, 3)
             };
-
             helpTextBox = new TextBox
             {
-                Location = new Point(10, this.Height - 80),
-                Size = new Size(this.Width - 20, 70),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Multiline = true,
-                ReadOnly = true,
-                ScrollBars = ScrollBars.Vertical,
+                Name = "settingsDescription", Dock = DockStyle.Fill,
+                Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
                 Text = "Select a property to see its description here."
             };
-
-            // Add controls to the user control
-            this.Controls.Add(searchLabel);
-            this.Controls.Add(searchBox);
-            this.Controls.Add(homunculusSLabel);
-            this.Controls.Add(homunculusSFilter);
-            this.Controls.Add(homunculusBaseLabel);
-            this.Controls.Add(homunculusBaseFilter);
-            this.Controls.Add(tabControl);
-            this.Controls.Add(helpLabel);
-            this.Controls.Add(helpTextBox);
+            layout.Controls.Add(searchRow, 0, 0);
+            layout.Controls.Add(filters, 0, 1);
+            layout.Controls.Add(tabControl, 0, 2);
+            layout.Controls.Add(helpLabel, 0, 3);
+            layout.Controls.Add(helpTextBox, 0, 4);
+            Controls.Add(layout);
 
             // Load saved filter settings
             LoadFilterSettings();
@@ -283,14 +293,7 @@ namespace AzzyAIConfig
             if (_hconf == null) return;
 
             categoryWrappers.Clear();
-            foreach (TabPage tabPage in tabControl.TabPages)
-            {
-                PropertyGrid propertyGrid = tabPage.Controls[0] as PropertyGrid;
-                if (propertyGrid != null)
-                {
-                    ApplyFilterToPropertyGrid(propertyGrid, tabPage.Text);
-                }
-            }
+            ApplyFilters();
         }
 
         private void ApplyFilters()
@@ -305,6 +308,10 @@ namespace AzzyAIConfig
                     ApplyFilterToPropertyGrid(propertyGrid, tabPage.Text);
                 }
             }
+            int count = categoryWrappers.Values.Sum(wrapper => wrapper.GetProperties().Count);
+            helpLabel.Text = count == 0 ? "No matching settings. Clear filters to see all options."
+                : count + " matching settings. Select a setting for its description.";
+            helpTextBox.Text = "Filters only change what is displayed; they do not enable or disable skills.";
         }
 
         private void ApplyFilterToPropertyGrid(PropertyGrid propertyGrid, string category)
@@ -322,17 +329,30 @@ namespace AzzyAIConfig
 
             var wrapper = categoryWrappers[key];
             wrapper.UpdateFilters(searchText, homunculusSType, homunculusBaseType);
+            propertyGrid.SelectedObject = null;
             propertyGrid.SelectedObject = wrapper;
         }
 
-        public void Refresh()
+        public override void Refresh()
         {
             RefreshAllTabs();
+            base.Refresh();
         }
 
         public void UpdateData()
         {
             RefreshAllTabs();
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.F))
+            {
+                searchBox.Focus();
+                searchBox.SelectAll();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 
@@ -385,7 +405,8 @@ namespace AzzyAIConfig
                     string propName = prop.Name.ToLower();
                     string displayName = prop.DisplayName.ToLower();
                     
-                    if (!propName.Contains(_searchText) && !displayName.Contains(_searchText))
+                    if (!propName.Contains(_searchText) && !displayName.Contains(_searchText)
+                        && prop.Description.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) < 0)
                         continue;
                 }
 
@@ -415,15 +436,15 @@ namespace AzzyAIConfig
             
             // Check for Homunculus S specific skills
             string[] seraSkills = { "paralyze", "poisonmist", "painkiller", "calllegion" };
-            string[] eiraSkills = { "silentbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
+            string[] eiraSkills = { "silentbreeze", "healownerbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
             string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" };
             string[] bayeriSkills = { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" };
             string[] dieterSkills = { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" };
             
             // Check for Base Homunculus specific skills
-            string[] lifSkills = { "escape", "breeze" };
-            string[] amistrSkills = { "bulwark", "castle", "bloodlust" };
-            string[] filirSkills = { "flit", "accel", "moon", "speed" };
+            string[] lifSkills = { "escape" };
+            string[] amistrSkills = { "bulwark", "castle", "bloodlust", "provokeowner" };
+            string[] filirSkills = { "flit", "accel", "moon", "speed", "sbr44" };
             string[] vanilmirthSkills = { "caprice", "chaotic", "selfdestruct" };
 
             // Check if this property belongs to a specific Homunculus S type
@@ -441,7 +462,9 @@ namespace AzzyAIConfig
 
             // Check if this property belongs to a specific Base Homunculus type
             string belongsToHomunculusBase = null;
-            if (propNameLower.Contains("lif") || lifSkills.Any(skill => propNameLower.Contains(skill)))
+            if (belongsToHomunculusS != null)
+                belongsToHomunculusBase = null;
+            else if (propNameLower.Contains("lif") || lifSkills.Any(skill => propNameLower.Contains(skill)))
                 belongsToHomunculusBase = "lif";
             else if (propNameLower.Contains("amistr") || amistrSkills.Any(skill => propNameLower.Contains(skill)))
                 belongsToHomunculusBase = "amistr";

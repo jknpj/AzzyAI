@@ -1,0 +1,187 @@
+using System;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
+
+namespace AzzyAIConfig
+{
+    enum ServerTypeOptions
+    {
+        Official = 0,
+        Private = 1
+    }
+
+    partial class HomConf
+    {
+        private static readonly string[] AdditionalOptionNames = {
+            "ServerType", "AutoDetectServerType", "CastTimeRatio", "UseProvokeOwner",
+            "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
+            "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
+            "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel",
+            "UseEleanorTheOneFighterRises", "EleanorTheOneFighterRisesLevel",
+            "UseSeraToxinOfMandara", "SeraToxinOfMandaraLevel",
+            "UseSeraNeedleStinger", "SeraNeedleStingerLevel",
+            "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel",
+            "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel",
+            "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel",
+            "UseEleanorTinderBreaker", "EleanorTinderBreakerLevel",
+            "UseEleanorCBC", "EleanorCBCLevel", "UseEleanorEQC", "EleanorEQCLevel",
+            "AllowBloodlust", "AllowSBR44"
+        };
+
+        [Category("Basic Options"), DefaultValue(ServerTypeOptions.Official),
+        Description("Official: Gravity servers. Private: rAthena/Hercules servers. This changes actor identification and skill compatibility, not the selected homunculus filter.")]
+        public ServerTypeOptions ServerType { get; set; }
+
+        [Category("Basic Options"), DefaultValue(true),
+        Description("Automatically switch to private-server actor identification when rAthena/Hercules monster IDs are detected.")]
+        public bool AutoDetectServerType { get; set; }
+
+        private double _castTimeRatio;
+        [Category("AutoSkill Options"), DefaultValue(0.5),
+        Description("Remaining variable cast time after reductions: 0 = no variable cast time, 1 = full variable cast time.")]
+        public double CastTimeRatio
+        {
+            get { return _castTimeRatio; }
+            set
+            {
+                if (double.IsNaN(value) || value < 0 || value > 1)
+                    throw new ArgumentOutOfRangeException("value", "CastTimeRatio must be between 0 and 1.");
+                _castTimeRatio = value;
+            }
+        }
+
+        [Category("Autobuff Options"), DefaultValue(UseProvokeOwnerOptions.Never),
+        Description("Use Amistr Castling to protect the owner in the selected AI states.")]
+        public UseProvokeOwnerOptions UseProvokeOwner { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eira's Twister Cutter attack.")]
+        public bool UseEiraTwisterCutter { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Twister Cutter level, 1-10. The AI also checks the learned level.")]
+        public int EiraTwisterCutterLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eira's Absolute Zephyr area attack.")]
+        public bool UseEiraAbsoluteZephyr { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Absolute Zephyr level, 1-10.")]
+        public int EiraAbsoluteZephyrLevel { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eleanor's Blazing And Furious attack.")]
+        public bool UseEleanorBlazingAndFurious { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Blazing And Furious level, 1-10.")]
+        public int EleanorBlazingAndFuriousLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eleanor's The One Fighter Rises attack.")]
+        public bool UseEleanorTheOneFighterRises { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("The One Fighter Rises level, 1-10.")]
+        public int EleanorTheOneFighterRisesLevel { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Sera's Toxin Of Mandara area attack. Targeting follows the selected server type.")]
+        public bool UseSeraToxinOfMandara { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Toxin Of Mandara level, 1-10.")]
+        public int SeraToxinOfMandaraLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Sera's Needle Stinger attack.")]
+        public bool UseSeraNeedleStinger { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Needle Stinger level, 1-10.")]
+        public int SeraNeedleStingerLevel { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Bayeri's Glanzen Spies attack.")]
+        public bool UseBayeriGlanzenSpies { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Glanzen Spies level, 1-10.")]
+        public int BayeriGlanzenSpiesLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Bayeri's Heilige Pferd area attack.")]
+        public bool UseBayeriHeiligePferd { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Heilige Pferd level, 1-10.")]
+        public int BayeriHeiligePferdLevel { get; set; }
+        [Category("Autobuff Options"), DefaultValue(UseDefensiveBuffOptions.Never),
+        Description("Use Bayeri's Goldene Tone buff in the selected AI states.")]
+        public UseDefensiveBuffOptions UseBayeriGoldeneTone { get; set; }
+        [Category("Autobuff Options"), DefaultValue(10), Description("Goldene Tone level, 1-10.")]
+        public int BayeriGoldeneToneLevel { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(true), Description("Enable Eleanor's Tinder Breaker in grappling mode.")]
+        public bool UseEleanorTinderBreaker { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(5), Description("Tinder Breaker level, 1-5.")]
+        public int EleanorTinderBreakerLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(true), Description("Enable Eleanor's CBC grappling combo follow-up.")]
+        public bool UseEleanorCBC { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(5), Description("CBC level, 1-5.")]
+        public int EleanorCBCLevel { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(true), Description("Enable Eleanor's EQC grappling combo follow-up.")]
+        public bool UseEleanorEQC { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(5), Description("EQC level, 1-5.")]
+        public int EleanorEQCLevel { get; set; }
+
+        [Category("Autobuff Options"), DefaultValue(false), Description("Allow the inherited Amistr Blood Lust buff.")]
+        public bool AllowBloodlust { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Allow inherited Filir SBR44, which consumes intimacy.")]
+        public bool AllowSBR44 { get; set; }
+
+        private void ResetAdditionalOptions()
+        {
+            var properties = TypeDescriptor.GetProperties(this);
+            foreach (string name in AdditionalOptionNames)
+                properties[name].SetValue(this, ((DefaultValueAttribute)properties[name].Attributes[typeof(DefaultValueAttribute)]).Value);
+        }
+
+        private void LoadAdditionalOptions(string fileName)
+        {
+            ResetAdditionalOptions();
+            string defaultsFile = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_file)), "Defaults.lua");
+            if (File.Exists(defaultsFile))
+                ReadAdditionalOptions(File.ReadAllText(defaultsFile));
+            ReadAdditionalOptions(File.ReadAllText(fileName));
+        }
+
+        private void ReadAdditionalOptions(string text)
+        {
+            var properties = TypeDescriptor.GetProperties(this);
+            foreach (string name in AdditionalOptionNames)
+            {
+                MatchCollection matches = Regex.Matches(text, @"(?m)^[ \t]*" + name + @"[ \t]*=[ \t]*([A-Za-z_]+|[-+]?(?:\d+(?:\.\d*)?|\.\d+))[ \t]*(?=--|\r?$)");
+                if (matches.Count == 0) continue;
+                string token = matches[matches.Count - 1].Groups[1].Value;
+                var property = properties[name];
+                object value;
+                if (property.PropertyType == typeof(ServerTypeOptions))
+                {
+                    if (token == "SERVER_OFFICIAL" || token == "0") value = ServerTypeOptions.Official;
+                    else if (token == "SERVER_PRIVATE" || token == "1") value = ServerTypeOptions.Private;
+                    else throw new FormatException("Invalid ServerType: " + token);
+                }
+                else if (property.PropertyType == typeof(bool))
+                    value = int.Parse(token, CultureInfo.InvariantCulture) != 0;
+                else if (property.PropertyType.IsEnum)
+                    value = Enum.ToObject(property.PropertyType, int.Parse(token, CultureInfo.InvariantCulture));
+                else
+                    value = Convert.ChangeType(token, property.PropertyType, CultureInfo.InvariantCulture);
+                property.SetValue(this, value);
+            }
+        }
+
+        private string SaveAdditionalOptions(string text)
+        {
+            var properties = TypeDescriptor.GetProperties(this);
+            foreach (string name in AdditionalOptionNames)
+            {
+                var property = properties[name];
+                object value = property.GetValue(this);
+                if (name.EndsWith("Level", StringComparison.Ordinal))
+                {
+                    int maximum = name.StartsWith("Eleanor", StringComparison.Ordinal) &&
+                        (name == "EleanorTinderBreakerLevel" || name == "EleanorCBCLevel" || name == "EleanorEQCLevel") ? 5 : 10;
+                    if ((int)value < 1 || (int)value > maximum)
+                        throw new InvalidOperationException(name + " must be between 1 and " + maximum + ".");
+                }
+                string token = property.PropertyType == typeof(ServerTypeOptions)
+                    ? ((ServerTypeOptions)value == ServerTypeOptions.Private ? "SERVER_PRIVATE" : "SERVER_OFFICIAL")
+                    : property.PropertyType == typeof(double) ? ((double)value).ToString(CultureInfo.InvariantCulture)
+                    : Convert.ToInt32(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+                string pattern = @"(?m)^([ \t]*" + name + @"[ \t]*=[ \t]*)[^ \t\r\n]+";
+                if (Regex.IsMatch(text, pattern))
+                    text = Regex.Replace(text, pattern, match => match.Groups[1].Value + token);
+                else
+                    text += Environment.NewLine + name.PadRight(25) + "= " + token;
+            }
+            return text;
+        }
+    }
+}

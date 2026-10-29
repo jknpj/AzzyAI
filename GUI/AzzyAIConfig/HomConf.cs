@@ -42,7 +42,8 @@ namespace AzzyAIConfig
 	{
 		Lif = 1,
 		Amistr = 2,
-		Filir = 3
+		Filir = 3,
+		Vanilmirth = 4
 	}
 
 	enum UseSeraPainkillerOptions : sbyte
@@ -268,7 +269,7 @@ namespace AzzyAIConfig
         Enabled_Relog=2
     }
 
-    class HomConf
+    partial class HomConf
     {
         // The default file
         string _file = "H_Config.lua";
@@ -287,6 +288,7 @@ namespace AzzyAIConfig
 
             // Initialize this object's values
             InitValues();
+            LoadAdditionalOptions(_file);
         }
 
         public HomConf(string file)
@@ -305,6 +307,7 @@ namespace AzzyAIConfig
 
             // Initialize the values for this object
             InitValues();
+            LoadAdditionalOptions(_file);
         }
 
         public void Revert()
@@ -314,10 +317,12 @@ namespace AzzyAIConfig
 
             // Reinitialize the values for this object
             InitValues();
+            LoadAdditionalOptions(_file);
         }
 
         public void SetDefaults()
         {
+            ResetAdditionalOptions();
             // Basic Options
             _AggroHP = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AggroHP"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _AggroSP = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AggroSP"].Attributes[typeof(DefaultValueAttribute)]).Value);
@@ -476,7 +481,7 @@ namespace AzzyAIConfig
             if (!File.Exists(file))
             {
                 // Create the file
-                File.CreateText(file);
+                File.WriteAllText(file, File.ReadAllText(_file));
             }
 
             // Set the configuration values
@@ -627,7 +632,7 @@ namespace AzzyAIConfig
             H_Config.PVPmode = Convert.ToInt32(_PVPmode);
 
             // Save the file
-            H_Config.Save(file);
+            H_Config.Save(file, SaveAdditionalOptions);
         }
 
         public void Open(string file)
@@ -644,6 +649,7 @@ namespace AzzyAIConfig
 
             // Initialize the values for this object
             InitValues();
+            LoadAdditionalOptions(file);
         }
 
         void InitValues()
@@ -1098,10 +1104,9 @@ namespace AzzyAIConfig
         OldHomunTypeOptions _OldHomunType = OldHomunTypeOptions.Filir;
         [Category("Basic Options"),
         Description(
-            "If you are using a Homun S that was NOT a vanilmirth, set this" +
-            " to the type of homun that your homun s was prior to mutation." +
-            "This will be disregarded if the homun was a Vanilmirth, or for" +
-            "non-S homunculi"
+            "Fallback base type for a Homunculus S when inherited skills cannot be detected." +
+            " Normally the AI automatically detects the original type." +
+            " This setting is ignored for non-S homunculi."
             ),
         DefaultValue(OldHomunTypeOptions.Filir)]
         public OldHomunTypeOptions OldHomunType
@@ -1540,9 +1545,9 @@ namespace AzzyAIConfig
                 {
                     _EiraXenoSlasherLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _EiraXenoSlasherLevel = 5;
+                    _EiraXenoSlasherLevel = 10;
                 }
                 else
                 {
@@ -1605,9 +1610,9 @@ namespace AzzyAIConfig
                 {
                     _EiraEraseCutterLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _EiraEraseCutterLevel = 5;
+                    _EiraEraseCutterLevel = 10;
                 }
                 else
                 {
@@ -1645,9 +1650,9 @@ namespace AzzyAIConfig
                 {
                     _BayeriStahlHornLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _BayeriStahlHornLevel = 5;
+                    _BayeriStahlHornLevel = 10;
                 }
                 else
                 {
@@ -1686,9 +1691,9 @@ namespace AzzyAIConfig
                 {
                     _BayeriHailegeStarLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _BayeriHailegeStarLevel = 5;
+                    _BayeriHailegeStarLevel = 10;
                 }
                 else
                 {
@@ -1726,9 +1731,9 @@ namespace AzzyAIConfig
                 {
                     _SeraParalyzeLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _SeraParalyzeLevel = 5;
+                    _SeraParalyzeLevel = 10;
                 }
                 else
                 {
@@ -1844,9 +1849,9 @@ namespace AzzyAIConfig
                 {
                     _EleanorSilverveinLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _EleanorSilverveinLevel = 5;
+                    _EleanorSilverveinLevel = 10;
                 }
                 else
                 {
@@ -1871,9 +1876,9 @@ namespace AzzyAIConfig
                 {
                     _EleanorMidnightLevel = 1;
                 }
-                else if (value > 5)
+                else if (value > 10)
                 {
-                    _EleanorMidnightLevel = 5;
+                    _EleanorMidnightLevel = 10;
                 }
                 else
                 {

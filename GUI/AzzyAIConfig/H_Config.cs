@@ -638,7 +638,7 @@ namespace AzzyAIConfig
         #endregion
 
         #region Save
-        public static void Save(string fileName)
+        public static void Save(string fileName, Func<string, string> additionalOptions = null)
         {
             // Read the file contents from fileName
             string file = File.ReadAllText(fileName);
@@ -653,6 +653,8 @@ namespace AzzyAIConfig
             file = SaveStandbyOptions(file);
             file = SaveBerserkOptions(file);
             file = SavePVPOptions(file);
+            if (additionalOptions != null)
+                file = additionalOptions(file);
 
             // Output to the console "Saving to file: <fileName>"
             Program.WriteLine("Saving to file: {0}", fileName);

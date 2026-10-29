@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -28,6 +29,46 @@ namespace AzzyAIConfig
         {
             // Pregenerated designer code
             InitializeComponent();
+            FormClosing += MainForm_FormClosing;
+        }
+
+        private bool TrySaveChanges()
+        {
+            try
+            {
+                SaveChanges();
+                buttonApply.Enabled = false;
+                applySettingsToolStripMenuItem.Enabled = false;
+                revertToolStripMenuItem.Enabled = false;
+                return true;
+            }
+            catch (IOException e)
+            {
+                ShowSaveError(e);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                ShowSaveError(e);
+            }
+            catch (InvalidOperationException e)
+            {
+                ShowSaveError(e);
+            }
+            return false;
+        }
+
+        private void ShowSaveError(Exception error)
+        {
+            MessageBox.Show(this, "Settings could not be saved completely. Your edits are still open.\n\n" + error.Message,
+                "Save failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!buttonApply.Enabled) return;
+            var result = MessageBox.Show(this, "Save your configuration changes before closing?",
+                "Unsaved changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            e.Cancel = result == DialogResult.Cancel || (result == DialogResult.Yes && !TrySaveChanges());
         }
 
         void SaveChanges()
@@ -177,47 +218,12 @@ namespace AzzyAIConfig
 
         private void buttonQuit_Click(object sender, EventArgs e)
         {
-            // Check if buttonApply is enabled
-            if (buttonApply.Enabled)
-            {
-                // Popup a message to check if the user would like to save the configurations
-                System.Windows.Forms.DialogResult result = MessageBox.Show("Would you like to save these configuration settings?", "Message", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-                // Check if the result from the message box is yes
-                if (result == System.Windows.Forms.DialogResult.Yes)
-                {
-                    // Save the configuration changes
-                    SaveChanges();
-
-                    // Close the window
-                    Close();
-                }
-
-                // If the result from the message box is no
-                else if (result == System.Windows.Forms.DialogResult.No)
-                {
-                    // Close the window
-                    Close();
-                }
-            }
-
-            // Close the window
             Close();
         }
 
         private void buttonApply_Click(object sender, EventArgs e)
         {
-            // Save the configuration changes
-            SaveChanges();
-
-            // Disable the buttonApply
-            buttonApply.Enabled = false;
-
-            // Disable the applySettingsToolStripMenuItem
-            applySettingsToolStripMenuItem.Enabled = false;
-
-            // Disable the reverToolStripMenuItem
-            revertToolStripMenuItem.Enabled = false;
+            TrySaveChanges();
         }
 
         private void revertToolStripMenuItem_Click(object sender, EventArgs e)
@@ -231,6 +237,7 @@ namespace AzzyAIConfig
             // Refresh the controls to show reverted values
             homunculusConfigControl.Refresh();
             propertyGridMercenary.Refresh();
+            ConfigChanged(sender, e);
         }
 
         private void resetToDefaultsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -244,6 +251,7 @@ namespace AzzyAIConfig
             // Refresh the controls to show default values
             homunculusConfigControl.Refresh();
             propertyGridMercenary.Refresh();
+            ConfigChanged(sender, e);
         }
 
         private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -270,7 +278,8 @@ namespace AzzyAIConfig
             //AzzyAIAboutBox about = new AzzyAIAboutBox();
             // Show the about box
             //about.ShowDialog();
-            MessageBox.Show("Azzy AI v1.54\nAI written by Dr. Azzy\nGUI written by Machiavellian with multiple extensions by Dr. Azzy\n(C) 2009-2014\n\nIcon by Kami Kali","AzzyAI 1.54", MessageBoxButtons.OK);
+            MessageBox.Show("AzzyAI LATAM HG\nAI by Dr. Azzy; GUI by Machiavellian and contributors\n\nIncludes current Homunculus S settings and official/private server selection.\n\nIcon by Kami Kali",
+                "About AzzyAI", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void homunculusSettingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -295,6 +304,7 @@ namespace AzzyAIConfig
 
                 // Update the homunculusConfigControl values
                 homunculusConfigControl.UpdateData();
+                ConfigChanged(sender, e);
             }
         }
 
@@ -320,6 +330,7 @@ namespace AzzyAIConfig
 
                 // Update the propertyGridHomunculus values
                 propertyGridMercenary.Update();
+                ConfigChanged(sender, e);
             }
         }
 
