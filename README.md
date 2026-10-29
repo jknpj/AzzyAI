@@ -47,6 +47,7 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
 * **Eira**
     * Twister Cutter
     * Absolute Zephyr
+    * Light of Regenerate (optional autobuff, off by default: `UseEiraLightOfRegene`, `EiraLightOfRegeneLevel`, `EiraLightOfRegeneOwnerHP`). Keeps the buff up so the Eira resurrects the owner if they die. It needs Loyal intimacy and lowers intimacy on every cast.
 * **Eleanor**
     * Blazing And Furious
     * The One Fighter Rise
