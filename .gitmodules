@@ -1,0 +1,3 @@
+[submodule "webgui"]
+	path = webgui
+	url = https://github.com/jknpj/AzzyAI-webgui.git
