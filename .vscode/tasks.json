@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "GUI: Build",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\gui.ps1", "-Action", "Build"],
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "GUI: Prepare debug sandbox",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\gui.ps1", "-Action", "Prepare"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "GUI: Run",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\gui.ps1", "-Action", "Run"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "GUI: Smoke test",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\gui.ps1", "-Action", "Test"],
+            "group": "test",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

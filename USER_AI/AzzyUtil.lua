@@ -2771,9 +2771,9 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	AutoSkillCastTimeout=delay+t
 	if AutoSkillCooldown[skill]~=nil then
 		AutoSkillCooldown[skill]=t+GetSkillInfo(skill,9,level)+delay
-		-- cooldowns survive map changes on the server; save the long ones so the reloaded AI
+		-- cooldowns survive map changes on the server; save them so the reloaded AI
 		-- doesn't recast early and get "Skill failed"
-		if GetSkillInfo(skill,9,level) >= 10000 then
+		if GetSkillInfo(skill,9,level) > 0 then
 			UpdateTimeoutFile()
 		end
 	elseif (skill==MH_VOLCANIC_ASH) then --handle the three ash timeouts

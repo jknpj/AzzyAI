@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "AzzyAI desktop GUI (.NET Framework)",
+            "type": "clr",
+            "request": "launch",
+            "preLaunchTask": "GUI: Prepare debug sandbox",
+            "program": "${workspaceFolder}\\.artifacts\\gui\\run\\Debug\\AzzyAIConfig.exe",
+            "cwd": "${workspaceFolder}\\.artifacts\\gui\\run\\Debug",
+            "justMyCode": true
+        }
+    ]
+}

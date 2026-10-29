@@ -44,21 +44,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
-      - uses: nuget/setup-nuget@v2
-      - name: Reference assemblies for .NET 4.0
-        run: nuget install Microsoft.NETFramework.ReferenceAssemblies.net40 -Version 1.0.3 -OutputDirectory "$env:RUNNER_TEMP\refasm"
       - name: Build
-        run: >
-          msbuild GUI/AzzyAIConfig/AzzyAIConfig.sln /nologo /v:minimal
-          /p:Configuration=Release /p:Platform=x86
-          "/p:TargetFrameworkRootPath=$env:RUNNER_TEMP\refasm\Microsoft.NETFramework.ReferenceAssemblies.net40.1.0.3\build"
-          "/p:OutDir=$env:RUNNER_TEMP\guiout\\"
+        run: .\tools\gui.ps1 -Action Build -Configuration Release
       - name: Package
         run: |
           $pkg = "$env:RUNNER_TEMP\pkg\USER_AI"
           New-Item -ItemType Directory -Force $pkg | Out-Null
           Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
-          Copy-Item "$env:RUNNER_TEMP\guiout\AzzyAIConfig.exe" $pkg -Force
+          Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
           Compress-Archive -Path $pkg -DestinationPath AzzyAI.zip
       - uses: actions/upload-artifact@v4
         with:
