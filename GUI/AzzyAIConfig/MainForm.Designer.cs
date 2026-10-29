@@ -485,13 +485,14 @@
             // 
             // label1
             // 
-            label1.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            label1.AutoSize = true;
+            label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            label1.AutoEllipsis = true;
+            label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             label1.Location = new System.Drawing.Point(282, 397);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(162, 13);
             label1.TabIndex = 1;
-            label1.Text = "AzzyAI Configuration Utility v1.55";
+            label1.Text = "Editing: " + System.IO.Path.GetFullPath("H_Config.lua");
             label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // buttonApply
@@ -522,12 +523,13 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(936, 663);
+            this.MinimumSize = new System.Drawing.Size(800, 580);
             this.Controls.Add(tableLayoutPanel1);
             this.Controls.Add(menuStrip1);
             this.MainMenuStrip = menuStrip1;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "AzzyAI Configuration Utility";
+            this.Text = "AzzyAI Configuration - LATAM HG";
             this.Load += new System.EventHandler(this.MainForm_Load);
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();

@@ -25,6 +25,7 @@ namespace AzzyAIConfig
         {
             try
             {
+                Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new MainForm());

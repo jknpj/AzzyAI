@@ -96,6 +96,24 @@ to the source `USER_AI` files.** Close the sandbox GUI before launching again.
 The smoke test opens/closes the form, visits all seven tabs, checks configuration
 bindings, and verifies that startup did not change the copied Lua files.
 
+The Homunculus editor includes official/private server selection, newer
+Homunculus S skills, Eleanor's grappling switches, and inherited Blood Lust/SBR44
+options. Skill selectors support the updated level-10 caps where applicable.
+Search matches names and descriptions; the type filters only hide controls,
+not disable skills. Use **Clear filters** to return to all settings. The layout
+resizes with the window, and the footer shows which configuration is being edited.
+Apply saves changes; Quit or the window close button prompts for unsaved edits.
+The smoke test also checks resizing, filtering, level limits, imports/defaults,
+and saving/reloading settings without changing unedited values.
+
+To test the compiled desktop GUI in a game client, close any existing config
+window and back up its executable, then copy only
+`.artifacts\gui\Release\AzzyAIConfig.exe` into that client's `AI\USER_AI` folder.
+Run it there to edit the installed configuration. The GUI always uses its own
+executable directory, even when launched from a shortcut with another working
+directory. Copying the executable does not replace the client's Lua files;
+clicking Apply does save configuration changes, so back those up before editing.
+
 In VS Code, use **Ctrl+Shift+B** to build, **F5** to debug, or **Tasks: Run Task**
 for `GUI: Run` / `GUI: Smoke test`. The workspace enables OmniSharp for this
 legacy project, using its .NET Framework host so no additional .NET SDK is

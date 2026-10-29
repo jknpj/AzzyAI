@@ -209,7 +209,51 @@ SCENARIOS = {
 		expect = { "Absolute Zephyr" } },
 
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
-		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" } },
+		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
+		checks = {
+			["grapple skills obey their individual config switches"] = function()
+				local previous = {
+					mode = EleanorMode,
+					spheres = MySpheres,
+					comboSCTimeout = ComboSCTimeout,
+					comboSVTimeout = ComboSVTimeout,
+					cbc = UseEleanorCBC,
+					eqc = UseEleanorEQC,
+					tinderBreaker = UseEleanorTinderBreaker,
+				}
+				EleanorMode = GRAPPLING_MODE
+				MySpheres = AutoComboSpheres
+				ComboSCTimeout = GetTick() + 1000
+				ComboSVTimeout = GetTick() + 1000
+
+				UseEleanorCBC = 0
+				UseEleanorEQC = 1
+				UseEleanorTinderBreaker = 0
+				local eqc = GetGrappleSkill(MyID)
+
+				UseEleanorCBC = 1
+				UseEleanorEQC = 0
+				local cbc = GetGrappleSkill(MyID)
+
+				UseEleanorCBC = 0
+				UseEleanorEQC = 0
+				UseEleanorTinderBreaker = 1
+				local tinderBreaker = GetGrappleSkill(MyID)
+
+				UseEleanorTinderBreaker = 0
+				local disabled = GetGrappleSkill(MyID)
+
+				EleanorMode = previous.mode
+				MySpheres = previous.spheres
+				ComboSCTimeout = previous.comboSCTimeout
+				ComboSVTimeout = previous.comboSVTimeout
+				UseEleanorCBC = previous.cbc
+				UseEleanorEQC = previous.eqc
+				UseEleanorTinderBreaker = previous.tinderBreaker
+
+				return eqc == MH_EQC and cbc == MH_CBC and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
+			end,
+		} },
 
 	-- many monsters on screen: must keep fighting and not error out
 	crowd_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = crowd, expect = { "Heilige Stange" } },
