@@ -20,6 +20,11 @@ AutoSkillCooldown[MH_POISON_MIST]=0
 AutoSkillCooldown[MH_LAVA_SLIDE]=0
 AutoSkillCooldown[MH_STEINWAND]=0 	
 AutoSkillCooldown[MH_SUMMON_LEGION]=0
+-- Old homunculus buffs: the reuse delay can outlast the buff (rAthena Bulwark Lv5: 20 s buff,
+-- 30 s cooldown), so recasting when the buff drops only produced "Skill failed".
+for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_FLEET,HFLI_SPEED}) do
+	AutoSkillCooldown[cdskill]=0
+end
 -- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
 -- Eleanor combo skills are left out on purpose; their chain is timed by ComboSCTimeout/ComboSVTimeout.
 for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIGE_STANGE,MH_NEEDLE_OF_PARALYZE,
