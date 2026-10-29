@@ -2697,7 +2697,11 @@ end
 function KiteOK(myid)
 	mertype=GetV(V_MERTYPE,myid)
 	if (mertype==nil) then
-		homuntype=modulo(MyHomunType,4)
+		if MyHomunType < 17 then
+			homuntype=modulo(MyHomunType,4)
+		else
+			homuntype=modulo(DetectedOldHomunType or OldHomunType,4)
+		end
 		if ((homuntype==0 or homuntype==3 )and DoNotChase==1) then
 			return 1
 		else

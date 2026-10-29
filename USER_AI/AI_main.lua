@@ -67,7 +67,7 @@ function doInit(myid)
 		OutFile:close()
 	end
 	local mskill,mlevel=GetMobSkill(MyID)
-	if mskill==0 and (MyHomunType==SERA and PoisonMistMode~=0) or (MyHomunType==DIETER and LavaSlideMode~=0) then
+	if mskill==0 and ((MyHomunType==SERA and PoisonMistMode~=0) or (MyHomunType==DIETER and LavaSlideMode~=0)) then
 		mskill,mlevel=GetSightOrAoE(MyID)
 	end
 	if mskill~=0 and mlevel~=0 and AoEReserveSP==1 and AutoMobMode~=0 then
@@ -3769,7 +3769,7 @@ function AI(myid)
 					end
 				end
 			elseif tactcast == CAST_REACT_CASTLE then
-				if (modulo(MyHomunType,4)==AMISTR or DetectedOldHomunType==AMISTR) and v[2]==2 then
+				if ((MyHomunType < 17 and modulo(MyHomunType,4)==AMISTR) or DetectedOldHomunType==AMISTR) and v[2]==2 then
 					if AutoSkillTimeout < GetTick() and GetSkillInfo(HAMI_CASTLE,3,5) < GetV(V_SP,MyID) then
 						DoSkill(HAMI_CASTLE,5,MyID)
 						TraceAI("CAST_REACT_CASTLE being enabled against target"..k.." with tactic "..tactcast)
