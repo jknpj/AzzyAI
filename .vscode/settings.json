@@ -1,0 +1,5 @@
+{
+    "dotnet.server.useOmnisharp": true,
+    "omnisharp.useModernNet": false,
+    "dotnet.defaultSolution": "GUI\\AzzyAIConfig\\AzzyAIConfig.sln"
+}

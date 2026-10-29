@@ -2352,15 +2352,17 @@ function DoAutoBuffs(buffmode)
 					spreq=spreq+120
 				end
 				if spreq <= GetV(V_SP,MyID) then
-					DoSkill(skill,level,MyID,1)
-					GuardTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
-					UpdateTimeoutFile()
+					if DoSkill(skill,level,MyID,1) ~= 0 then
+						GuardTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
+						UpdateTimeoutFile()
+					end
 				end
 			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
-				DoSkill(skill,level,MyID,1)
-				GuardTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
-				UpdateTimeoutFile()
-				return
+				if DoSkill(skill,level,MyID,1) ~= 0 then
+					GuardTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
+					UpdateTimeoutFile()
+					return
+				end
 			end
 		end
 	end

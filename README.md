@@ -59,6 +59,50 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
 
 ## Tests & CI
 
+### Windows desktop GUI development
+
+The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
+Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
+cannot build it.
+
+Use an existing Visual Studio 2022 installation with .NET desktop development,
+or install Build Tools with the .NET desktop build tools workload:
+
+```powershell
+winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --source winget --override "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools --includeRecommended"
+code --install-extension ms-dotnettools.csharp
+```
+
+Accept administrator prompts and restart VS Code after installation. The existing
+.NET Framework 4.8 runtime runs this .NET 4.0 app; do not install the obsolete 4.0
+runtime. NuGet restores the pinned 4.0 reference assemblies on the first build
+(internet access to nuget.org is required). If C: is short on space, the installer
+supports `--installPath D:\DevTools\VSBuildTools2022 --path cache=D:\DevTools\VSCache`,
+but shared Windows components still need space on C:.
+
+From the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Build
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Test
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Run
+```
+
+Use `-Configuration Release` for a release build. Build outputs and intermediate
+files go into ignored `.artifacts\gui`, not the legacy tracked `bin`/`obj` folders.
+Run, Test, and F5 build the app and copy the current `USER_AI` configuration into
+a disposable sandbox. **Each launch refreshes these copies; Apply never writes
+to the source `USER_AI` files.** Close the sandbox GUI before launching again.
+The smoke test opens/closes the form, visits all seven tabs, checks configuration
+bindings, and verifies that startup did not change the copied Lua files.
+
+In VS Code, use **Ctrl+Shift+B** to build, **F5** to debug, or **Tasks: Run Task**
+for `GUI: Run` / `GUI: Smoke test`. The workspace enables OmniSharp for this
+legacy project, using its .NET Framework host so no additional .NET SDK is
+required; C# Dev Kit is not required. WinForms visual designer support
+requires full Visual Studio with .NET desktop development, not VS Code or
+Build Tools. This setup does not add a designer.
+
 The AI can't run outside the RO client, so `tools/harness/` contains an offline simulator: it mocks the client API (`GetV`, `GetActors`, `SkillObject`, ...), loads the real `USER_AI` files with a fixed config (`tools/harness/fixtures/H_Config.lua`) and runs scenarios (`tools/harness/scenarios.lua`) for every homunculus S, checking that:
 
 - expected skills are cast and forbidden ones aren't;
@@ -89,7 +133,7 @@ The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACK
 - saves that level in `data/H_<owner>Skills.lua`, so map changes don't start over;
 - tries one level higher at most once per hour (`LEARNED_SKILL_RECHECK_SECONDS`), in case the skill was levelled.
 
-Long cooldowns (10 s or more) are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change.
+Skill cooldowns are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change, including short cooldowns such as Toxin of Mandara.
 
 The simulator follows rAthena's rules (`clif_parse_UseSkillToId_homun`, `skill_check_condition_mercenary`): homunculus/mercenary skills need **more** SP than their cost, so `DoSkill` never sends a skill at exactly its SP cost. rAthena silently lowers a level above the learned one, so the level step-down above only matters on servers that refuse such casts.
 
@@ -132,6 +176,12 @@ custom-AI selection (`/hoai`) and folder write permissions (clients under `Progr
 write to `%LOCALAPPDATA%\VirtualStore` instead). Disable the option after testing; logs are appended.
 The offline harness cannot verify what a particular client reports or whether the
 server accepts AI-issued attack commands.
+
+An unlearned defensive base-homunculus buff (such as Amistr Bulwark)
+must not block following or normal attacks. This can first appear after a level-up
+raises SP enough for the configured buff, or when SP equals its cost. Skipped
+casts now leave the buff timer unchanged and let normal AI behavior continue;
+the harness covers both cases at realistic client uptime.
 
 ### Skill Configuration
 To use the new skills, you must add and adjust their settings in your **`H_Config.lua`** file. The AI will automatically disable any skills that are misconfigured or not learned by your homunculus.

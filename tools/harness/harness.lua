@@ -146,6 +146,7 @@ if not sc then
 end
 if sc.ticks then TICKS = math.max(TICKS, sc.ticks) end
 selfMonster = sc.selfMonster == true
+now = sc.startTick or now
 
 -- Monster IDs must be outside the summon ID range of the selected server type
 local mobBase = (sc.private or sc.privateIds) and 110000000 or 60000

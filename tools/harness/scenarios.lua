@@ -7,6 +7,7 @@
 --   passive    monsters stand still and attack nobody
 --   selfMonster the client's IsMonster() also returns 1 for our own homunculus
 --   sp/spregen homunculus max SP and SP regained per second
+--   startTick  client uptime in milliseconds (default 1000)
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -47,6 +48,14 @@ SCENARIOS = {
 			end,
 		} },
 	amistr_fresh_alt = { homuntype = 6, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_unlearned_bulwark = { homuntype = 2, skills = {}, mobs = single, private = true, passive = true,
+		sp = 100, spregen = 1, minAttacks = 100, startTick = 10000000 },
+	amistr_bulwark_exact_sp = { homuntype = 2, skills = { "HAMI_DEFENCE:1" }, mobs = single,
+		sp = 20, spregen = 0, minAttacks = 100, startTick = 10000000, set = { AmiBulwarkLevel = 1 } },
+	amistr_bulwark_learned = { homuntype = 2, skills = { "HAMI_DEFENCE" }, mobs = single,
+		sp = 100, spregen = 1, minAttacks = 100, startTick = 10000000, expect = { "Amistr Bulwark" } },
+	amistr_unlearned_smart_bulwark = { homuntype = 2, skills = {}, mobs = single,
+		sp = 300, spregen = 1, minAttacks = 100, startTick = 10000000, set = { UseSmartBulwark = 1 } },
 	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },
 	-- passive monsters (nobody attacking): the homunculus must still go and attack them
 	amistr_fresh_passive = { homuntype = 2, skills = {}, mobs = cluster, passive = true, sp = 20, spregen = 1, minAttacks = 50 },
@@ -100,13 +109,15 @@ SCENARIOS = {
 	bayeri_low_sp = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster, sp = 150, spregen = 5,
 			minAttacks = 100 },
 	-- partly levelled homunculus: hard-coded Lv5 casts (Stein Wand) and configured levels above the
-	-- learned one must be lowered before casting, never refused by the server
-	bayeri_partial = { homuntype = 49, mobs = cluster,
+	-- learned one must be lowered before casting. Unlearned Pferd has ambiguous range 1,
+	-- so it requires the same eight bounded probes as bayeri_pferd_unlearned below.
+	bayeri_partial = { homuntype = 49, mobs = cluster, maxRefused = 8, minAttacks = 100,
 		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
 			"MH_STEINWAND:1", "MH_GLANZEN_SPIES", "MH_GOLDENE_TONE" },
 		set = { UseBayeriHeiligePferd = 1 },
 		expect = { "Heilige Stange", "Stein Wand" }, forbid = { "Heilige Pferd" },
 		checks = {
+			["unlearned Pferd probes stop"] = function() return LearnedSkill[MH_HEILIGE_PFERD].cap == 0 end,
 			["learned levels detected"] = function()
 				return GetSkillLevelCap(MH_STAHL_HORN) == 3 and GetSkillLevelCap(MH_HEILIGE_STANGE) == 2
 					and GetSkillLevelCap(MH_STEINWAND) == 1
