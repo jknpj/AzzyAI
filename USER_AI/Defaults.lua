@@ -279,6 +279,11 @@ UseBayeriGoldeneTone = 0
 BayeriGoldeneToneLevel = 10
 UseDieterTempering = 0
 UseDieterBlastForge = 0
+-- Light of Regenerate: if the owner dies while it is active, the Eira sacrifices itself to
+-- resurrect them. Needs Loyal intimacy and drops it on every cast, so it is off by default.
+UseEiraLightOfRegene = 0
+EiraLightOfRegeneLevel = 5
+EiraLightOfRegeneOwnerHP = 100
 
 -- New Eleanor Defaults
 UseEleanorTinderBreaker		=1

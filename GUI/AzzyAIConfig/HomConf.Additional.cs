@@ -25,6 +25,7 @@ namespace AzzyAIConfig
             "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel",
             "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel",
             "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel",
+            "UseEiraLightOfRegene", "EiraLightOfRegeneLevel", "EiraLightOfRegeneOwnerHP",
             "UseEleanorTinderBreaker", "EleanorTinderBreakerLevel",
             "UseEleanorCBC", "EleanorCBCLevel", "UseEleanorEQC", "EleanorEQCLevel",
             "AllowBloodlust", "AllowSBR44"
@@ -97,6 +98,15 @@ namespace AzzyAIConfig
         [Category("Autobuff Options"), DefaultValue(10), Description("Goldene Tone level, 1-10.")]
         public int BayeriGoldeneToneLevel { get; set; }
 
+        [Category("Autobuff Options"), DefaultValue(UseDefensiveBuffOptions.Never),
+        Description("Keep Eira's Light of Regenerate active in the selected AI states. If the owner dies while it is active, the Eira sacrifices itself to resurrect them. The skill needs Loyal intimacy and lowers it on every cast.")]
+        public UseDefensiveBuffOptions UseEiraLightOfRegene { get; set; }
+        [Category("Autobuff Options"), DefaultValue(5), Description("Light of Regenerate level, 1-5. Higher levels last longer and restore more HP.")]
+        public int EiraLightOfRegeneLevel { get; set; }
+        [Category("Autobuff Options"), DefaultValue(100),
+        Description("Only cast Light of Regenerate while the owner's HP percent is at or below this value (0-100). 100 keeps it up all the time.")]
+        public int EiraLightOfRegeneOwnerHP { get; set; }
+
         [Category("AutoSkill Options"), DefaultValue(true), Description("Enable Eleanor's Tinder Breaker in grappling mode.")]
         public bool UseEleanorTinderBreaker { get; set; }
         [Category("AutoSkill Options"), DefaultValue(5), Description("Tinder Breaker level, 1-5.")]
@@ -166,11 +176,13 @@ namespace AzzyAIConfig
                 object value = property.GetValue(this);
                 if (name.EndsWith("Level", StringComparison.Ordinal))
                 {
-                    int maximum = name.StartsWith("Eleanor", StringComparison.Ordinal) &&
-                        (name == "EleanorTinderBreakerLevel" || name == "EleanorCBCLevel" || name == "EleanorEQCLevel") ? 5 : 10;
+                    int maximum = name == "EleanorTinderBreakerLevel" || name == "EleanorCBCLevel" ||
+                        name == "EleanorEQCLevel" || name == "EiraLightOfRegeneLevel" ? 5 : 10;
                     if ((int)value < 1 || (int)value > maximum)
                         throw new InvalidOperationException(name + " must be between 1 and " + maximum + ".");
                 }
+                else if (name == "EiraLightOfRegeneOwnerHP" && ((int)value < 0 || (int)value > 100))
+                    throw new InvalidOperationException(name + " must be between 0 and 100.");
                 string token = property.PropertyType == typeof(ServerTypeOptions)
                     ? ((ServerTypeOptions)value == ServerTypeOptions.Private ? "SERVER_PRIVATE" : "SERVER_OFFICIAL")
                     : property.PropertyType == typeof(double) ? ((double)value).ToString(CultureInfo.InvariantCulture)

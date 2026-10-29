@@ -3327,6 +3327,7 @@ function LintSkillOptions(myid, logstring)
             { "UseEiraXenoSlasher", "EiraXenoSlasherLevel", MH_XENO_SLASHER, "Xeno Slasher" },
             { "UseEiraSilentBreeze", "EiraSilentBreezeLevel", MH_SILENT_BREEZE, "Silent Breeze" },
             { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" },
+            { "UseEiraLightOfRegene", "EiraLightOfRegeneLevel", MH_LIGHT_OF_REGENE, "Light of Regenerate" },
             { "UseEiraTwisterCutter", "EiraTwisterCutterLevel", MH_TWISTER_CUTTER, "Twister Cutter" },
             { "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel", MH_ABSOLUTE_ZEPHYR, "Absolute Zephyr" }
         },
@@ -3424,6 +3425,14 @@ function GetSOwner2ndBuffSkill(myid)
 			skill = MH_TEMPERING
 			level = SkillList[htype][skill]
 			skillopt = UseDieterTempering
+		elseif htype==EIRA and UseEiraLightOfRegene~=nil and UseEiraLightOfRegene~=0 then
+			skill = MH_LIGHT_OF_REGENE
+			skillopt = UseEiraLightOfRegene
+			level = math.min(EiraLightOfRegeneLevel or 5, SkillList[htype][skill] or 0)
+			if level > 0 and (GetV(V_MOTION,OwnerID)==MOTION_DEAD or HPPercent(OwnerID) > (EiraLightOfRegeneOwnerHP or 100)) then
+				-- level 0 with a valid skill means "not now"; returning 0,0,0 would disable the buff for good
+				return skill,0,skillopt
+			end
 		end
 	end
 	if level==0 then
