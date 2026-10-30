@@ -1159,10 +1159,6 @@ function OnATTACK_ST()
     if (UseSkillOnly ~= 1) then
         Attack(MyID, MyEnemy)
         TraceAI("Normal attack vs: "..MyEnemy)
-        if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE then
-            MySpheres = math.max(math.min(10, MySpheres + 1 / SphereTrackFactor), 0)
-            UpdateTimeoutFile()
-        end
     end
 
     if (MySkill ~= 0) then
@@ -3338,9 +3334,25 @@ function AI(myid)
 		MyASAPBuffs[v],MyPosX[v],MyPosY[v],OwnerPosX[v],OwnerPosY[v],EnemyPosX[v],EnemyPosY[v],MyMotions[v],MyStates[v],MyEnemies[v]=MyASAPBuffs[v-1],MyPosX[v-1],MyPosY[v-1],OwnerPosX[v-1],OwnerPosY[v-1],EnemyPosX[v-1],EnemyPosY[v-1],MyMotions[v-1],MyStates[v-1],MyEnemies[v-1]
 	end	
 	MyPosX[1],MyPosY[1],OwnerPosX[1],OwnerPosY[1],EnemyPosX[1],EnemyPosY[1],MyMotions[1],MyStates[1],MyEnemies[1]=x,y,ox,oy,ex,ey,GetV(V_MOTION,MyID),MyState,MyEnemy
-	-- grappling Eleanor gains spheres from hits she takes (rAthena: 50% per hit)
-	if MyHomunType == ELEANOR and EleanorMode == GRAPPLING_MODE and MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE then
-		MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
+	-- Eleanor gains spheres from hits (rAthena: 50% of the hits she lands in fighting style, or takes in
+	-- grappling style). Counting per attack command would overcount: the AI asks for an attack every
+	-- tick but she only swings once per attack delay. So fighting style counts attack animations that
+	-- start, and grappling style hits that start. SphereTrackFactor = hits counted per sphere (2 is exact).
+	if MyHomunType == ELEANOR then
+		local gain = false
+		if EleanorMode == FIGHTING_MODE then
+			gain = (MyMotions[1] == MOTION_ATTACK or MyMotions[1] == MOTION_ATTACK2)
+				and MyMotions[2] ~= MOTION_ATTACK and MyMotions[2] ~= MOTION_ATTACK2
+		elseif EleanorMode == GRAPPLING_MODE then
+			gain = MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE
+		end
+		if gain then
+			local before = math.floor(MySpheres)
+			MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
+			if math.floor(MySpheres) ~= before then
+				UpdateTimeoutFile()
+			end
+		end
 	end
 	if MyState==PROVOKE_ST then
 		MyASAPBuffs[1]=MyASAPBuffs[2]
@@ -3704,6 +3716,14 @@ function AI(myid)
 	elseif clearcastskill==2 then
 		-- Only a cast that never started can be a refused level; a broken cast was accepted.
 		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
+		-- A refused sphere skill means we had fewer spheres than we thought (DoSkill already took the
+		-- cost off the estimate): fall to one short of the cost, so it takes a few more counted
+		-- hits before the AI tries again.
+		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]
+		if MyHomunType == ELEANOR and CastSkillState == 0 and refusedCost ~= nil and refusedCost > 0 then
+			MySpheres = refusedCost - 1
+			UpdateTimeoutFile()
+		end
 		if CastSkillMode==0 then
 			CastSkill=0
 			CastSkillLevel=0
