@@ -1,8 +1,10 @@
 -- Test scenarios for harness.lua. Each one runs the real AI for ~30 s of game time.
 --   homuntype  homunculus S type (EIRA=48, BAYERI=49, SERA=50, DIETER=51, ELEANOR=52)
 --   skills     skills the homunculus has learned
---   mobs       monster positions (owner stands at 100,100, all monsters attack the owner)
---   private    true to run with ServerType = SERVER_PRIVATE
+--   mobs       monster positions (owner stands at 100,100, all monsters attack the owner);
+--              { x, y, mobId } behaves like that rAthena monster (fixtures/rathena.lua RA_MOB):
+--              aggressive ones attack the owner, passive ones fight back, plants never move
+--   private    true to run with ServerType = SERVER_PRIVATE (the simulated server uses rAthena's skill data)
 --   privateIds rAthena-style actor IDs without changing ServerType (wrong-config check)
 --   passive    monsters stand still and attack nobody
 --   selfMonster the client's IsMonster() also returns 1 for our own homunculus
@@ -30,6 +32,62 @@ local EIRA_SKILLS = { "MH_LIGHT_OF_REGENE", "MH_OVERED_BOOST", "MH_ERASER_CUTTER
 	"MH_SILENT_BREEZE", "MH_TWISTER_CUTTER", "MH_ABSOLUTE_ZEPHYR" }
 local ELEANOR_SKILLS = { "MH_STYLE_CHANGE", "MH_SONIC_CLAW", "MH_SILVERVEIN_RUSH", "MH_MIDNIGHT_FRENZY",
 	"MH_TINDER_BREAKER", "MH_CBC", "MH_EQC", "MH_BLAZING_AND_FURIOUS", "MH_THE_ONE_FIGHTER_RISES" }
+
+-- SkillList/SkillInfo against the rAthena skill trees (db/re/homunculus_db.yml): same max levels,
+-- every active skill listed and per-level SkillInfo entries for every level
+local function checkSkillTrees()
+	assert(RA_HOMUN and RA_SKILL, "fixtures/rathena.lua missing: run python tools/harness/rathena_sync.py")
+	local problems = {}
+	local function name(id) return (RA_SKILL[id] and RA_SKILL[id].name) or tostring(id) end
+	for const, tree in pairs(RA_HOMUN) do
+		local list = SkillList[_G[const]] or {}
+		for id, lvl in pairs(list) do
+			local ra, si = tree[id], SkillInfo[id]
+			if not ra then
+				problems[#problems + 1] = const .. ": " .. name(id) .. " is not in the rAthena skill tree"
+			elseif ra.maxlv ~= lvl then
+				problems[#problems + 1] = ("%s: %s max level %d, rAthena %d"):format(const, name(id), lvl, ra.maxlv)
+			end
+			if not si then
+				problems[#problems + 1] = const .. ": " .. name(id) .. " has no SkillInfo"
+			else
+				for idx = 2, 9 do
+					if type(si[idx]) == "table" and #si[idx] < lvl then
+						problems[#problems + 1] = ("%s: SkillInfo[%s][%d] has %d levels, needs %d"):format(
+							const, name(id), idx, #si[idx], lvl)
+					end
+				end
+			end
+		end
+		for id in pairs(tree) do
+			if not list[id] and RA_SKILL[id] and RA_SKILL[id].target ~= "Passive" then
+				problems[#problems + 1] = const .. ": active skill " .. name(id) .. " missing from SkillList"
+			end
+		end
+	end
+	table.sort(problems)
+	if #problems > 0 then error(table.concat(problems, "; "), 0) end
+	return true
+end
+
+-- plants never get skills (H_Tactics: SKILL_NEVER) and the aggressive monster still gets attacked
+local function plantChecks()
+	return {
+		["no skills cast on plants"] = function()
+			for _, c in ipairs(HarnessCasts) do
+				local m = c.kind == "obj" and HarnessMob(c.a)
+				if m and m.ra and m.ra.ai == "06" then error(c.name .. " cast on " .. m.ra.name, 0) end
+			end
+			return true
+		end,
+		["the aggressive monster is fought"] = function()
+			for _, m in ipairs(HarnessMonsters()) do
+				if m.ra and m.ra.ai ~= "06" and (m.hitsTaken or 0) > 0 then return true end
+			end
+			return RA_MOB == nil
+		end,
+	}
+end
 
 SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
@@ -126,16 +184,37 @@ SCENARIOS = {
 	-- partly levelled homunculus: hard-coded Lv5 casts (Stein Wand) and configured levels above the
 	-- learned one must be lowered before casting. Unlearned Pferd has ambiguous range 1,
 	-- so it requires the same eight bounded probes as bayeri_pferd_unlearned below.
-	bayeri_partial = { homuntype = 49, mobs = cluster, maxRefused = 8, minAttacks = 100,
+	-- Heilige Stange is off like in bayeri_pferd: Lv2 casts in 3 s with no cooldown, so the AI would
+	-- chain it from range 9 and never get close enough for the caster-centered Pferd (or melee).
+	-- Glanzen Spies is off too, or it spends the SP the Pferd probes need.
+	bayeri_partial = { homuntype = 49, mobs = cluster, maxRefused = 8, minAttacks = 100, ticks = 500,
 		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
 			"MH_STEINWAND:1", "MH_GLANZEN_SPIES", "MH_GOLDENE_TONE" },
-		set = { UseBayeriHeiligePferd = 1 },
-		expect = { "Heilige Stange", "Stein Wand" }, forbid = { "Heilige Pferd" },
+		set = { UseBayeriHeiligePferd = 1, UseBayeriHailegeStar = 0, UseBayeriGlanzenSpies = 0 },
+		expect = { "Stahl Horn", "Stein Wand" }, forbid = { "Heilige Pferd", "Heilige Stange" },
 		checks = {
 			["unlearned Pferd probes stop"] = function() return LearnedSkill[MH_HEILIGE_PFERD].cap == 0 end,
 			["learned levels detected"] = function()
 				return GetSkillLevelCap(MH_STAHL_HORN) == 3 and GetSkillLevelCap(MH_HEILIGE_STANGE) == 2
 					and GetSkillLevelCap(MH_STEINWAND) == 1
+			end,
+			["Stahl Horn lowered to the learned Lv3"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.skill == MH_STAHL_HORN and c.lvl > 3 then return false end
+				end
+				return true
+			end,
+		} },
+	-- the cheap Stange chain above, with Stange on: casts stay at the learned Lv2
+	bayeri_partial_stange = { homuntype = 49, mobs = cluster, minAttacks = 0,
+		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_STEINWAND:1" },
+		expect = { "Heilige Stange" },
+		checks = {
+			["Heilige Stange stays at the learned Lv2"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.skill == MH_HEILIGE_STANGE and c.lvl ~= 2 then return false end
+				end
+				return GetSkillLevelCap(MH_HEILIGE_STANGE) == 2
 			end,
 		} },
 	-- Heilige Pferd not learned but enabled: its Lv1-4 have range 1 so the probe can't tell. The AI
@@ -156,8 +235,8 @@ SCENARIOS = {
 	dieter_private = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, private = true, minAttacks = 20,
 		expect = { "Lava Slide", "Magma Flow" },
 		checks = {
-			["private Lava Slide AoE grows with level"] = function()
-				return GetSkillAoESize(MH_LAVA_SLIDE, 1) == 3 and GetSkillAoESize(MH_LAVA_SLIDE, 10) == 9
+			["private Lava Slide AoE stays 7x7 (rAthena Unit Layout 3)"] = function()
+				return GetSkillAoESize(MH_LAVA_SLIDE, 1) == 7 and GetSkillAoESize(MH_LAVA_SLIDE, 10) == 7
 			end,
 		} },
 	-- regression: Blast Forge has range 1, which the old learned-skill check read as "not learned"
@@ -273,4 +352,27 @@ SCENARIOS = {
 	-- many monsters on screen: must keep fighting and not error out
 	crowd_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = crowd, expect = { "Heilige Stange" } },
 	crowd_sera = { homuntype = 50, skills = SERA_SKILLS, mobs = crowd, expect = { "Poison Mist" } },
+
+	-- rAthena data (fixtures/rathena.lua, regenerated by rathena_sync.py) --------------------
+	rathena_skill_tree = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1,
+		checks = { ["SkillList/SkillInfo match the rAthena skill trees"] = checkSkillTrees } },
+	-- Eleanor on rAthena: Sonic Claw needs a sphere, which only normal attacks in fighting style give
+	eleanor_private = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
+		expect = { "Sonic Claw" } },
+	-- real monsters: plants (Ai 06) next to an aggressive Zombie
+	plants_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = { {103,100,1078}, {103,101,1080}, {104,100,1015} },
+		checks = plantChecks() },
+	plants_bayeri_private = { homuntype = 49, skills = BAYERI_SKILLS, private = true,
+		mobs = { {103,100,1078}, {103,101,1080}, {104,100,1015} }, checks = plantChecks() },
+	-- passive Porings (Ai 02) don't attack anyone until the homunculus hits them
+	porings_private = { homuntype = 2, skills = {}, mobs = { {103,100,1002}, {104,101,1002} }, private = true,
+		sp = 20, spregen = 1, minAttacks = 50,
+		checks = {
+			["hit Porings fight back"] = function()
+				for _, m in ipairs(HarnessMonsters()) do
+					if (m.hitsTaken or 0) > 0 and m.target ~= 2001 and m.ra then return false end
+				end
+				return true
+			end,
+		} },
 }

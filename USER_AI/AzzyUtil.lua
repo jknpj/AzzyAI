@@ -1969,7 +1969,7 @@ function GetComboSkill(myid)
 					else
 						level=EleanorSilverveinLevel
 					end
-				elseif ComboSVTimeout > GetTick()  then
+				elseif ComboSVTimeout > GetTick() and IsSkillReady(MH_MIDNIGHT_FRENZY) then
 					skill=MH_MIDNIGHT_FRENZY
 					if EleanorMidnightLevel==nil then
 						level=SkillList[ELEANOR][MH_MIDNIGHT_FRENZY]
@@ -1993,14 +1993,14 @@ function GetGrappleSkill(myid)
 		htype=MyHomunType
 		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
 			local comboFollowupSpheres = math.max(0, AutoComboSpheres - 1)
-			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorCBC == 1 then
+			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
 				skill=MH_CBC
 				if EleanorCBCLevel==nil then
 					level=SkillList[ELEANOR][MH_CBC]
 				else
 					level=EleanorCBCLevel
 				end
-			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorEQC == 1 then
+			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
 				skill=MH_EQC
 				if EleanorEQCLevel==nil then
 					level=SkillList[ELEANOR][MH_EQC]
@@ -2559,6 +2559,11 @@ function IsSkillReady(skill)
 	if AutoSkillCooldown~=nil and AutoSkillCooldown[skill]~=nil and GetTick() < AutoSkillCooldown[skill] then
 		return false
 	end
+	-- without enough spirit spheres the server only answers "Skill failed"
+	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
+	if sphereCost ~= nil and MySpheres < sphereCost then
+		return false
+	end
 	return true
 end
 
@@ -2736,6 +2741,8 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		return 0
 	end
 	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target))
+	-- SP before the request, so the skill watcher can spot the cost even if SP regen lands in between
+	local spBeforeCast = GetV(V_SP,MyID)
 	targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
 		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
@@ -2757,6 +2764,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		CastSkillLevel=level
 		CastSkillTime=GetTick()
 		CastSkillState=0
+		CastSkillSP=spBeforeCast
 		logappend("AAI_SKILLFAIL", "Mode set "..mode.." skill "..skill.." level "..level)
 	else
 		if mode~=nil then --mode is negative, call the plugin mode handler.
@@ -2771,6 +2779,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 			CastSkillLevel=level
 			CastSkillTime=GetTick()
 			CastSkillState=0
+			CastSkillSP=spBeforeCast
 		end
 	end
 	local t=GetTick();
@@ -2799,14 +2808,17 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	else
 		TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
 	end
+	-- spheres the server takes for this skill (SkillSphereCost only exists in the homunculus AI)
+	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
+	if sphereCost ~= nil then
+		MySpheres = math.max(0,MySpheres - sphereCost)
+	end
 	if skill==MH_MIDNIGHT_FRENZY then
-		MySpheres = math.max(0,MySpheres - 2)
 		ComboSVTimeout=0
 		UpdateTimeoutFile()
 	elseif skill==MH_SILVERVEIN_RUSH then
 		ComboSVTimeout=GetTick()+2000
 		ComboSCTimeout=0
-		MySpheres = math.max(0,MySpheres - 1)
 		UpdateTimeoutFile()
 	elseif skill==MH_SONIC_CRAW then
 		ComboSCTimeout=GetTick()+2000
@@ -2814,15 +2826,23 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	elseif skill==MH_TINDER_BREAKER then
 		ComboSCTimeout=GetTick()+2000
 		ComboSVTimeout=0
-		MySpheres = math.max(0,MySpheres - 1)
 	elseif skill==MH_CBC then
 		ComboSVTimeout=GetTick()+2000
 		ComboSCTimeout=0
-		MySpheres = math.max(0,MySpheres - 1)
 	elseif skill==MH_EQC then
 		ComboSVTimeout=0
 		ComboSCTimeout=0
-		--No sphere use?
+	elseif skill==MH_BLAZING_AND_FURIOUS then
+		-- the server uses up every sphere after counting the hits
+		MySpheres=0
+		ComboSCTimeout=0
+		ComboSVTimeout=0
+		UpdateTimeoutFile()
+	elseif skill==MH_THE_ONE_FIGHTER_RISES then
+		MySpheres = math.min(10,MySpheres + 1)
+		ComboSCTimeout=0
+		ComboSVTimeout=0
+		UpdateTimeoutFile()
 	else --Combo wasn't used, so kill the timeouts
 		ComboSCTimeout=0
 		ComboSVTimeout=0

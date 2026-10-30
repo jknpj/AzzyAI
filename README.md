@@ -129,7 +129,14 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 - no skill is cast without enough SP or before its cooldown;
 - the homunculus still does normal attacks;
 - official/private server overrides are applied;
-- casts the server would refuse ("Skill failed": level not learned) stay within `maxRefused`, also across a simulated map change (`reloadAt`).
+- casts the server would refuse stay within `maxRefused`, also across a simulated map change (`reloadAt`).
+
+The simulated server follows rAthena's rules (`skill_isNotOk_hom`, `unit_skilluse_id2`, `skill_check_condition_mercenary`): a cast is refused when the level isn't learned, the skill is still in cooldown (counted from the end of the cast), the target is beyond the skill range (square distance, the homunculus doesn't walk into range), Goldene Ferse and Angriffs Modus overlap, or Eleanor lacks the style, combo or spirit spheres (one sphere every second hit dealt in fighting style or taken in grappling style, at most 10). On `SERVER_PRIVATE` scenarios its SP costs, cast times, delays, cooldowns and ranges come from rAthena's `db/re/skill_db.yml`; on official ones from AzzyAI's official profile. The rAthena data lives in `tools/harness/fixtures/rathena.lua`, generated from a pinned rAthena commit and committed so the harness needs no network. It also gives scenarios real monsters (`{ x, y, mobId }`: aggressive ones attack the owner, passive ones fight back, plants never move) and lets `rathena_skill_tree` check `SkillList`/`SkillInfo` against `db/re/homunculus_db.yml`. To move to a newer rAthena (standard library only; behind a proxy set `HTTPS_PROXY` first):
+
+```
+python tools/harness/rathena_sync.py              # latest master
+python tools/harness/rathena_sync.py --ref <sha>  # a specific commit
+```
 
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
