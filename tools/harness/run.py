@@ -5,6 +5,7 @@ Usage:
     python tools/harness/run.py                 # syntax check + all scenarios
     python tools/harness/run.py bayeri dieter   # only these scenarios
     python tools/harness/run.py --verbose sera  # also print every cast
+    python tools/harness/run.py --globals       # globals assigned inside functions (missing 'local')
 
 Needs a Lua 5.1 interpreter (the version embedded in the RO client). It is looked up in the
 LUA / LUAC environment variables, then on PATH as lua5.1 / lua51 / lua.
@@ -74,6 +75,28 @@ def run_scenario(lua, name, ticks, env):
         return r.returncode == 0
 
 
+def check_globals(luac):
+    """Lists globals assigned inside functions (SETGLOBAL outside the main chunk): usually a missing 'local'."""
+    found = {}
+    for name in sorted(os.listdir(USER_AI)):
+        if not name.endswith(".lua"):
+            continue
+        path = os.path.join(USER_AI, name)
+        r = subprocess.run([luac, "-l", "-p", path], capture_output=True, text=True)
+        scope = None
+        for line in r.stdout.splitlines():
+            m = re.match(r"(main|function) <[^:]*:(\d+),", line)
+            if m:
+                scope = None if m.group(1) == "main" else int(m.group(2))
+                continue
+            m = re.search(r"\bSETGLOBAL\b.*;\s*(\S+)", line)
+            if m and scope is not None:
+                found.setdefault(m.group(1), set()).add(f"{name}:{scope}")
+    for g in sorted(found):
+        print(f"  {g:28} {', '.join(sorted(found[g], key=lambda s: (s.split(':')[0], int(s.split(':')[1]))))}")
+    print(f"globals assigned inside functions: {len(found)}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("scenarios", nargs="*", help="scenario names (default: all)")
@@ -81,11 +104,16 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="print every cast")
     parser.add_argument("--trace", action="store_true", help="print TraceAI output")
     parser.add_argument("--profile", action="store_true", help="print time per AI() call and the hottest functions")
+    parser.add_argument("--globals", action="store_true",
+                        help="only list globals assigned inside functions of USER_AI (missing 'local' candidates)")
     parser.add_argument("--skip-syntax", action="store_true")
     args = parser.parse_args()
 
     lua = find_tool("LUA", ["lua5.1", "lua51", "lua"])
     luac = find_tool("LUAC", ["luac5.1", "luac51", "luac"])
+    if args.globals:
+        check_globals(luac)
+        return
     ok = True
     if not args.skip_syntax:
         ok = check_syntax(luac)
