@@ -3179,6 +3179,7 @@ function AI(myid)
 	TactRowCache = {}
 	MobInfoCache = {}
 	ActorClassCache = {}
+	ActorPosCache = {}
 	if DoneInit== 0 then
 		doInit(myid)
 	end

@@ -645,7 +645,7 @@ function GetMobCount(skill,level,target,aggro)
 		return 0
 	end
 	local skillaoe=GetSkillAoESize(skill,level)
-	local x,y=GetV(V_POSITION,MyID)
+	local x,y=GetPos(MyID)
 	if skillaoe==nil then
 		if skill == ML_BRANDISH then
 			for k,v in pairs (Targets) do
@@ -694,7 +694,7 @@ function GetMobCount(skill,level,target,aggro)
 		local logging = LogEnable and LogEnable["AAI_MOBCOUNT"] == 1
 		local logstring=""
 		-- the center's position is read once, not once per monster
-		local tx,ty=GetV(V_POSITION,target)
+		local tx,ty=GetPos(target)
 		for k,v in pairs(Targets) do
 			local tbas=GetTact(TACT_BASIC,k)
 			local dist = GetDistanceAPR(k,tx,ty)
@@ -737,17 +737,19 @@ function GetBestAoETarget(myid,skill,level)
 	end
 	local range=(size-1)/2
 	local mobs={}
+	local pos={}
 	for k,v in pairs(Targets) do
 		if GetTact(TACT_BASIC,k)~=0 then
-			local x,y=GetV(V_POSITION,k)
+			local x,y=GetPos(k)
+			pos[k]={x,y}
 			mobs[#mobs+1]={k,x,y,AoEMobWeight(skill,k)}
 		end
 	end
 	local mcount=0
 	local result=-1
 	for k,v in pairs(Targets) do
-		if GetTact(TACT_BASIC,k)~=0 and IsInAttackSight(myid,k,skill,level)==true then
-			local tx,ty=GetV(V_POSITION,k)
+		if pos[k]~=nil and IsInAttackSight(myid,k,skill,level)==true then
+			local tx,ty=pos[k][1],pos[k][2]
 			local count=0
 			if tx ~= -1 then
 				for i=1,#mobs do
@@ -773,13 +775,13 @@ end
 function GetBestAoECoord(myid,skill,level)
 	local range=GetSkillInfo(skill,2,level)
 	local aoesize=((GetSkillAoESize(skill,level) or 1)-1)/2
-	local myx,myy=GetV(V_POSITION,myid)
-	local ox,oy=GetV(V_POSITION,OwnerID)
+	local myx,myy=GetPos(myid)
+	local ox,oy=GetPos(OwnerID)
 	-- weights summed per cell, and the bounding box of the occupied cells
 	local cells, minx, maxx, miny, maxy = {}, nil, nil, nil, nil
 	for k,v in pairs(Targets) do
 		if GetTact(TACT_BASIC,k)~=0 then
-			local x,y=GetV(V_POSITION,k)
+			local x,y=GetPos(k)
 			if x < ox+20 and x > ox-20 and y < oy+20 and y > oy-20 then
 				local w = AoEMobWeight(skill,k)
 				if w ~= 0 then
@@ -1364,33 +1366,6 @@ function	GetDistance2 (id1, id2)
 end
 
 
-function	GetDistanceA (id1, id2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
-	if (x1 == -1 or x2 == -1) then
-		return 999
-	end
-	return GetDistance (x1,y1,x2,y2)
-end
-
-function	GetDistanceAP (id1, x2,y2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	if (x1 == -1 or x2 == -1) then
-		return 999
-	end
-	return GetDistance (x1,y1,x2,y2)
-end
-
-function	GetDistanceAPR (id1, x2,y2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	if (x1 == -1 or x2 == -1) then
-		return 999
-	end
-	local x=x1-x2
-	local y=y1-y2
-	return math.max(math.abs(x),math.abs(y))
-end
-
 function GetDistanceRect(id1,id2)
 	local x1, y1 = GetV (V_POSITION,id1)
 	local x2, y2 = GetV (V_POSITION,id2)
@@ -1443,9 +1418,22 @@ function	GetDistanceP (x1,y1,x2,y2)
 	return math.floor(math.sqrt((x1-x2)^2+(y1-y2)^2))
 end
 
+-- GetV(V_POSITION, id), read once per actor per AI() call: actors only move between ticks.
+-- AI() empties ActorPosCache at the start of every tick.
+ActorPosCache = {}
+function GetPos(id)
+	local p = ActorPosCache[id]
+	if p == nil then
+		local x, y = GetV(V_POSITION, id)
+		p = {x, y}
+		ActorPosCache[id] = p
+	end
+	return p[1], p[2]
+end
+
 function	GetDistanceA (id1, id2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
+	local x1, y1 = GetPos(id1)
+	local x2, y2 = GetPos(id2)
 	if (x1 == -1 or x2 == -1) then
 		return 999
 	end
@@ -1453,7 +1441,7 @@ function	GetDistanceA (id1, id2)
 end
 
 function	GetDistanceAP (id1, x2,y2)
-	local x1, y1 = GetV (V_POSITION,id1)
+	local x1, y1 = GetPos(id1)
 	if (x1 == -1 or x2 == -1) then
 		return 999
 	end
@@ -1468,8 +1456,8 @@ function	GetDistancePR (x1,y1,x2,y2)
 end
 
 function GetDistanceAR(id1,id2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
+	local x1, y1 = GetPos(id1)
+	local x2, y2 = GetPos(id2)
 	if (x1 == -1 or x2 == -1) then
 		return 999
 	end
@@ -1477,7 +1465,7 @@ function GetDistanceAR(id1,id2)
 end
 
 function	GetDistanceAPR (id1, x2,y2)
-	local x1, y1 = GetV (V_POSITION,id1)
+	local x1, y1 = GetPos(id1)
 	if (x1 == -1 or x2 == -1) then
 		return 999
 	end

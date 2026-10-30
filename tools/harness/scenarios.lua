@@ -363,6 +363,7 @@ SCENARIOS = {
 	crowd_dieter = { homuntype = 51, skills = DIETER_SKILLS, mobs = crowd, minAttacks = 1,
 		checks = {
 			["optimized AoE aiming matches the brute-force search"] = function()
+				ActorPosCache = {} -- the world moved since the last AI() call
 				local function bruteCoord(skill, level)
 					local range = GetSkillInfo(skill, 2, level)
 					local aoe = ((GetSkillAoESize(skill, level) or 1) - 1) / 2

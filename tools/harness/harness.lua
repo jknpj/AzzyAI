@@ -363,7 +363,8 @@ local memStart = collectgarbage("count")
 local function globalTableSizes()
 	local sizes = {}
 	for k, v in pairs(_G) do
-		if type(v) == "table" and v ~= _G and type(k) == "string" then
+		-- *Cache tables are emptied by AI() every tick; their size only reflects the screen
+		if type(v) == "table" and v ~= _G and type(k) == "string" and not k:find("Cache$") then
 			local n = 0
 			for _, vv in pairs(v) do
 				n = n + 1
