@@ -173,7 +173,7 @@ ChaseGiveUp              = 6
 AttackGiveUp		=10 
 AtkPosbugTimeoutLimit  = 3 
 FollowTryPanic		=3 
-SphereTrackFactor	=3 
+SphereTrackFactor	=3 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average; 3 errs low)
 
 --Berzerk Settings:
 UseBerzerkMobbed         = 0 

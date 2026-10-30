@@ -462,6 +462,26 @@ SCENARIOS = {
 	-- Eleanor on rAthena: Sonic Claw needs a sphere, which only normal attacks in fighting style give
 	eleanor_private = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
 		expect = { "Sonic Claw" } },
+	-- the AI asks for an attack every tick but she swings once per 800 ms: the sphere estimate must count
+	-- swings (the harness server gives one sphere per two of them) and never run ahead of the server's
+	eleanor_spheres = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
+		expect = { "Sonic Claw" },
+		afterLoad = function()
+			local realAI = AI
+			SphereOverMax = -10
+			AI = function(id)
+				local r = realAI(id)
+				local over = MySpheres - HarnessServer.spheres
+				if over > SphereOverMax then SphereOverMax = over end
+				return r
+			end
+		end,
+		checks = {
+			["the estimate never runs more than 1 sphere ahead of the server"] = function()
+				if SphereOverMax > 1 then error(("ran %.2f spheres ahead"):format(SphereOverMax), 0) end
+				return true
+			end,
+		} },
 	-- real monsters: plants (Ai 06) next to an aggressive Zombie
 	plants_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = { {103,100,1078}, {103,101,1080}, {104,100,1015} },
 		checks = plantChecks() },
