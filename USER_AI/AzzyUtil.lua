@@ -1962,7 +1962,8 @@ function GetComboSkill(myid)
 		htype=MyHomunType
 		if htype==ELEANOR then
 			if EleanorMode==FIGHTING_MODE then
-				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres then
+				-- Sonic Claw already used one sphere, so the follow-up needs one less than the start
+				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres - 1 and IsSkillReady(MH_SILVERVEIN_RUSH) then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
 						level=SkillList[ELEANOR][MH_SILVERVEIN_RUSH]
@@ -1992,22 +1993,23 @@ function GetGrappleSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
 		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
-			local comboFollowupSpheres = math.max(0, AutoComboSpheres - 1)
-			if ComboSCTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
+			-- AutoComboSpheres decides when to start the chain (Tinder Breaker); a started chain only
+			-- needs the spheres the next skill costs (CBC 1, EQC 2), or the server refuses it
+			if ComboSCTimeout > GetTick() and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
 				skill=MH_CBC
 				if EleanorCBCLevel==nil then
 					level=SkillList[ELEANOR][MH_CBC]
 				else
 					level=EleanorCBCLevel
 				end
-			elseif ComboSVTimeout > GetTick() and MySpheres >= comboFollowupSpheres and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
+			elseif ComboSVTimeout > GetTick() and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
 				skill=MH_EQC
 				if EleanorEQCLevel==nil then
 					level=SkillList[ELEANOR][MH_EQC]
 				else
 					level=EleanorEQCLevel
 				end
-			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 then
+			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER) then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
@@ -2089,7 +2091,7 @@ end
 
 function GetDebuffSkill(myid)
 	if (IsHomun(myid)==1) then
-		if MyHomunType==EIRA and UseEiraSilentBreeze==1 then
+		if MyHomunType==EIRA and UseEiraSilentBreeze==1 and IsSkillReady(MH_SILENT_BREEZE) then
 			skill=MH_SILENT_BREEZE
 			if EiraSilentBreezeLevel==nil then
 				level=SkillList[EIRA][MH_SILENT_BREEZE]
@@ -2266,6 +2268,10 @@ function	GetSOffensiveSkill(myid)
 			skill=MH_ANGRIFFS_MODUS
 			level = SkillList[BAYERI][MH_ANGRIFFS_MODUS]
 			skillopt=UseBayeriAngriffModus
+			-- the server refuses Angriffs Modus while Goldene Ferse is up (and vice versa)
+			if UseBayeriGoldenPherze~=0 and SDefensiveTimeout > GetTick() then
+				level = 0
+			end
 		elseif	(htype==DIETER and UseDieterMagmaFlow~=0) then
 			skill=MH_MAGMA_FLOW
 			level = SkillList[DIETER][MH_MAGMA_FLOW]
@@ -2293,6 +2299,9 @@ function	GetSDefensiveSkill(myid)
 			skill=MH_GOLDENE_FERSE
 			level = SkillList[BAYERI][MH_GOLDENE_FERSE]
 			skillopt=UseBayeriGoldenPherze
+			if UseBayeriAngriffModus~=0 and SOffensiveTimeout > GetTick() then
+				level = 0
+			end
 		elseif	(htype==DIETER and UseDieterGraniticArmor~=0) then
 			skill=MH_GRANITIC_ARMOR
 			level = SkillList[DIETER][MH_GRANITIC_ARMOR]
@@ -2351,11 +2360,11 @@ function GetSightOrAoE(myid)
 		htype=MyHomunType
 		if	(htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode~=0) then
 			skill=MH_LAVA_SLIDE
-			level = SkillList[DIETER][MH_LAVA_SLIDE]
+			level = DieterLavaSlideLevel or SkillList[DIETER][MH_LAVA_SLIDE]
 			skillopt=LavaSlideMode
 		elseif (htype==SERA and PoisonMistMode~=0 and UseSeraPoisonMist==1) then
 			skill=MH_POISON_MIST
-			level = SkillList[SERA][MH_POISON_MIST]
+			level = SeraPoisonMistLevel or SkillList[SERA][MH_POISON_MIST]
 			skillopt=PoisonMistMode
 		end
 	else
@@ -2448,13 +2457,18 @@ function	GetDefensiveOwnerSkill(myid)
 			skill = MH_PAIN_KILLER
 			level = SkillList[htype][skill]
 			skillopt = UseSeraPainkiller
-			return skill,level,skillopt
 		elseif htype==BAYERI and UseBayeriGoldeneTone~=0 then
 			skill = MH_GOLDENE_TONE
 			level = BayeriGoldeneToneLevel or SkillList[htype][skill]
 			skillopt = UseBayeriGoldeneTone
-			return skill,level,skillopt
+		else
+			return 0,0,0
 		end
+		-- level 0 = in cooldown (Goldene Tone's 120 s reuse outlasts its 30-120 s buff)
+		if not IsSkillReady(skill) then
+			level = 0
+		end
+		return skill,level,skillopt
 	else
 		level = SkillList[MercType][MER_KYRIE]
 		if level~=nil then
@@ -2495,12 +2509,12 @@ function GetHealingSkill(myid)
 		if htype < 17 then --if it's not a homun S just run it through modulo. 
 			homuntype=modulo(MyHomunType,4)
 		else --If it's a homun S, get the OldHomunType
-			if homuntype == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
+			if htype == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
 				skill=MH_SILENT_BREEZE
-				if GetTick() < AutoSkillCooldown[skill] then
+				if not IsSkillReady(skill) then
 					level=0
 				else
-					level=SkillList[EIRA][MH_SILENT_BREEZE]
+					level=EiraSilentBreezeLevel or SkillList[EIRA][MH_SILENT_BREEZE]
 				end
 				return skill,level
 			end
@@ -2793,12 +2807,14 @@ function DoSkill(skill,level,target,mode,targx,targy)
 			UpdateTimeoutFile()
 		end
 	elseif (skill==MH_VOLCANIC_ASH) then --handle the three ash timeouts
+		-- a slot is busy until that ash disappears ([8]), not just until the reuse delay ends
+		local ashBusy = math.max(GetSkillInfo(skill,8,level), GetSkillInfo(skill,9,level)) + delay
 		if (AshTimeout[1] < t) then
-			AshTimeout[1]=t+GetSkillInfo(skill,9,level)+delay
+			AshTimeout[1]=t+ashBusy
 		elseif (AshTimeout[2] < t) then
-			AshTimeout[2]=t+GetSkillInfo(skill,9,level)+delay
+			AshTimeout[2]=t+ashBusy
 		else 
-			AshTimeout[3]=t+GetSkillInfo(skill,9,level)+delay
+			AshTimeout[3]=t+ashBusy
 		end
 	end
 	delay = delay + GetSkillInfo(skill,6,level)
@@ -2850,7 +2866,8 @@ function DoSkill(skill,level,target,mode,targx,targy)
 
 	TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
 	logappend("AAI_SKILLFAIL", "DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
-	return
+	-- the level actually requested (may be lower than asked, see GetCastableSkillLevel)
+	return level
 end
 
 function modtwroSend()

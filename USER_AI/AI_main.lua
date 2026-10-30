@@ -26,10 +26,12 @@ for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_
 	AutoSkillCooldown[cdskill]=0
 end
 -- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
--- Eleanor combo skills are left out on purpose; their chain is timed by ComboSCTimeout/ComboSVTimeout.
+-- The Eleanor combo follow-ups are left out on purpose; their chain is timed by ComboSCTimeout/ComboSVTimeout.
+-- Sonic Claw starts the chain but is also cast on its own, so its cooldown is tracked.
 for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIGE_STANGE,MH_NEEDLE_OF_PARALYZE,
 	MH_TWISTER_CUTTER,MH_ABSOLUTE_ZEPHYR,MH_GLANZEN_SPIES,MH_HEILIGE_PFERD,MH_NEEDLE_STINGER,
-	MH_TOXIN_OF_MANDARA,MH_BLAZING_AND_FURIOUS,MH_THE_ONE_FIGHTER_RISES,MH_BLAST_FORGE}) do
+	MH_TOXIN_OF_MANDARA,MH_BLAZING_AND_FURIOUS,MH_THE_ONE_FIGHTER_RISES,MH_BLAST_FORGE,
+	MH_SONIC_CRAW,MH_SILENT_BREEZE,MH_GOLDENE_TONE,MH_PAIN_KILLER}) do
 	AutoSkillCooldown[cdskill]=0
 end
 -----------Config checking----------------
@@ -835,7 +837,8 @@ function OnCHASE_ST()
             TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
-            if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) then
+            -- Sonic Claw costs a sphere and works only in fighting style (CHASE switches style first)
+            if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and IsSkillReady(fallbackSkill) then
                 if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
                     TraceAI("Eleanor Fallback: Selecting Sonic Claw.")
                     skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
@@ -1125,7 +1128,8 @@ function OnATTACK_ST()
                 TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
-                if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) then
+                -- in ATTACK_ST nothing switches style, so only while already in fighting style
+                if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and EleanorMode == FIGHTING_MODE and IsSkillReady(fallbackSkill) then
                     if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
                         TraceAI("Eleanor Fallback: Selecting Sonic Claw.")
                         skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
@@ -2222,7 +2226,7 @@ function DoAutoBuffs(buffmode)
 					MyPEnemy = OwnerID
 					MyPSkill = skill
 					MyPSkillLevel = level
-					MyPMode = 7
+					MyPMode = 9
 					TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
 					return OnPROVOKE_ST()
 				end
@@ -2380,7 +2384,9 @@ function DoAutoBuffs(buffmode)
 				-- skill in cooldown
 			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
 				MyBuffSPCosts["SOffensive"]=GetSkillInfo(skill,3,level)
-				DoSkill(skill,level,MyID,4)
+				-- DoSkill may lower the level to the learned one; time the buff by what was cast
+				local castlvl = DoSkill(skill,level,MyID,4) or 0
+				if castlvl > 0 then level = castlvl end
 				SOffensiveTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)		
 				--logappend("AAI_SKILL",skill.."|"..level.."|"..GetSkillInfo(skill,8,level).."|"..SOffensiveTimeout)
 				UpdateTimeoutFile()
@@ -2399,7 +2405,8 @@ function DoAutoBuffs(buffmode)
 				-- skill in cooldown
 			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
 				MyBuffSPCosts["SDefensive"]=GetSkillInfo(skill,3,level)
-				DoSkill(skill,level,MyID,5)
+				local castlvl = DoSkill(skill,level,MyID,5) or 0
+				if castlvl > 0 then level = castlvl end
 				SDefensiveTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
 				UpdateTimeoutFile()
 				return
@@ -2415,7 +2422,8 @@ function DoAutoBuffs(buffmode)
 				-- do nothing, skill in cooldown
 			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
 				MyBuffSPCosts["SOwnerBuff"]=GetSkillInfo(skill,3,level)
-				DoSkill(skill,level,MyID,6)
+				local castlvl = DoSkill(skill,level,MyID,6) or 0
+				if castlvl > 0 then level = castlvl end
 				SOwnerBuffTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
 				UpdateTimeoutFile()
 				return
@@ -2431,7 +2439,8 @@ function DoAutoBuffs(buffmode)
 				-- do nothing, skill in cooldown
 			elseif (GetSkillInfo(skill,3,level) <= GetV(V_SP,MyID)) then
 				MyBuffSPCosts["SOwnerBuff"]=GetSkillInfo(skill,3,level)
-				DoSkill(skill,level,MyID,6)
+				local castlvl = DoSkill(skill,level,MyID,6) or 0
+				if castlvl > 0 then level = castlvl end
 				SOwner2ndBuffTimeout = AutoSkillCastTimeout + GetSkillInfo(skill,8,level)
 				UpdateTimeoutFile()
 				return
@@ -2631,10 +2640,12 @@ function OnPROVOKE_ST()
 	local tx,ty=GetV(V_POSITION,MyPEnemy)
 	if IsInAttackSight(MyID,MyPEnemy,MyPSkill,MyPSkillLevel) then
 		
+		-- PMode 7 = Sight / AoE-as-buff (Poison Mist, Lava Slide), 9 = Provoke on the owner,
+		-- the same numbers FailSkillUse() uses
 		if MyPMode == 7 then
-			ProvokeOwnerTimeout = GetTick()+GetSkillInfo(MyPSkill,8,MyPSkillLevel)
-		elseif MyPMode== 9 then
 			SightTimeout = GetTick()+GetSkillInfo(MyPSkill,8,MyPSkillLevel)
+		elseif MyPMode== 9 then
+			ProvokeOwnerTimeout = GetTick()+GetSkillInfo(MyPSkill,8,MyPSkillLevel)
 		elseif MyPMode== 11 then
 			OffensiveOwnerTimeout = GetTick()+GetSkillInfo(MyPSkill,8,MyPSkillLevel)
 		elseif MyPMode== 12 then
@@ -2654,8 +2665,10 @@ function OnPROVOKE_ST()
 		TraceAI("PROVOKE_ST -> IDLE_ST Couldn't get into range to provoke/AoE owner")
 		if (MyPMode==12) then
 			DefensiveOwnerTimeout=GetTick()+20000
-		elseif (MyPMode==7) then
+		elseif (MyPMode==9) then
 			ProvokeOwnerTimeout=GetTick()+10000
+		elseif (MyPMode==7) then
+			SightTimeout=GetTick()+10000
 		end
 		if MyPState~=PROVOKE_ST then
 			MyState=MyPState
@@ -3283,6 +3296,10 @@ function AI(myid)
 		MyASAPBuffs[v],MyPosX[v],MyPosY[v],OwnerPosX[v],OwnerPosY[v],EnemyPosX[v],EnemyPosY[v],MyMotions[v],MyStates[v],MyEnemies[v]=MyASAPBuffs[v-1],MyPosX[v-1],MyPosY[v-1],OwnerPosX[v-1],OwnerPosY[v-1],EnemyPosX[v-1],EnemyPosY[v-1],MyMotions[v-1],MyStates[v-1],MyEnemies[v-1]
 	end	
 	MyPosX[1],MyPosY[1],OwnerPosX[1],OwnerPosY[1],EnemyPosX[1],EnemyPosY[1],MyMotions[1],MyStates[1],MyEnemies[1]=x,y,ox,oy,ex,ey,GetV(V_MOTION,MyID),MyState,MyEnemy
+	-- grappling Eleanor gains spheres from hits she takes (rAthena: 50% per hit)
+	if MyHomunType == ELEANOR and EleanorMode == GRAPPLING_MODE and MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE then
+		MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
+	end
 	if MyState==PROVOKE_ST then
 		MyASAPBuffs[1]=MyASAPBuffs[2]
 	else
@@ -3531,14 +3548,6 @@ function AI(myid)
 			elseif CastSkillState>0 then
 				if LastAIDelay > 220 then
 					--Skill cast successfully
-					if CastSkillMode==8 then
-						if EleanorMode==GRAPPLING_MODE then
-							EleanorMode=FIGHTING_MODE
-						else
-							EleanorMode=GRAPPLING_MODE
-						end
-						UpdateTimeoutFile()
-					end
 					TraceAI("Delay watcher: Skill use successful detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					logappend("AAI_SKILLFAIL","successful skill use detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					clearcastskill=1
@@ -3567,14 +3576,6 @@ function AI(myid)
 			else -- CastSkillState is 0, so the skill hasn't started casting, but just in case it slipped by:
 				if LastAIDelay > 220 then
 					--Skill cast successfully
-					if CastSkillMode==8 then
-						if EleanorMode==GRAPPLING_MODE then
-							EleanorMode=FIGHTING_MODE
-						else
-							EleanorMode=GRAPPLING_MODE
-						end
-						UpdateTimeoutFile()
-					end
 					TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					logappend("AAI_SKILLFAIL","successful skill use detected - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					clearcastskill=1
@@ -3633,6 +3634,16 @@ function AI(myid)
 		end
 	end
 	if clearcastskill==1 then
+		-- Style Change went through (any watcher branch: it has no cast time, so the instant
+		-- branch is the usual one): the server flipped Eleanor's style
+		if CastSkillMode==8 then
+			if EleanorMode==GRAPPLING_MODE then
+				EleanorMode=FIGHTING_MODE
+			else
+				EleanorMode=GRAPPLING_MODE
+			end
+			UpdateTimeoutFile()
+		end
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
 		--LavaSlideMode=constant
@@ -3765,8 +3776,9 @@ function AI(myid)
 				end
 			elseif tactcast == CAST_REACT_STIEN then
 				if MyHomunType==BAYERI then
-					if AutoSkillTimeout < GetTick() and GetSkillInfo(MH_STEINWAND,3,5) < GetV(V_SP,MyID) then
-						DoSkill(MH_STEINWAND,5,MyID)
+					local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
+					if AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
+						DoSkill(MH_STEINWAND,wandlevel,MyID)
 						TraceAI("CAST_REACT_STIEN being enabled against target"..k.." with tactic "..tactcast)
 					
 						return
@@ -3831,9 +3843,10 @@ function AI(myid)
 		return
 	end
 	if UseSteinWandTele ==1 and MyHomunType==BAYERI then
-		if SteinWandPauseTime == 0 then
+		if SteinWandPauseTime == 0 and IsSkillReady(MH_STEINWAND) then
 			DoSkill(MH_STEINWAND,BayeriSteinWandLevel,MyID)
-			SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,8,BayeriSteinWandLevel)
+			-- like the buff path: retry after the reuse delay, the wall breaks long before [8] ends
+			SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,9,BayeriSteinWandLevel)
 			SteinWandPauseTime=SteinWandTelePause+GetTick()
 			return
 		end

@@ -93,7 +93,15 @@ EleanorMidnightLevel		=5
 UseEleanorTinderBreaker		=1
 UseDieterLavaSlide			=1 
 DieterLavaSlideLevel		=10
-
+-- 0 = cast Poison Mist / Lava Slide as attack skills; other values use them as AoE buffs
+PoisonMistMode				=0
+LavaSlideMode				=0
+UseDieterVolcanicAsh		=0
+AshMaximizeTargets			=0
+HealOwnerBreeze				=0
+PainkillerFriends			=0
+PainkillerFriendsSave		=0
+EleanorDoNotSwitchMode		=0
 
 --Autobuff options
 UseDefensiveBuff		=1
