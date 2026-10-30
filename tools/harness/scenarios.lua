@@ -10,6 +10,7 @@
 --   selfMonster the client's IsMonster() also returns 1 for our own homunculus
 --   sp/spregen homunculus max SP and SP regained per second
 --   startTick  client uptime in milliseconds (default 1000)
+--   dropTactics monster classes whose H_Tactics.lua row is removed (tests the defaults for unknown monsters)
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -380,4 +381,93 @@ SCENARIOS = {
 				return true
 			end,
 		} },
+
+	-- Monster database (USER_AI/MobInfo.lua) ------------------------------------------------
+	mobinfo_data = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1,
+		checks = {
+			["MobInfo.lua is loaded (run tools/harness/rathena_sync.py)"] = function() return MobInfo ~= nil end,
+			["Poring: Water 1, no flags"] = function()
+				local p = MobInfo[1002]
+				return p[2] == 1 and p[3] == 1 and p[5] == 0
+			end,
+			["Baphomet is a boss MVP, Red Plant a plant"] = function()
+				return HasMobFlag(MobInfo[1039], MOB_FLAG_MVP) and HasMobFlag(MobInfo[1039], MOB_FLAG_BOSS)
+					and HasMobFlag(MobInfo[1078], MOB_FLAG_PLANT) and not HasMobFlag(MobInfo[1002], MOB_FLAG_PLANT)
+			end,
+			["skill elements: Lava Slide fire, Heilige Stange holy"] = function()
+				return SkillElement[MH_LAVA_SLIDE] == 3 and SkillElement[MH_HEILIGE_STANGE] == 6
+			end,
+			["element table: fire on water 1 = 90%, fire on fire 2 = 0%"] = function()
+				return ElementFix[1][3][1] == 90 and ElementFix[2][3][3] == 0
+			end,
+		} },
+	-- the default limit (50%) still lets fire hit a Water 1 Poring (90%)...
+	dieter_element_ok = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, minAttacks = 20,
+		expect = { "Lava Slide" } },
+	-- ...a stricter limit makes Dieter leave its fire attacks out against it
+	dieter_element_skip = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, minAttacks = 20,
+		set = { SkillElementMinRate = 95 },
+		forbid = { "Lava Slide" },
+		checks = {
+			["Lava Slide does 90% to a Poring"] = function()
+				local m = HarnessMonsters()[1]
+				return SkillElementRate(MH_LAVA_SLIDE, m.id) == 90 and not SkillElementOK(MH_LAVA_SLIDE, m.id)
+			end,
+		} },
+	-- UseMobInfo = 0 brings back the old behavior
+	dieter_element_off = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, minAttacks = 20,
+		set = { SkillElementMinRate = 95, UseMobInfo = 0 }, expect = { "Lava Slide" } },
+	-- an MVP standing next to a Poring: with BossAggro = 1 (default) the homunculus leaves it alone
+	boss_mvp_ignored = { homuntype = 2, skills = {}, mobs = { {103,100,1039}, {98,100,1002} }, passive = true,
+		sp = 20, spregen = 1, minAttacks = 20,
+		checks = {
+			["the MVP is never attacked, the Poring is"] = function()
+				local boss, poring = 0, 0
+				for _, m in ipairs(HarnessMonsters()) do
+					if m.class == 1039 then boss = m.hitsTaken or 0 else poring = poring + (m.hitsTaken or 0) end
+				end
+				return boss == 0 and poring > 0
+			end,
+		} },
+	-- ...but defends the owner when the MVP attacks
+	boss_mvp_defend = { homuntype = 2, skills = {}, mobs = { {103,100,1039} }, sp = 20, spregen = 1, minAttacks = 20 },
+	-- BossAggro = 0: tactics decide, the default tactic attacks it
+	boss_mvp_tactics = { homuntype = 2, skills = {}, mobs = { {103,100,1039} }, passive = true,
+		sp = 20, spregen = 1, minAttacks = 20, set = { BossAggro = 0 } },
+	-- plants without a tactics row (they normally have one): no skills on them (PlantSkills = 0)
+	plants_no_tactics = { homuntype = 49, skills = BAYERI_SKILLS, dropTactics = { 1078, 1080 },
+		mobs = { {103,100,1078}, {103,101,1080}, {104,100,1015} }, checks = plantChecks() },
+	-- Mixed elements: a Fire 2 monster (immune to fire) in front of three Earth 2 ones (175% from fire).
+	-- Dieter must still use Lava Slide as an attack (the pack makes it worth it) and lay it so
+	-- the Earth pack is inside.
+	mixed_element_dieter = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 1, ticks = 400,
+		set = { LavaSlideMode = 0 },
+		mobs = { {102,100,1673}, {104,102,1672}, {105,102,1678}, {104,103,1672} },
+		checks = {
+			["Lava Slide was cast covering the Earth pack"] = function()
+				local n = 0
+				for _, c in ipairs(HarnessCasts) do
+					if c.ok and c.skill == MH_LAVA_SLIDE then
+						n = n + 1
+						for _, m in ipairs(HarnessMonsters()) do
+							if m.class ~= 1673 and math.max(math.abs(c.a - m.x), math.abs(c.b - m.y)) > 3 then
+								return false
+							end
+						end
+					end
+				end
+				return n > 0
+			end,
+			["the weighted count ignores the immune Dimik"] = function()
+				local fire, earth
+				for _, m in ipairs(HarnessMonsters()) do
+					if m.class == 1673 then fire = m.id elseif not earth then earth = m.id end
+				end
+				return AoEMobWeight(MH_LAVA_SLIDE, fire) == 0 and AoEMobWeight(MH_LAVA_SLIDE, earth) == 1.75
+			end,
+		} },
+	-- only Fire monsters: no fire skill at all
+	fire_immune_dieter = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 20,
+		mobs = { {102,100,1673}, {103,101,1673}, {103,99,1673} }, forbid = { "Lava Slide", "Blast Forge" },
+		set = { UseDieterBlastForge = 1, LavaSlideMode = 0 } },
 }

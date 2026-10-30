@@ -183,6 +183,16 @@ With the wrong value on a private server every monster looks like a player and t
 
 `ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026): cast times, after-cast delays, cooldowns, durations, AoE sizes and sphere costs come from the LATAM client data on Divine Pride (`tools/harness/divinepride_sync.py`, needs a free API key in `DIVINEPRIDE_API_KEY`; its output is git-ignored), with kRO's client text and bROWiki filling the few gaps. `ServerSkillOverrides` lists only the rAthena Renewal values that differ (a few ranges, cooldowns, durations, AoE sizes and CBC's sphere cost) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
 
+### Monster Database
+`USER_AI/MobInfo.lua` lists the race, element, element level, size and boss/MVP/plant flags of every monster, the element damage table and the element of each homunculus attack skill. It is generated from rAthena Renewal (`db/re/mob_db.yml`, `attr_fix.yml`, `skill_db.yml`) by `tools/harness/rathena_sync.py`. The homunculus reads a monster's ID with `GetV(V_HOMUNTYPE)`, so it uses the database without any setup; mercenaries only know monster IDs from MobID files and are not affected.
+
+* **Skills by element** (`SkillElementMinRate`, default 50): an attack skill is left out when the target's element would cut its damage below this percent, and always when the target is immune or healed by it. Dieter won't cast Lava Slide on Fire monsters, for example. The AI then picks another skill or attacks normally. Poison Mist and Lava Slide used as AoE buffs (`PoisonMistMode`/`LavaSlideMode`) wait until at least one monster near you would take enough damage.
+* **Packs of mixed elements**: area skills count each monster by the damage its element lets through (an Earth 2 monster counts 1.75 against fire, a Fire 2 one 0), both to decide whether the skill is worth casting (`AutoMobCount`) and where to aim it. An area skill may still be used when the current target is immune, if the monsters around it make up for it; it is then aimed at them.
+* **Plants** (`PlantSkills`, default 0): plants and mushrooms take 1 damage from everything, so no skills are used on them and they don't count for area skills.
+* **Bosses** (`BossAggro`, default 1): the homunculus never starts a fight with an MVP (`2` = also mini-bosses), whatever the tactics say; it still defends you and itself when they attack. `0` lets the tactics decide.
+
+`UseMobInfo = 0` turns all of this off. `AAIStartH.txt` shows whether the database was loaded. Tactics rows still apply first; the database only adjusts attacking tactics for bosses and the skill/weight of plants.
+
 ### Troubleshooting automatic attacks
 
 Some clients report the player's own homunculus/mercenary as a monster through `IsMonster()`.

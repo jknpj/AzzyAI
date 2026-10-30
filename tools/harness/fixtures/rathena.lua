@@ -165,4 +165,7 @@ RA_MOB = {
 	[1101] = {name="Baphomet Jr.", level=57, hp=1763, race="Demon", element="Dark", elv=1, size="Small", ai="21", class="Normal", mvp=false},
 	[1147] = {name="Maya", level=55, hp=380000, race="Insect", element="Earth", elv=4, size="Large", ai="21", class="Boss", mvp=true},
 	[1368] = {name="Geographer", level=73, hp=3408, race="Plant", element="Earth", elv=3, size="Medium", ai="10", class="Normal", mvp=false},
+	[1672] = {name="Dimik", level=116, hp=23779, race="Formless", element="Earth", elv=2, size="Medium", ai="04", class="Normal", mvp=false},
+	[1673] = {name="Dimik", level=116, hp=19250, race="Formless", element="Fire", elv=2, size="Medium", ai="04", class="Normal", mvp=false},
+	[1678] = {name="Venatu", level=113, hp=18996, race="Formless", element="Earth", elv=2, size="Medium", ai="04", class="Normal", mvp=false},
 }
