@@ -124,7 +124,7 @@ function 	GetTact(t,m)
 				e=MobID[m]
 			end
 		else
-			e=GetV(V_HOMUNTYPE,m)
+			e=GetActorClass(m)
 		end
 		temp=GetMyTact(e)
 		if (temp==nil) then
@@ -187,6 +187,18 @@ MOB_FLAG_BOSS	= 1	-- boss protocol (MVPs and mini-bosses)
 MOB_FLAG_MVP	= 2
 MOB_FLAG_PLANT	= 4	-- takes 1 damage from everything (plants, mushrooms)
 MobInfoCache = {}
+ActorClassCache = {}
+
+-- A homunculus' view of an actor's class (monster ID), read once per AI() call and shared by
+-- GetTact and GetMobInfo; AI() empties ActorClassCache at the start of every tick.
+function GetActorClass(id)
+	local class = ActorClassCache[id]
+	if class == nil then
+		class = GetV(V_HOMUNTYPE, id)
+		ActorClassCache[id] = class
+	end
+	return class
+end
 
 function GetMobInfo(id)
 	if MobInfo == nil or UseMobInfo == 0 or id == nil or id == 0 then
@@ -196,7 +208,7 @@ function GetMobInfo(id)
 	if info == nil then
 		local class
 		if IsHomun(MyID) == 1 then
-			class = GetV(V_HOMUNTYPE, id)
+			class = GetActorClass(id)
 		else
 			class = MobID[id]
 		end
@@ -681,9 +693,11 @@ function GetMobCount(skill,level,target,aggro)
 		range=(skillaoe-1)/2
 		local logging = LogEnable and LogEnable["AAI_MOBCOUNT"] == 1
 		local logstring=""
+		-- the center's position is read once, not once per monster
+		local tx,ty=GetV(V_POSITION,target)
 		for k,v in pairs(Targets) do
 			local tbas=GetTact(TACT_BASIC,k)
-			local dist = GetDistanceAR(target,k)
+			local dist = GetDistanceAPR(k,tx,ty)
 			if logging then
 				logstring=logstring.."|"..k.."v[2]"..v[2].."t"..GetV(V_TARGET,k).."m"..GetV(V_MOTION,k).."aggro"..aggro
 			end
@@ -702,12 +716,47 @@ function GetMobCount(skill,level,target,aggro)
 	return mobcount
 end
 
+-- Monster to aim a target-centered AoE at: the one whose area holds the most AoEMobWeight
+-- (same count as GetMobCount(skill,level,k,1)). Positions and weights are read once instead of
+-- once per candidate, so a screen of n monsters costs n GetV calls rather than n^2.
 function GetBestAoETarget(myid,skill,level)
+	local size=GetSkillAoESize(skill,level)
+	if size==nil or IsCasterCenteredAoE(skill) then
+		local mcount=0
+		local result=-1
+		for k,v in pairs(Targets) do
+			if GetTact(TACT_BASIC,k)~=0 and IsInAttackSight(myid,k,skill,level)==true then
+				local count=GetMobCount(skill,level,k,1)
+				if mcount < count then
+					result=k
+					mcount=count
+				end
+			end
+		end
+		return result
+	end
+	local range=(size-1)/2
+	local mobs={}
+	for k,v in pairs(Targets) do
+		if GetTact(TACT_BASIC,k)~=0 then
+			local x,y=GetV(V_POSITION,k)
+			mobs[#mobs+1]={k,x,y,AoEMobWeight(skill,k)}
+		end
+	end
 	local mcount=0
 	local result=-1
 	for k,v in pairs(Targets) do
 		if GetTact(TACT_BASIC,k)~=0 and IsInAttackSight(myid,k,skill,level)==true then
-			local count=GetMobCount(skill,level,k,1)
+			local tx,ty=GetV(V_POSITION,k)
+			local count=0
+			if tx ~= -1 then
+				for i=1,#mobs do
+					local m=mobs[i]
+					if m[2] ~= -1 and math.abs(m[2]-tx) <= range and math.abs(m[3]-ty) <= range then
+						count=count+m[4]
+					end
+				end
+			end
 			if mcount < count then
 				result=k
 				mcount=count
@@ -717,49 +766,68 @@ function GetBestAoETarget(myid,skill,level)
 	return result
 end
 
+-- Best cell to center a ground AoE on, within range of myid. Each monster within 20 cells of the
+-- owner adds its AoEMobWeight; ties keep the first cell found (lowest x, then lowest y).
+-- Only cells covered by some monster's area can beat 0, so just those are scored, each with a
+-- 2D prefix sum lookup: O(monsters * area) instead of O(range^2 * area^2) per call.
 function GetBestAoECoord(myid,skill,level)
-	local mcount =0
-	local resultx = -1
-	local resulty = -1
 	local range=GetSkillInfo(skill,2,level)
 	local aoesize=((GetSkillAoESize(skill,level) or 1)-1)/2
-	local myx
-	local myy
-	myx,myy=GetV(V_POSITION,myid)
+	local myx,myy=GetV(V_POSITION,myid)
 	local ox,oy=GetV(V_POSITION,OwnerID)
-	grid={}
-	for xx=ox-20,ox+20 do
-		grid[xx]={}
-		--for xx=oy-20,oy+20 do
-		--	grid[xx][yy]=0
-		--end
-	end
+	-- weights summed per cell, and the bounding box of the occupied cells
+	local cells, minx, maxx, miny, maxy = {}, nil, nil, nil, nil
 	for k,v in pairs(Targets) do
-		local tbas = GetTact(TACT_BASIC,k)
-		x,y=GetV(V_POSITION,k)
-		if x < ox+20 and x > ox-20 and y < oy+20 and y > oy-20 and tbas~=0 then 
-			if grid[x][y]==nil then
-				grid[x][y]=AoEMobWeight(skill,k)
-			else
-				grid[x][y]=grid[x][y]+AoEMobWeight(skill,k)
+		if GetTact(TACT_BASIC,k)~=0 then
+			local x,y=GetV(V_POSITION,k)
+			if x < ox+20 and x > ox-20 and y < oy+20 and y > oy-20 then
+				local w = AoEMobWeight(skill,k)
+				if w ~= 0 then
+					local col = cells[x]
+					if col == nil then col = {}; cells[x] = col end
+					col[y] = (col[y] or 0) + w
+					if minx == nil or x < minx then minx = x end
+					if maxx == nil or x > maxx then maxx = x end
+					if miny == nil or y < miny then miny = y end
+					if maxy == nil or y > maxy then maxy = y end
+				end
 			end
 		end
 	end
-	for xx=myx-range,myx+range do
-		for yy=myy-range,myy+range do
-			local thiscount=0
-			for xxx=xx-aoesize,xx+aoesize do
-				if grid[xxx]~=nil then
-					for yyy=yy-aoesize,yy+aoesize do
-						if grid[xxx][yyy] ~=nil then
-							thiscount=thiscount+grid[xxx][yyy]
-						end
-					end
-				end
-			end
-			if thiscount>mcount then
-				mcount=thiscount
-				resultx,resulty=xx,yy
+	if minx == nil then
+		return -1,-1
+	end
+	-- prefix sums over the box: P[x][y] = weight in [minx..x] x [miny..y]
+	local P = {}
+	local zero = {}
+	for x=minx-1,maxx do P[x] = {} end
+	for y=miny-1,maxy do P[minx-1][y] = 0 end
+	for x=minx,maxx do
+		local px, ppx, col = P[x], P[x-1], cells[x] or zero
+		px[miny-1] = 0
+		for y=miny,maxy do
+			px[y] = (col[y] or 0) + px[y-1] + ppx[y] - ppx[y-1]
+		end
+	end
+	local function boxsum(x1,y1,x2,y2)
+		if x1 < minx then x1 = minx end
+		if y1 < miny then y1 = miny end
+		if x2 > maxx then x2 = maxx end
+		if y2 > maxy then y2 = maxy end
+		if x1 > x2 or y1 > y2 then return 0 end
+		return P[x2][y2] - P[x1-1][y2] - P[x2][y1-1] + P[x1-1][y1-1]
+	end
+	-- candidate centers: in range of myid and within aoesize of some monster
+	local cx1, cx2 = math.max(myx-range, minx-aoesize), math.min(myx+range, maxx+aoesize)
+	local cy1, cy2 = math.max(myy-range, miny-aoesize), math.min(myy+range, maxy+aoesize)
+	local mcount, resultx, resulty = 0, -1, -1
+	for xx=cx1,cx2 do
+		for yy=cy1,cy2 do
+			local thiscount = boxsum(xx-aoesize,yy-aoesize,xx+aoesize,yy+aoesize)
+			-- weights like 0.9 or 1.75 leave rounding noise in the sums: a cell must win by more than that
+			if thiscount > mcount + 1e-6 then
+				mcount = thiscount
+				resultx,resulty = xx,yy
 			end
 		end
 	end

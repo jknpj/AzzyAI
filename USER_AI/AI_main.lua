@@ -3178,6 +3178,7 @@ function AI(myid)
 	MyHomunType = GetV(V_HOMUNTYPE,myid)
 	TactRowCache = {}
 	MobInfoCache = {}
+	ActorClassCache = {}
 	if DoneInit== 0 then
 		doInit(myid)
 	end
@@ -3492,9 +3493,12 @@ function AI(myid)
 	end
 	
 	--New autofriend routine
-	-- MobID/IsActive were just refreshed, so drop tactics resolved earlier in this tick
-	TactRowCache = {}
-	MobInfoCache = {}
+	-- MobID/IsActive were just refreshed, so drop tactics resolved earlier in this tick. Only
+	-- mercenaries use them to find a monster's class; a homunculus reads it from the client.
+	if IsHomun(myid)==0 then
+		TactRowCache = {}
+		MobInfoCache = {}
+	end
 	if (NewAutoFriend==1 and AssumeHomun==1) then
 		friendedOK=0
 		retainercount=0
