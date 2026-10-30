@@ -281,7 +281,10 @@ SCENARIOS = {
 			["official Toxin is caster-centered"] = function()
 				return GetSkillInfo(MH_TOXIN_OF_MANDARA, 7) == 0 and SkillAOEInfo[MH_TOXIN_OF_MANDARA][2] == 1
 			end,
-			["official Sonic Claw reuse is 500 ms"] = function() return GetSkillInfo(MH_SONIC_CLAW, 9, 5) == 500 end,
+			["official Sonic Claw reuse is 1000 ms, range 1"] = function()
+				return GetSkillInfo(MH_SONIC_CLAW, 9, 5) == 1000 and GetSkillInfo(MH_SONIC_CLAW, 2, 5) == 1
+					and SkillSphereCost[MH_CBC] == 2
+			end,
 			["official Lava Slide AoE is 7x7"] = function() return GetSkillAoESize(MH_LAVA_SLIDE, 1) == 7 end,
 		} },
 	sera_s_private = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster, private = true,
@@ -292,7 +295,9 @@ SCENARIOS = {
 				return GetSkillInfo(MH_TOXIN_OF_MANDARA, 7) == 1 and SkillAOEInfo[MH_TOXIN_OF_MANDARA][2] == 0
 					and GetSkillInfo(MH_TOXIN_OF_MANDARA, 2, 10) == 2
 			end,
-			["private Sonic Claw reuse is 1000 ms"] = function() return GetSkillInfo(MH_SONIC_CLAW, 9, 5) == 1000 end,
+			["private Sonic Claw range 3, CBC 1 sphere"] = function()
+				return GetSkillInfo(MH_SONIC_CLAW, 2, 5) == 3 and SkillSphereCost[MH_CBC] == 1
+			end,
 			["private summon ID range"] = function() return MagicNumber == 110000000 end,
 		} },
 

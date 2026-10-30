@@ -1,2 +1,4 @@
 .artifacts/
 .vs/
+# third-party API data from tools/harness/divinepride_sync.py
+tools/harness/fixtures/divinepride_*.json
