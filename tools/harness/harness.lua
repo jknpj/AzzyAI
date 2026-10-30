@@ -333,6 +333,8 @@ local function loadAI()
 	local ok, e = pcall(realdofile, "./AI/USER_AI/AI.lua")
 	dofile = realdofile
 	if not ok then error(e, 0) end
+	-- monsters whose H_Tactics.lua row is removed, to test the defaults for unknown monsters
+	for _, id in ipairs(sc.dropTactics or {}) do MyTact[id] = nil end
 end
 loadAI()
 serverRules()

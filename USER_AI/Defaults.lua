@@ -103,6 +103,12 @@ PainkillerFriends			=0
 PainkillerFriendsSave		=0
 EleanorDoNotSwitchMode		=0
 
+-- Monster database (MobInfo.lua)
+UseMobInfo					=1	-- 0 = ignore the monster database
+SkillElementMinRate			=50	-- skip attack skills that would do less than this % because of the target's element
+PlantSkills					=0	-- 1 = also use skills on plants (they take 1 damage from everything)
+BossAggro					=1	-- 0 = tactics decide, 1 = only react to MVPs, 2 = only react to any boss
+
 --Autobuff options
 UseDefensiveBuff		=1
 UseOffensiveBuff		=1 

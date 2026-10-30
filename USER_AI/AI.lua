@@ -14,6 +14,11 @@ TypeString="H"
 
 dofile("./AI/USER_AI/Const_.lua")
 dofile("./AI/USER_AI/H_SkillList.lua") 
+-- monster facts from rAthena (MobInfo, ElementFix, SkillElement); optional, see tools/harness/rathena_sync.py
+pcall(dofile, "./AI/USER_AI/MobInfo.lua")
+dofile("./AI/USER_AI/Defaults.lua")
+-- monster facts from rAthena (MobInfo, ElementFix, SkillElement); optional, see tools/harness/rathena_sync.py
+pcall(dofile, "./AI/USER_AI/MobInfo.lua")
 dofile("./AI/USER_AI/Defaults.lua")
 dofile("./AI/USER_AI/AzzyUtil.lua")
 dofile("./AI/USER_AI/Stubs.lua")

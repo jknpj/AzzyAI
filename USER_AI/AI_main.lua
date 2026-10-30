@@ -785,7 +785,7 @@ function OnCHASE_ST()
         end
         for i, v in ipairs(TargetedSkills) do
             skilltype = v[1]
-            if v[2] ~= 0 then
+            if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                 if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
                     if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                         local mobskill_level = skill_level
@@ -1075,7 +1075,7 @@ function OnATTACK_ST()
             for i, v in ipairs(TargetedSkills) do
                 skilltype = v[1]
                 TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
-                if v[2] ~= 0 then
+                if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
                         if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                             local mobskill_level = skill_level
@@ -1169,6 +1169,10 @@ function OnATTACK_ST()
         TraceAI("Skill Attack: "..MySkill.." target: "..MyEnemy.." level:"..MySkillLevel)
         SkillTarget = MyEnemy
         SkillTargetX, SkillTargetY = nil, nil
+        -- the target itself shrugs off this AoE's element (it got picked for the pack around it):
+        -- aim where the monsters that do get hurt are, even with AoEMaximizeTargets off
+        local elementAim = MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and not IsCasterCenteredAoE(MySkill)
+            and not SkillElementOK(MySkill, MyEnemy)
         if (MySkill == MA_SHARPSHOOTING and AoEMaximizeTargets == 1) then
             target, hitcount = GetBestFASTarget(MyID)
             TraceAI(target.." - "..hitcount)
@@ -1184,13 +1188,13 @@ function OnATTACK_ST()
                 SkillTarget = target
             end
             TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
-        elseif (MySkill == MH_HEILIGE_STANGE or MySkill == MS_BOWLINGBASH or (MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 1 and not IsCasterCenteredAoE(MySkill))) and AoEMaximizeTargets == 1 then
+        elseif (MySkill == MH_HEILIGE_STANGE or MySkill == MS_BOWLINGBASH or (MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 1 and not IsCasterCenteredAoE(MySkill))) and (AoEMaximizeTargets == 1 or elementAim) then
             target = GetBestAoETarget(MyID, MySkill, MySkillLevel)
             if target ~= -1 then
                 SkillTarget = target
             end
             TraceAI("Skill Attack: "..MySkill.." (aoe target) target: "..SkillTarget.." enemy: "..MyEnemy)
-        elseif ((MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 2 and MySkill ~= MH_VOLCANIC_ASH and AoEMaximizeTargets == 1) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1)) then
+        elseif ((MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 2 and MySkill ~= MH_VOLCANIC_ASH and (AoEMaximizeTargets == 1 or elementAim)) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1)) then
             targx, targy = GetBestAoECoord(MyID, MySkill, MySkillLevel)
             if targx ~= -1 then
                 SkillTargetX, SkillTargetY = targx, targy
@@ -1285,7 +1289,7 @@ function	OnTANKCHASE_ST ()
 		for i,v in ipairs(SkillList) do
 
 			skilltype=v[1]
-			if v[2]~=0 then
+			if v[2]~=0 and SkillElementOKFor(v[2],MyEnemy) then
 				--logappend("AAI_Chase","skilltype ".. skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill ".. tact_skill.." tact_skillclass ".. tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
 				if (GetV(V_SP,MyID) >= tact_sp+GetSkillInfo(v[2],3,math.min(v[3],skill_level)) and GetSkillInfo(v[2],2,math.min(v[3],skill_level)) >= dist) then 
 				--TraceAI("skilltype ".. skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill ".. tact_skill.."v"..v[1].." "..v[2].." "..v[3])
@@ -3173,6 +3177,7 @@ function AI(myid)
 	OwnerID = GetV(V_OWNER,myid)
 	MyHomunType = GetV(V_HOMUNTYPE,myid)
 	TactRowCache = {}
+	MobInfoCache = {}
 	if DoneInit== 0 then
 		doInit(myid)
 	end
@@ -3489,6 +3494,7 @@ function AI(myid)
 	--New autofriend routine
 	-- MobID/IsActive were just refreshed, so drop tactics resolved earlier in this tick
 	TactRowCache = {}
+	MobInfoCache = {}
 	if (NewAutoFriend==1 and AssumeHomun==1) then
 		friendedOK=0
 		retainercount=0

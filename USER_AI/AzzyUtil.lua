@@ -148,6 +148,7 @@ function 	GetTact(t,m)
 		logappend("AAI_ERROR","Default tactic "..t.." is undefined - Please review and correct tactics file or restore default tactics file")
 		return 0
 	else
+		x = MobInfoTact(t, x, m)
 		if t==TACT_SP and x==-1 then
 			x = AttackSkillReserveSP
 		elseif t==TACT_CHASE then
@@ -173,6 +174,132 @@ end
 function GetMyTact(m)
 	return MyTact[m]
 end
+
+--########################
+--### Monster database ###
+--########################
+-- MobInfo.lua (generated from rAthena's mob_db by tools/harness/rathena_sync.py):
+--   MobInfo[class] = {race, element, element level, size, flags}
+--   ElementFix[element level][attack element][defense element] = damage %
+--   SkillElement[skill] = element of a damaging skill
+-- Homunculi read a monster's class with GetV(V_HOMUNTYPE); mercenaries only know it from MobID files.
+MOB_FLAG_BOSS	= 1	-- boss protocol (MVPs and mini-bosses)
+MOB_FLAG_MVP	= 2
+MOB_FLAG_PLANT	= 4	-- takes 1 damage from everything (plants, mushrooms)
+MobInfoCache = {}
+
+function GetMobInfo(id)
+	if MobInfo == nil or UseMobInfo == 0 or id == nil or id == 0 then
+		return nil
+	end
+	local info = MobInfoCache[id]
+	if info == nil then
+		local class
+		if IsHomun(MyID) == 1 then
+			class = GetV(V_HOMUNTYPE, id)
+		else
+			class = MobID[id]
+		end
+		info = (class and MobInfo[class]) or false
+		MobInfoCache[id] = info
+	end
+	return info or nil
+end
+
+function HasMobFlag(info, flag)
+	return info ~= nil and math.floor(info[5] / flag) % 2 == 1
+end
+
+function IsPlantMob(id)
+	return HasMobFlag(GetMobInfo(id), MOB_FLAG_PLANT)
+end
+
+-- 2 = MVP, 1 = other boss-protocol monster, 0 = neither or unknown
+function GetBossLevel(id)
+	local info = GetMobInfo(id)
+	if HasMobFlag(info, MOB_FLAG_MVP) then
+		return 2
+	elseif HasMobFlag(info, MOB_FLAG_BOSS) then
+		return 1
+	end
+	return 0
+end
+
+-- % of a skill's damage that the target takes because of its element (100 when unknown)
+function SkillElementRate(skill, target)
+	local element = SkillElement and SkillElement[skill]
+	local info = GetMobInfo(target)
+	if element == nil or info == nil or ElementFix == nil then
+		return 100
+	end
+	local byLevel = ElementFix[info[3]]
+	local row = byLevel and byLevel[element]
+	return (row and row[info[2]]) or 100
+end
+
+-- False when the target's element shrugs off the skill (less than SkillElementMinRate % of the
+-- damage; immune or healed counts as 0), so the AI attacks normally or picks another skill.
+function SkillElementOK(skill, target)
+	if UseMobInfo == 0 then
+		return true
+	end
+	local rate = SkillElementRate(skill, target)
+	return rate > 0 and rate >= (SkillElementMinRate or 0)
+end
+
+-- How much monster k counts toward an area skill: its tactics weight times the share of damage
+-- its element lets through (Fire 2 vs fire = 0, Earth 2 = 1.75). Monsters below
+-- SkillElementMinRate count 0, so packs of mixed elements are judged by who actually gets hurt.
+function AoEMobWeight(skill, k)
+	local weight = GetTact(TACT_WEIGHT, k)
+	if skill == nil or UseMobInfo == 0 or SkillElement == nil or SkillElement[skill] == nil then
+		return weight
+	end
+	if not SkillElementOK(skill, k) then
+		return 0
+	end
+	return weight * SkillElementRate(skill, k) / 100
+end
+
+-- Element check of an attack skill: single-target skills look at the target; area skills pass
+-- when the area around the target would be hurt enough, even if the target itself is immune.
+function SkillElementOKFor(skill, target)
+	if SkillElementOK(skill, target) then
+		return true
+	end
+	if UseMobInfo == 0 or GetSkillAoESize(skill, 1) == nil then
+		return false
+	end
+	local level = SkillList[MyHomunType] and SkillList[MyHomunType][skill] or 1
+	return GetMobCount(skill, level, target, 1) >= (AutoMobCount or 1)
+end
+
+-- Tactic changes from the monster database, applied on top of the tactics file:
+--   bosses: attacking tactics become "react" ones (BossAggro: 1 = MVPs, 2 = all bosses)
+--   plants: no skills (PlantSkills = 0) and no weight in AoE counts, since they take 1 damage
+REACT_FOR_ATTACK = {}
+function MobInfoTact(t, x, m)
+	if UseMobInfo == 0 or MobInfo == nil then
+		return x
+	end
+	if t == TACT_BASIC then
+		if BossAggro ~= nil and BossAggro > 0 and x ~= TACT_IGNORE and GetBossLevel(m) >= 3 - BossAggro then
+			return REACT_FOR_ATTACK[x] or x
+		end
+	elseif (t == TACT_SKILL or t == TACT_WEIGHT) and PlantSkills == 0 and IsPlantMob(m) then
+		return 0
+	end
+	return x
+end
+REACT_FOR_ATTACK[TACT_ATTACK_L] = TACT_REACT_L
+REACT_FOR_ATTACK[TACT_ATTACK_M] = TACT_REACT_M
+REACT_FOR_ATTACK[TACT_ATTACK_H] = TACT_REACT_H
+REACT_FOR_ATTACK[TACT_SNIPE_L] = TACT_REACT_L
+REACT_FOR_ATTACK[TACT_SNIPE_M] = TACT_REACT_M
+REACT_FOR_ATTACK[TACT_SNIPE_H] = TACT_REACT_H
+REACT_FOR_ATTACK[TACT_ATK_L_REACT_M] = TACT_REACT_M
+REACT_FOR_ATTACK[TACT_ATTACK_LAST] = TACT_REACT_L
+REACT_FOR_ATTACK[TACT_ATTACK_TOP] = TACT_REACT_H
 
 function	GetPVPTact(t,m)
 	local x
@@ -222,6 +349,8 @@ function StartupDiagnostics()
 	return "\nBuild: LATAM-HG (self-target fix, targeting log)"
 		.."\nServerType: "..tostring(ServerType).." (auto-detect "..tostring(AutoDetectServerType)..")"
 		.."\nLogs enabled: "..(#logs > 0 and table.concat(logs, ", ") or "none")
+		.."\nMonster database (MobInfo.lua): "..(MobInfo ~= nil and "loaded" or "missing")
+			.." (UseMobInfo "..tostring(UseMobInfo)..", BossAggro "..tostring(BossAggro)..")"
 		.."\nLogs are written to: the RO client folder (next to this file)"
 end
 
@@ -550,17 +679,25 @@ function GetMobCount(skill,level,target,aggro)
 			target=MyID
 		end
 		range=(skillaoe-1)/2
+		local logging = LogEnable and LogEnable["AAI_MOBCOUNT"] == 1
 		local logstring=""
 		for k,v in pairs(Targets) do
 			local tbas=GetTact(TACT_BASIC,k)
 			local dist = GetDistanceAR(target,k)
-			logstring=logstring.."|"..k.."v[2]"..v[2].."t"..GetV(V_TARGET,k).."m"..GetV(V_MOTION,k).."aggro"..aggro
+			if logging then
+				logstring=logstring.."|"..k.."v[2]"..v[2].."t"..GetV(V_TARGET,k).."m"..GetV(V_MOTION,k).."aggro"..aggro
+			end
 			if dist <= range and (v[2]>0 or aggro~=0) and tbas~=0 then
-				mobcount=mobcount+1*GetTact(TACT_WEIGHT,k)
-				logstring=logstring.."add:"..GetTact(TACT_WEIGHT,k).."new:"..mobcount
+				local w = AoEMobWeight(skill,k)
+				mobcount=mobcount+w
+				if logging then
+					logstring=logstring.."add:"..w.."new:"..mobcount
+				end
 			end			
 		end
-		logappend("AAI_MOBCOUNT","Mobcount on well-behaved skill "..FormatSkill(skill,level).." range "..range.." logstring: "..logstring.." result: "..mobcount)
+		if logging then
+			logappend("AAI_MOBCOUNT","Mobcount on well-behaved skill "..FormatSkill(skill,level).." range "..range.." logstring: "..logstring.." result: "..mobcount)
+		end
 	end
 	return mobcount
 end
@@ -602,9 +739,9 @@ function GetBestAoECoord(myid,skill,level)
 		x,y=GetV(V_POSITION,k)
 		if x < ox+20 and x > ox-20 and y < oy+20 and y > oy-20 and tbas~=0 then 
 			if grid[x][y]==nil then
-				grid[x][y]=GetTact(TACT_WEIGHT,k)
+				grid[x][y]=AoEMobWeight(skill,k)
 			else
-				grid[x][y]=grid[x][y]+GetTact(TACT_WEIGHT,k)
+				grid[x][y]=grid[x][y]+AoEMobWeight(skill,k)
 			end
 		end
 	end
@@ -2383,7 +2520,29 @@ function GetSightOrAoE(myid)
 			skill=skill
 		end
 	end
+	-- the AoE is laid at the owner's feet: skip it while the monsters there shrug off its element
+	if level ~= 0 and IsHomun(myid)==1 and not AoEElementOK(skill) then
+		level=0
+	end
 	return skill,level,skillopt
+end
+
+-- False when every monster near the owner would take less than SkillElementMinRate % from the
+-- skill's element (no monster around, or no monster database: true)
+function AoEElementOK(skill)
+	if UseMobInfo == 0 or MobInfo == nil or SkillElement == nil or SkillElement[skill] == nil then
+		return true
+	end
+	local seen = false
+	for k,v in pairs(Targets) do
+		if GetDistanceA(OwnerID,k) <= 7 then
+			seen = true
+			if SkillElementOK(skill,k) then
+				return true
+			end
+		end
+	end
+	return not seen
 end
 function	GetGuardSkill(myid)
 	local level = 0

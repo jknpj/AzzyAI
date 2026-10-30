@@ -12,6 +12,13 @@ namespace AzzyAIConfig
         Private = 1
     }
 
+    enum BossAggroOptions
+    {
+        Tactics = 0,
+        ReactToMVPs = 1,
+        ReactToBosses = 2
+    }
+
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
@@ -28,7 +35,8 @@ namespace AzzyAIConfig
             "UseEiraLightOfRegene", "EiraLightOfRegeneLevel", "EiraLightOfRegeneOwnerHP",
             "UseEleanorTinderBreaker", "EleanorTinderBreakerLevel",
             "UseEleanorCBC", "EleanorCBCLevel", "UseEleanorEQC", "EleanorEQCLevel",
-            "AllowBloodlust", "AllowSBR44"
+            "AllowBloodlust", "AllowSBR44",
+            "UseMobInfo", "SkillElementMinRate", "PlantSkills", "BossAggro"
         };
 
         [Category("Basic Options"), DefaultValue(ServerTypeOptions.Official),
@@ -125,6 +133,19 @@ namespace AzzyAIConfig
         [Category("AutoSkill Options"), DefaultValue(false), Description("Allow inherited Filir SBR44, which consumes intimacy.")]
         public bool AllowSBR44 { get; set; }
 
+        [Category("Basic Options"), DefaultValue(true),
+        Description("Use the monster database (MobInfo.lua: element, race, size, boss/MVP and plant of every monster) to pick skills and to treat bosses and plants. Set to false for the old behavior.")]
+        public bool UseMobInfo { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(50),
+        Description("Attack skills are left out against a target whose element would cut their damage below this percent (0-200). Immune targets (0% or less) are always skipped. Example: fire skills do 90% to Water 1 monsters and 0% to Fire 2 monsters.")]
+        public int SkillElementMinRate { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(false),
+        Description("Use skills on plants and mushrooms too. They take 1 damage from everything, so by default skills are saved for other monsters and plants don't count for area skills.")]
+        public bool PlantSkills { get; set; }
+        [Category("Basic Options"), DefaultValue(BossAggroOptions.ReactToMVPs),
+        Description("Bosses the homunculus never starts a fight with, whatever the tactics say: it still defends you and itself when they attack. Tactics = the tactics decide. ReactToMVPs = MVPs. ReactToBosses = MVPs and mini-bosses.")]
+        public BossAggroOptions BossAggro { get; set; }
+
         private void ResetAdditionalOptions()
         {
             var properties = TypeDescriptor.GetProperties(this);
@@ -183,6 +204,8 @@ namespace AzzyAIConfig
                 }
                 else if (name == "EiraLightOfRegeneOwnerHP" && ((int)value < 0 || (int)value > 100))
                     throw new InvalidOperationException(name + " must be between 0 and 100.");
+                else if (name == "SkillElementMinRate" && ((int)value < 0 || (int)value > 200))
+                    throw new InvalidOperationException(name + " must be between 0 and 200.");
                 string token = property.PropertyType == typeof(ServerTypeOptions)
                     ? ((ServerTypeOptions)value == ServerTypeOptions.Private ? "SERVER_PRIVATE" : "SERVER_OFFICIAL")
                     : property.PropertyType == typeof(double) ? ((double)value).ToString(CultureInfo.InvariantCulture)
