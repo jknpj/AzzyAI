@@ -335,6 +335,14 @@ local function loadAI()
 	if not ok then error(e, 0) end
 	-- monsters whose H_Tactics.lua row is removed, to test the defaults for unknown monsters
 	for _, id in ipairs(sc.dropTactics or {}) do MyTact[id] = nil end
+	-- tactics rows for monster classes: the default row with these indexes replaced
+	for id, over in pairs(sc.tactics or {}) do
+		local row = {}
+		for i, v in pairs(MyTact[0]) do row[i] = v end
+		for i, v in pairs(over) do row[i] = v end
+		MyTact[id] = row
+	end
+	if sc.afterLoad then sc.afterLoad() end
 end
 loadAI()
 serverRules()

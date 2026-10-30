@@ -186,6 +186,7 @@ end
 MOB_FLAG_BOSS	= 1	-- boss protocol (MVPs and mini-bosses)
 MOB_FLAG_MVP	= 2
 MOB_FLAG_PLANT	= 4	-- takes 1 damage from everything (plants, mushrooms)
+MOB_FLAG_IMMOBILE = 8	-- never chases (Ai 06, 10, 11)
 MobInfoCache = {}
 ActorClassCache = {}
 
@@ -224,6 +225,28 @@ end
 
 function IsPlantMob(id)
 	return HasMobFlag(GetMobInfo(id), MOB_FLAG_PLANT)
+end
+
+-- Distance at which monster id makes us kite. KiteByRange=1 uses its real attack range (MobInfo):
+-- a melee monster (range 1) keeps the configured threshold, a ranged one starts earlier and an
+-- immobile one only matters inside its range. Returns nil when we couldn't get out of its range
+-- within KiteBounds, because running would only get us shot in the back.
+function KiteThresholdFor(id, base)
+	if KiteByRange ~= 1 then
+		return base
+	end
+	local info = GetMobInfo(id)
+	local range = info and info[6]
+	if range == nil then
+		return base
+	end
+	if range >= KiteBounds then
+		return nil
+	end
+	if HasMobFlag(info, MOB_FLAG_IMMOBILE) then
+		return range
+	end
+	return base + range - 1
 end
 
 -- 2 = MVP, 1 = other boss-protocol monster, 0 = neither or unknown

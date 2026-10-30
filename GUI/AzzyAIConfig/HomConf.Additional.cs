@@ -36,7 +36,7 @@ namespace AzzyAIConfig
             "UseEleanorTinderBreaker", "EleanorTinderBreakerLevel",
             "UseEleanorCBC", "EleanorCBCLevel", "UseEleanorEQC", "EleanorEQCLevel",
             "AllowBloodlust", "AllowSBR44",
-            "UseMobInfo", "SkillElementMinRate", "PlantSkills", "BossAggro", "TargetPriority"
+            "UseMobInfo", "SkillElementMinRate", "PlantSkills", "BossAggro", "TargetPriority", "KiteByRange"
         };
 
         [Category("Basic Options"), DefaultValue(ServerTypeOptions.Official),
@@ -148,6 +148,9 @@ namespace AzzyAIConfig
         [Category("Basic Options"), DefaultValue(false),
         Description("Choose the next target by more than distance. Among targets with the same tactics priority: monsters attacking you or a friend first, plants last, targets your skills can hurt (element), the center of the biggest cluster when an area skill is available, then the closest.")]
         public bool TargetPriority { get; set; }
+        [Category("Kiting Options"), DefaultValue(false),
+        Description("Kite by the monster's real attack range (monster database). Ranged monsters make the homunculus kite earlier and with a longer step, a monster that never chases only matters inside its range, and none is kited when its range reaches KiteBounds (there would be no way out). Melee monsters keep KiteThreshold. Needs UseMobInfo.")]
+        public bool KiteByRange { get; set; }
 
         private void ResetAdditionalOptions()
         {

@@ -57,7 +57,7 @@ def all_scenarios():
     with open(os.path.join(HERE, "scenarios.lua"), encoding="utf-8") as f:
         text = f.read()
     body = text.split("SCENARIOS = {", 1)[1]
-    return re.findall(r"^\t(\w+)\s*=\s*\{", body, re.M)
+    return re.findall(r"^\t(\w+)\s*=\s*(?:\{|\w+\()", body, re.M)
 
 
 def run_scenario(lua, name, ticks, env):
