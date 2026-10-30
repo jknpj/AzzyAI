@@ -276,6 +276,17 @@ SkillAOEInfo[MH_THE_ONE_FIGHTER_RISES]={{3,3,3,3,5,5,5,5,7,7},1}
 SkillAOEInfo[MH_HEILIGE_PFERD]={{3,3,3,3,5,5,5,5,7,7},1}
 SkillAOEInfo[MH_BLAST_FORGE]={{3,3,3,3,5,5,5,5,7,7},0}
 
+-- Spirit spheres Eleanor's skills need (rAthena SpiritSphereCost, checked in skill_isNotOk_hom);
+-- the server refuses the cast without them. Blazing and Furious also uses up every sphere.
+SkillSphereCost={}
+SkillSphereCost[MH_SONIC_CRAW]=1
+SkillSphereCost[MH_SILVERVEIN_RUSH]=1
+SkillSphereCost[MH_MIDNIGHT_FRENZY]=1
+SkillSphereCost[MH_TINDER_BREAKER]=1
+SkillSphereCost[MH_CBC]=1
+SkillSphereCost[MH_EQC]=2
+SkillSphereCost[MH_BLAZING_AND_FURIOUS]=1
+
 -- rAthena Renewal (db/re/skill_db.yml) values that differ from official LATAM, applied by ApplyServerType()
 -- when ServerType = SERVER_PRIVATE. info = {[SkillInfo index]=value}, aoe = replacement SkillAOEInfo entry.
 -- Audited against rAthena master on 2026-10-29: every homunculus skill (8001-8059) compared field by field.

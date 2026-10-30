@@ -3585,8 +3585,12 @@ function AI(myid)
 				end
 			end
 		end
-		-- sp watcher
-		if sp-MyLastSP == RegenTick[1] - GetSkillInfo(castskillold,3,castskilloldlvl) or MyLastSP - sp == GetSkillInfo(castskillold,3,castskilloldlvl) then
+		-- sp watcher: the exact cost between two ticks, or (if SP regen landed in between) a drop of
+		-- about the cost since the request; nothing else lowers a homunculus/mercenary's SP
+		local castcost = GetSkillInfo(castskillold,3,castskilloldlvl)
+		local regentol = RegenTick[1] > 0 and RegenTick[1] or math.floor(GetV(V_MAXSP,MyID)/100)+3
+		local spdrop = CastSkillSP ~= nil and CastSkillSP - sp or 0
+		if sp-MyLastSP == RegenTick[1] - castcost or MyLastSP - sp == castcost or (castcost > 0 and spdrop > 0 and spdrop >= castcost - regentol) then
 			--if IsHomun(myid)==0 then
 				TraceAI("SP watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 				logappend("AAI_SKILLFAIL","successful skill use detected by SP use - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
