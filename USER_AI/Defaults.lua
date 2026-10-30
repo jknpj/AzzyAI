@@ -160,6 +160,7 @@ KiteParanoidStep         = 2
 KiteThreshold            = 3
 KiteParanoidThreshold    = 2
 KiteParanoid             = 0 
+KiteByRange				= 0	-- 1 = kite by the monster's real attack range (needs UseMobInfo): earlier from archers, only inside range for immobile ones
 
 --Standby Behavior:
 DefendStandby            = 0 

@@ -11,6 +11,8 @@
 --   sp/spregen homunculus max SP and SP regained per second
 --   startTick  client uptime in milliseconds (default 1000)
 --   dropTactics monster classes whose H_Tactics.lua row is removed (tests the defaults for unknown monsters)
+--   tactics    { [monster class] = { [tactic index] = value } } replaces those entries of the default row
+--   afterLoad  function run after every AI load, to patch the AI's tables or wrap its functions
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -88,6 +90,43 @@ local function plantChecks()
 			return RA_MOB == nil
 		end,
 	}
+end
+
+-- Kiting by attack range: a passive monster (the Poring class patched to attack range 9) stands 5 cells
+-- from the homunculus. KITE_FIRST = { distance, minimum step } of the first kite the AI starts.
+local function kiteScenario(byRange, runChecks)
+	local checks = {}
+	-- KiteThresholdFor against synthetic MobInfo rows (the scenario's monster takes the class)
+	local function thresholdFor(info, base, enabled)
+		MobInfo[99990] = info
+		HarnessMob(60001).class = 99990
+		TactRowCache, MobInfoCache, ActorClassCache = {}, {}, {}
+		KiteByRange = enabled
+		return KiteThresholdFor(60001, base)
+	end
+	for name, check in pairs(runChecks) do checks[name] = check end
+	checks["melee monster keeps the configured threshold"] = function() return thresholdFor({0,0,1,0,0,1}, 3, 1) == 3 end
+	checks["ranged monster starts the kite earlier"] = function() return thresholdFor({0,0,1,0,0,9}, 3, 1) == 11 end
+	checks["no kite when its range reaches KiteBounds"] = function() return thresholdFor({0,0,1,0,0,10}, 3, 1) == nil end
+	checks["immobile monster only inside its range"] = function()
+		return thresholdFor({0,0,1,0,8,9}, 3, 1) == 9 and thresholdFor({0,0,1,0,8,1}, 3, 1) == 1
+	end
+	checks["off: the configured threshold, whatever the range"] = function() return thresholdFor({0,0,1,0,0,9}, 3, 0) == 3 end
+	checks["unknown monster or old MobInfo without range: configured threshold"] = function()
+		return thresholdFor(nil, 3, 1) == 3 and thresholdFor({0,0,1,0,0}, 3, 1) == 3
+	end
+	return { homuntype = 2, skills = {}, mobs = { {106,100} }, passive = true, minAttacks = 0,
+		set = { KiteMonsters = 1, ForceKite = 1, KiteByRange = byRange },
+		tactics = { [1002] = { [3] = 2 } }, -- TACT_KITE = KITE_ALWAYS
+		afterLoad = function()
+			MobInfo[1002] = { 0, 0, 1, 0, 0, 9 }
+			local real = DoKiteAdjust
+			DoKiteAdjust = function(myid, enemy, minstep)
+				if KITE_FIRST == nil then KITE_FIRST = { GetDistanceA(myid, enemy), minstep } end
+				return real(myid, enemy, minstep)
+			end
+		end,
+		checks = checks }
 end
 
 SCENARIOS = {
@@ -528,6 +567,23 @@ SCENARIOS = {
 	fire_immune_dieter = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 20,
 		mobs = { {102,100,1673}, {103,101,1673}, {103,99,1673} }, forbid = { "Lava Slide", "Blast Forge" },
 		set = { UseDieterBlastForge = 1, LavaSlideMode = 0 } },
+	-- KiteByRange: the monster (range 9, not attacking anybody) uses KiteParanoidThreshold 2, so the
+	-- kite starts at 2 + 9 - 1 = 10 cells with a step that takes us out of its range; off, it only
+	-- starts within KiteParanoidThreshold
+	kite_by_range = kiteScenario(1, {
+		["kites right away, with a step that leaves its range"] = function()
+			local k = KITE_FIRST
+			if k == nil then error("the AI never kited", 0) end
+			if not (k[1] > 2 and k[2] ~= nil and k[1] + k[2] > 9) then
+				error(("first kite at distance %s with step %s"):format(tostring(k[1]), tostring(k[2])), 0)
+			end
+			return true
+		end }),
+	kite_range_off = kiteScenario(0, {
+		["does not kite until the monster is within KiteParanoidThreshold"] = function()
+			local k = KITE_FIRST
+			return k == nil or (k[1] <= 2 and k[2] == nil)
+		end }),
 	-- TargetPriority: SelectEnemy on a fixed set of equal-tactics monsters (plant, Fire 2 immune to
 	-- Lava Slide, an isolated Earth 2 monster and a pack of three), with TargetPriority 0 and 1
 	target_priority = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 0, dropTactics = { 1078 },

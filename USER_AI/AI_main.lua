@@ -3035,13 +3035,17 @@ end
 --### DoKiteAdjust ###
 --####################
 
-function DoKiteAdjust(myid,enemy)
+function DoKiteAdjust(myid,enemy,minstep)
 	local step
 	local target=GetV(V_TARGET,enemy)
 	if (IsFriend(target)==1 or target==MyID) then
 		step=KiteStep
 	else
 		step=KiteParanoidStep
+	end
+	-- a monster with a long attack range needs a longer step to get out of it
+	if minstep ~= nil and minstep > step then
+		step=math.min(minstep,KiteBounds)
 	end
 	local x,y=GetV(V_POSITION,myid)
 	local ox,oy=GetV(V_POSITION,OwnerID)
@@ -3864,9 +3868,11 @@ function AI(myid)
 						else
 							threshold=KiteParanoidThreshold
 						end
-						if (GetDistanceA(MyID,v) <= threshold) then
+						threshold=KiteThresholdFor(v,threshold)
+						local kitedist=GetDistanceA(MyID,v)
+						if (threshold ~= nil and kitedist <= threshold) then
 							TraceAI("Enemies close to me, start kite routine. ")
-							DoKiteAdjust(MyID,v)
+							DoKiteAdjust(MyID,v,KiteByRange==1 and (threshold-kitedist+1) or nil)
 							kitecalled=1
 							break
 						end
