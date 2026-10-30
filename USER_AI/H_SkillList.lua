@@ -294,7 +294,8 @@ SkillSphereCost[MH_BLAZING_AND_FURIOUS]=1
 -- Duration1=[8], Cooldown=[9], SplashArea/Unit Layout N = AoE side 2N+1.
 -- Deliberately not copied:
 --  * Missing rAthena cooldowns: [9] also keeps the AI from recasting Summon Legion, Poison Mist and
---    Lava Slide while they are still active, and is unused by buffs, so the LATAM values are kept.
+--    Lava Slide while they are still active, so the LATAM values are kept. Pain Killer and Silent
+--    Breeze only use [9] as a cooldown, so theirs is cleared like rAthena's.
 --  * Missing AfterCastActDelay / AfterCastWalkDelay: a longer [6] only makes the AI wait a bit more.
 --  * HFLI_MOON / HFLI_SBR44 Range 15: keeping LATAM's 1 / 9 avoids changing Filir's positioning.
 ServerSkillOverrides={}
@@ -309,13 +310,15 @@ ServerSkillOverrides[SERVER_PRIVATE]={
 	-- rAthena has no fixed cast on these; its single CastTime is variable
 	[MH_NEEDLE_OF_PARALYZE]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000},[8]={12000,12000,12000,14000,14000,14000,16000,16000,16000,18000}}},
 	[MH_POISON_MIST]={info={[4]={0,0,0,0,0}}},
-	[MH_PAIN_KILLER]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={2500,2500,2500,2500,2500,2500,2500,2500,2500,2500}}},
+	[MH_PAIN_KILLER]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={2500,2500,2500,2500,2500,2500,2500,2500,2500,2500},[9]={0,0,0,0,0,0,0,0,0,0}}},
 	[MH_STAHL_HORN]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={500,500,500,500,500,500,500,500,500,500}}},
 	[MH_HEILIGE_STANGE]={info={[4]={0,0,0,0,0,0,0,0,0,0}}},
 	[MH_LAVA_SLIDE]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={2000,2000,2000,2000,2000,2000,2000,2000,2000,2000}}},
 	[MH_PYROCLASTIC]={info={[4]={0,0,0,0,0,0,0,0,0,0},[5]={2500,2500,2500,2500,2500,2500,2500,2500,2500,2500}}},
 	-- rAthena: 1s cooldown (LATAM 0.5s)
 	[MH_SONIC_CRAW]={info={[9]={1000,1000,1000,1000,1000}}},
+	-- rAthena: no Silent Breeze cooldown (LATAM 20s)
+	[MH_SILENT_BREEZE]={info={[9]={0,0,0,0,0}}},
 	-- rAthena: 12-20s ash duration (AzzyAI's LATAM entry uses the 8-40s effect duration)
 	[MH_VOLCANIC_ASH]={info={[8]={12000,14000,16000,18000,20000}}},
 	-- rAthena: enemy-targeted, range 2, splash centered on the target
