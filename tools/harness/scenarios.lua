@@ -176,6 +176,10 @@ SCENARIOS = {
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)
 	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single,
 		expect = { "Glanzen Spies", "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand" } },
+	-- both AoEs on and fully learned: the cheap ranged Stange must not starve the caster-centered Pferd
+	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
+		set = { UseBayeriHeiligePferd = 1 },
+		expect = { "Heilige Stange", "Heilige Pferd" } },
 	bayeri_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		set = { UseBayeriHeiligePferd = 1, UseBayeriHailegeStar = 0 },
 		expect = { "Heilige Pferd" }, forbid = { "Heilige Stange" } },
@@ -524,4 +528,64 @@ SCENARIOS = {
 	fire_immune_dieter = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 20,
 		mobs = { {102,100,1673}, {103,101,1673}, {103,99,1673} }, forbid = { "Lava Slide", "Blast Forge" },
 		set = { UseDieterBlastForge = 1, LavaSlideMode = 0 } },
+	-- TargetPriority: SelectEnemy on a fixed set of equal-tactics monsters (plant, Fire 2 immune to
+	-- Lava Slide, an isolated Earth 2 monster and a pack of three), with TargetPriority 0 and 1
+	target_priority = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 0, dropTactics = { 1078 },
+		set = { LavaSlideMode = 0 },
+		mobs = { {101,101,1078}, {103,100,1673}, {104,102,1672}, {105,102,1672}, {104,103,1672}, {99,100,1672} },
+		checks = (function()
+			local spots = { {101,101}, {103,100}, {104,102}, {105,102}, {104,103}, {99,100} }
+			-- picks[name] = id the AI chooses among the given monsters (indexes into spots) with TargetPriority tp
+			local function pick(tp, indexes, aggroIndex)
+				TargetPriority = tp
+				AutoSkillCooldown[MH_LAVA_SLIDE] = 0
+				TactRowCache, MobInfoCache, ActorClassCache, ActorPosCache = {}, {}, {}, {}
+				local ids = {}
+				for _, m in ipairs(HarnessMonsters()) do ids[#ids + 1] = m.id end
+				table.sort(ids)
+				Targets = {}
+				for i, id in ipairs(ids) do
+					local m = HarnessMob(id)
+					m.dead, m.x, m.y = nil, spots[i][1], spots[i][2]
+					Targets[id] = { 3, 0 }
+				end
+				local home = HarnessMob(MyID)
+				home.x, home.y = 101, 100
+				local enemys = {}
+				for _, i in ipairs(indexes) do
+					local attacking = i == aggroIndex
+					enemys[ids[i]] = { 3, attacking and 1 or 0, TACT_ATTACK_L, 0 }
+				end
+				Unreachable = {}
+				return SelectEnemy(enemys), ids, enemys
+			end
+			local function expectPick(tp, indexes, wantIndex, aggroIndex)
+				local got, ids, enemys = pick(tp, indexes, aggroIndex)
+				if got ~= ids[wantIndex] then
+					local ctx = TargetPriorityContext()
+					local keys = {}
+					for k in pairs(enemys) do keys[#keys + 1] = k end
+					table.sort(keys)
+					local w = ctx.aoe and AoEClusterWeights(ctx.aoe, keys) or {}
+					local parts = {}
+					for _, k in ipairs(keys) do
+						parts[#parts + 1] = ("%d:cluster=%s,immune=%s"):format(k, tostring(w[k]), tostring(TargetImmuneToSkills(ctx, k)))
+					end
+					error(("TargetPriority=%d picked monster %s, wanted #%d (%s); aoe=%s skills=%d %s"):format(
+						tp, tostring(got), wantIndex, tostring(ids[wantIndex]), ctx.aoe and ctx.aoe[1] or "none",
+						#ctx.skills, table.concat(parts, " ")), 0)
+				end
+				return true
+			end
+			return {
+				["off: the closest wins, plant included"] = function() return expectPick(0, { 1, 2, 3 }, 1) end,
+				["on: the plant goes last"] = function() return expectPick(1, { 1, 2, 3 }, 3) end,
+				["on: a monster immune to the skills goes after one that is not"] = function() return expectPick(1, { 2, 3 }, 3) end,
+				["off: the immune monster is closer so it wins"] = function() return expectPick(0, { 2, 3 }, 2) end,
+				["on: the one attacking us goes before a closer one"] = function() return expectPick(1, { 3, 4 }, 4, 4) end,
+				["off: the closer one wins over the attacker"] = function() return expectPick(0, { 3, 4 }, 3, 4) end,
+				["on: the pack is preferred to an isolated monster that is closer"] = function() return expectPick(1, { 6, 3 }, 3) end,
+				["off: the isolated monster is closer so it wins"] = function() return expectPick(0, { 6, 3 }, 6) end,
+			}
+		end)() },
 }
