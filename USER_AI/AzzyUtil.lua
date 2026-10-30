@@ -555,7 +555,7 @@ function IsFriend(id)
 	if (id==OwnerID) then
 		return 1
 	elseif (id~= MyID) then
-		friendclass=MyFriends[id]
+		local friendclass=MyFriends[id]
 		if (friendclass==FRIEND or friendclass==RETAINER) then
 			return 1
 		end
@@ -567,8 +567,8 @@ function IsPVPFriend(id)
 	if (id==OwnerID) then
 		return 1
 	elseif (id~= MyID) then
-		friendclass=MyFriends[id]
-		if (friendclass==FRIEND or friendclass==RETAINER or friendclass==NEUTRAL or friendclass==ALLY or friendclass==NEUTRAL) then
+		local friendclass=MyFriends[id]
+		if (friendclass==FRIEND or friendclass==RETAINER or friendclass==NEUTRAL or friendclass==ALLY) then
 			return 1
 		end
 	end
@@ -623,7 +623,7 @@ function GetAggroCount(target)
 	if target ==nil then
 		for k,v in pairs(Targets) do
 			if v[2] > 0 then -- it's aggressive
-				distance = GetDistanceA(OwnerID,k)
+				local distance = GetDistanceA(OwnerID,k)
 				if (distance <= GetMoveBounds()) then
 					aggrocount=aggrocount+1*GetTact(TACT_WEIGHT,k)
 				end
@@ -658,9 +658,9 @@ function GetMobCount(skill,level,target,aggro)
 				end
 			end
 		elseif skill== MA_SHARPSHOOTING then
-			mx,my=GetV(V_POSITION,target)
-			dx=math.abs(x-mx)
-			dy=math.abs(y-my)
+			local mx,my=GetV(V_POSITION,target)
+			local dx=math.abs(x-mx)
+			local dy=math.abs(y-my)
 			if ((dx==0) or (dx==1 and dy>1) or (dx==2 and dy>6) or (dx==3 and dy>9) or (dx==4 and dy>11)) then 
 				if my>y then
 					mobcount=GetFASTargetCount(MyID,0,1,aggro)
@@ -690,7 +690,7 @@ function GetMobCount(skill,level,target,aggro)
 		if IsCasterCenteredAoE(skill) then
 			target=MyID
 		end
-		range=(skillaoe-1)/2
+		local range=(skillaoe-1)/2
 		local logging = LogEnable and LogEnable["AAI_MOBCOUNT"] == 1
 		local logstring=""
 		-- the center's position is read once, not once per monster
@@ -870,7 +870,7 @@ function GetBestFASTarget(myid)
 		for y,v2 in pairs(v) do
 			--TraceAI("GetBestFAST "..x.." "..y.." "..v2)
 			if v2~=0 then
-				count=GetFASTargetCount(myid,x,y)
+				local count=GetFASTargetCount(myid,x,y)
 				if count > mincount then
 					mincount = count
 					target = v2
@@ -916,20 +916,14 @@ end
 
 function GetFASOptions(myid)
 	local x,y=GetV(V_POSITION,myid)
-	noption=0
-	eoption=0
-	soption=0
-	woption=0
-	neoption=0
-	nwoption=0
-	seoption=0
-	swoption=0
+	local noption,eoption,soption,woption=0,0,0,0
+	local neoption,nwoption,seoption,swoption=0,0,0,0
 	for k,v in pairs(Monsters) do
 		TraceAI("FAS loop id: "..k)
 		if GetDistanceA(myid,k) < 15 then
-			mx,my=GetV(V_POSITION,k)
-			dx=math.abs(x-mx)
-			dy=math.abs(y-my)
+			local mx,my=GetV(V_POSITION,k)
+			local dx=math.abs(x-mx)
+			local dy=math.abs(y-my)
 			if ((dx==0) or (dx==1 and dy>1) or (dx==2 and dy>6) or (dx==3 and dy>9) or (dx==4 and dy>11)) then 
 				if my>y then
 					noption=k
@@ -960,7 +954,7 @@ function GetFASOptions(myid)
 			break
 		end
 	end
-	result={[-1]={[-1]=swoption,[0]=woption,[1]=nwoption},[0]={[-1]=soption,[0]=0,[1]=noption},[1]={[-1]=seoption,[0]=eoption,[1]=neoption}}
+	local result={[-1]={[-1]=swoption,[0]=woption,[1]=nwoption},[0]={[-1]=soption,[0]=0,[1]=noption},[1]={[-1]=seoption,[0]=eoption,[1]=neoption}}
 	TraceAI("Returning FAS Options: "..swoption.."-"..woption.."-"..nwoption.." "..soption.."--"..noption.." "..seoption.."-"..eoption.."-"..neoption)
 	return result
 end
@@ -969,7 +963,8 @@ function GetFASTargetCount(myid,directionx,directiony,aggro)
 	local x,y=GetV(V_POSITION,myid)
 	local s=directionx+directiony
 	TraceAI("GFASTC: "..s)
-	count=0
+	local count=0
+	local xmin,xmax,ymin,ymax,miny,maxy
 	if s==1 or s==-1 then -- straight
 		if directiony==0 then --Horizontal
 			ymin=y-1
@@ -993,7 +988,7 @@ function GetFASTargetCount(myid,directionx,directiony,aggro)
 			end
 		end
 		for k,v in pairs(Targets) do
-			mx,my=GetV(V_POSITION,k)
+			local mx,my=GetV(V_POSITION,k)
 			--logappend("AAI_mobcount","straight monster:"..xmin.."-"..xmax..","..ymin.."-"..ymax.." "..mx..","..my)
 			if GetTact(TACT_BASIC,k)~=0 and mx>=xmin and xmax>=mx and my>=ymin and ymax>=my then
 				count=count+1
@@ -1002,10 +997,9 @@ function GetFASTargetCount(myid,directionx,directiony,aggro)
 		--logappend("AAI_mobcount","straight:"..xmin.."-"..xmax..","..ymin.."-"..ymax.." count"..count)
 		return count
 	else	--Diagonal
-		count = 0
 		for k,v in pairs(Targets) do
 			if GetTact(TACT_BASIC,k)~=0 and IsNotKS(MyID,k)==1 then
-				mx,my=GetV(V_POSITION,k)
+				local mx,my=GetV(V_POSITION,k)
 				if directionx==1 then --east
 					if (mx+1>=x and x+14>=mx) then -- has prayer of hitting
 						if mx==x-1 then
@@ -1237,14 +1231,14 @@ end
 function HPPercent(id)
 	local maxHP=GetV(V_MAXHP,id)
 	local curHP=GetV(V_HP,id)
-	percHP=100*curHP/maxHP
+	local percHP=100*curHP/maxHP
 	return percHP
 end
 
 function SPPercent(id)
 	local maxSP=GetV(V_MAXSP,id)
 	local curSP=GetV(V_SP,id)
-	percSP=100*curSP/maxSP
+	local percSP=100*curSP/maxSP
 	return percSP
 end
 
@@ -1263,7 +1257,7 @@ function Move(myid,x,y)
 		return 
 	elseif dis > 15  then
 		--factor = 14/dis
-		factor=0.5+((math.random(3)-2)*0.1)
+		local factor=0.5+((math.random(3)-2)*0.1)
 		if dis > 25 then 
 			factor =0.4+((math.random(3)-2)*0.1)
 		end
@@ -1769,14 +1763,14 @@ function Closest(myid,ox,oy,range,alt)
 	local logstring="x,y"..x..","..y.." ox,oy"..ox..","..oy
 	if range > 1 then
 		logstring=logstring.."range > 1 "
-		dist=math.sqrt(dx^2+dy^2)
+		local dist=math.sqrt(dx^2+dy^2)
 		if (dist < range) then
 			newx,newy=x,y
 			logstring=logstring.."dist < range new"..newx..","..newy.." "
 		else
-			factor=range/dist
-			xoff=(dx-absceil(dx*factor))
-			yoff=(dy-absceil(dy*factor))
+			local factor=range/dist
+			local xoff=(dx-absceil(dx*factor))
+			local yoff=(dy-absceil(dy*factor))
 			newx,newy=x+xoff,y+yoff
 			logstring=logstring.."dist > range new" ..newx..","..newy.." factor:"..factor.." "
 		end
@@ -2035,8 +2029,8 @@ function AdjustCCWr(x,y,ox,oy,r)
 end
 
 function AdjustOpp(x,y,ox,oy)
-	dx=ox-x
-	dy=oy-y
+	local dx=ox-x
+	local dy=oy-y
 	return x+2*dx,y+2*dy
 end
 function ClosestR(myid,target,range,alt)
@@ -2060,7 +2054,7 @@ function GetDanceCell(x,y,enemy)
 		x,y=Closest(MyID,enemyx,enemyy,1)
 		return x,y
 	end
-	t = math.random(2)
+	local t = math.random(2)
 	if t == 1 then
 		return AdjustCW(x,y,enemyx,enemyy)
 	elseif t == 2 then
@@ -2836,6 +2830,7 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 end
 
 function GetTargetedSkills(myid)
+	local s,l,Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk
 	s,l=GetAtkSkill(myid)
 	Mainatk={MAIN_ATK,s,l}
 	s,l=GetSAtkSkill(myid)
@@ -2854,7 +2849,7 @@ function GetTargetedSkills(myid)
     NewSAtk={CLASS_NEW_S,s,l}
 	s,l=GetNewMobSkill(myid)
     NewMobatk={CLASS_NEW_MOB,s,l}
-	result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
+	local result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
 	return result
 end
 
@@ -2975,7 +2970,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target))
 	-- SP before the request, so the skill watcher can spot the cost even if SP regen lands in between
 	local spBeforeCast = GetV(V_SP,MyID)
-	targetmode=GetSkillInfo(skill,7)
+	local targetmode=GetSkillInfo(skill,7)
 	if skill==HFLI_SBR44 and AllowSBR44~=1 then
 		logappend("AAI_ERROR","Attempt to use SBR 44 blocked. If you really want to use this, set AllowSBR44 = 1")
 	elseif targetmode==0 then
@@ -2984,7 +2979,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		SkillObject(MyID,level,skill,target)
 	elseif targetmode==2 then
 		if targx == nil then
-			x,y=GetV(V_POSITION,target)
+			local x,y=GetV(V_POSITION,target)
 			SkillGround(MyID,level,skill,x,y)
 		else
 			SkillGround(MyID,level,skill,targx,targy)
