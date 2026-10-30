@@ -36,7 +36,7 @@ namespace AzzyAIConfig
             "UseEleanorTinderBreaker", "EleanorTinderBreakerLevel",
             "UseEleanorCBC", "EleanorCBCLevel", "UseEleanorEQC", "EleanorEQCLevel",
             "AllowBloodlust", "AllowSBR44",
-            "UseMobInfo", "SkillElementMinRate", "PlantSkills", "BossAggro"
+            "UseMobInfo", "SkillElementMinRate", "PlantSkills", "BossAggro", "TargetPriority"
         };
 
         [Category("Basic Options"), DefaultValue(ServerTypeOptions.Official),
@@ -145,6 +145,9 @@ namespace AzzyAIConfig
         [Category("Basic Options"), DefaultValue(BossAggroOptions.ReactToMVPs),
         Description("Bosses the homunculus never starts a fight with, whatever the tactics say: it still defends you and itself when they attack. Tactics = the tactics decide. ReactToMVPs = MVPs. ReactToBosses = MVPs and mini-bosses.")]
         public BossAggroOptions BossAggro { get; set; }
+        [Category("Basic Options"), DefaultValue(false),
+        Description("Choose the next target by more than distance. Among targets with the same tactics priority: monsters attacking you or a friend first, plants last, targets your skills can hurt (element), the center of the biggest cluster when an area skill is available, then the closest.")]
+        public bool TargetPriority { get; set; }
 
         private void ResetAdditionalOptions()
         {

@@ -2072,6 +2072,31 @@ function SelectEnemy(enemys,curenemy)
 	local max_reachable=1
 	--local min_mobcount=1
 	--local mobcount=0
+	-- TargetPriority=1: plants go last, and among equal priorities targets that attack us or a friend
+	-- come first, then ones our skills can hurt, then the biggest AoE cluster, then the closest.
+	local smart = TargetPriority == 1
+	local ctx, cluster
+	local min_top, min_fine = 0, 0
+	if smart then
+		ctx = TargetPriorityContext()
+		local ids = {}
+		for k in pairs(enemys) do ids[#ids+1] = k end
+		if curenemy ~= nil then ids[#ids+1] = curenemy end
+		cluster = ctx.aoe and AoEClusterWeights(ctx.aoe, ids) or {}
+	end
+	local function topRank(id)
+		if smart and IsPlantMob(id) then
+			return 0
+		end
+		return 1
+	end
+	local function fineRank(id, isAggro)
+		if not smart then
+			return 0
+		end
+		local fit = TargetImmuneToSkills(ctx, id) and 0 or 1
+		return isAggro * 1000000 + fit * 10000 + math.min(cluster[id] or 0, 9999)
+	end
 	if curenemy~=nil then -- it's an opportunistic attack
 		local dist = GetDistanceA(MyID,curenemy)
 		local aggrotemp=0
@@ -2079,6 +2104,8 @@ function SelectEnemy(enemys,curenemy)
 			aggrotemp=1
 		end
 		min_priority=convpriority(GetTact(TACT_BASIC,curenemy),aggrotemp)
+		min_top=topRank(curenemy)
+		min_fine=fineRank(curenemy,aggrotemp)
 		if dist < 3 then 
 			return curenemy
 		else
@@ -2093,6 +2120,8 @@ function SelectEnemy(enemys,curenemy)
 			aggro=0
 		end
 		priority=convpriority(basepriority,aggro)
+		local top=topRank(k)
+		local fine=fineRank(k,aggro)
 		--TraceAI(k.." "..basepriority.." "..priority)
 		--elseif ((priority==2 or priority==5) and (v[1]==3 or v[4]>=CAST_REACT)) then
 		--	aggro=-1
@@ -2110,11 +2139,13 @@ function SelectEnemy(enemys,curenemy)
 		--TraceAI(priority.."/"..min_priority.." "..dis.."/"..min_dis.." "..unreachable.."/"..max_reachable)
 		if (unreachable <= max_reachable) then
 			--if (aggro >= min_aggro) then
-				if (priority > min_priority or (priority==min_priority and dis < min_dis)) then
+				if (top > min_top or (top==min_top and (priority > min_priority or (priority==min_priority and (fine > min_fine or (fine==min_fine and dis < min_dis)))))) then
 					--if (dis < min_dis) then
 						result = k
 						min_dis = dis
 						min_priority=priority
+						min_top=top
+						min_fine=fine
 						--min_aggro=aggro
 						max_reachable=unreachable
 					--end

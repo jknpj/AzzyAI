@@ -768,6 +768,66 @@ function GetBestAoETarget(myid,skill,level)
 	return result
 end
 
+-- Context for TargetPriority: the damage skills with a known element, and the first target-centered
+-- AoE skill the AI could cast (used to count clusters).
+function TargetPriorityContext()
+	local ctx = {skills = {}, aoe = nil}
+	for _, v in ipairs(GetTargetedSkills(MyID)) do
+		local skill, level = v[2], v[3]
+		if skill ~= 0 then
+			if SkillElement and SkillElement[skill] ~= nil then
+				ctx.skills[#ctx.skills + 1] = skill
+			end
+			if ctx.aoe == nil and AutoMobMode ~= 0 and IsMobSkillType(v[1]) and GetSkillAoESize(skill, level) ~= nil
+				and not IsCasterCenteredAoE(skill) then
+				ctx.aoe = {skill, level}
+			end
+		end
+	end
+	return ctx
+end
+
+-- True when none of the AI's elemental skills would hurt the target enough (plain attacks still do)
+function TargetImmuneToSkills(ctx, id)
+	if UseMobInfo == 0 or #ctx.skills == 0 then
+		return false
+	end
+	for _, skill in ipairs(ctx.skills) do
+		if SkillElementOK(skill, id) then
+			return false
+		end
+	end
+	return true
+end
+
+-- id -> whole number of AoEMobWeight inside the AoE skill ctx.aoe if it were cast on id
+function AoEClusterWeights(aoe, ids)
+	local skill, level = aoe[1], aoe[2]
+	local range = (GetSkillAoESize(skill, level) - 1) / 2
+	local mobs = {}
+	for k in pairs(Targets) do
+		if GetTact(TACT_BASIC, k) ~= 0 then
+			local x, y = GetPos(k)
+			mobs[#mobs + 1] = {x, y, AoEMobWeight(skill, k)}
+		end
+	end
+	local result = {}
+	for _, id in ipairs(ids) do
+		local tx, ty = GetPos(id)
+		local count = 0
+		if tx ~= -1 then
+			for i = 1, #mobs do
+				local m = mobs[i]
+				if m[1] ~= -1 and math.abs(m[1] - tx) <= range and math.abs(m[2] - ty) <= range then
+					count = count + m[3]
+				end
+			end
+		end
+		result[id] = math.floor(count + 1e-6)
+	end
+	return result
+end
+
 -- Best cell to center a ground AoE on, within range of myid. Each monster within 20 cells of the
 -- owner adds its AoEMobWeight; ties keep the first cell found (lowest x, then lowest y).
 -- Only cells covered by some monster's area can beat 0, so just those are scored, each with a
