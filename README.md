@@ -193,6 +193,8 @@ With the wrong value on a private server every monster looks like a player and t
 
 `UseMobInfo = 0` turns all of this off. `AAIStartH.txt` shows whether the database was loaded. Tactics rows still apply first; the database only adjusts attacking tactics for bosses and the skill/weight of plants.
 
+The web GUI uses the same rAthena data (`webgui/mobdata.js`, also written by `rathena_sync.py`, with the maps each monster spawns on) to suggest tactics rows: pick a map and it adds a row for every monster there, based on whether it is a plant, a boss, aggressive or unable to move.
+
 ### Troubleshooting automatic attacks
 
 Some clients report the player's own homunculus/mercenary as a monster through `IsMonster()`.
