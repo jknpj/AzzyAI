@@ -169,11 +169,11 @@ local function serverRules()
 	EXCLUSIVE = { [MH_GOLDENE_FERSE] = MH_ANGRIFFS_MODUS, [MH_ANGRIFFS_MODUS] = MH_GOLDENE_FERSE }
 end
 
--- spheres, styles and combos work the same on official servers, so rAthena's costs are always used
+-- sphere costs: rAthena's on private servers, AzzyAI's official SkillSphereCost (LATAM) otherwise
 local function sphereCost(skill, lvl)
-	local ra = RA_SKILL and RA_SKILL[skill]
-	if not ra then return 0 end
-	return ra.spheres[math.min(lvl, #ra.spheres)] or 0
+	local ra = serverRathena and RA_SKILL and RA_SKILL[skill]
+	if ra then return ra.spheres[math.min(lvl, #ra.spheres)] or 0 end
+	return (SkillSphereCost and SkillSphereCost[skill]) or 0
 end
 
 -- battle.cpp: 50% chance per hit dealt (fighting) or taken (grappling); the harness gives

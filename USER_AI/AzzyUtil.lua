@@ -316,6 +316,9 @@ function ApplyServerSkillOverrides()
 		if o.aoe~=nil and SkillAOEInfo~=nil then
 			SkillAOEInfo[skill]=o.aoe
 		end
+		if o.spheres~=nil and SkillSphereCost~=nil then
+			SkillSphereCost[skill]=o.spheres
+		end
 	end
 end
 
