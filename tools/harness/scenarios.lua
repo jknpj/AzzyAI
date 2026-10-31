@@ -976,3 +976,45 @@ SCENARIOS = {
 			}
 		end)() },
 }
+
+-- Eleanor benchmark scenarios (not part of the default run: they last 180 simulated seconds).
+-- They mirror the test server's passive benchmark (azzy_training.txt): a stationary Neutral
+-- dummy with 0 DEF/MDEF/FLEE, 180 s, no SP refill, and the max-level Eleanor of
+-- fixtures/homun_stats.lua. Run them with tools/harness/eleanor_bench.py.
+--   swingMs 129:     normal attacks: 11,500 DPS in the measured sessions without skills is ~7.8 swings/s
+--                    at 1,481 damage (the ASPD cap would allow 10/s)
+--   castPauseMs 550: with Sonic Claw at ~0.9 casts/s she swung only ~3.9 times/s (875,619 normal
+--                    attack damage over 150 s), half of the idle rate, so each cast costs ~0.55 s
+--                    of swinging. Both are derived from the benchmark, not from the server code.
+--                    ELEANOR_SWING_MS / ELEANOR_CAST_PAUSE_MS override them
+--   spregen 22:      SP regeneration measured in the Sonic Claw sessions (20.2 and 22.8 SP/s)
+--   incomingHitMs 2000: the attacker dummy (ATK 500, one attack per 2 s) that grappling needs
+-- Configurations follow Report-AzzyBench.py: style x which new skills are enabled, plus the
+-- Sonic Claw-only setup used for the isolated spam test and a no-skill baseline.
+local ELEANOR_BENCH = {
+	["attack_only"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 }, combos = false, noSonic = true },
+	["sonic_only"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 }, combos = false },
+	["fighting_none"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 }, combos = true },
+	["fighting_blazing"] = { skills = { UseEleanorBlazingAndFurious = 1, UseEleanorTheOneFighterRises = 0 }, combos = true },
+	["fighting_fighter"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 1 }, combos = true },
+	["fighting_both"] = { skills = { UseEleanorBlazingAndFurious = 1, UseEleanorTheOneFighterRises = 1 }, combos = true },
+	["grappling_none"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 }, combos = true, grappling = true },
+	["grappling_blazing"] = { skills = { UseEleanorBlazingAndFurious = 1, UseEleanorTheOneFighterRises = 0 }, combos = true, grappling = true },
+	["grappling_fighter"] = { skills = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 1 }, combos = true, grappling = true },
+	["grappling_both"] = { skills = { UseEleanorBlazingAndFurious = 1, UseEleanorTheOneFighterRises = 1 }, combos = true, grappling = true },
+}
+for name, cfg in pairs(ELEANOR_BENCH) do
+	local set = { AutoSkillDelay = tonumber(os.getenv("ELEANOR_SKILL_DELAY") or "") or 0, SphereTrackInterval = 200,
+		EleanorDoNotSwitchMode = 1, AutoComboMode = cfg.combos and 2 or 0, AutoComboSpheres = 3,
+		UseEleanorSonicClaw = cfg.noSonic and 0 or 1 }
+	for k, v in pairs(cfg.skills) do set[k] = v end
+	-- the combo starters of the chosen style only; Sonic Claw only has none of them
+	local grapple = cfg.combos and cfg.grappling and 1 or 0
+	set.UseEleanorTinderBreaker, set.UseEleanorCBC, set.UseEleanorEQC = grapple, grapple, grapple
+	SCENARIOS["eleanor_bench_" .. name] = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		private = true, passive = true, sp = 3381, spregen = 22, ticks = 1800,
+		swingMs = tonumber(os.getenv("ELEANOR_SWING_MS") or "") or 129, attackMotion = 100,
+		castPauseMs = tonumber(os.getenv("ELEANOR_CAST_PAUSE_MS") or "") or 550,
+		incomingHitMs = cfg.grappling and 2000 or nil, startStyle = cfg.grappling and "grappling" or nil,
+		minAttacks = 0, maxRefused = 1000, set = set }
+end
