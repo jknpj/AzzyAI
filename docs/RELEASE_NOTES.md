@@ -37,7 +37,7 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
     (`0,5` on pt-BR/es), names containing commas were truncated, `TACT_TANKMOB` was not
     recognised, the tactic ID box threw on empty input, and exporting to a new file failed
     because `File.CreateText` handles were never closed.
-  - Harness: `HARNESS_PROFILE=1` also lists the source lines that call `GetV` most;
+  - Harness: `HARNESS_PROFILE=1` with `HARNESS_PROFILE_SITES=1` also lists the source lines that call `GetV` most;
     `HARNESS_GLOBALS=1` reports globals read while undefined and globals created during AI
     ticks. The desktop GUI smoke test covers tactics import, removal and round-trip.
 
@@ -218,6 +218,7 @@ The simulated server follows rAthena's rules (`skill_isNotOk_hom`, `unit_skillus
 ```
 python tools/harness/rathena_sync.py              # latest master
 python tools/harness/rathena_sync.py --ref <sha>  # a specific commit
+python tools/harness/rathena_sync.py --fixture-only  # only fixtures/rathena.lua (no MobInfo.lua / mobdata.js)
 ```
 
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
@@ -230,6 +231,21 @@ python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
 `--profile` reports time per `AI()` call, the hottest functions (sampled), `GetV` calls per tick by type, Lua heap after GC and global tables that keep growing (leak check). The `crowd_*` scenarios put 40 monsters on screen to stress the per-tick loops. Absolute times are relative to the mock, not the RO client.
+
+### Damage model
+
+On private-server scenarios the harness also prices every accepted cast and normal attack, so a change in what the AI casts can be compared by expected damage and DPS:
+
+```
+set HARNESS_DAMAGE=1                      # PowerShell: $env:HARNESS_DAMAGE='1'
+python tools/harness/run.py --skip-syntax eira_dummy
+```
+
+`damage.lua` is a Lua port of rAthena's Renewal pipeline for a homunculus attacking a monster: `status_calc_homunculus_`/`status_calc_misc` (ATK, MATK, hit), `battle_calc_weapon_attack` and `battle_calc_magic_attack` (skill ratio, RES/MRES, DEF/MDEF, element, hit count) and `is_attack_hitting`. The skill ratios come straight from each skill's `calculateSkillRatio()` in `src/map/skills/homunculus/*.cpp` (translated to Lua by `rathena_sync.py`), and the skill types, elements, hit counts and monster stats from `skill_db.yml` and `mob_db.yml`, all in `fixtures/rathena.lua`. `python tools/harness/rathena_sync.py --ref <sha> --fixture-only` regenerates only that file.
+
+It is an expected-value model: ATK and MATK use their mean, there are no critical hits, and monsters without rAthena data (`{ x, y }`) count as the test server's training dummy (a Neutral Poring with 0 DEF, MDEF and FLEE). A scenario monster can override fields as `{ x, y, mobId, { def = 0, element = "Neutral", elv = 1 } }`, and `stats = { ... }` replaces the homunculus profile. `fixtures/homun_stats.lua` holds the level 275 stats of the local test server's homunculi (not an rAthena default), `castRatio` sets the server's own cast reduction, and `HarnessDamage` is available to scenario checks.
+
+Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK (`homunc.conf` 0x3D); Sonic Claw and Blazing And Furious hit once per spirit sphere left after their cost; ground units (Lava Slide, Blast Forge, Poison Mist) are priced as Duration / Interval hits on every monster in the area for the whole duration. Not modelled: status effects (Bleeding, Stun, Tinder Breaker's DEF reduction), buffs, the owner's skills and monster attacks. `damage_model` checks the formulas against values worked out by hand from the rAthena source, and the same scenario compares them with the local benchmark (`log/azzy-benchmark.csv`): Sonic Claw averaged 9.3 spheres at 8,150 per sphere, and Xeno Slasher's 186,330 per cast is 0.46% above the model's 185,478. `eira_dummy` simulates that benchmark with the test client's configuration: 121,472 expected DPS over 60 s against 116,584 measured; the measured session also had four Twister Cutter casts, which fits the cast backoff pausing Xeno Slasher at its start (not confirmed: the detailed log was off). Still unexplained: Twister Cutter's measured 99,077 per cast is exactly half of the model's 197,254, and a later Xeno Slasher session averaged 113,128 per cast, only 61% of the expected damage per cast.
 
 In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level.
 
