@@ -3581,6 +3581,7 @@ function AI(myid)
 	--SP+Skillfail Watcher
 	local clearcastskill=0  --There are a buncha globals that need to be zeroed when we're done watching for skill cast success or failure. However, after the initial round of skill failure checking, we still need to know what this skill was in order to check what the skill was. Also, we need to make sure we don't call FailSkillUse() if it looks like it failed, but the SP for it was used. So we set this to 1 if we see it successfully cast, 2 if failed, and then act appropriately afterwards.
 	local sp = GetV(V_SP,MyID)
+	local interruptedOffensiveCast = false
 	if CastSkill~=0 then
 		local castskillold = CastSkill
 		local castskilloldlvl = CastSkillLevel -- remember these for the SP watcher down below. 
@@ -3605,7 +3606,7 @@ function AI(myid)
 			if GetV(V_MOTION,MyID)==MOTION_CASTING then
 				CastSkillState=1
 			elseif CastSkillState>0 then
-				if LastAIDelay > 220 then
+				if LastAIDelay > 220 and GetTick() >= CastSkillTime + skillcastingtime then
 					--Skill cast successfully
 					TraceAI("Delay watcher: Skill use successful detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					logappend("AAI_SKILLFAIL","successful skill use detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
@@ -3620,12 +3621,16 @@ function AI(myid)
 								break
 							end
 						end
-						-- Ground targeted skills aren't interruptible! 
-						if (flinch==1 and GetSkillInfo(CastSkill,7,CastSkillLevel)~=2) or skillcastingtime + AutoSkillTimeout + CastSkillTime < GetTick() then 
+						if flinch==1 or GetTick() < CastSkillTime + skillcastingtime then
+							interruptedOffensiveCast = flinch == 1 and GetTick() < CastSkillTime + skillcastingtime
+								and CastSkillMode == 0 and CastSkillEnemy ~= nil and CastSkillEnemy ~= 0
+								and not IsOutOfSight(MyID, CastSkillEnemy)
+								and GetV(V_MOTION, CastSkillEnemy) ~= MOTION_DEAD
+								and IsInAttackSight(MyID, CastSkillEnemy, CastSkill, CastSkillLevel) == true
 							TraceAI("Delay watcher: Skill casting detected, but no delay - cast was broken: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." flinch: "..flinch.." expected cast completion: "..(skillcastingtime + CastSkillTime))
 							logappend("AAI_SKILLFAIL", "Skill casting detected, but no delay - cast was broken: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." flinch: "..flinch.." expected cast completion: "..(skillcastingtime + CastSkillTime))
 							clearcastskill=2
-						elseif skillcastingtime + CastSkillTime > GetTick() then
+						else
 							TraceAI("Delay watcher: Skill use successful - was seen casting, and no sign of interruption, no delay. mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 							logappend("AAI_SKILLFAIL","Skill use successful - was seen casting, and no sign of interruption, no delay. mode"..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 							clearcastskill=1
@@ -3633,12 +3638,10 @@ function AI(myid)
 					end
 				end
 			else -- CastSkillState is 0, so the skill hasn't started casting, but just in case it slipped by:
-				if LastAIDelay > 220 then
-					--Skill cast successfully
-					TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
-					logappend("AAI_SKILLFAIL","successful skill use detected - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
-					clearcastskill=1
-				elseif GetTick() - CastSkillTime > 1000 then
+				if (CastInterruptUnconfirmed ~= 1 or not IsOffensiveCastSkill(CastSkill)) and LastAIDelay > 220
+					and GetTick() >= CastSkillTime + skillcastingtime then
+					clearcastskill = 1
+				elseif GetTick() - CastSkillTime > math.max(1000, skillcastingtime) then
 					TraceAI("Delay watcher: no sign of skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
 					logappend("AAI_SKILLFAIL", "no sign of skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
 					clearcastskill=2
@@ -3693,6 +3696,9 @@ function AI(myid)
 		end
 	end
 	if clearcastskill==1 then
+		if CastSkillMode == 0 then
+			RecordOffensiveCastResult(CastSkill, CastSkillLevel, true, false)
+		end
 		-- Style Change went through (any watcher branch: it has no cast time, so the instant
 		-- branch is the usual one): the server flipped Eleanor's style
 		if CastSkill==MH_STYLE_CHANGE then
@@ -3715,6 +3721,14 @@ function AI(myid)
 		CastSkillTime=0
 		CastSkillState=0	
 	elseif clearcastskill==2 then
+		if CastInterruptUnconfirmed == 1 and CastSkillMode == 0 and CastSkillEnemy
+			and CastSkillEnemy ~= 0 and not IsOutOfSight(MyID, CastSkillEnemy)
+			and GetV(V_MOTION, CastSkillEnemy) ~= MOTION_DEAD
+			and IsInAttackSight(MyID, CastSkillEnemy, CastSkill, CastSkillLevel) == true
+			and sp >= GetSkillInfo(CastSkill, 3, CastSkillLevel) then
+			interruptedOffensiveCast = true
+		end
+		RecordOffensiveCastResult(CastSkill, CastSkillLevel, false, interruptedOffensiveCast)
 		-- Only a cast that never started can be a refused level; a broken cast was accepted.
 		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
 		-- A refused sphere skill means we had fewer spheres than we thought (DoSkill already took the
@@ -3758,6 +3772,15 @@ function AI(myid)
 	end
 	
 	
+	-- Explicit player commands are still handled above; automatic actions must not
+	-- cancel an in-progress cast by attacking, moving or requesting another skill.
+	local pendingCastTime = CastSkill ~= 0 and
+		(GetSkillInfo(CastSkill, 4, CastSkillLevel) + GetSkillInfo(CastSkill, 5, CastSkillLevel) * CastTimeRatio) or 0
+	if msg[1] == NONE_CMD and (GetV(V_MOTION, MyID) == MOTION_CASTING
+		or (CastSkill ~= 0 and GetTick() < CastSkillTime + pendingCastTime)) then
+		return
+	end
+
 	OnAImiddle()
 	
 	--###EMERGENCY HANDLING###

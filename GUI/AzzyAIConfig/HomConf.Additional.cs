@@ -23,6 +23,7 @@ namespace AzzyAIConfig
     {
         private static readonly string[] AdditionalOptionNames = {
             "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "UseProvokeOwner",
+            "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
             "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
             "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel",
@@ -72,6 +73,38 @@ namespace AzzyAIConfig
                 if (value < 1)
                     throw new ArgumentOutOfRangeException("value", "SphereTrackInterval must be positive.");
                 _sphereTrackInterval = value;
+            }
+        }
+
+        private int _castInterruptLimit;
+        [Category("AutoSkill Options"), DefaultValue(false),
+        Description("Also count failed offensive casts with no visible casting motion or confirmed completion, when the target is alive and in range and SP is sufficient. May include server refusals, not just interruptions. Uses CastInterruptLimit/Pause. Disabled by default; H_Extra.lua overrides take precedence.")]
+        public bool CastInterruptUnconfirmed { get; set; }
+
+        [Category("AutoSkill Options"), DefaultValue(3),
+        Description("Offensive cast interruptions before temporarily skipping that skill. 0 disables the protection. Success resets the counter. Buffs and combos are excluded; unconfirmed failures count only with CastInterruptUnconfirmed enabled.")]
+        public int CastInterruptLimit
+        {
+            get { return _castInterruptLimit; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", "CastInterruptLimit must not be negative.");
+                _castInterruptLimit = value;
+            }
+        }
+
+        private int _castInterruptPause;
+        [Category("AutoSkill Options"), DefaultValue(5000),
+        Description("Milliseconds to skip an offensive skill after CastInterruptLimit confirmed interruptions. Other usable skills or normal attacks remain available. Positive integer; default 5000 ms. Does not change server cooldowns.")]
+        public int CastInterruptPause
+        {
+            get { return _castInterruptPause; }
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException("value", "CastInterruptPause must be positive.");
+                _castInterruptPause = value;
             }
         }
 

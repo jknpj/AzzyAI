@@ -61,6 +61,32 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
 
 ## Tests & CI
 
+While a requested cast is within its expected casting time or the client reports
+a casting motion, automatic movement, attacks and skill
+requests pause to avoid cancelling the cast; explicit player commands still work.
+A cast ending before its expected completion is not assumed successful without
+SP confirmation. This does not prevent interruptions from incoming damage.
+
+Homunculus offensive casts now back off per skill after `CastInterruptLimit`
+confirmed consecutive interruptions (default 3); `CastInterruptPause` controls
+the pause in milliseconds (default 5000). Set the limit to 0 to disable it.
+Both settings are in AutoSkill Options in the desktop and web GUIs and can be
+overridden in `H_Extra.lua`. Only casts observed starting and then ending early
+with damage evidence and a living, in-range target count; successful casts reset
+the counter. Buffs, combos, manual skill requests and unconfirmed refusals do not
+trigger the pause. Other enabled usable skills or normal attacks can be selected
+during the pause, and the paused skill returns automatically afterward.
+Counters and pauses reset when the client reloads the AI; server cooldowns and
+skill mechanics are unchanged.
+
+`CastInterruptUnconfirmed` (default 0 / disabled) optionally includes offensive
+failures without an observed cast or confirmed completion, provided the target
+is alive and in range and SP is sufficient. This can include server refusals:
+the client API cannot reliably distinguish them from hidden interruptions.
+It uses the same limit/pause and is available in both GUIs. With this option
+enabled, a gap between AI
+calls alone is not completion evidence for a cast never observed starting.
+
 ### Windows desktop GUI development
 
 The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client

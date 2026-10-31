@@ -175,6 +175,9 @@ AtkPosbugTimeoutLimit  = 3
 FollowTryPanic		=3 
 SphereTrackFactor	=3 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average; 3 errs low)
 SphereTrackInterval     = 800 -- minimum ms between estimated fighting-style hits
+CastInterruptLimit      = 3 -- confirmed offensive cast interruptions before a pause; 0 disables
+CastInterruptPause      = 5000 -- temporary per-skill pause in ms
+CastInterruptUnconfirmed = 0 -- also count offensive failures without visible casting; may include refusals
 
 --Berzerk Settings:
 UseBerzerkMobbed         = 0 

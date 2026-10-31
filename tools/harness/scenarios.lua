@@ -344,6 +344,157 @@ SCENARIOS = {
 			end,
 			["private summon ID range"] = function() return MagicNumber == 110000000 end,
 		} },
+	sera_cast_protection = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster, private = true,
+		set = { UseSeraToxinOfMandara = 1, UseSeraNeedleStinger = 1, UseSeraParalyze = 0 },
+		checks = {
+			["casting blocks automatic commands and early cancellation is not success"] = function()
+				local realGetV, realGetTick = GetV, GetTick
+				local realAttack, realMove, realDoSkill = Attack, Move, DoSkill
+				local realLog = logappend
+				local motion, clock, commands = MOTION_CASTING, realGetTick(), 0
+				local broken = false
+				GetV = function(kind, id, ...)
+					if id == MyID and kind == V_MOTION then return motion end
+					if id == MyID and kind == V_SP then return 1000 end
+					return realGetV(kind, id, ...)
+				end
+				GetTick = function() return clock end
+				Attack = function(...) commands = commands + 1 end
+				Move = function(...) commands = commands + 1 end
+				DoSkill = function(...) commands = commands + 1 end
+				logappend = function(category, message)
+					if message:find("cast was broken", 1, true) then broken = true end
+				end
+				CastSkill, CastSkillLevel, CastSkillMode = MH_TOXIN_OF_MANDARA, 10, 0
+				CastSkillTime, CastSkillState = clock, 0
+				CastSkillSP = GetV(V_SP, MyID)
+				MyLastSP, RegenTick[1] = CastSkillSP, 0
+				motion = MOTION_STAND
+				AI(MyID)
+				assert(commands == 0 and CastSkill ~= 0, "AI cancelled a cast before its motion was visible")
+				motion = MOTION_CASTING
+				clock = clock + 100
+				AI(MyID)
+				assert(commands == 0 and CastSkillState == 1, "AI issued commands while casting")
+				motion = MOTION_STAND
+				clock = clock + 100
+				AI(MyID)
+				clock = clock + 100
+				AI(MyID)
+				assert(broken and CastSkill == 0, "early cast cancellation was not reported as broken")
+				GetV, GetTick = realGetV, realGetTick
+				Attack, Move, DoSkill = realAttack, realMove, realDoSkill
+				logappend = realLog
+				return true
+			end,
+		} },
+
+	sera_interrupt_backoff = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster, private = true,
+		set = { UseSeraToxinOfMandara = 1, UseSeraNeedleStinger = 1, CastInterruptLimit = 3, CastInterruptPause = 5000 },
+		checks = {
+			["watcher counts only observed interrupted casts with a valid target"] = function()
+				local realGetV, realGetTick = GetV, GetTick
+				local realSight, realRange = IsOutOfSight, IsInAttackSight
+				local realAttack, realMove, realDoSkill = Attack, Move, DoSkill
+				local realRecord = RecordOffensiveCastResult
+				local target, motion, dead, inRange = 110000001, MOTION_STAND, false, true
+				local clock, counted = realGetTick() + 100, 0
+				GetTick = function() return clock end
+				GetV = function(kind, id, ...)
+					if id == MyID and kind == V_MOTION then return motion end
+					if id == target and kind == V_MOTION then return dead and MOTION_DEAD or MOTION_STAND end
+					if id == MyID and kind == V_SP then return 1000 end
+					return realGetV(kind, id, ...)
+				end
+				IsOutOfSight = function(id, enemy)
+					if enemy == target then return false end
+					return realSight(id, enemy)
+				end
+				IsInAttackSight = function(id, enemy, ...)
+					if enemy == target then return inRange end
+					return realRange(id, enemy, ...)
+				end
+				Attack, Move, DoSkill = function() end, function() end, function() end
+				RecordOffensiveCastResult = function(skill, level, success, interrupted)
+					if interrupted then counted = counted + 1 end
+				end
+				local function interrupt(observed)
+					CastSkill, CastSkillLevel, CastSkillMode = MH_TOXIN_OF_MANDARA, 10, 0
+					CastSkillTime, CastSkillState, CastSkillEnemy = clock, 0, target
+					CastSkillSP = GetV(V_SP, MyID)
+					MyLastSP, RegenTick[1] = CastSkillSP, 0
+					motion = observed and MOTION_CASTING or MOTION_STAND
+					AI(MyID)
+					motion = MOTION_DAMAGE
+					clock = clock + 100
+					AI(MyID)
+					motion = MOTION_STAND
+					clock = clock + 100
+					AI(MyID)
+					clock = clock + 100
+				end
+				interrupt(true)
+				assert(counted == 1, "observed damage interruption was not counted")
+				dead = true
+				interrupt(true)
+				dead, inRange = false, false
+				interrupt(true)
+				inRange = true
+				interrupt(false)
+				assert(counted == 1, "dead, out-of-range or unobserved cast counted as interrupted")
+				CastInterruptUnconfirmed = 1
+				for i = 1, 3 do
+					interrupt(false)
+					clock = clock + 1200
+					AI(MyID)
+				end
+				assert(counted == 4, "opt-in did not count failures with hidden casting and long AI gaps")
+				CastInterruptUnconfirmed = 0
+				CastSkill = 0
+				GetV, GetTick = realGetV, realGetTick
+				IsOutOfSight, IsInAttackSight = realSight, realRange
+				Attack, Move, DoSkill = realAttack, realMove, realDoSkill
+				RecordOffensiveCastResult = realRecord
+				return true
+			end,
+			["per-skill backoff respects threshold, expiry, success, exclusions and disable"] = function()
+				local realGetTick = GetTick
+				local clock = realGetTick() + 100000
+				GetTick = function() return clock end
+				local toxin, stinger = MH_TOXIN_OF_MANDARA, MH_NEEDLE_STINGER
+				AutoSkillCooldown[toxin], AutoSkillCooldown[stinger] = 0, 0
+				GetTargetedSkills(MyID)
+				for i = 1, 2 do RecordOffensiveCastResult(toxin, 10, false, true) end
+				assert(IsSkillReady(toxin), "paused before threshold")
+				RecordOffensiveCastResult(toxin, 10, true, false)
+				for i = 1, 2 do RecordOffensiveCastResult(toxin, 10, false, true) end
+				assert(IsSkillReady(toxin), "success did not reset interruptions")
+				RecordOffensiveCastResult(toxin, 10, false, false)
+				assert(IsSkillReady(toxin), "unconfirmed refusal triggered backoff")
+				RecordOffensiveCastResult(toxin, 10, false, true)
+				assert(not IsSkillReady(toxin) and IsSkillReady(stinger), "pause affected the wrong skills")
+				local skill = GetNewMobSkill(MyID)
+				assert(skill == 0, "paused Toxin remained selectable")
+				assert(GetNewSAtkSkill(MyID) == stinger, "fallback attack unavailable")
+				clock = clock + 4999
+				assert(not IsSkillReady(toxin), "pause ended early")
+				clock = clock + 1
+				assert(IsSkillReady(toxin) and GetNewMobSkill(MyID) == toxin, "pause did not expire")
+				for i = 1, 3 do RecordOffensiveCastResult(MH_PAIN_KILLER, 10, false, true) end
+				assert(not IsOffensiveCastPaused(MH_PAIN_KILLER), "buff entered backoff")
+				for i = 1, 3 do RecordOffensiveCastResult(MH_CBC, 5, false, true) end
+				assert(not IsOffensiveCastPaused(MH_CBC), "combo entered backoff")
+				for i = 1, 3 do RecordOffensiveCastResult(MH_TINDER_BREAKER, 5, false, true) end
+				assert(not IsOffensiveCastPaused(MH_TINDER_BREAKER), "combo starter entered backoff")
+				for i = 1, 3 do RecordOffensiveCastResult(toxin, 10, false, true) end
+				CastInterruptLimit = 0
+				assert(IsSkillReady(toxin), "disable did not bypass backoff")
+				CastInterruptLimit = 3
+				clock = clock + 5000
+				GetTick = realGetTick
+				return true
+			end,
+		} },
 
 	eira = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster,
 		expect = { "Eraser Cutter", "Xeno Slasher" } },
