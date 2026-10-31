@@ -50,11 +50,14 @@ jobs:
         run: .\tools\gui.ps1 -Action Build -Configuration Release
       - name: Package
         run: |
-          $pkg = "$env:RUNNER_TEMP\pkg\USER_AI"
+          $pkgRoot = "$env:RUNNER_TEMP\pkg"
+          $pkg = "$pkgRoot\USER_AI"
           New-Item -ItemType Directory -Force $pkg | Out-Null
           Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
           Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
-          Compress-Archive -Path $pkg -DestinationPath AzzyAI.zip
+          Copy-Item docs "$pkgRoot\docs" -Recurse
+          Copy-Item README.md, README.pt-BR.md, README.es.md, Changelog.md $pkgRoot
+          Compress-Archive -Path "$pkgRoot\*" -DestinationPath AzzyAI.zip
       - uses: actions/upload-artifact@v4
         with:
           name: AzzyAI
