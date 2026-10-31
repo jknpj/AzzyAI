@@ -2877,7 +2877,41 @@ function IsMobSkillType(skilltype)
 	return skilltype==MOB_ATK or skilltype==CLASS_NEW_MOB
 end
 
+local offensiveCastSkills = {}
+local castInterruptCounts = {}
+local castInterruptUntil = {}
+
+function IsOffensiveCastSkill(skill)
+	return offensiveCastSkills[skill] == true
+end
+
+function RecordOffensiveCastResult(skill, level, success, interrupted)
+	if IsHomun(MyID) ~= 1 or not offensiveCastSkills[skill] or CastInterruptLimit == 0
+		or GetSkillInfo(skill, 4, level) + GetSkillInfo(skill, 5, level) == 0 then
+		return
+	end
+	if success then
+		castInterruptCounts[skill] = nil
+	elseif interrupted then
+		local count = (castInterruptCounts[skill] or 0) + 1
+		castInterruptCounts[skill] = count
+		if count >= CastInterruptLimit then
+			castInterruptCounts[skill] = nil
+			castInterruptUntil[skill] = GetTick() + CastInterruptPause
+			logappend("AAI_ERROR", "Offensive cast backoff: pausing " .. FormatSkill(skill, level)
+				.. " for " .. CastInterruptPause .. " ms after " .. count .. " counted cast failures.")
+		end
+	end
+end
+
+function IsOffensiveCastPaused(skill)
+	return CastInterruptLimit ~= 0 and castInterruptUntil[skill] ~= nil and GetTick() < castInterruptUntil[skill]
+end
+
 function IsSkillReady(skill)
+	if IsOffensiveCastPaused(skill) then
+		return false
+	end
 	if AutoSkillCooldown~=nil and AutoSkillCooldown[skill]~=nil and GetTick() < AutoSkillCooldown[skill] then
 		return false
 	end
@@ -2946,6 +2980,16 @@ function GetTargetedSkills(myid)
 	s,l=GetNewMobSkill(myid)
     NewMobatk={CLASS_NEW_MOB,s,l}
 	local result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
+	for _, candidate in ipairs(result) do
+		if candidate[2] ~= 0 and candidate[2] ~= MH_SONIC_CRAW and candidate[2] ~= MH_TINDER_BREAKER
+			and (candidate[1] == MAIN_ATK or candidate[1] == S_ATK
+			or IsMobSkillType(candidate[1]) or candidate[1] == CLASS_NEW_S) then
+			offensiveCastSkills[candidate[2]] = true
+			if IsOffensiveCastPaused(candidate[2]) then
+				candidate[2], candidate[3] = 0, 0
+			end
+		end
+	end
 	return result
 end
 
@@ -3105,6 +3149,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 			CastSkillSP=spBeforeCast
 		end
 	end
+	CastSkillEnemy = MyEnemy
 	local t=GetTick();
 	delay=AutoSkillDelay + GetSkillInfo(skill,4,level)+GetSkillInfo(skill,5,level)*CastTimeRatio
 	AutoSkillCastTimeout=delay+t

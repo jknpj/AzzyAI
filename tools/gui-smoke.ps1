@@ -148,6 +148,14 @@ try {
         $properties['CastTimeRatio'].SetValue($config, 0.75)
         $properties['SphereTrackInterval'].SetValue($config, 200)
         $properties['AutoSkillDelay'].SetValue($config, 0)
+        $properties['CastInterruptLimit'].SetValue($config, 2)
+        $properties['CastInterruptPause'].SetValue($config, 4000)
+        $properties['CastInterruptUnconfirmed'].SetValue($config, $true)
+        foreach ($invalid in @(@('CastInterruptLimit', -1), @('CastInterruptPause', 0))) {
+            $rejected = $false
+            try { $properties[$invalid[0]].SetValue($config, $invalid[1]) } catch { $rejected = $true }
+            if (!$rejected) { throw "$($invalid[0]) accepted an invalid value." }
+        }
         $rejectedInterval = $false
         try { $properties['SphereTrackInterval'].SetValue($config, 0) } catch { $rejectedInterval = $true }
         if (!$rejectedInterval -or $config.SphereTrackInterval -ne 200) {
@@ -164,13 +172,17 @@ try {
             '(?m)^EiraTwisterCutterLevel\s*=\s*3', '(?m)^UseEleanorCBC\s*=\s*0',
             '(?m)^UseBayeriGoldeneTone\s*=\s*3',
             '(?m)^SphereTrackInterval\s*=\s*200', '(?m)^AutoSkillDelay\s*=\s*0',
+            '(?m)^CastInterruptLimit\s*=\s*2', '(?m)^CastInterruptPause\s*=\s*4000',
+            '(?m)^CastInterruptUnconfirmed\s*=\s*1',
             '(?m)^CustomUnknownOption = 123', '(?m)^-- untouched test comment')) {
             if ($text -notmatch $pattern) { throw "Round-trip did not preserve or save: $pattern" }
         }
         $config.Open($roundtrip)
         if ($config.EiraTwisterCutterLevel -ne 3 -or $config.UseEleanorCBC -or
             $config.ServerType.ToString() -ne 'Private' -or $config.CastTimeRatio -ne 0.75 -or
-            $config.SphereTrackInterval -ne 200 -or $config.AutoSkillDelay -ne 0) {
+            $config.SphereTrackInterval -ne 200 -or $config.AutoSkillDelay -ne 0 -or
+            $config.CastInterruptLimit -ne 2 -or $config.CastInterruptPause -ne 4000 -or
+            !$config.CastInterruptUnconfirmed) {
             throw 'Imported new settings did not match the saved values.'
         }
         foreach ($name in @('EiraXenoSlasherLevel', 'EiraEraseCutterLevel', 'BayeriStahlHornLevel',
@@ -186,7 +198,9 @@ try {
         }
         $config.SetDefaults()
         if ($config.EiraTwisterCutterLevel -ne 10 -or $config.UseEiraTwisterCutter -or !$config.UseEleanorCBC -or
-            $config.SphereTrackInterval -ne 800 -or $config.AutoSkillDelay -ne 400) {
+            $config.SphereTrackInterval -ne 800 -or $config.AutoSkillDelay -ne 400 -or
+            $config.CastInterruptLimit -ne 3 -or $config.CastInterruptPause -ne 5000 -or
+            $config.CastInterruptUnconfirmed) {
             throw 'Reset to defaults did not reset the new settings.'
         }
         [IO.File]::WriteAllText($minimal, "-- ServerType = SERVER_PRIVATE`r`nServerType = SERVER_OFFICIAL -- test`r`n")
