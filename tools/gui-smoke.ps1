@@ -53,6 +53,10 @@ try {
         }
     }
     $tabs.SelectedIndex = 0
+    $menuTexts = @($form.MainMenuStrip.Items | ForEach-Object { if ($_.HasDropDownItems) { $_.DropDownItems | ForEach-Object { $_.Text } } })
+    if (@($menuTexts | Where-Object { $_ -like '*Reset*' }).Count -ne 0) {
+        throw 'The Reset to Defaults menu item should have been removed.'
+    }
     $hom = $form.Controls.Find('homunculusConfigControl', $true)[0]
     $binding = $hom.GetType().GetProperty('SelectedObject',
         [Reflection.BindingFlags]'Instance, Public, NonPublic')
@@ -196,12 +200,16 @@ try {
         if (!$rejected -or (Get-FileHash $roundtrip).Hash -ne $savedHash) {
             throw 'Invalid skill levels must fail without modifying the configuration.'
         }
-        $config.SetDefaults()
-        if ($config.EiraTwisterCutterLevel -ne 10 -or $config.UseEiraTwisterCutter -or !$config.UseEleanorCBC -or
-            $config.SphereTrackInterval -ne 800 -or $config.AutoSkillDelay -ne 400 -or
-            $config.CastInterruptLimit -ne 3 -or $config.CastInterruptPause -ne 5000 -or
-            $config.CastInterruptUnconfirmed) {
-            throw 'Reset to defaults did not reset the new settings.'
+        $expectedDefaults = @{
+            EiraTwisterCutterLevel = 10; UseEiraTwisterCutter = $false; UseEleanorCBC = $true
+            SphereTrackInterval = 800; AutoSkillDelay = 400; CastInterruptLimit = 3
+            CastInterruptPause = 5000; CastInterruptUnconfirmed = $false
+        }
+        foreach ($name in $expectedDefaults.Keys) {
+            $attribute = $properties[$name].Attributes[[ComponentModel.DefaultValueAttribute]]
+            if ($null -eq $attribute -or $attribute.Value -ne $expectedDefaults[$name]) {
+                throw "$name has an unexpected default value attribute."
+            }
         }
         [IO.File]::WriteAllText($minimal, "-- ServerType = SERVER_PRIVATE`r`nServerType = SERVER_OFFICIAL -- test`r`n")
         $config.Open($minimal)
@@ -274,7 +282,7 @@ try {
             throw "Opening the GUI unexpectedly changed $($_.Name)."
         }
     }
-    Write-Host 'PASS: seven tabs, resizing, search, type filters, skill limits, settings round-trip/defaults/import, tactics import/removal/round-trip, and unchanged source Lua.'
+    Write-Host 'PASS: seven tabs, resizing, search, type filters, skill limits, settings round-trip/default attributes/import, tactics import/removal/round-trip, and unchanged source Lua.'
 } finally {
     if ($null -ne $form) {
         $form.Dispose()

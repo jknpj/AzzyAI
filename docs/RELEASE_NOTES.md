@@ -19,8 +19,11 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   to three confirmed interruptions and a 5000 ms per-skill pause.
   `CastInterruptUnconfirmed` is an opt-in for ambiguous failures.
 - Desktop GUI: C# Release executable distributed in `USER_AI`; settings import,
-  save, validation and reset are covered by smoke tests.
+  save, validation and revert are covered by smoke tests.
 - Maintenance pass (unreleased):
+  - Removed the "Reset to Defaults" command (Edit menu and Ctrl+D) from both GUIs. Revert
+    still reloads the files, and the per-option restore in the property grid and web GUI
+    remains. `HomConf.SetDefaults()`/`MerConf.SetDefaults()` are now unused.
   - Performance: motion, target and HP of other actors are read once per AI tick
     (`GetActorMotion`, `GetActorTarget`, `HPPercent` caches), and distance helpers use the
     per-tick position cache. In the 40-monster scenario `GetV` calls per tick dropped

@@ -43,8 +43,7 @@ Antes de actualizar, conserva una copia de:
 Guarda el respaldo completo fuera de la carpeta de IA del juego.
 No sobrescribas archivos personalizados sin revisarlos ni sustituyas el código
 nuevo con la carpeta antigua completa. Compara/importa los ajustes en la
-instalación actualizada, guarda, recarga y prueba. **Reset to Defaults** no
-actualiza la IA: reemplaza tus elecciones por los valores predeterminados.
+instalación actualizada, guarda, recarga y prueba.
 
 ## 3. Configurar con las GUIs
 
@@ -117,8 +116,8 @@ en el homúnculo siguen necesitando monstruos cercanos.
 `AttackSkillReserveSP` conserva SP en lugar de gastarlo todo en ataques.
 `AutoSkillDelay` es una espera adicional de la IA. **0 elimina solo esa espera**,
 no cooldowns, tiempo de lanzamiento ni interrupciones del servidor.
-Menor no siempre es mejor. El valor al restablecer en la GUI puede diferir del
-preset incluido; importa el valor del archivo instalado.
+Menor no siempre es mejor. El preset incluido y los valores internos de reserva
+de la IA pueden diferir; importa el valor del archivo instalado.
 
 ## 6. Consejos por Homúnculo S
 

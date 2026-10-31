@@ -58,7 +58,6 @@
             this.applySettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.revertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.resetToDefaultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.homunculusConfigControl = new AzzyAIConfig.HomunculusConfigControl();
             this.propertyGridMercenary = new System.Windows.Forms.PropertyGrid();
@@ -227,8 +226,7 @@
             editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.applySettingsToolStripMenuItem,
             this.toolStripMenuItem3,
-            this.revertToolStripMenuItem,
-            this.resetToDefaultsToolStripMenuItem});
+            this.revertToolStripMenuItem});
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             editToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.E)));
             editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
@@ -256,14 +254,6 @@
             this.revertToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.revertToolStripMenuItem.Text = "Revert";
             this.revertToolStripMenuItem.Click += new System.EventHandler(this.revertToolStripMenuItem_Click);
-            // 
-            // resetToDefaultsToolStripMenuItem
-            // 
-            this.resetToDefaultsToolStripMenuItem.Name = "resetToDefaultsToolStripMenuItem";
-            this.resetToDefaultsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
-            this.resetToDefaultsToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.resetToDefaultsToolStripMenuItem.Text = "Reset to Defaults";
-            this.resetToDefaultsToolStripMenuItem.Click += new System.EventHandler(this.resetToDefaultsToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -560,7 +550,6 @@
         private ExtraControl extraControl1;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem revertToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem resetToDefaultsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem applySettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
