@@ -82,8 +82,14 @@ try {
     $buffProperties = [ComponentModel.TypeDescriptor]::GetProperties($categories.TabPages[3].Controls[0].SelectedObject)
     if ($null -eq $visibleProperties['UseEiraTwisterCutter'] -or
         $null -eq $buffProperties['HealOwnerBreeze'] -or
-        $null -ne $visibleProperties['UseEleanorCBC']) {
+        $null -ne $visibleProperties['UseEleanorCBC'] -or
+        $null -ne $visibleProperties['SphereTrackInterval']) {
         throw 'Combined Eira/Amistr filters hid Eira options or included Eleanor options.'
+    }
+    $sFilter.SelectedItem = 'Eleanor'
+    $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
+    if ($null -eq $visibleProperties['SphereTrackInterval']) {
+        throw 'Eleanor filter did not expose SphereTrackInterval.'
     }
     $search.Text = 'no-such-setting'
     $summary = $hom.Controls.Find('settingsSummary', $true)[0]
@@ -140,6 +146,13 @@ try {
         }
         $properties['ServerType'].SetValue($config, [Enum]::Parse($properties['ServerType'].PropertyType, 'Private'))
         $properties['CastTimeRatio'].SetValue($config, 0.75)
+        $properties['SphereTrackInterval'].SetValue($config, 200)
+        $properties['AutoSkillDelay'].SetValue($config, 0)
+        $rejectedInterval = $false
+        try { $properties['SphereTrackInterval'].SetValue($config, 0) } catch { $rejectedInterval = $true }
+        if (!$rejectedInterval -or $config.SphereTrackInterval -ne 200) {
+            throw 'SphereTrackInterval must reject zero without changing its value.'
+        }
         $properties['UseEiraTwisterCutter'].SetValue($config, $true)
         $properties['EiraTwisterCutterLevel'].SetValue($config, 3)
         $properties['UseEleanorCBC'].SetValue($config, $false)
@@ -150,12 +163,14 @@ try {
         foreach ($pattern in @('(?m)^ServerType\s*=\s*SERVER_PRIVATE', '(?m)^CastTimeRatio\s*=\s*0\.75',
             '(?m)^EiraTwisterCutterLevel\s*=\s*3', '(?m)^UseEleanorCBC\s*=\s*0',
             '(?m)^UseBayeriGoldeneTone\s*=\s*3',
+            '(?m)^SphereTrackInterval\s*=\s*200', '(?m)^AutoSkillDelay\s*=\s*0',
             '(?m)^CustomUnknownOption = 123', '(?m)^-- untouched test comment')) {
             if ($text -notmatch $pattern) { throw "Round-trip did not preserve or save: $pattern" }
         }
         $config.Open($roundtrip)
         if ($config.EiraTwisterCutterLevel -ne 3 -or $config.UseEleanorCBC -or
-            $config.ServerType.ToString() -ne 'Private' -or $config.CastTimeRatio -ne 0.75) {
+            $config.ServerType.ToString() -ne 'Private' -or $config.CastTimeRatio -ne 0.75 -or
+            $config.SphereTrackInterval -ne 200 -or $config.AutoSkillDelay -ne 0) {
             throw 'Imported new settings did not match the saved values.'
         }
         foreach ($name in @('EiraXenoSlasherLevel', 'EiraEraseCutterLevel', 'BayeriStahlHornLevel',
@@ -170,7 +185,8 @@ try {
             throw 'Invalid skill levels must fail without modifying the configuration.'
         }
         $config.SetDefaults()
-        if ($config.EiraTwisterCutterLevel -ne 10 -or $config.UseEiraTwisterCutter -or !$config.UseEleanorCBC) {
+        if ($config.EiraTwisterCutterLevel -ne 10 -or $config.UseEiraTwisterCutter -or !$config.UseEleanorCBC -or
+            $config.SphereTrackInterval -ne 800 -or $config.AutoSkillDelay -ne 400) {
             throw 'Reset to defaults did not reset the new settings.'
         }
         [IO.File]::WriteAllText($minimal, "-- ServerType = SERVER_PRIVATE`r`nServerType = SERVER_OFFICIAL -- test`r`n")

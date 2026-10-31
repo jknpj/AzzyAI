@@ -437,7 +437,7 @@ namespace AzzyAIConfig
             // Check for Homunculus S specific skills
             string[] seraSkills = { "paralyze", "poisonmist", "painkiller", "calllegion" };
             string[] eiraSkills = { "silentbreeze", "healownerbreeze", "xenoslasher", "erasercutter", "overedboost", "regene" };
-            string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode" };
+            string[] eleanorSkills = { "sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode", "spheretrackinterval" };
             string[] bayeriSkills = { "stahlhorn", "hailege", "goldene", "steinwand", "angriffs" };
             string[] dieterSkills = { "lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic" };
             

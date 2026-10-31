@@ -1324,7 +1324,7 @@ namespace AzzyAIConfig
         int _AutoSkillDelay = 400;
         [Category("AutoSkill Options"),
         Description(
-            "This value is the delay (in ms) between uses of a skill. If " +
+            "Extra AI delay in milliseconds; 0 removes this margin, not server cooldowns. If " +
             "you are having problems with the homunculus \"double casting\" " +
             "skills, increase this value. Otherwise, leave it be."
             ),
@@ -1333,9 +1333,9 @@ namespace AzzyAIConfig
 	{
 		get { return _AutoSkillDelay; }
 		set {
-			if (value < 100)
+			if (value < 0)
 			{
-				_AutoSkillDelay=100;
+				_AutoSkillDelay=0;
 			}
 			else if (value > 600){
 				_AutoSkillDelay=600;
@@ -1437,9 +1437,10 @@ namespace AzzyAIConfig
         int _AutoComboSpheres = 10;
         [Category("AutoSkill Options"),
         Description(
-            "If AutoComboMode is enabled, combo skills may be used if the " +
-            "homun has at least this many spheres. Sphere counts are not " +
-            "exact"
+            "When automatic combos are enabled, Eleanor waits for this many spheres " +
+            "before starting Sonic Claw or Tinder Breaker. Follow-ups require their own " +
+            "sphere costs and a confirmed previous cast. With combos disabled, starters " +
+            "only require their normal sphere cost. Sphere counts are estimates."
             ),
         DefaultValue(10)]
         public int AutoComboSpheres
