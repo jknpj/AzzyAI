@@ -22,7 +22,7 @@ namespace AzzyAIConfig
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
-            "ServerType", "AutoDetectServerType", "CastTimeRatio", "UseProvokeOwner",
+            "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "UseProvokeOwner",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
             "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
             "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel",
@@ -58,6 +58,20 @@ namespace AzzyAIConfig
                 if (double.IsNaN(value) || value < 0 || value > 1)
                     throw new ArgumentOutOfRangeException("value", "CastTimeRatio must be between 0 and 1.");
                 _castTimeRatio = value;
+            }
+        }
+
+        private int _sphereTrackInterval;
+        [Category("AutoSkill Options"), DefaultValue(800),
+        Description("Advanced Eleanor option: minimum milliseconds between fighting-style attack attempts counted toward the sphere estimate. This is not the skill cooldown or the real sphere count. Use a shorter interval only for a homunculus that actually attacks faster; too short can cause refused skills. Positive integer; default 800 ms. An H_Extra.lua override takes precedence.")]
+        public int SphereTrackInterval
+        {
+            get { return _sphereTrackInterval; }
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException("value", "SphereTrackInterval must be positive.");
+                _sphereTrackInterval = value;
             }
         }
 
