@@ -146,7 +146,18 @@ function Move(id, x, y) local e = world[id]; if e then e.destx, e.desty = x, y; 
 function MoveToOwner(id) local o = world[OWNER]; Move(id, o.x, o.y) end
 -- the homunculus swings once per ATTACK_DELAY; the swing animation lasts ATTACK_MOTION. Asking for
 -- an attack again while it is swinging or waiting changes nothing, like the client.
+-- With SWING_MS (scenario `swingMs`) it instead keeps swinging by itself every SWING_MS while the
+-- AI keeps asking for the attack, and every accepted cast stops the swinging for CAST_PAUSE_MS
+-- (scenario `castPauseMs`): the skill animation and the client re-issuing the attack.
 local ATTACK_DELAY, ATTACK_MOTION = 800, 400
+local SWING_MS, CAST_PAUSE_MS
+local function swing(e, t)
+	e.attackUntil = now + ATTACK_MOTION
+	e.motion = MOTION_ATTACK
+	t.hitsTaken = (t.hitsTaken or 0) + 1
+	HarnessOnHomunAttack(e, t)
+	HarnessDamageAttack(t)
+end
 function Attack(id, target)
 	local e, t = world[id], world[target]
 	if not e then return end
@@ -156,16 +167,27 @@ function Attack(id, target)
 		if id ~= HOMUN then
 			e.motion = MOTION_ATTACK
 			t.hitsTaken = (t.hitsTaken or 0) + 1
+		elseif SWING_MS then
+			e.swingTarget, e.swingAsked = t, now
 		elseif now >= (e.nextSwing or 0) then
-			e.nextSwing, e.attackUntil = now + ATTACK_DELAY, now + ATTACK_MOTION
-			e.motion = MOTION_ATTACK
-			t.hitsTaken = (t.hitsTaken or 0) + 1
-			HarnessOnHomunAttack(e, t)
-			HarnessDamageAttack(t)
+			e.nextSwing = now + ATTACK_DELAY
+			swing(e, t)
 		end
 	else
 		e.badAttacks = (e.badAttacks or 0) + 1; e.badTarget = target
 	end
+end
+-- continuous swinging between the ticks (SWING_MS): swings that fell inside the last step
+local function runSwings(e)
+	local t = e.swingTarget
+	if not t or now - (e.swingAsked or -1e9) > 300 then return end
+	local nextAt = math.max(e.nextSwing or 0, e.noSwingUntil or 0, now - STEP)
+	while nextAt <= now do
+		swing(e, t)
+		e.attacks = (e.attacks or 0) + 1
+		nextAt = math.max(nextAt + SWING_MS, e.noSwingUntil or 0)
+	end
+	e.nextSwing = nextAt
 end
 
 -- server-side state that survives AI reloads: cooldowns, buffs and Eleanor's spheres/style/combo
@@ -249,6 +271,7 @@ local function recordCast(kind, id, lvl, skill, a, b)
 	local ok = why == nil and e.sp > cost
 	local spheresAtHit
 	if ok then
+		if id == HOMUN and CAST_PAUSE_MS then e.noSwingUntil = now + CAST_PAUSE_MS end
 		e.sp = e.sp - cost
 		e.motion = MOTION_SKILL
 		local castTime = serverCastTime(skill, lvl)
@@ -368,6 +391,16 @@ function HarnessDamageReport()
 	local seconds = math.max((now - dmg.start) / 1000, 0.001)
 	local out = { ("    damage: %s in %.1f s = %s DPS (expected value, rAthena %s)"):format(
 		thousands(dmg.total), seconds, thousands(dmg.total / seconds), (RATHENA_COMMIT or "?"):sub(1, 8)) }
+	local accepted, refusedCasts, spSpent = 0, 0, 0
+	for _, c in ipairs(casts) do
+		if c.ok then
+			accepted = accepted + 1
+			spSpent = spSpent + serverField(c.skill, "sp", c.lvl)
+		elseif c.refused then
+			refusedCasts = refusedCasts + 1
+		end
+	end
+	out[#out + 1] = ("    casts: %d accepted, %d refused by the server, %d SP spent"):format(accepted, refusedCasts, spSpent)
 	local keys = {}
 	for _, k in ipairs(dmg.order) do keys[#keys + 1] = k end
 	table.sort(keys, function(x, y) return dmg.totals[x].damage > dmg.totals[y].damage end)
@@ -398,6 +431,7 @@ dofile(HERE .. "scenarios.lua")
 local sc = SCENARIOS[scenario]
 if sc then
 	ATTACK_DELAY, ATTACK_MOTION = sc.attackDelay or 800, sc.attackMotion or 400
+	SWING_MS, CAST_PAUSE_MS = sc.swingMs, sc.castPauseMs
 end
 if not sc then
 	print("unknown scenario " .. scenario)
@@ -465,6 +499,12 @@ end
 loadAI()
 serverRules()
 HarnessDamageSetup(sc)
+-- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
+-- like the test server's benchmark after a manual Style Change
+if sc.startStyle == "grappling" then
+	server.style = "grappling"
+	EleanorMode = GRAPPLING_MODE
+end
 for _, entry in ipairs(sc.skills) do
 	-- "MH_TOXIN_OF_MANDARA:3" = learned at level 3; no suffix = every level
 	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
@@ -557,6 +597,7 @@ for tick = 1, TICKS do
 		end
 		if not ok then runtimeError = e; break end
 	end
+	if SWING_MS and h.swingTarget then runSwings(h) end
 	if h.destx then
 		if h.x < h.destx then h.x = h.x + 1 elseif h.x > h.destx then h.x = h.x - 1 end
 		if h.y < h.desty then h.y = h.y + 1 elseif h.y > h.desty then h.y = h.y - 1 end
@@ -564,6 +605,14 @@ for tick = 1, TICKS do
 	end
 	if h.motion == MOTION_SKILL then h.motion = MOTION_STAND end
 	if h.motion == MOTION_ATTACK and now >= (h.attackUntil or 0) then h.motion = MOTION_STAND end
+	if h.motion == MOTION_DAMAGE and now >= (h.damageUntil or 0) then h.motion = MOTION_STAND end
+	-- sc.incomingHitMs: an attacker the AI never sees (the test server's stationary dummy that
+	-- hits every 2 s) lands a hit on the homunculus every that many ms: damage motion for the
+	-- client, and a 50% sphere chance in grappling style
+	if sc.incomingHitMs and h.homuntype == ELEANOR and now % sc.incomingHitMs == 0 then
+		h.motion, h.damageUntil = MOTION_DAMAGE, now + 200
+		sphereHit("grappling")
+	end
 	if now % 1000 == 0 then
 		h.sp = math.min(h.maxsp, h.sp + (sc.spregen or 10))
 		-- every monster attacking the homunculus lands one hit per second
