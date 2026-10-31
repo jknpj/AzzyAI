@@ -2,8 +2,10 @@
 """Regenerates tools/harness/fixtures/rathena.lua and USER_AI/MobInfo.lua from the rAthena Renewal databases.
 
 The harness uses the generated file as the "server truth" for SERVER_PRIVATE scenarios
-(SP, cooldowns, ranges, spirit spheres), to check the homunculus skill trees and to give
-scenario monsters real rAthena data. MobInfo.lua is loaded by the AI itself: every monster's
+(SP, cooldowns, ranges, spirit spheres), to check the homunculus skill trees, to give scenario
+monsters real rAthena data and, for the damage model (damage.lua), the skill ratios taken from
+src/map/skills/homunculus/*.cpp, each skill's type/element/hit count and the monsters' DEF, MDEF and
+stats. MobInfo.lua is loaded by the AI itself: every monster's
 race, element, size and boss/MVP/plant flags, the element damage table and the element of each
 homunculus attack skill. The web GUI's webgui/mobdata.js (monsters and the maps they spawn on,
 for its tactics suggestions) is written when the webgui submodule is checked out. All files are
@@ -13,6 +15,7 @@ to a newer rAthena commit.
 Usage:
     python tools/harness/rathena_sync.py              # latest rathena/rathena master
     python tools/harness/rathena_sync.py --ref <sha>  # a specific commit/branch/tag
+    python tools/harness/rathena_sync.py --fixture-only  # only rewrite fixtures/rathena.lua
 
 Only needs the Python standard library. Behind a proxy, set HTTPS_PROXY (urllib also reads the
 Windows proxy settings). On Windows the system certificate store is trusted, so proxies that
@@ -213,10 +216,26 @@ def lua(v, indent=""):
     if isinstance(v, dict):
         parts = []
         for k, x in v.items():
+            if x is None:
+                continue  # nil in Lua: the field is simply absent
             key = f"[{k}]" if isinstance(k, int) else k
             parts.append(f"{key}={lua(x)}")
         return "{" + ", ".join(parts) + "}"
     raise TypeError(type(v))
+
+
+def per_level_str(value, maxlv, key):
+    """Like per_level for text values (an element name); None when the skill doesn't set one."""
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        return [str(value)] * maxlv
+    by_level = {int(e["Level"]): str(e[key]) for e in value}
+    out, last = [], "Neutral"
+    for lv in range(1, maxlv + 1):
+        last = by_level.get(lv, last)
+        out.append(last)
+    return out
 
 
 def build_skills(body):
@@ -228,6 +247,7 @@ def build_skills(body):
         n = int(s.get("MaxLevel", 1))
         req = s.get("Requires") or {}
         unit = s.get("Unit") or {}
+        flags = s.get("DamageFlags") or {}
         skills[sid] = {
             "name": s["Name"],
             "maxlv": n,
@@ -243,6 +263,17 @@ def build_skills(body):
             "delay": per_level(s.get("AfterCastActDelay"), n, "Time"),
             "cooldown": per_level(s.get("Cooldown"), n, "Time"),
             "duration": per_level(s.get("Duration1"), n, "Time"),
+            # damage model: Weapon/Magic/Misc, element (nil = the weapon's/neutral), hits per cast
+            # (negative: the total is split into that many displayed hits), DamageFlags
+            "type": s.get("Type", "None"),
+            "element": per_level_str(s.get("Element"), n, "Element"),
+            "hits": per_level(s.get("HitCount", 1), n, "Count"),
+            "nodamage": bool(flags.get("NoDamage")),
+            "ignoredef": bool(flags.get("IgnoreDefense")),
+            "splitsplash": bool(flags.get("SplashSplit")),
+            "unit": bool(unit),
+            "unitid": unit.get("Id"),
+            "interval": int(unit.get("Interval", 0) or 0),
         }
     return skills
 
@@ -281,11 +312,116 @@ def build_mobs(body):
             "ai": ai_code(m.get("Ai")),
             "class": m.get("Class", "Normal"),
             "mvp": bool(m.get("MvpExp")),
+            # damage model (battle.cpp / status_calc_misc): hard DEF/MDEF, RES/MRES and the six
+            # stats (mob_db defaults them to 1) that soft DEF, soft MDEF and FLEE come from
+            "def": int(m.get("Defense", 0)),
+            "mdef": int(m.get("MagicDefense", 0)),
+            "res": int(m.get("Resistance", 0)),
+            "mres": int(m.get("MagicResistance", 0)),
+            "str": int(m.get("Str", 1)),
+            "agi": int(m.get("Agi", 1)),
+            "vit": int(m.get("Vit", 1)),
+            "int": int(m.get("Int", 1)),
+            "dex": int(m.get("Dex", 1)),
+            "luk": int(m.get("Luk", 1)),
         }
     missing = sorted(set(MOB_IDS) - set(mobs))
     if missing:
         sys.exit(f"monsters not found in mob_db.yml: {missing}")
     return mobs
+
+
+SKILL_SOURCE_DIR = "src/map/skills/homunculus"
+
+_RATIO_STAT = re.compile(r"sstatus->(\w+)")
+_C_TOKEN = re.compile(r"\s*(?:(\d+)|([A-Za-z_]\w*)|(.))")
+
+
+def c_to_lua(expr):
+    """Translates the integer arithmetic SkillImpl::calculateSkillRatio uses (numbers, + - * / and
+    parentheses, skill_lv, status_get_lv(src) and sstatus->stat) into a Lua expression.
+    Division becomes idiv(), which truncates like C. Anything else is an error, so a skill
+    whose formula needs more than this is noticed instead of silently mis-modelled."""
+    expr = re.sub(r"status_get_lv\(\s*src\s*\)", "blv", expr)
+    expr = _RATIO_STAT.sub(lambda m: "st_" + m.group(1).rstrip("_"), expr)
+    expr = re.sub(r"\bskill_lv\b", "lv", expr)
+    tokens = []
+    for number, name, other in _C_TOKEN.findall(expr):
+        tokens.append(number or name or other)
+    if "".join(tokens) != re.sub(r"\s+", "", expr):
+        raise ValueError(f"cannot tokenize {expr!r}")
+    pos = 0
+
+    def peek():
+        return tokens[pos] if pos < len(tokens) else None
+
+    def take():
+        nonlocal pos
+        pos += 1
+        return tokens[pos - 1]
+
+    def factor():
+        tok = take()
+        if tok.isdigit():
+            return tok
+        if tok in ("lv", "blv"):
+            return tok
+        if tok.startswith("st_"):
+            return "st." + tok[3:]
+        if tok == "(":
+            inner = additive()
+            if take() != ")":
+                raise ValueError(f"missing ) in {expr!r}")
+            return f"({inner})"
+        if tok == "-":
+            return f"(-{factor()})"
+        raise ValueError(f"unsupported token {tok!r} in {expr!r}")
+
+    def multiplicative():
+        left = factor()
+        while peek() in ("*", "/"):
+            op = take()
+            right = factor()
+            left = f"({left} * {right})" if op == "*" else f"idiv({left}, {right})"
+        return left
+
+    def additive():
+        left = multiplicative()
+        while peek() in ("+", "-"):
+            op = take()
+            left = f"({left} {op} {multiplicative()})"
+        return left
+
+    result = additive()
+    if pos != len(tokens):
+        raise ValueError(f"trailing tokens in {expr!r}")
+    return result
+
+
+def build_ratios(sha, name_to_id):
+    """RA_RATIO[skill id] = (C expression, Lua expression) from each homunculus skill's
+    calculateSkillRatio(): the percentage added to the base 100% skill ratio."""
+    ratios = {}
+    items = json.loads(fetch(f"https://api.github.com/repos/{REPO}/contents/{SKILL_SOURCE_DIR}?ref={sha}"))
+    for item in items:
+        name = item["name"]
+        if not name.endswith(".cpp") or name.startswith("skill_factory"):
+            continue
+        text = fetch(f"https://raw.githubusercontent.com/{REPO}/{sha}/{item['path']}")
+        owner = re.search(r"SkillImpl\w*\(\s*(MH_\w+)\s*\)", text)
+        body = re.search(r"::calculateSkillRatio\([^)]*\)\s*const\s*\{(.*?)\n\}", text, re.S)
+        if not owner or not body:
+            continue
+        sid = name_to_id.get(owner.group(1))
+        additions = re.findall(r"base_skillratio\s*\+=\s*([^;]+);", body.group(1))
+        other = [l for l in body.group(1).split("\n")
+                 if l.strip() and not l.strip().startswith(("//", "const status_data", "base_skillratio"))]
+        if sid is None or len(additions) != 1 or other:
+            print(f"  warning: {name}: calculateSkillRatio is not a single base_skillratio += expression, skipped")
+            continue
+        c_expr = re.sub(r"\s+", " ", additions[0]).strip()
+        ratios[sid] = (c_expr, c_to_lua(c_expr))
+    return ratios
 
 
 def index_of(table, name, what, default=0):
@@ -434,6 +570,8 @@ def list_spawn_files(sha, path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--ref", default="master", help="rAthena commit, branch or tag (default: master)")
+    parser.add_argument("--fixture-only", action="store_true",
+                        help="only rewrite fixtures/rathena.lua (skip USER_AI/MobInfo.lua and webgui/mobdata.js)")
     args = parser.parse_args()
 
     sha = resolve_ref(args.ref)
@@ -441,6 +579,7 @@ def main():
     skill_body = load_db(sha, "db/re/skill_db.yml")
     name_to_id = {s["Name"]: int(s["Id"]) for s in skill_body}
     skills = build_skills(skill_body)
+    ratios = build_ratios(sha, name_to_id)
     homun = build_homun(load_db(sha, "db/re/homunculus_db.yml"), name_to_id)
     mobs = []
     for path in ("db/re/mob_db.yml", "db/mob_db2.yml"):
@@ -448,8 +587,9 @@ def main():
             mobs += load_db(sha, path) or []
         except Exception:
             pass
-    write_mobinfo(sha, mobs, skill_body, load_db(sha, "db/re/attr_fix.yml"))
-    write_webgui_mobdata(sha, mobs)
+    if not args.fixture_only:
+        write_mobinfo(sha, mobs, skill_body, load_db(sha, "db/re/attr_fix.yml"))
+        write_webgui_mobdata(sha, mobs)
     mobs = build_mobs(mobs)
 
     lines = [
@@ -470,6 +610,20 @@ def main():
         lines.append("\t},")
     lines += ["}", "", "-- RA_MOB[id]: monsters from db/re/mob_db.yml", "RA_MOB = {"]
     lines += [f"\t[{mid}] = {lua(mobs[mid])}," for mid in sorted(mobs)]
+    lines += [
+        "}", "",
+        f"-- RA_RATIO[id]: percentage added to a skill's base 100% ratio, from SkillImpl::calculateSkillRatio",
+        f"-- in {SKILL_SOURCE_DIR}/*.cpp. lv = skill level, blv = the caster's base level, st = its",
+        "-- status (str, agi, vit, int, dex, luk). idiv truncates like C integer division.",
+        "local function idiv(a, b)",
+        "\tlocal q = a / b",
+        "\tif q >= 0 then return math.floor(q) end",
+        "\treturn -math.floor(-q)",
+        "end",
+        "RA_RATIO = {",
+    ]
+    lines += [f"\t[{sid}] = function(lv, blv, st) return {ratios[sid][1]} end, -- {ratios[sid][0]}"
+              for sid in sorted(ratios)]
     lines += ["}", ""]
 
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
