@@ -20,6 +20,23 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   `CastInterruptUnconfirmed` is an opt-in for ambiguous failures.
 - Desktop GUI: C# Release executable distributed in `USER_AI`; settings import,
   save, validation and reset are covered by smoke tests.
+- Maintenance pass (unreleased):
+  - Performance: motion, target and HP of other actors are read once per AI tick
+    (`GetActorMotion`, `GetActorTarget`, `HPPercent` caches), and distance helpers use the
+    per-tick position cache. In the 40-monster scenario `GetV` calls per tick dropped
+    from 460 to 209. Eleanor's sphere estimate saves `data\H_<owner>Timeouts.lua` at most
+    once per second instead of once per counted attack. `AI.lua` no longer loads
+    `MobInfo.lua` and `Defaults.lua` twice.
+  - Fixes: `formatmypos` compared against an undefined variable (trace output only). Desktop
+    GUI tactics: removing a tactic discarded later edits (Hom/Mer); removing the first or a
+    middle PVP tactic removed the wrong one or threw; importing a tactics file appended
+    duplicates instead of replacing the list; weights were saved with the current culture
+    (`0,5` on pt-BR/es), names containing commas were truncated, `TACT_TANKMOB` was not
+    recognised, the tactic ID box threw on empty input, and exporting to a new file failed
+    because `File.CreateText` handles were never closed.
+  - Harness: `HARNESS_PROFILE=1` also lists the source lines that call `GetV` most;
+    `HARNESS_GLOBALS=1` reports globals read while undefined and globals created during AI
+    ticks. The desktop GUI smoke test covers tactics import, removal and round-trip.
 
 ### Validation and limitations
 

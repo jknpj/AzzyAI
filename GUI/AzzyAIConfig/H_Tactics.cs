@@ -23,6 +23,9 @@ namespace AzzyAIConfig
             string file = File.ReadAllText(fileName);
             string[] lines = file.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
+            // Importing a file replaces the tactics instead of appending to the ones already loaded
+            _tacts.Clear();
+
             // Check if the file does not contain "MyTact[0]"
             if (!Regex.IsMatch(file, "MyTact\\[0\\]"))
             {
@@ -37,7 +40,7 @@ namespace AzzyAIConfig
                 if (Regex.IsMatch(line, "MyTact\\[(.*?)\\]=\\{(.*?)\\}.*?--(.*?)"))
                 {
                     // Get the set of values from the line
-                    string[] values = Regex.Replace(line, "MyTact\\[(.*?)\\]=\\{(.*?)\\}.*?--(.*?)", "$1,$2,$3").Split(',');
+                    string[] values = Regex.Replace(line, "MyTact\\[(.*?)\\]=\\{(.*?)\\}.*?--(.*?)", "$1,$2,$3").Split(new char[] { ',' }, 15);
 
                     // Create a new tactic object
                     Tact t = new Tact(Convert.ToInt32(values[0]), values[14]);
@@ -102,6 +105,10 @@ namespace AzzyAIConfig
                     else if (values[1] == "TACT_ATTACK_TOP")
                     {
                         t.TACT_BASIC = TACT_BASIC.TACT_ATTACK_TOP;
+                    }
+                    else if (values[1] == "TACT_TANKMOB")
+                    {
+                        t.TACT_BASIC = TACT_BASIC.TACT_TANKMOB;
                     }
 
                     t.TACT_SKILL = values[2];
@@ -339,7 +346,7 @@ namespace AzzyAIConfig
                 if (Regex.IsMatch(file, string.Format("MyTact\\[{0}\\]", t.ID)))
                 {
                     // Update the tactic
-                    file = Regex.Replace(file, string.Format("(MyTact\\[{0}\\]=\\{{).*?(\\}}.*?--).*", t.ID), string.Format("$1{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}$2{13}", t.TACT_BASIC, t.TACT_SKILL, t.TACT_KITE, t.TACT_CAST, t.TACT_PUSHBACK, t.TACT_DEBUFF, t.TACT_SKILLCLASS, t.TACT_RESCUE, t.TACT_SP, t.TACT_SNIPE, t.TACT_KS, t.TACT_WEIGHT, t.TACT_CHASE, t.Name));
+                    file = Regex.Replace(file, string.Format("(MyTact\\[{0}\\]=\\{{).*?(\\}}.*?--).*", t.ID), string.Format("$1{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}$2{13}", t.TACT_BASIC, t.TACT_SKILL, t.TACT_KITE, t.TACT_CAST, t.TACT_PUSHBACK, t.TACT_DEBUFF, t.TACT_SKILLCLASS, t.TACT_RESCUE, t.TACT_SP, t.TACT_SNIPE, t.TACT_KS, Convert.ToString(t.TACT_WEIGHT, new CultureInfo("en-US")), t.TACT_CHASE, t.Name));
                 }
                 // If the file does not contain the tactic
                 else

@@ -1166,7 +1166,7 @@ function OnATTACK_ST()
         if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE and GetTick() >= nextEleanorSphereAttack then
             nextEleanorSphereAttack = GetTick() + SphereTrackInterval
             MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
-            UpdateTimeoutFile()
+            UpdateTimeoutFileThrottled()
         end
     end
 
@@ -2632,6 +2632,7 @@ function DoHealingTasks (myid)
 end
 
 function UpdateTimeoutFile()
+	NextTimeoutFileWrite = GetTick() + TIMEOUT_FILE_MIN_INTERVAL
 	if StickyStandby==2 then
 		ShouldStandbyx=ShouldStandby
 	else
@@ -2656,6 +2657,16 @@ function UpdateTimeoutFile()
 		logappend("AAI_ERROR","Failed to update timeout file for owner "..OwnerID)
 	end
 	return
+end
+
+-- For frequent, low-value updates (Eleanor's sphere estimate): any write made within the last
+-- TIMEOUT_FILE_MIN_INTERVAL ms already saved the current values, so skip this one.
+TIMEOUT_FILE_MIN_INTERVAL = 1000
+NextTimeoutFileWrite = 0
+function UpdateTimeoutFileThrottled()
+	if GetTick() >= NextTimeoutFileWrite then
+		UpdateTimeoutFile()
+	end
 end
 
 function TimeoutConv(a)
@@ -3217,6 +3228,9 @@ function AI(myid)
 	MobInfoCache = {}
 	ActorClassCache = {}
 	ActorPosCache = {}
+	ActorMotionCache = {}
+	ActorTargetCache = {}
+	ActorHPCache = {}
 	if DoneInit== 0 then
 		doInit(myid)
 	end
@@ -3322,7 +3336,7 @@ function AI(myid)
 
 	--###DATA GATHERING###
 	for k,v in pairs(Unreachable) do
-		if (IsOutOfSight(myid,k)==true or GetV(V_MOTION,k)==MOTION_DEAD or (IsFriendOrSelf(GetV(V_TARGET,k))==1) and GetV(V_MOTION,k)~=MOTION_STAND) then
+		if (IsOutOfSight(myid,k)==true or GetActorMotion(k)==MOTION_DEAD or (IsFriendOrSelf(GetActorTarget(k))==1) and GetActorMotion(k)~=MOTION_STAND) then
 			Unreachable[k]=nil
 			TraceAI("Marking as reachable"..k)
 		end
@@ -3388,7 +3402,7 @@ function AI(myid)
 	local logActors = LogEnable["AAI_ACTORS"]==1
 	local myx, myy = x, y
 	for i, v in ipairs(actors) do
-		local x, y = GetV(V_POSITION, v)
+		local x, y = GetPos(v)
 		TakenCells[x .. "_" .. y] = 1
 		-- AAIActors only remembers which actors were already logged, so skip it when logging is off
 		if logActors and AAIActors[v] ~= 1 then
@@ -3467,17 +3481,17 @@ function AI(myid)
 							IsActive[v]=1
 						end
 					end
-					if (GetTact(TACT_BASIC,v)==TACT_TANK and GetV(V_TARGET,v)==MyID) then
+					if (GetTact(TACT_BASIC,v)==TACT_TANK and GetActorTarget(v)==MyID) then
 						TankMonsterCount=TankMonsterCount+1
 					end
-					motionclass=MotionClassLU[GetV(V_MOTION,v)]
+					motionclass=MotionClassLU[GetActorMotion(v)]
 					if motionclass==nil then 
 						motionclass=3 
 					end --CHANGE
 					--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." "..motionclass)
 					if (motionclass~=-1 and (IsActive[v]==1 or AutoDetectPlant~=1 or IsHomun(myid)==1)) then 
 						--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." target added")
-						Targets[v]={motionclass,GetTargetClass(GetV(V_TARGET,v))}
+						Targets[v]={motionclass,GetTargetClass(GetActorTarget(v))}
 					end
 				elseif IsSummonID(v)==1 or (ServerType==SERVER_PRIVATE and v~=MyID and v~=OwnerID) then
 					Retainers[v]=1
@@ -3536,7 +3550,7 @@ function AI(myid)
 				TraceAI("PVP: Player "..k.."  Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k))
 			end
 			if IsMonster(k)==1 then
-				Targets[k] = {MotionClassLU[GetV(V_MOTION,k)],GetTargetClass(GetV(V_TARGET,k))}
+				Targets[k] = {MotionClassLU[GetActorMotion(k)],GetTargetClass(GetActorTarget(k))}
 			end
 		end
 	end

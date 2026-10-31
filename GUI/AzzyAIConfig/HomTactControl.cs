@@ -75,7 +75,7 @@ namespace AzzyAIConfig
             if (!File.Exists(file))
             {
                 // Create the file
-                File.CreateText(file);
+                File.WriteAllText(file, string.Empty);
             }
 
             // Save the file
@@ -904,8 +904,15 @@ namespace AzzyAIConfig
             // Get the listBoxTactics selected tactic
             Tact t = (Tact)listBoxTactics.SelectedItem;
 
+            // Ignore half-typed values (empty box, lone minus sign) instead of throwing
+            int id;
+            if (!int.TryParse(textBoxID.Text, out id))
+            {
+                return;
+            }
+
             // Update the tactic ID
-            t.ID = TACT_ID;
+            t.ID = id;
 
             // Check if the TacticsChanged event handler is not null
             if (TacticsChanged != null)

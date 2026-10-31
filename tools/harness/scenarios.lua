@@ -644,6 +644,12 @@ SCENARIOS = {
 		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3, SphereTrackInterval = 200 },
 		expect = { "Sonic Claw", "Silvervein Rush", "Midnight Frenzy" },
 		afterLoad = function()
+			TimeoutWrites = 0
+			local realUpdateTimeoutFile = UpdateTimeoutFile
+			UpdateTimeoutFile = function(...)
+				TimeoutWrites = TimeoutWrites + 1
+				return realUpdateTimeoutFile(...)
+			end
 			local realDoSkill = DoSkill
 			DoSkill = function(skill, ...)
 				if skill == MH_SILVERVEIN_RUSH or skill == MH_MIDNIGHT_FRENZY then
@@ -668,6 +674,17 @@ SCENARIOS = {
 					if cast.skill == MH_MIDNIGHT_FRENZY and cast.ok then completed = completed + 1 end
 				end
 				assert(completed >= 6, "too few completed combos: " .. completed)
+				return true
+			end,
+			["sphere estimate saves the timeout file at most once per interval"] = function()
+				NextTimeoutFileWrite = 0
+				local before = TimeoutWrites
+				UpdateTimeoutFileThrottled()
+				UpdateTimeoutFileThrottled()
+				assert(TimeoutWrites == before + 1, "expected one write, got " .. (TimeoutWrites - before))
+				NextTimeoutFileWrite = GetTick()
+				UpdateTimeoutFileThrottled()
+				assert(TimeoutWrites == before + 2, "write after the interval was skipped")
 				return true
 			end,
 		} },

@@ -141,29 +141,15 @@ namespace AzzyAIConfig
             // If the collection is not read only and contains item
             else if (Contains(item))
             {
-                // Create a new tactics array
-                Tact[] old = new Tact[_items.Length];
+                // Find the item
+                int index = 0;
+                while (_items[index] != item) index++;
 
-                // Copy the old tactics array to the new one
-                _items.CopyTo(old, 0);
-
-                // Replace the item with the last tactic in the array
-                int i = 0;
-                while (old[i] != item) i++;
-                if (old[i] == item)
-                {
-                    old[i] = old[old.Length - 1];
-                }
-
-                // Create a new tactics array with one less slot than the old one
-                _items = new Tact[old.Length - 1];
-
-                // Run through all the slots in the new array
-                for (i = 0; i < _items.Length; i++)
-                {
-                    // Create a new tactic from the old one in the old array
-                    _items[i] = new Tact(old[i].ID, old[i].Name, old[i].TACT_BASIC, old[i].TACT_SKILL, old[i].TACT_KITE, old[i].TACT_CAST, old[i].TACT_PUSHBACK, old[i].TACT_DEBUFF, old[i].TACT_SKILLCLASS, old[i].TACT_RESCUE, old[i].TACT_SP,old[i].TACT_SNIPE, old[i].TACT_KS, old[i].TACT_WEIGHT, old[i].TACT_CHASE);
-                }
+                // Keep the original tactic objects: the list box edits them directly
+                Tact[] kept = new Tact[_items.Length - 1];
+                Array.Copy(_items, 0, kept, 0, index);
+                Array.Copy(_items, index + 1, kept, index, _items.Length - index - 1);
+                _items = kept;
 
                 // Sort the new array
                 Array.Sort(_items);
