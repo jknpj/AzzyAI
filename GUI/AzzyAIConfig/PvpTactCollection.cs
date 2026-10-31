@@ -141,32 +141,15 @@ namespace AzzyAIConfig
             // If the collection is not read only and contains item
             else if (Contains(item))
             {
-                // Create a new tactics array
-                PvpTact[] old = new PvpTact[_items.Length];
+                // Find the item
+                int index = 0;
+                while (_items[index] != item) index++;
 
-                // Copy the old tactics array to the new one
-                _items.CopyTo(old, 0);
-
-                // Search for the item and replace it with the last tactic in the array
-                int i = 0;
-                while (old[i] != item)
-                {
-                    i++;
-                    if (old[i] == item)
-                    {
-                        old[i] = old[old.Length - 1];
-                    }
-                }
-
-                // Create a new tactics array with one less slot than the old one
-                _items = new PvpTact[old.Length - 1];
-
-                // Run through all the slots in the new array
-                for (i = 0; i < _items.Length; i++)
-                {
-                    // Set the current slot to the old tactic
-                    _items[i] = old[i];
-                }
+                // Copy every other tactic into a new array with one less slot
+                PvpTact[] kept = new PvpTact[_items.Length - 1];
+                Array.Copy(_items, 0, kept, 0, index);
+                Array.Copy(_items, index + 1, kept, index, _items.Length - index - 1);
+                _items = kept;
 
                 // Sort the new array
                 Array.Sort(_items);

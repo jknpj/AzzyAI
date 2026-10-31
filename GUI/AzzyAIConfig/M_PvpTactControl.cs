@@ -77,7 +77,7 @@ namespace AzzyAIConfig
             if (!File.Exists(file))
             {
                 // Create the file
-                File.CreateText(file);
+                File.WriteAllText(file, string.Empty);
             }
 
             // Save the file

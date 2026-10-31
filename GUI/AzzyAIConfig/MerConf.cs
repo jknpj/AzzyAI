@@ -174,7 +174,7 @@ namespace AzzyAIConfig
             if (!File.Exists(file))
             {
                 // Create the file
-                File.CreateText(file);
+                File.WriteAllText(file, File.ReadAllText(_file));
             }
 
             // Set the configuration values

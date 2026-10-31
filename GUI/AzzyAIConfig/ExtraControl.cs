@@ -66,13 +66,13 @@ namespace AzzyAIConfig
             if (!File.Exists(hfile))
             {
                 // Create hfile
-                File.CreateText(hfile);
+                File.WriteAllText(hfile, string.Empty);
             }
             // Check if mfile does not exist
             if (!File.Exists(mfile))
             {
                 // Create mfile
-                File.CreateText(mfile);
+                File.WriteAllText(mfile, string.Empty);
             }
 
             // Save the contents of each file

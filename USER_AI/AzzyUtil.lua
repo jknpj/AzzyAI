@@ -509,7 +509,7 @@ end
 
 function IsRescueTarget(id)
 	local tactrescue=GetTact(TACT_RESCUE,id)
-	local target=GetV(V_TARGET,id)
+	local target=GetActorTarget(id)
 	local owner=OwnerID
 	if target==owner then
 		local hp = HPPercent(owner)
@@ -1311,10 +1311,21 @@ end
 --### HP/SP % functions###
 --########################
 
+-- HP can't change within one AI() call; AI() empties ActorHPCache at the start of every tick.
+ActorHPCache = {}
 function HPPercent(id)
+	if id ~= nil then
+		local cached = ActorHPCache[id]
+		if cached ~= nil then
+			return cached
+		end
+	end
 	local maxHP=GetV(V_MAXHP,id)
 	local curHP=GetV(V_HP,id)
 	local percHP=100*curHP/maxHP
+	if id ~= nil then
+		ActorHPCache[id] = percHP
+	end
 	return percHP
 end
 
@@ -1434,8 +1445,8 @@ function	GetDistance (x1,y1,x2,y2)
 end
 
 function	GetDistance2 (id1, id2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
+	local x1, y1 = GetPos (id1)
+	local x2, y2 = GetPos (id2)
 	if (x1 == -1 or x2 == -1) then
 		return -1
 	end
@@ -1444,8 +1455,8 @@ end
 
 
 function GetDistanceRect(id1,id2)
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
+	local x1, y1 = GetPos (id1)
+	local x2, y2 = GetPos (id2)
 	if (x1 == -1 or x2 == -1) then
 		return 999
 	end
@@ -1455,8 +1466,8 @@ function GetDistanceRect(id1,id2)
 end
 
 function GetDistance3(id1,id2) 
-	local x1, y1 = GetV (V_POSITION,id1)
-	local x2, y2 = GetV (V_POSITION,id2)
+	local x1, y1 = GetPos (id1)
+	local x2, y2 = GetPos (id2)
 	if (x1 == -1 or x2 == -1) then
 		return -1
 	end
@@ -1499,6 +1510,9 @@ end
 -- AI() empties ActorPosCache at the start of every tick.
 ActorPosCache = {}
 function GetPos(id)
+	if id == nil then
+		return GetV(V_POSITION, id)
+	end
 	local p = ActorPosCache[id]
 	if p == nil then
 		local x, y = GetV(V_POSITION, id)
@@ -1506,6 +1520,34 @@ function GetPos(id)
 		ActorPosCache[id] = p
 	end
 	return p[1], p[2]
+end
+
+-- Motion and target of another actor, read once per actor per AI() call like GetPos.
+-- AI() empties both caches at the start of every tick.
+ActorMotionCache = {}
+ActorTargetCache = {}
+function GetActorMotion(id)
+	if id == nil then
+		return GetV(V_MOTION, id)
+	end
+	local motion = ActorMotionCache[id]
+	if motion == nil then
+		motion = GetV(V_MOTION, id)
+		ActorMotionCache[id] = motion
+	end
+	return motion
+end
+
+function GetActorTarget(id)
+	if id == nil then
+		return GetV(V_TARGET, id)
+	end
+	local target = ActorTargetCache[id]
+	if target == nil then
+		target = GetV(V_TARGET, id)
+		ActorTargetCache[id] = target
+	end
+	return target
 end
 
 function	GetDistanceA (id1, id2)
@@ -1666,8 +1708,8 @@ function	GetDistanceFromOwner (id)
 end
 
 function	IsOutOfSight (id1,id2)
-	local x1,y1 = GetV (V_POSITION,id1)
-	local x2,y2 = GetV (V_POSITION,id2)
+	local x1,y1 = GetPos(id1)
+	local x2,y2 = GetPos(id2)
 	if (x1 == -1 or x2 == -1 or id1==-1 or id2==-1) then
 		return true
 	end
@@ -3382,7 +3424,7 @@ function formatmypos(steps)
 	local outstring=""
 	for v=1,steps,1 do
 		outstring=outstring.."("..MyPosX[v]..","..MyPosY[v]..")"
-		if v~=step then
+		if v~=steps then
 			outstring=outstring..","
 		end
 	end

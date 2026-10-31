@@ -214,13 +214,67 @@ try {
         Remove-Item $roundtrip, $minimal -ErrorAction SilentlyContinue
     }
     $form.Controls.Find('buttonApply', $true)[0].Enabled = $false
+    $tactBase = [string](Join-Path $Sandbox 'H_Tactics.lua')
+    $tactTemp = [string](Join-Path $Sandbox 'tactics-smoke.tmp')
+    $previousCulture = [Threading.Thread]::CurrentThread.CurrentCulture
+    try {
+        $hTactics = $assembly.GetType('AzzyAIConfig.H_Tactics', $true)
+        $tactLoad = $hTactics.GetMethod('Load')
+        $tactSave = $hTactics.GetMethod('Save')
+        $tactics = $hTactics.GetProperty('Tactics').GetValue($null, $null)
+        $tactType = $assembly.GetType('AzzyAIConfig.Tact', $true)
+        $tactLoad.Invoke($null, @($tactBase)) | Out-Null
+        $count = $tactics.Count
+        $tactLoad.Invoke($null, @($tactBase)) | Out-Null
+        if ($tactics.Count -ne $count) { throw 'Importing a tactics file appended duplicates instead of replacing the list.' }
+        if ($count -lt 4) { throw 'Expected at least four tactics to test removal.' }
+        foreach ($position in @('first', 'middle', 'last')) {
+            $items = [Array]::CreateInstance($tactType, $tactics.Count)
+            $tactics.CopyTo($items, 0)
+            $index = @{ first = 0; middle = [int][Math]::Floor($items.Length / 2); last = $items.Length - 1 }[$position]
+            $removed = $items[$index]
+            if (!$tactics.Remove($removed)) { throw "Removing the $position tactic failed." }
+            $remaining = [Array]::CreateInstance($tactType, $tactics.Count)
+            $tactics.CopyTo($remaining, 0)
+            if ($remaining.Length -ne $items.Length - 1) { throw "Removing the $position tactic changed the count by the wrong amount." }
+            foreach ($item in $items) {
+                $present = $false
+                foreach ($kept in $remaining) { if ([object]::ReferenceEquals($kept, $item)) { $present = $true } }
+                if ([object]::ReferenceEquals($item, $removed)) {
+                    if ($present) { throw "The $position tactic was not removed." }
+                } elseif (!$present) {
+                    throw "Removing the $position tactic dropped or replaced another tactic object."
+                }
+            }
+        }
+        $items = [Array]::CreateInstance($tactType, $tactics.Count)
+        $tactics.CopyTo($items, 0)
+        $edited = $items[$items.Length - 1]
+        $editedId = $edited.ID
+        $edited.Name = 'Poring, Red'
+        $edited.TACT_WEIGHT = [decimal]0.5
+        [Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::GetCultureInfo('pt-BR')
+        $tactSave.Invoke($null, @($tactTemp)) | Out-Null
+        [Threading.Thread]::CurrentThread.CurrentCulture = $previousCulture
+        $tactLoad.Invoke($null, @($tactTemp)) | Out-Null
+        $reloaded = [Array]::CreateInstance($tactType, $tactics.Count)
+        $tactics.CopyTo($reloaded, 0)
+        $match = @($reloaded | Where-Object { $_.ID -eq $editedId })
+        if ($match.Count -ne 1 -or $match[0].Name.Trim() -ne 'Poring, Red' -or $match[0].TACT_WEIGHT -ne [decimal]0.5) {
+            throw 'An edit made after removing tactics was lost, or a comma name/decimal weight did not survive saving.'
+        }
+    } finally {
+        [Threading.Thread]::CurrentThread.CurrentCulture = $previousCulture
+        Remove-Item $tactTemp -ErrorAction SilentlyContinue
+        $tactLoad.Invoke($null, @($tactBase)) | Out-Null
+    }
     $form.Close()
     Get-ChildItem $Sandbox -Filter '*.lua' | ForEach-Object {
         if ($before[$_.Name] -ne (Get-FileHash $_.FullName).Hash) {
             throw "Opening the GUI unexpectedly changed $($_.Name)."
         }
     }
-    Write-Host 'PASS: seven tabs, resizing, search, type filters, skill limits, settings round-trip/defaults/import, and unchanged source Lua.'
+    Write-Host 'PASS: seven tabs, resizing, search, type filters, skill limits, settings round-trip/defaults/import, tactics import/removal/round-trip, and unchanged source Lua.'
 } finally {
     if ($null -ne $form) {
         $form.Dispose()

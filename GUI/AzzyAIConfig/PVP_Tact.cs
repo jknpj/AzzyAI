@@ -22,6 +22,9 @@ namespace AzzyAIConfig
             string file = File.ReadAllText(fileName);
             string[] lines = file.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
+            // Importing a file replaces the tactics instead of appending to the ones already loaded
+            _tacts.Clear();
+
             // Check if the file does not contain "MyPVPTact[0]"
             if (!Regex.IsMatch(file, "MyPVPTact\\[0\\]"))
             {

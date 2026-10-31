@@ -98,8 +98,17 @@ end
 
 local skillKnown = {}
 local getvCalls = {}
+local getvSites = {}
+local profileSites = os.getenv("HARNESS_PROFILE") == "1"
 function GetV(v, id, extra, extra2)
 	getvCalls[v] = (getvCalls[v] or 0) + 1
+	if profileSites then
+		local caller = debug.getinfo(2, "Sl")
+		local site = (caller.short_src:match("[^\\/]+$") or caller.short_src) .. ":" .. caller.currentline
+		local sites = getvSites[v]
+		if not sites then sites = {}; getvSites[v] = sites end
+		sites[site] = (sites[site] or 0) + 1
+	end
 	local e = world[id]
 	if v == V_OWNER then return OWNER end
 	if not e then
@@ -381,6 +390,36 @@ end
 collectgarbage("collect")
 local memStart = collectgarbage("count")
 
+-- HARNESS_GLOBALS=1: report globals read while undefined (usually a typo or a missing default) and
+-- globals created while the AI runs (a local written without "local" leaks into _G)
+local trackGlobals = os.getenv("HARNESS_GLOBALS") == "1"
+local nilReads, lateWrites = {}, {}
+local inTick = false
+if trackGlobals then
+	local function site()
+		local info = debug.getinfo(3, "Sl")
+		return info and ((info.short_src:match("[^/\\]*$") or "?") .. ":" .. info.currentline) or "?"
+	end
+	setmetatable(_G, {
+		__index = function(_, name)
+			if inTick and type(name) == "string" then
+				local where = nilReads[name]
+				if not where then where = {}; nilReads[name] = where end
+				local s = site()
+				where[s] = (where[s] or 0) + 1
+			end
+			return nil
+		end,
+		__newindex = function(t, name, value)
+			if inTick and type(name) == "string" and value ~= nil then
+				local s = site()
+				if not lateWrites[name] then lateWrites[name] = s end
+			end
+			rawset(t, name, value)
+		end,
+	})
+end
+
 local function globalTableSizes()
 	local sizes = {}
 	for k, v in pairs(_G) do
@@ -410,7 +449,9 @@ for tick = 1, TICKS do
 	if not h.busyUntil or now >= h.busyUntil then
 		local t0 = profile and os.clock()
 		if profile then debug.sethook(sampler, "", 100) end
+		inTick = true
 		local ok, e = pcall(AI, HOMUN)
+		inTick = false
 		if profile then
 			debug.sethook()
 			local dt = os.clock() - t0
@@ -514,6 +555,16 @@ if profile and aiCalls > 0 then
 		parts[#parts + 1] = (vnames[gv[i]] or tostring(gv[i])) .. "=" .. math.floor(getvCalls[gv[i]] / aiCalls)
 	end
 	print(("    GetV per AI call: %d (%s)"):format(math.floor(gtotal / aiCalls), table.concat(parts, ", ")))
+	for i = 1, math.min(6, #gv) do
+		local sites = {}
+		for site, n in pairs(getvSites[gv[i]] or {}) do sites[#sites + 1] = site end
+		table.sort(sites, function(a, b) return getvSites[gv[i]][a] > getvSites[gv[i]][b] end)
+		local top = {}
+		for j = 1, math.min(5, #sites) do
+			top[#top + 1] = ("%s=%.1f"):format(sites[j], getvSites[gv[i]][sites[j]] / aiCalls)
+		end
+		print(("      %s callers per AI call: %s"):format(vnames[gv[i]] or tostring(gv[i]), table.concat(top, ", ")))
+	end
 	local keys, total = {}, 0
 	for k, n in pairs(samples) do keys[#keys + 1] = k; total = total + n end
 	table.sort(keys, function(a, b) return samples[a] > samples[b] end)
@@ -528,5 +579,21 @@ if profile and aiCalls > 0 then
 			end
 		end
 	end
+end
+if trackGlobals then
+	setmetatable(_G, nil)
+	local names = {}
+	for name in pairs(nilReads) do names[#names + 1] = name end
+	table.sort(names)
+	for _, name in ipairs(names) do
+		local sites, total = {}, 0
+		for s, n in pairs(nilReads[name]) do sites[#sites + 1] = s; total = total + n end
+		table.sort(sites)
+		print(("    NILGLOBAL %s read %dx at %s"):format(name, total, table.concat(sites, ",", 1, math.min(3, #sites))))
+	end
+	names = {}
+	for name in pairs(lateWrites) do names[#names + 1] = name end
+	table.sort(names)
+	for _, name in ipairs(names) do print(("    LATEGLOBAL %s created at %s"):format(name, lateWrites[name])) end
 end
 os.exit(#failures == 0 and 0 or 1)
