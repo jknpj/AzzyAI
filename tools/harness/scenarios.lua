@@ -352,6 +352,7 @@ SCENARIOS = {
 		expect = { "Absolute Zephyr" } },
 
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		set = { AutoComboMode = 0 },
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
 		checks = {
 			["grapple skills obey their individual config switches"] = function()
@@ -461,10 +462,67 @@ SCENARIOS = {
 		checks = { ["SkillList/SkillInfo match the rAthena skill trees"] = checkSkillTrees } },
 	-- Eleanor on rAthena: Sonic Claw needs a sphere, which only normal attacks in fighting style give
 	eleanor_private = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
+		set = { AutoComboMode = 0 },
 		expect = { "Sonic Claw" } },
-	-- the AI asks for an attack every tick but she swings once per 800 ms: the sphere estimate must count
-	-- swings (the harness server gives one sphere per two of them) and never run ahead of the server's
+	eleanor_manual_style = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = { {101,100} }, private = true,
+		tactics = { [0] = { [7] = 8 } },
+		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3 },
+		afterLoad = function()
+			local realAI = AI
+			local requested = false
+			AI = function(id)
+				if DoneInit ~= 0 and not requested and CastSkill == 0 then
+					requested = true
+					HarnessServer.spheres = 10
+					MySpheres = 10
+					OnSKILL_OBJECT_CMD(1, MH_STYLE_CHANGE, id)
+				end
+				return realAI(id)
+			end
+		end,
+		expect = { "Style Change", "Tinder Breaker", "Continuous Brandishing Combo", "Eternal Quickening Combo" },
+		checks = {
+			["manual style change updates both server and AI"] = function()
+				assert(HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE,
+					"manual style change was not tracked")
+				return true
+			end,
+		} },
+	eleanor_hidden_motion = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
+		attackDelay = 100, attackMotion = 100,
+		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3, SphereTrackInterval = 200 },
+		expect = { "Sonic Claw", "Silvervein Rush", "Midnight Frenzy" },
+		afterLoad = function()
+			local realDoSkill = DoSkill
+			DoSkill = function(skill, ...)
+				if skill == MH_SILVERVEIN_RUSH or skill == MH_MIDNIGHT_FRENZY then
+					assert(CastSkill == 0, "combo advanced before the previous cast was confirmed")
+				end
+				return realDoSkill(skill, ...)
+			end
+			local realGetV = GetV
+			GetV = function(kind, id, ...)
+				if kind == V_MOTION and id == MyID then
+					local value = realGetV(kind, id, ...)
+					if value == MOTION_ATTACK or value == MOTION_ATTACK2 then return MOTION_STAND end
+					return value
+				end
+				return realGetV(kind, id, ...)
+			end
+		end,
+		checks = {
+			["fast Eleanor completes at least six combos in 30 seconds"] = function()
+				local completed = 0
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.skill == MH_MIDNIGHT_FRENZY and cast.ok then completed = completed + 1 end
+				end
+				assert(completed >= 6, "too few completed combos: " .. completed)
+				return true
+			end,
+		} },
+	-- The AI asks for an attack every tick but the estimate must throttle those commands.
 	eleanor_spheres = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
+		set = { AutoComboMode = 0 },
 		expect = { "Sonic Claw" },
 		afterLoad = function()
 			local realAI = AI
