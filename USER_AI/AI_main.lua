@@ -9,6 +9,8 @@ MainVersion="1.56"
 -- AI_main is loaded after H_Config/M_Config, so ServerType is final here
 ApplyServerType()
 
+local nextEleanorSphereAttack = 0
+
 ResCmdList			= List.new()
 -- As of dev 15, global variables are now in Const_.lua
 AutoSkillCooldown		= {}
@@ -1159,6 +1161,13 @@ function OnATTACK_ST()
     if (UseSkillOnly ~= 1) then
         Attack(MyID, MyEnemy)
         TraceAI("Normal attack vs: "..MyEnemy)
+        -- Some clients never expose our attack motion. Estimate from attack commands, but
+        -- credit at most one attempt per interval, not one per AI call or dance command.
+        if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE and GetTick() >= nextEleanorSphereAttack then
+            nextEleanorSphereAttack = GetTick() + SphereTrackInterval
+            MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
+            UpdateTimeoutFile()
+        end
     end
 
     if (MySkill ~= 0) then
@@ -1198,14 +1207,11 @@ function OnATTACK_ST()
             TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
         end
         if MySkill ~= 0 then
-            if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE then
-                MySpheres = math.max(math.min(10, MySpheres + 1 / SphereTrackFactor), 0)
-                UpdateTimeoutFile()
-            end
             DoSkill(MySkill, MySkillLevel, SkillTarget, -1, SkillTargetX, SkillTargetY)
         end
     end
-    if ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
+    local comboPending = MyHomunType == ELEANOR and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())
+    if not comboPending and ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
         nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
         if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
             logappend("AAI_DANCE", "Dance attack canceled, too close to move bounds "..GetDistanceAPR(OwnerID, nx, ny).." "..GetMoveBounds())
@@ -3334,16 +3340,11 @@ function AI(myid)
 		MyASAPBuffs[v],MyPosX[v],MyPosY[v],OwnerPosX[v],OwnerPosY[v],EnemyPosX[v],EnemyPosY[v],MyMotions[v],MyStates[v],MyEnemies[v]=MyASAPBuffs[v-1],MyPosX[v-1],MyPosY[v-1],OwnerPosX[v-1],OwnerPosY[v-1],EnemyPosX[v-1],EnemyPosY[v-1],MyMotions[v-1],MyStates[v-1],MyEnemies[v-1]
 	end	
 	MyPosX[1],MyPosY[1],OwnerPosX[1],OwnerPosY[1],EnemyPosX[1],EnemyPosY[1],MyMotions[1],MyStates[1],MyEnemies[1]=x,y,ox,oy,ex,ey,GetV(V_MOTION,MyID),MyState,MyEnemy
-	-- Eleanor gains spheres from hits (rAthena: 50% of the hits she lands in fighting style, or takes in
-	-- grappling style). Counting per attack command would overcount: the AI asks for an attack every
-	-- tick but she only swings once per attack delay. So fighting style counts attack animations that
-	-- start, and grappling style hits that start. SphereTrackFactor = hits counted per sphere (2 is exact).
+	-- Grappling style gains spheres from damage taken. Fighting style uses throttled
+	-- attack attempts in OnATTACK_ST because some clients hide our attack animation.
 	if MyHomunType == ELEANOR then
 		local gain = false
-		if EleanorMode == FIGHTING_MODE then
-			gain = (MyMotions[1] == MOTION_ATTACK or MyMotions[1] == MOTION_ATTACK2)
-				and MyMotions[2] ~= MOTION_ATTACK and MyMotions[2] ~= MOTION_ATTACK2
-		elseif EleanorMode == GRAPPLING_MODE then
+		if EleanorMode == GRAPPLING_MODE then
 			gain = MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE
 		end
 		if gain then
@@ -3694,7 +3695,7 @@ function AI(myid)
 	if clearcastskill==1 then
 		-- Style Change went through (any watcher branch: it has no cast time, so the instant
 		-- branch is the usual one): the server flipped Eleanor's style
-		if CastSkillMode==8 then
+		if CastSkill==MH_STYLE_CHANGE then
 			if EleanorMode==GRAPPLING_MODE then
 				EleanorMode=FIGHTING_MODE
 			else
@@ -3721,7 +3722,14 @@ function AI(myid)
 		-- hits before the AI tries again.
 		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]
 		if MyHomunType == ELEANOR and CastSkillState == 0 and refusedCost ~= nil and refusedCost > 0 then
-			MySpheres = refusedCost - 1
+			-- Follow-ups can fail because their combo or target disappeared, not only
+			-- because of spheres. Do not erase the estimate for those failures.
+			if CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
+				ComboSCTimeout = 0
+				ComboSVTimeout = 0
+			else
+				MySpheres = refusedCost - 1
+			end
 			UpdateTimeoutFile()
 		end
 		if CastSkillMode==0 then

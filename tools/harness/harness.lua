@@ -292,6 +292,9 @@ function SkillGround(id, lvl, skill, x, y) recordCast("gnd", id, lvl, skill, x, 
 
 dofile(HERE .. "scenarios.lua")
 local sc = SCENARIOS[scenario]
+if sc then
+	ATTACK_DELAY, ATTACK_MOTION = sc.attackDelay or 800, sc.attackMotion or 400
+end
 if not sc then
 	print("unknown scenario " .. scenario)
 	os.exit(2)

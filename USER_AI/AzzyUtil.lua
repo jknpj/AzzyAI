@@ -2221,6 +2221,17 @@ function GetSAtkSkill(myid)
 				end
 			end
 		end
+		if htype == ELEANOR and (skill == MH_SONIC_CRAW or skill == MH_TINDER_BREAKER) then
+			local comboEnabled = AutoComboMode == 2 or Berserk_ComboAlways == 1
+			if AutoComboMode == 1 and MyEnemy ~= 0 then
+				local tactic = GetTact(TACT_SKILLCLASS, MyEnemy)
+				comboEnabled = comboEnabled or (skill == MH_SONIC_CRAW and (tactic == CLASS_COMBO_1 or tactic == CLASS_COMBO_2))
+					or (skill == MH_TINDER_BREAKER and tactic > 5)
+			end
+			if comboEnabled and MySpheres < AutoComboSpheres then
+				return 0,0
+			end
+		end
 		if level ~=0 and IsSkillReady(skill) then
 			return skill,level
 		end
@@ -2229,6 +2240,7 @@ function GetSAtkSkill(myid)
 end
 
 function GetComboSkill(myid)
+	if CastSkill ~= 0 then return 0,0 end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
@@ -2261,6 +2273,7 @@ function GetComboSkill(myid)
 end
 
 function GetGrappleSkill(myid)
+	if CastSkill ~= 0 then return 0,0 end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
