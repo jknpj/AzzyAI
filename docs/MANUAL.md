@@ -42,7 +42,7 @@ Before updating, keep a copy of:
 Keep the original full backup somewhere outside the game's AI folder.
 Do not overwrite personalized files blindly or replace new code with an old
 full folder. Compare/import settings into the updated installation, save, reload
-and test. **Reset to Defaults** is not an update tool: it replaces your choices.
+and test.
 
 ## 3. Configure with a GUI
 
@@ -113,8 +113,8 @@ area attacks; caster-centered skills still need monsters near the homunculus.
 `AttackSkillReserveSP` leaves SP available instead of spending everything on
 offense. `AutoSkillDelay` is an extra wait added by the AI. **0 removes only that
 extra wait**, not server cooldowns, cast time or interruptions. Smaller values
-are not always better. The GUI reset default and the bundled preset can differ;
-the installed file's value is what matters.
+are not always better. The bundled preset and the AI's built-in fallback values can
+differ; the installed file's value is what matters.
 
 ## 6. Notes for each Homunculus S
 

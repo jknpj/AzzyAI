@@ -114,13 +114,6 @@ namespace AzzyAIConfig
                 // Enable reverToolStripMenuItem
                 revertToolStripMenuItem.Enabled = true;
             }
-
-            // Check if the resetToDefaultsToolStripMenuItem is not enabled
-            if (!resetToDefaultsToolStripMenuItem.Enabled)
-            {
-                // Enable resetToDefaultsToolStripMenuItem
-                resetToDefaultsToolStripMenuItem.Enabled = true;
-            }
         }
 
         private void homunculusConfigControl_PropertyValueChanged(object sender, EventArgs e)
@@ -144,13 +137,6 @@ namespace AzzyAIConfig
             {
                 // Enable reverToolStripMenuItem
                 revertToolStripMenuItem.Enabled = true;
-            }
-
-            // Check if the resetToDefaultsToolStripMenuItem is not enabled
-            if (!resetToDefaultsToolStripMenuItem.Enabled)
-            {
-                // Enable resetToDefaultsToolStripMenuItem
-                resetToDefaultsToolStripMenuItem.Enabled = true;
             }
         }
 
@@ -176,13 +162,6 @@ namespace AzzyAIConfig
                 // Enable reverToolStripMenuItem
                 revertToolStripMenuItem.Enabled = true;
             }
-
-            // Check if the resetToDefaultsToolStripMenuItem is not enabled
-            if (!resetToDefaultsToolStripMenuItem.Enabled)
-            {
-                // Enable resetToDefaultsToolStripMenuItem
-                resetToDefaultsToolStripMenuItem.Enabled = true;
-            }
         }
 
         private void propertyGridMercenary_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -207,13 +186,6 @@ namespace AzzyAIConfig
                 // Enable reverToolStripMenuItem
                 revertToolStripMenuItem.Enabled = true;
             }
-
-            // Check if the resetToDefaultsToolStripMenuItem is not enabled
-            if (!resetToDefaultsToolStripMenuItem.Enabled)
-            {
-                // Enable resetToDefaultsToolStripMenuItem
-                resetToDefaultsToolStripMenuItem.Enabled = true;
-            }
         }
 
         private void buttonQuit_Click(object sender, EventArgs e)
@@ -235,20 +207,6 @@ namespace AzzyAIConfig
             _mconf.Revert();
             
             // Refresh the controls to show reverted values
-            homunculusConfigControl.Refresh();
-            propertyGridMercenary.Refresh();
-            ConfigChanged(sender, e);
-        }
-
-        private void resetToDefaultsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Reset the homunculus configurations to defaults
-            _hconf.SetDefaults();
-
-            // Reset the mercenary configurations to defaults
-            _mconf.SetDefaults();
-            
-            // Refresh the controls to show default values
             homunculusConfigControl.Refresh();
             propertyGridMercenary.Refresh();
             ConfigChanged(sender, e);
