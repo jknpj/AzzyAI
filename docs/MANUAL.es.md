@@ -132,6 +132,18 @@ de la IA pueden diferir; importa el valor del archivo instalado.
 Son consejos de configuración, no un ranking ni una build óptima. Las reglas
 del servidor pueden variar, incluso el alcance y el tipo de objetivo.
 
+El preset incluido usa `AutoMobCount` 2 y deja desactivadas **Twister Cutter**
+(Eira), **Glanzen Spies** (Bayeri), **Needle Stinger** (Sera) y **Blazing And
+Furious** (Eleanor), porque la IA las prefiere a habilidades más baratas que
+rindieron al menos igual en pruebas sin conexión, y activa **Blast Forge**
+(Dieter). Estas elecciones vienen de una simulación, no de un servidor oficial:
+activa cualquiera si lo prefieres. Todas las habilidades de ataque de Dieter son de área, así que con
+`AutoMobCount` 2 no ataca a un solo monstruo con ellas: pon `AutoMobCount` en 1 si
+luchas sobre todo contra un monstruo a la vez con Dieter (Bayeri y Sera pierden
+daño contra monstruos aislados). Los detalles están en las
+[notas técnicas](RELEASE_NOTES.md#default-preset-tuning) y en las
+[tablas de comparación](preset-tuning/README.md).
+
 ### Eleanor: combos o solo Sonic Claw
 
 Para combos, elige **Always** o **Tactics** en `AutoComboMode` y revisa

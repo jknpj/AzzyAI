@@ -129,6 +129,17 @@ differ; the installed file's value is what matters.
 These are configuration tips, not a ranking or an optimal build. Server rules
 may differ, including skill ranges and targeting.
 
+The bundled preset sets `AutoMobCount` to 2 and leaves **Twister Cutter** (Eira),
+**Glanzen Spies** (Bayeri), **Needle Stinger** (Sera) and **Blazing And Furious**
+(Eleanor) off, because the AI prefers them to cheaper skills that did at least as
+well in offline tests, and turns **Blast Forge** (Dieter) on. These choices come
+from a simulation, not from an official server: enable any of them if you prefer
+it. Dieter's attacks are all area skills, so with `AutoMobCount` 2 he does not attack
+a single monster with them: set `AutoMobCount` to 1 if you mostly fight one monster
+at a time as Dieter (Bayeri and Sera then lose damage against single monsters).
+Details are in the [technical notes](RELEASE_NOTES.md#default-preset-tuning) and the
+[comparison tables](preset-tuning/README.md).
+
 ### Eleanor: combos or Sonic Claw only
 
 For combos, set `AutoComboMode` to **Always** or **Tactics** and review

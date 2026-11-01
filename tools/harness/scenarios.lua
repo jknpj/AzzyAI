@@ -110,6 +110,18 @@ local function damageModelChecks()
 		assert(twister == 197254, twister)
 		return true
 	end
+	checks["Tinder Breaker, CBC and EQC add a flat 2500/4000/6000 per level plus the base level"] = function()
+		-- a normal attack (1481 on the dummy) plus 2500*5+275, 4000*5+275 and 6000*5+275 (battle.cpp)
+		assert(Damage.skill(eleanor, MH_TINDER_BREAKER, 5, dummy()) == 14256, "Tinder Breaker")
+		assert(Damage.skill(eleanor, MH_CBC, 5, dummy()) == 21756, "CBC")
+		assert(Damage.skill(eleanor, MH_EQC, 5, dummy()) == 31756, "EQC")
+		return true
+	end
+	checks["skills whose unit only applies a status deal no damage"] = function()
+		assert(Damage.unmodelled(MH_POISON_MIST) == "its unit only applies a status", "Poison Mist")
+		assert(Damage.unmodelled(MH_LAVA_SLIDE) == nil, "Lava Slide hits every tick")
+		return true
+	end
 	checks["hard DEF reduces weapon damage, IgnoreDefense and magic skip it"] = function()
 		assert(Damage.skill(eleanor, MH_SONIC_CRAW, 5, dummy({ def = 500 }), { spheres = 1 }) == 4074, "DEF 500")
 		assert(Damage.skill(eira, MH_XENO_SLASHER, 10, dummy({ def = 500, mdef = 500 })) == 185478, "IgnoreDefense")
@@ -1016,5 +1028,42 @@ for name, cfg in pairs(ELEANOR_BENCH) do
 		swingMs = tonumber(os.getenv("ELEANOR_SWING_MS") or "") or 129, attackMotion = 100,
 		castPauseMs = tonumber(os.getenv("ELEANOR_CAST_PAUSE_MS") or "") or 550,
 		incomingHitMs = cfg.grappling and 2000 or nil, startStyle = cfg.grappling and "grappling" or nil,
+		minAttacks = 0, maxRefused = 1000, set = set }
+end
+
+-- Benchmark of a Homunculus S against a zero-defense Neutral dummy (or a pack of five), for
+-- comparing configurations: tools/harness/homun_bench.py. Everything comes from the environment,
+-- so the scenario table stays fixed:
+--   HBENCH_SET "AutoMobCount=2,UseEiraTwisterCutter=0"   config overrides
+--   HBENCH_MOBS 1 to 5 monsters      HBENCH_SECONDS 180      HBENCH_SPREGEN SP per second      HBENCH_CAST_RATIO
+local HOMUN_BENCH = {
+	["eira"] = { 48, EIRA_SKILLS, 6334 },
+	["bayeri"] = { 49, BAYERI_SKILLS, 9221 },
+	["sera"] = { 50, SERA_SKILLS, 9707 },
+	["dieter"] = { 51, DIETER_SKILLS, 14814 },
+	-- the Eleanor extras are the calibration of eleanor_bench_* above (swing rate, SP regeneration)
+	["eleanor"] = { 52, ELEANOR_SKILLS, 3381, spregen = 22, swingMs = 129, castPauseMs = 550, attackMotion = 100,
+		set = { SphereTrackInterval = 200 } },
+}
+for name, h in pairs(HOMUN_BENCH) do
+	local set = {}
+	for key, value in pairs(h.set or {}) do set[key] = value end
+	for key, value in (os.getenv("HBENCH_SET") or ""):gmatch("(%w+)=([%w%.%-]+)") do set[key] = tonumber(value) end
+	SCENARIOS["hbench_" .. name] = { homuntype = h[1], skills = h[2],
+		mobs = { unpack(cluster, 1, math.min(math.max(tonumber(os.getenv("HBENCH_MOBS") or "") or 1, 1), #cluster)) },
+		private = true, passive = true, sp = h[3], spregen = tonumber(os.getenv("HBENCH_SPREGEN") or "") or h.spregen or 60,
+		swingMs = h.swingMs, castPauseMs = h.castPauseMs, attackMotion = h.attackMotion,
+		ticks = (tonumber(os.getenv("HBENCH_SECONDS") or "") or 180) * 10,
+		castRatio = tonumber(os.getenv("HBENCH_CAST_RATIO") or "") or 1,
+		-- the AI knows the dummy as a Poring (Water): show it the Neutral element the damage model uses,
+		-- or fire skills would count the monsters at half weight
+		afterLoad = function()
+			if MobInfo and MobInfo[1002] then
+				local info = {}
+				for i, v in ipairs(MobInfo[1002]) do info[i] = v end
+				info[2] = 0
+				MobInfo[1002] = info
+			end
+		end,
 		minAttacks = 0, maxRefused = 1000, set = set }
 end

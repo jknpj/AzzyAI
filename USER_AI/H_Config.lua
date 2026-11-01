@@ -21,7 +21,7 @@ LiveMobID                = 0
 
 AttackSkillReserveSP     = 0 
 AutoMobMode              = 2 
-AutoMobCount             = 1
+AutoMobCount             = 2
 AutoComboMode            = 2
 AutoComboSkill		=0
 AutoComboSpheres         = 10
@@ -139,26 +139,30 @@ DoNotAttackMoving        = 0
 UseSmartBulwark          = 0
 
 -- New Homunculus S Skills
-UseEiraTwisterCutter = 1
+-- Chosen with the offline damage benchmark (tools/harness/homun_bench.py, see docs/RELEASE_NOTES.md):
+-- the AI prefers area skills, then the newer single-target ones, so a costlier skill that is not
+-- better is left off: Twister Cutter (Eira), Glanzen Spies (Bayeri), Needle Stinger (Sera),
+-- Blazing And Furious (Eleanor). Blast Forge (Dieter) adds damage next to Lava Slide.
+UseEiraTwisterCutter = 0
 EiraTwisterCutterLevel = 10
 UseEiraAbsoluteZephyr = 0
 EiraAbsoluteZephyrLevel = 10
-UseEleanorBlazingAndFurious = 1
+UseEleanorBlazingAndFurious = 0
 EleanorBlazingAndFuriousLevel = 10
 UseEleanorTheOneFighterRises = 1
 EleanorTheOneFighterRisesLevel = 10
 UseSeraToxinOfMandara = 1
 SeraToxinOfMandaraLevel = 10
-UseSeraNeedleStinger = 1
+UseSeraNeedleStinger = 0
 SeraNeedleStingerLevel = 10
-UseBayeriGlanzenSpies = 1
+UseBayeriGlanzenSpies = 0
 BayeriGlanzenSpiesLevel = 10
 UseBayeriHeiligePferd = 0
 BayeriHeiligePferdLevel = 10
 UseBayeriGoldeneTone = 1
 BayeriGoldeneToneLevel = 10
 UseDieterTempering = 1
-UseDieterBlastForge = 0
+UseDieterBlastForge = 1
 
 -- New Eleanor Defaults
 UseEleanorTinderBreaker		=1
