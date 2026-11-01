@@ -65,8 +65,10 @@ def run_scenario(lua, name, ticks, env):
         dst = os.path.join(tmp, "AI", "USER_AI")
         shutil.copytree(USER_AI, dst, ignore=shutil.ignore_patterns("*.exe", "*.pdb", "*.pdf", "data"))
         os.makedirs(os.path.join(dst, "data"))
-        # fixed config so the tests don't depend on the user's own H_Config.lua
-        shutil.copy(os.path.join(HERE, "fixtures", "H_Config.lua"), os.path.join(dst, "H_Config.lua"))
+        # fixed config so the tests don't depend on the user's own H_Config.lua; HARNESS_CONFIG
+        # points at another one (the benchmarks compare against the shipped USER_AI/H_Config.lua)
+        shutil.copy(env.get("HARNESS_CONFIG") or os.path.join(HERE, "fixtures", "H_Config.lua"),
+                    os.path.join(dst, "H_Config.lua"))
         r = subprocess.run([lua, os.path.join(HERE, "harness.lua"), name, str(ticks)],
                            cwd=tmp, capture_output=True, text=True, env=env, timeout=300)
         sys.stdout.write(r.stdout)

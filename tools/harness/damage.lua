@@ -115,12 +115,16 @@ local function applyHits(dmg, n)
 end
 
 -- why Damage.skill can't price this skill, or nil
+-- Ground units that hit their targets every Interval (skill_unit_onplace_timer); the other units
+-- (Poison Mist, Safety Wall, Volcanic Ash) only apply a status, e.g. skill.cpp UNT_POISON_MIST
+local DAMAGE_UNITS = { Lava_Slide = true, Dummyskill = true }
 function Damage.unmodelled(skill)
 	local ra = RA_SKILL and RA_SKILL[skill]
 	if not ra then return "no rAthena data" end
 	-- Blazing And Furious is flagged NoDamage but attacks from castendNoDamageId: a calculateSkillRatio
 	-- means the skill deals damage
 	if ra.nodamage and not (RA_RATIO and RA_RATIO[skill]) then return "deals no damage" end
+	if ra.unit and ra.unitid and not DAMAGE_UNITS[ra.unitid] then return "its unit only applies a status" end
 	if ra.type ~= "Weapon" and ra.type ~= "Magic" then return "type " .. tostring(ra.type) end
 	return nil
 end
@@ -132,6 +136,12 @@ function Damage.ticks(skill, lvl)
 	if not ra or not ra.unit or ra.unitid == "Dummyskill" or ra.interval <= 0 then return 1 end
 	return math.max(1, idiv(ra.duration[math.min(lvl, #ra.duration)] or 0, ra.interval))
 end
+
+-- flat damage battle_calc_weapon_attack adds after DEF and element (battle.cpp, the switch after
+-- battle_calc_element_damage): Tinder Breaker, CBC and EQC are otherwise a normal attack
+local FLAT_AFTER_ELEMENT = {
+	MH_TINDER_BREAKER = 2500, MH_CBC = 4000, MH_EQC = 6000,
+}
 
 -- Expected damage of one use of `skill` on one monster (all hits, one unit tick).
 -- ctx.targets = monsters hit together (splash damage that is split among them),
@@ -169,6 +179,8 @@ function Damage.skill(hs, skill, lvl, mob, ctx)
 	end
 	if dmg < 1 then dmg = 1 end
 	dmg = idiv(dmg * elementRate(element, mob), 100)
+	local flat = FLAT_AFTER_ELEMENT[ra.name]
+	if flat then dmg = dmg + flat * lvl + hs.level end
 	dmg = applyHits(dmg, hitCount(ra, skill, lvl, ctx))
 	return dmg * hit
 end
