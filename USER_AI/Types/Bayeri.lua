@@ -3,5 +3,5 @@
 -- Heilige Pferd is a pack skill: +10-12% DPS with 2+ monsters in the benchmark, and AutoMobCount 2 keeps it off lone targets.
 UseBayeriHeiligePferd = 1
 AutoMobCount = 2
--- Glanzen Spies replaces Stahl Horn on a lone target and loses ~40% DPS in the benchmark.
-UseBayeriGlanzenSpies = 0
+-- Glanzen Spies ignores DEF: the AI only casts it instead of Stahl Horn against high-DEF targets (see SpiesBeatsStahlHorn), so it is safe to leave on.
+UseBayeriGlanzenSpies = 1

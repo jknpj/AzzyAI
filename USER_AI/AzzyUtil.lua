@@ -4040,6 +4040,21 @@ function PickReadySkill(htype,candidates)
 	return 0,0
 end
 
+-- Glanzen Spies ignores DEF but is Holy and slower: on a neutral 0 DEF target it deals about 60% of
+-- Stahl Horn's damage (homun_bench.py). Stahl Horn loses (4000+DEF)/(4000+10*DEF) of it to DEF, so
+-- Spies only pays off against high DEF (about 320 for a neutral target; the element moves that).
+-- Without monster data it stays the user's choice.
+BAYERI_SPIES_VS_STAHL = 0.6
+function SpiesBeatsStahlHorn(target)
+	local info = GetMobInfo(target)
+	if info == nil or info[7] == nil then
+		return true
+	end
+	local def = info[7]
+	local stahl = (4000 + def) / (4000 + 10 * def)
+	return BAYERI_SPIES_VS_STAHL * SkillElementRate(MH_GLANZEN_SPIES, target) / 100 > stahl
+end
+
 function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then
 		return 0,0
@@ -4048,6 +4063,9 @@ function GetNewSAtkSkill(myid)
 	if htype==EIRA then
 		return PickReadySkill(htype,{{UseEiraTwisterCutter,MH_TWISTER_CUTTER,EiraTwisterCutterLevel}})
 	elseif htype==BAYERI then
+		if not SpiesBeatsStahlHorn(MyEnemy) then
+			return 0,0
+		end
 		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
 	elseif htype==SERA then
 		return PickReadySkill(htype,{{UseSeraNeedleStinger,MH_NEEDLE_STINGER,SeraNeedleStingerLevel}})

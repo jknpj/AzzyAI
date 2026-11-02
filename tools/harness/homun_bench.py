@@ -20,9 +20,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def run(homun, overrides, mobs, spregen, seconds, config):
+def run(homun, overrides, mobs, spregen, seconds, config, mob_def=None, mob_mdef=None):
     env = dict(os.environ, HARNESS_DAMAGE="1", HBENCH_SET=overrides, HBENCH_MOBS=str(mobs),
                HBENCH_SECONDS=str(seconds))
+    if mob_def is not None:
+        env["HBENCH_DEF"] = str(mob_def)
+    if mob_mdef is not None:
+        env["HBENCH_MDEF"] = str(mob_mdef)
     if spregen:
         env["HBENCH_SPREGEN"] = str(spregen)
     if config:
@@ -48,11 +52,14 @@ def main():
     parser.add_argument("--spregen", type=int, default=0,
                         help="SP regeneration per second (default: 60, Eleanor 22)")
     parser.add_argument("--seconds", type=int, default=180)
+    parser.add_argument("--def", dest="mob_def", type=int, help="hard DEF of the dummies (default 0)")
+    parser.add_argument("--mdef", dest="mob_mdef", type=int, help="MDEF of the dummies (default 0)")
     parser.add_argument("--config", default=os.path.join(HERE, "..", "..", "USER_AI", "H_Config.lua"),
                         help="base H_Config.lua (default: the shipped USER_AI preset)")
     args = parser.parse_args()
     config = os.path.abspath(args.config)
-    results = [(c, run(args.homunculus, "" if c == "base" else c, args.mobs, args.spregen, args.seconds, config))
+    results = [(c, run(args.homunculus, "" if c == "base" else c, args.mobs, args.spregen, args.seconds, config,
+                       args.mob_def, args.mob_mdef))
                for c in args.configs]
     base = results[0][1]["dps"]
     print(f"{args.homunculus}: {args.mobs} monster(s), {args.seconds} s, "

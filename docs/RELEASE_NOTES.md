@@ -28,6 +28,13 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   Lava Slides). Eleanor no longer starts a Sonic Claw chain while a pack is worth
   The One Fighter Rises and SP is short for it: about +11% DPS against 2 monsters,
   +26% against 3 and +39% against 5, unchanged against one. These are simulated figures.
+- Bayeri: `Types/Bayeri.lua` enables Heilige Pferd with `AutoMobCount = 2` (+10-12% DPS
+  against packs, never cast on a lone target). Glanzen Spies ignores DEF but is Holy and
+  slower, so it replaced Stahl Horn and lost up to 40% DPS; it is now only chosen when the
+  target's DEF (new in `MobInfo.lua`: DEF and MDEF after the attack range) makes it pay off
+  (about DEF 320 for a neutral target, +9% at 400, +26% at 567). `homun_bench.py` has
+  `--def` and `--mdef` for this. Eleanor's dance is no longer blocked by a combo that cannot
+  be cast, and her preset enables The One Fighter Rises with `AutoMobCount = 2`.
 - Amistr Castling: Castle Route no longer repeats the cast at the same route point,
   and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
   (cooldown, SP above cost, skill learned).
