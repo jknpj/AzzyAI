@@ -582,12 +582,30 @@ SCENARIOS = {
 
 	eira = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster,
 		expect = { "Eraser Cutter", "Xeno Slasher" } },
+	eira_vanil_caprice = { homuntype = 48,
+		skills = { "MH_LIGHT_OF_REGENE", "MH_OVERED_BOOST", "MH_ERASER_CUTTER", "MH_XENO_SLASHER",
+			"MH_SILENT_BREEZE", "MH_TWISTER_CUTTER", "MH_ABSOLUTE_ZEPHYR", "HVAN_CAPRICE" },
+		mobs = single, private = true,
+		set = { UseHomunSSkillAttack = 0, UseEiraEraseCutter = 0 },
+		expect = { "Caprice" },
+		checks = { ["Vanilmirth base is detected from inherited Caprice"] = function()
+			return DetectedOldHomunType == VANILMIRTH
+		end } },
+	eira_vanil_caprice_disabled = { homuntype = 48,
+		skills = { "MH_LIGHT_OF_REGENE", "MH_OVERED_BOOST", "MH_ERASER_CUTTER", "MH_XENO_SLASHER",
+			"MH_SILENT_BREEZE", "MH_TWISTER_CUTTER", "MH_ABSOLUTE_ZEPHYR", "HVAN_CAPRICE" },
+		mobs = single, private = true,
+		set = { UseHomunSSkillAttack = 0, UseEiraEraseCutter = 0, UseVanilCaprice = 0 },
+		forbid = { "Caprice" },
+		checks = { ["Vanilmirth base remains detected when Caprice is disabled"] = function()
+			return DetectedOldHomunType == VANILMIRTH
+		end } },
 	eira_s = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster,
 		set = { UseEiraTwisterCutter = 1, UseEiraAbsoluteZephyr = 1 },
 		expect = { "Absolute Zephyr" } },
 
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
-		set = { AutoComboMode = 0 },
+		set = { AutoComboMode = 0, AutoMobCount = 1 },
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
 		checks = {
 			["grapple skills obey their individual config switches"] = function()
@@ -631,6 +649,32 @@ SCENARIOS = {
 				UseEleanorTinderBreaker = previous.tinderBreaker
 
 				return eqc == MH_EQC and cbc == MH_CBC and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
+			end,
+		} },
+	eleanor_aoe_single = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
+			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },
+		forbid = { "Blazing And Furious", "The One Fighter Rises" } },
+	eleanor_aoe_pack = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = cluster,
+		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
+			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },
+		expect = { "Blazing And Furious", "The One Fighter Rises" } },
+	eleanor_aoe_target_centered = { homuntype = 52, skills = ELEANOR_SKILLS,
+		mobs = { {103,100}, {106,100} },
+		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
+			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },
+		expect = { "Blazing And Furious" },
+		checks = {
+			["Blazing is selected when only its target-centered splash reaches the pack"] = function()
+				local blazing, fighter
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.ok and cast.skill == MH_BLAZING_AND_FURIOUS and not blazing then
+						blazing = cast.t
+					elseif cast.ok and cast.skill == MH_THE_ONE_FIGHTER_RISES and not fighter then
+						fighter = cast.t
+					end
+				end
+				return blazing ~= nil and (fighter == nil or blazing < fighter)
 			end,
 		} },
 

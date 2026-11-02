@@ -11,6 +11,10 @@ ApplyServerType()
 
 local nextEleanorSphereAttack = 0
 
+local function IsVanilCapriceForS(skill)
+    return skill == HVAN_CAPRICE and MyHomunType >= 17 and UseVanilCaprice ~= 0
+end
+
 ResCmdList			= List.new()
 -- As of dev 15, global variables are now in Const_.lua
 AutoSkillCooldown		= {}
@@ -804,7 +808,11 @@ function OnCHASE_ST()
                                 skilltouse = v
                             end
                         end
-                    elseif (skilltype == MAIN_ATK and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD)) then
+                    elseif (skilltype == MAIN_ATK
+                        and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS
+                            or (BerserkMode == 1 and Berserk_SkillAlways == 1))
+                        and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD
+                            or IsVanilCapriceForS(v[2]))) then
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
@@ -1094,7 +1102,11 @@ function OnATTACK_ST()
                                     skilltouse = v
                                 end
                             end
-                        elseif (skilltype == MAIN_ATK and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD)) then
+                        elseif (skilltype == MAIN_ATK
+                            and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS
+                                or (BerserkMode == 1 and Berserk_SkillAlways == 1))
+                            and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD
+                                or IsVanilCapriceForS(v[2]))) then
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
@@ -1305,7 +1317,7 @@ function	OnTANKCHASE_ST ()
 						if (tact_debuff*-1 == v[2] or (tact_debuff==1 and BasicDebuffs[v[2]]~=nil)) then
 							skilltouse=v
 						end
-					elseif (skilltype==MAIN_ATK and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1)) and tact_skillclass~=CLASS_S) then
+					elseif (skilltype==MAIN_ATK and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1)) and (tact_skillclass~=CLASS_S or IsVanilCapriceForS(v[2]))) then
 						skilltouse=v
 					elseif (skilltype==S_ATK and UseHomunSSkillChase==1 and (MySkillUsedCount < tact_skill or tact_skill==SKILL_ALWAYS or (BerserkMode==1 and Berserk_SkillAlways==1)) and tact_skillclass~=CLASS_OLD) then
 						skilltouse=v

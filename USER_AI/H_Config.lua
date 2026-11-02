@@ -27,6 +27,7 @@ AutoComboSkill		=0
 AutoComboSpheres         = 10
 UseHomunSSkillChase      = 1
 UseHomunSSkillAttack     = 1 
+UseVanilCaprice          = 1
 AutoSkillDelay           = 200
 AoEMaximizeTargets       = 0
 CastTimeRatio            = .80

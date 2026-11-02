@@ -2363,7 +2363,7 @@ function GetAtkSkill(myid)
 		else
 			homuntype=modulo(DetectedOldHomunType,4)
 		end
-		if (homuntype==0) then -- It's a vanil!
+		if (homuntype==0) and (UseVanilCaprice~=0) then -- It's a vanil!
 			skill=HVAN_CAPRICE
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
@@ -3019,7 +3019,7 @@ function GetTargetedSkills(myid)
 	Minionatk={MINION_ATK,s,l}
 	s,l=GetNewSAtkSkill(myid)
     NewSAtk={CLASS_NEW_S,s,l}
-	s,l=GetNewMobSkill(myid)
+	s,l=GetNewMobSkill(myid,MyEnemy,GetTact(TACT_SKILLCLASS,MyEnemy))
     NewMobatk={CLASS_NEW_MOB,s,l}
 	local result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
 	for _, candidate in ipairs(result) do
@@ -3898,15 +3898,11 @@ function GetNewSAtkSkill(myid)
 		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
 	elseif htype==SERA then
 		return PickReadySkill(htype,{{UseSeraNeedleStinger,MH_NEEDLE_STINGER,SeraNeedleStingerLevel}})
-	elseif htype==ELEANOR then
-		return PickReadySkill(htype,{
-			{UseEleanorBlazingAndFurious,MH_BLAZING_AND_FURIOUS,EleanorBlazingAndFuriousLevel},
-			{UseEleanorTheOneFighterRises,MH_THE_ONE_FIGHTER_RISES,EleanorTheOneFighterRisesLevel}})
 	end
 	return 0,0
 end
 
-function GetNewMobSkill(myid)
+function GetNewMobSkill(myid,target,tact_skillclass)
 	if IsHomun(myid)~=1 then
 		return 0,0
 	end
@@ -3919,6 +3915,21 @@ function GetNewMobSkill(myid)
 		return PickReadySkill(htype,{{UseBayeriHeiligePferd,MH_HEILIGE_PFERD,BayeriHeiligePferdLevel}})
 	elseif htype==DIETER then
 		return PickReadySkill(htype,{{UseDieterBlastForge,MH_BLAST_FORGE,nil}})
+	elseif htype==ELEANOR then
+		local candidates = {
+			{UseEleanorTheOneFighterRises,MH_THE_ONE_FIGHTER_RISES,EleanorTheOneFighterRisesLevel},
+			{UseEleanorBlazingAndFurious,MH_BLAZING_AND_FURIOUS,EleanorBlazingAndFuriousLevel}
+		}
+		for _, candidate in ipairs(candidates) do
+			local skill = candidate[2]
+			if candidate[1] ~= nil and candidate[1] ~= 0 and IsSkillReady(skill)
+				and not IsOffensiveCastPaused(skill) then
+				local level = candidate[3] or SkillList[htype][skill] or 0
+				if level ~= 0 and (target == nil or ShouldUseMobSkill(skill, level, target, tact_skillclass)) then
+					return skill, level
+				end
+			end
+		end
 	end
 	return 0,0
 end
