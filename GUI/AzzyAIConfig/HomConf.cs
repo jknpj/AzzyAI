@@ -503,6 +503,9 @@ namespace AzzyAIConfig
             _KiteParanoidThreshold = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["KiteParanoidThreshold"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _KiteBounds = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["KiteBounds"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _ForceKite = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["ForceKite"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _UseDamageDanger = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDamageDanger"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _DamageDangerDrop = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["DamageDangerDrop"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _DamageDangerHP = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["DamageDangerHP"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _FleeHP = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["FleeHP"].Attributes[typeof(DefaultValueAttribute)]).Value);
             
             // Friending Options
@@ -677,6 +680,9 @@ namespace AzzyAIConfig
             H_Config.KiteParanoidThreshold = _KiteParanoidThreshold;
             H_Config.KiteBounds = _KiteBounds;
             H_Config.ForceKite = Convert.ToInt32(_ForceKite);
+            H_Config.UseDamageDanger = Convert.ToInt32(_UseDamageDanger);
+            H_Config.DamageDangerDrop = _DamageDangerDrop;
+            H_Config.DamageDangerHP = _DamageDangerHP;
             H_Config.FleeHP = _FleeHP;
 
             // Friending Options
@@ -850,6 +856,9 @@ namespace AzzyAIConfig
             _KiteParanoidThreshold = H_Config.KiteParanoidThreshold;
             _KiteBounds = H_Config.KiteBounds;
             _ForceKite = Convert.ToBoolean(H_Config.ForceKite);
+            _UseDamageDanger = Convert.ToBoolean(H_Config.UseDamageDanger);
+            _DamageDangerDrop = H_Config.DamageDangerDrop;
+            _DamageDangerHP = H_Config.DamageDangerHP;
             _FleeHP = H_Config.FleeHP;
 
             // Friending Options
@@ -3310,6 +3319,33 @@ int _CastleDefendThreshold = 3;
     {
         get { return _ForceKite; }
         set { _ForceKite = value; }
+    }
+    bool _UseDamageDanger = false;
+    [Category("Kiting Options"),
+    Description("React to damage taken: when the homunculus loses DamageDangerDrop percent of its max HP within 3 seconds while below DamageDangerHP percent HP, it kites away (even without KiteMonsters) and Bayeri casts Stein Wand."),
+    DefaultValue(false)]
+    public bool UseDamageDanger
+    {
+        get { return _UseDamageDanger; }
+        set { _UseDamageDanger = value; }
+    }
+    int _DamageDangerDrop = 30;
+    [Category("Kiting Options"),
+    Description("Percent of max HP lost within 3 seconds that counts as danger (UseDamageDanger)."),
+    DefaultValue(30)]
+    public int DamageDangerDrop
+    {
+        get { return _DamageDangerDrop; }
+        set { _DamageDangerDrop = Math.Max(1, Math.Min(100, value)); }
+    }
+    int _DamageDangerHP = 60;
+    [Category("Kiting Options"),
+    Description("Danger only counts while HP is below this percent (UseDamageDanger)."),
+    DefaultValue(60)]
+    public int DamageDangerHP
+    {
+        get { return _DamageDangerHP; }
+        set { _DamageDangerHP = Math.Max(1, Math.Min(100, value)); }
     }
     int _FleeHP = 0;
     [Category("Kiting Options"),

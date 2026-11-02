@@ -14,7 +14,7 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   own HP every tick; losing `DamageDangerDrop`% of max HP within 3 s while below
   `DamageDangerHP`% makes the homunculus kite away (even with `KiteMonsters`
   off) and Bayeri cast Stein Wand. Editable in `H_Config.lua` and the web GUI;
-  not yet in the desktop GUI. Covered by the `damage_danger` harness check, not
+  also in the desktop GUI (Kiting Options). Covered by the `damage_danger` harness check, not
   yet verified in game.
 
 - Desktop GUI: new **Update** menu. "Update AI from git..." pulls a local clone

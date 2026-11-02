@@ -579,6 +579,18 @@ namespace AzzyAIConfig
             {
                 FleeHP = Convert.ToInt32(Regex.Match(file, "FleeHP\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
             }
+            if (Regex.IsMatch(file, "UseDamageDanger\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                UseDamageDanger = Convert.ToInt32(Regex.Match(file, "UseDamageDanger\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "DamageDangerDrop\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                DamageDangerDrop = Convert.ToInt32(Regex.Match(file, "DamageDangerDrop\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "DamageDangerHP\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                DamageDangerHP = Convert.ToInt32(Regex.Match(file, "DamageDangerHP\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
         }
 
         static void LoadFriendingOptions(string file)
@@ -1738,6 +1750,19 @@ namespace AzzyAIConfig
             {
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "FleeHP", FleeHP);
             }
+            foreach (var kv in new[] { new System.Collections.Generic.KeyValuePair<string, int>("UseDamageDanger", UseDamageDanger),
+                new System.Collections.Generic.KeyValuePair<string, int>("DamageDangerDrop", DamageDangerDrop),
+                new System.Collections.Generic.KeyValuePair<string, int>("DamageDangerHP", DamageDangerHP) })
+            {
+                if (Regex.IsMatch(file, "(" + kv.Key + "\\s*=\\s*)(\\d+|-\\d+)", RegexOptions.Multiline))
+                {
+                    file = Regex.Replace(file, "(" + kv.Key + "\\s*=\\s*)(\\d+|-\\d+)", string.Format("{0,-25}= {1}", kv.Key, kv.Value), RegexOptions.Multiline);
+                }
+                else
+                {
+                    file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, kv.Key, kv.Value);
+                }
+            }
             // Return the new file contents
             return string.Copy(file);
         }
@@ -2682,6 +2707,24 @@ namespace AzzyAIConfig
         {
             get { return _ForceKite; }
             set { _ForceKite = value; }
+        }
+        static int _UseDamageDanger = 0;
+        public static int UseDamageDanger
+        {
+            get { return _UseDamageDanger; }
+            set { _UseDamageDanger = value; }
+        }
+        static int _DamageDangerDrop = 30;
+        public static int DamageDangerDrop
+        {
+            get { return _DamageDangerDrop; }
+            set { _DamageDangerDrop = value; }
+        }
+        static int _DamageDangerHP = 60;
+        public static int DamageDangerHP
+        {
+            get { return _DamageDangerHP; }
+            set { _DamageDangerHP = value; }
         }
         static int _FleeHP = 8;
         public static int FleeHP
