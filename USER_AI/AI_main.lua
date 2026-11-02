@@ -3656,7 +3656,7 @@ function AI(myid)
 			elseif GetTick() - CastSkillTime > 1000 then
 				--Musta failed, we tried to use an instant cast skill 1 second ago and still no sign of it and no sign of delay.
 				TraceAI("Delay watcher: no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
-				logappend("AAI_SKILLFAIL", "no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
+				logappend("AAI_SKILLFAIL", "no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." SP "..GetV(V_SP,MyID).."/"..GetV(V_MAXSP,MyID).." needs "..GetSkillInfo(CastSkill,3,CastSkillLevel).." spheres "..(MySpheres or 0))
 				clearcastskill=2
 			end
 		else

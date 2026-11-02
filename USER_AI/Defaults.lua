@@ -60,7 +60,7 @@ AutoMobMode			=1
 AutoMobCount		=5
 AutoComboMode		=1
 AutoComboSkill		=0
-AutoComboSpheres	=10
+AutoComboSpheres	=3
 UseAutoPushback		=0
 AutoPushbackThreshold		=2
 UseHomunSSkillChase 		= 1
@@ -187,7 +187,7 @@ ChaseGiveUp              = 6
 AttackGiveUp		=10 
 AtkPosbugTimeoutLimit  = 3 
 FollowTryPanic		=3 
-SphereTrackFactor	=3 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average; 3 errs low)
+SphereTrackFactor	=2 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average)
 SphereTrackInterval     = 800 -- minimum ms between estimated fighting-style hits
 CastInterruptLimit      = 3 -- confirmed offensive cast interruptions before a pause; 0 disables
 CastInterruptPause      = 5000 -- temporary per-skill pause in ms
@@ -236,6 +236,10 @@ AttackDebuffLimit	=1
 -- 1 = on startup, disable skill options for skills the homunculus has not learned
 -- and clamp configured levels to the learned level (see LintSkillOptions in AzzyUtil).
 LintUserOptions		=1
+-- 1 = believe the client's answer about which skill levels are learned.
+-- 0 = treat it as a hint only (the official client answers it wrongly): skills are tried anyway.
+-- -1 = automatic: 0 on the official server, 1 on private servers.
+TrustSkillProbe		=-1
 
 -- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
 -- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).
@@ -281,8 +285,9 @@ BasicDebuffs[MA_SANDMAN]=	1
 BasicDebuffs[MA_FREEZINGTRAP]=	1
 
 --Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
+-- Guard and Quicken retry once only: a refusal there is usually "buff still active" (the official server), which retrying can't fix.
 SkillRetryLimit = {
-  [1]=4, [2]=4, [3]=4, [4]=3, [5]=3, [6]=3, [7]=3, [8]=0, [9]=2, [10]=2, [11]=3, [12]=3, [13]=3
+  [1]=1, [2]=1, [3]=4, [4]=3, [5]=3, [6]=3, [7]=3, [8]=0, [9]=2, [10]=2, [11]=3, [12]=3, [13]=3
 }
 SkillRetryLimit[-1]=2 -- for atk skills
 

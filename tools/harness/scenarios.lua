@@ -1095,7 +1095,7 @@ SCENARIOS = {
 		} },
 	eleanor_hidden_motion = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
 		attackDelay = 100, attackMotion = 100,
-		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3, SphereTrackInterval = 200 },
+		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3, SphereTrackInterval = 200, SphereTrackFactor = 3 },
 		expect = { "Sonic Claw", "Silvervein Rush", "Midnight Frenzy" },
 		afterLoad = function()
 			TimeoutWrites = 0

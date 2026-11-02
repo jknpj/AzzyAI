@@ -9,6 +9,21 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Official-server (LATAM) skill detection. The official client answers the
+  `V_SKILLATTACKRANGE_LEVEL` probe differently from rAthena: learned skills report
+  their table range (or +2 for range-1 melee skills), unlearned skills report
+  range + 1 or a flat 8, and some learned buffs report 1. `TrustSkillProbe`
+  (default `-1`) distrusts the probe on `SERVER_OFFICIAL` and trusts it on
+  `SERVER_PRIVATE`; `0`/`1` force either. Distrusted probes only prove
+  "not learned" for the filler answers, other skills are tried and never stepped
+  down on refusal. Base-type detection (Filir/Vanilmirth/Amistr/Lif) uses the
+  same check. `LogEnable["AAI_PROBE"]=1` dumps the raw answers per skill.
+- Eleanor combos on the official server: `EleanorComboGap` (default 600 ms)
+  delays Silvervein Rush / Midnight Frenzy / CBC / EQC after the previous combo
+  skill, `AutoComboSpheres` defaults to 3 and `SphereTrackFactor` to 2.
+- Guard and Quicken buffs (`SkillRetryLimit` 1 and 2) retry once instead of four
+  times, since a refusal there is normally "buff still active".
+
 - Mercenary startup diagnostics now go to `AAIStartM.txt` and include the raw
   and detected mercenary type, max HP/SP, mapped skills, and client-reported
   ranges for known mercenary skills. This helps identify custom or newer hires;

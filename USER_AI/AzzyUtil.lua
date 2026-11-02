@@ -2461,14 +2461,14 @@ function GetComboSkill(myid)
 		if htype==ELEANOR then
 			if EleanorMode==FIGHTING_MODE then
 				-- Sonic Claw already used one sphere, so the follow-up needs one less than the start
-				if ComboSCTimeout > GetTick() and MySpheres >= AutoComboSpheres - 1 and IsSkillReady(MH_SILVERVEIN_RUSH) then
+				if ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and MySpheres >= AutoComboSpheres - 1 and IsSkillReady(MH_SILVERVEIN_RUSH) then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
 						level=SkillList[ELEANOR][MH_SILVERVEIN_RUSH]
 					else
 						level=EleanorSilverveinLevel
 					end
-				elseif ComboSVTimeout > GetTick() and IsSkillReady(MH_MIDNIGHT_FRENZY) then
+				elseif ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_MIDNIGHT_FRENZY) then
 					skill=MH_MIDNIGHT_FRENZY
 					if EleanorMidnightLevel==nil then
 						level=SkillList[ELEANOR][MH_MIDNIGHT_FRENZY]
@@ -2494,14 +2494,14 @@ function GetGrappleSkill(myid)
 		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
 			-- AutoComboSpheres decides when to start the chain (Tinder Breaker); a started chain only
 			-- needs the spheres the next skill costs (CBC 1, EQC 2), or the server refuses it
-			if ComboSCTimeout > GetTick() and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
+			if ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
 				skill=MH_CBC
 				if EleanorCBCLevel==nil then
 					level=SkillList[ELEANOR][MH_CBC]
 				else
 					level=EleanorCBCLevel
 				end
-			elseif ComboSVTimeout > GetTick() and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
+			elseif ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
 				skill=MH_EQC
 				if EleanorEQCLevel==nil then
 					level=SkillList[ELEANOR][MH_EQC]
@@ -3405,6 +3405,8 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	if sphereCost ~= nil then
 		MySpheres = math.max(0,MySpheres - sphereCost)
 	end
+	-- the official server refuses a combo follow-up sent while the previous skill is still playing
+	ComboFollowAt=GetTick()+(EleanorComboGap or 0)
 	if skill==MH_MIDNIGHT_FRENZY then
 		ComboSVTimeout=0
 		UpdateTimeoutFile()
@@ -3694,8 +3696,46 @@ end
 --         "not learned" and for levels whose real range is 1, so for those skills the
 --         first value is only an upper bound.
 ---
+-- Diagnostic: logs what the client answers to the range probes for every skill of this unit
+-- (enable with LogEnable["AAI_PROBE"]=1), to find a reliable "is it learned" test per client.
+ProbeDumped = nil
+function DumpSkillProbe(myid)
+    if ProbeDumped or LogEnable == nil or LogEnable["AAI_PROBE"] ~= 1 or IsHomun(myid) ~= 1 then
+        return
+    end
+    ProbeDumped = 1
+    for _, typ in ipairs({LIF, AMISTR, FILIR, VANILMIRTH, MyHomunType}) do
+        for skill, maxLevel in pairs(SkillList[typ] or {}) do
+            local row = ""
+            for level = 1, maxLevel do
+                row = row .. " " .. tostring(GetV(V_SKILLATTACKRANGE_LEVEL, myid, skill, level))
+            end
+            logappend("AAI_PROBE", "type " .. tostring(typ) .. " skill " .. skill .. " nolevel=" .. tostring(GetV(V_SKILLATTACKRANGE, myid, skill)) .. " perlevel:" .. row)
+        end
+    end
+end
+
+-- On the official client the range probe answers: the table range (or +2 for range-1 melee skills)
+-- for learned skills, but table range + 1 for skills that are not learned (Xeno Slasher 8 instead
+-- of 7, Silent Breeze 6/8/10 instead of 5/7/9), or a flat 8 where the table range is off (The One
+-- Fighter Rises). A plain 1 stays ambiguous (Flitting, Moonlight... report 1 when learned).
+function ProbeAnswerPlausible(skillID, level, r)
+    if r == 1 or not SkillProbeUntrusted() then
+        return true
+    end
+    local expected = SkillInfo[skillID] ~= nil and GetSkillInfo(skillID, 2, level) or nil
+    if expected ~= nil and expected > 1 and r == expected + 1 then
+        return false
+    end
+    if r == 8 and (expected == nil or (expected ~= 8 and expected + 2 ~= 8)) then
+        return false
+    end
+    return true
+end
+
 function GetLearnedSkillLevel(myid, skillID)
     local maxLevel = 0
+    DumpSkillProbe(myid)
     
     if IsHomun(myid) == 1 then
         -- For homunculi, we need to determine which type to use for the lookup.
@@ -3723,15 +3763,20 @@ function GetLearnedSkillLevel(myid, skillID)
 
     -- If the skill doesn't exist for this unit type, it can't be learned.
     if maxLevel == 0 then
-        return 0, true
+        return 0, true, 0
     end
 
     -- Loop downwards from the max level to find the actual learned level.
     local ambiguous = 0
+    local filler = false
     for level = maxLevel, 1, -1 do
         -- It returns 1 if the skill is NOT known at this level.
-        if GetV(V_SKILLATTACKRANGE_LEVEL, myid, skillID, level) ~= 1 then
-            return level, true
+        local r = GetV(V_SKILLATTACKRANGE_LEVEL, myid, skillID, level)
+        if r ~= 1 and ProbeAnswerPlausible(skillID, level, r) then
+            return level, true, maxLevel
+        end
+        if r ~= 1 then
+            filler = true
         end
         -- Levels whose real range is 1 (e.g. Blast Forge, Toxin Lv1-4) also return 1 when learned.
         -- The highest such level is an upper bound; lower levels must still be probed.
@@ -3740,10 +3785,10 @@ function GetLearnedSkillLevel(myid, skillID)
         end
     end
 
-    if ambiguous > 0 then
-        return ambiguous, false
+    if ambiguous > 0 and not filler then
+        return ambiguous, false, maxLevel
     end
-    return 0, true
+    return 0, true, maxLevel, filler
 end
 
 -- What the AI knows about the learned level of each skill, used by DoSkill() so it never asks the
@@ -3791,12 +3836,29 @@ function SetLearnedSkillCap(skill, info, cap)
 	end
 end
 
+-- TrustSkillProbe: 1 = trust, 0 = distrust, -1 (default) = distrust on the official server only
+function SkillProbeUntrusted()
+	if TrustSkillProbe == 0 then return true end
+	if TrustSkillProbe == 1 then return false end
+	return ServerType ~= SERVER_PRIVATE
+end
+
 function GetSkillLevelCap(skill)
 	local info = LearnedSkill[skill]
 	if info == nil then
-		local cap, exact = nil, false
+		local cap, exact, maxLevel, filler = nil, false, 0, false
 		if IsHomun(MyID) == 1 then
-			cap, exact = GetLearnedSkillLevel(MyID, skill)
+			cap, exact, maxLevel, filler = GetLearnedSkillLevel(MyID, skill)
+		end
+		-- Some official clients answer the range probe wrongly (learned skills as not learned).
+		-- With the probe untrusted, "not learned" is believed only when the client answered with
+		-- the filler range; a plain 1 is ambiguous, so the skill is tried anyway and the level
+		-- steps down if the server keeps refusing it.
+		if cap ~= nil and SkillProbeUntrusted() and exact and not filler then
+			exact = false
+			if cap == 0 and maxLevel > 0 then
+				cap = maxLevel
+			end
 		end
 		info = { cap = cap, upper = cap, exact = exact, ok = 0, rejects = 0, probeUp = false }
 		LearnedSkill[skill] = info
@@ -3853,6 +3915,9 @@ function SkillCastResult(skill, level, success)
 	end
 	-- A refused level-up probe just confirms the saved level.
 	-- Probed levels are trusted; failures there are range/interrupt problems, not the level.
+	if SkillProbeUntrusted() then
+		return -- the client's answer was already discarded; refusals say nothing about the learned level
+	end
 	if level > info.cap or info.exact or level ~= info.cap or level <= info.ok then
 		return
 	end
@@ -3909,12 +3974,31 @@ function GetDetectedHomunType(myid)
     -- V_SKILLATTACKRANGE returns 1 for skills that are not learned. Skills with range 0 or
     -- a range above 1 are used so a learned skill can't be mistaken for an unlearned one.
     for _, probe in ipairs(HomunProbeOrder) do
-        if GetV(V_SKILLATTACKRANGE, myid, probe[1]) ~= 1 then
+        local learned = GetV(V_SKILLATTACKRANGE, myid, probe[1]) ~= 1
+        -- Some clients answer 1 to the level-less query even for learned skills; the per-level
+        -- query (as in GetLearnedSkillLevel) is the reliable one there.
+        if not learned then
+            for skill, maxLevel in pairs(SkillList[probe[2]]) do
+                for level = maxLevel, 1, -1 do
+                    local r = GetV(V_SKILLATTACKRANGE_LEVEL, myid, skill, level)
+                    if r ~= 1 and ProbeAnswerPlausible(skill, level, r) then
+                        learned = true
+                        break
+                    end
+                end
+                if learned then
+                    break
+                end
+            end
+        end
+        if learned then
             DetectedOldHomunType = probe[2]
             TraceAI("Homunculus base type auto-detected as: " .. probe[3])
+            logappend("AAI_SKILLFAIL", "Homunculus base type detected as " .. probe[3])
             return DetectedOldHomunType
         end
     end
+    logappend("AAI_SKILLFAIL", "Homunculus base type not detected, using OldHomunType " .. tostring(OldHomunType))
 
     NextHomunTypeProbe = now + 5000
     TraceAI("Base type not detected yet. Using configured OldHomunType as failsafe.")
