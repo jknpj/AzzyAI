@@ -3045,6 +3045,15 @@ function IsSkillReady(skill)
 	return true
 end
 
+-- Castling swaps places with the owner; true when a cast now would not just be refused
+function CanCastle()
+	if not IsSkillReady(HAMI_CASTLE) or GetTick() <= AutoSkillTimeout then
+		return false
+	end
+	local level = GetCastableSkillLevel(HAMI_CASTLE, 5)
+	return level > 0 and GetV(V_SP,MyID) > GetSkillInfo(HAMI_CASTLE,3,level)
+end
+
 function GetSkillAoESize(skill,level)
 	local aoeinfo=SkillAOEInfo[skill]
 	if aoeinfo==nil or type(aoeinfo[1])~="table" then

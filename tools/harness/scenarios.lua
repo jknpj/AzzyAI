@@ -254,6 +254,8 @@ SCENARIOS = {
 	amistr_unlearned_smart_bulwark = { homuntype = 2, skills = {}, mobs = single,
 		sp = 300, spregen = 1, minAttacks = 100, startTick = 10000000, set = { UseSmartBulwark = 1 } },
 	amistr_fresh_single = { homuntype = 2, skills = {}, mobs = single, sp = 20, spregen = 1, minAttacks = 100 },
+	amistr_castle_defend = { homuntype = 2, skills = { "HAMI_CASTLE:5" }, mobs = cluster, sp = 100, spregen = 1, minAttacks = 0,
+		set = { UseCastleDefend = 1, CastleDefendThreshold = 1 }, maxRefused = 2 },
 	-- passive monsters (nobody attacking): the homunculus must still go and attack them
 	amistr_fresh_passive = { homuntype = 2, skills = {}, mobs = cluster, passive = true, sp = 20, spregen = 1, minAttacks = 50 },
 	amistr_fresh_private = { homuntype = 2, skills = {}, mobs = cluster, private = true, sp = 20, spregen = 1, minAttacks = 100 },
@@ -372,6 +374,7 @@ SCENARIOS = {
 		set = { UseDieterBlastForge = 1 }, expect = { "Blast Forge" } },
 	-- Lava Slide allows one active instance, so Volcanic Ash (a debuff) is used as an attack skill
 	dieter_ash_attack = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
+		set = { UseDieterAshAsAttack = 1 },
 		expect = { "Lava Slide", "Volcanic Ash" } },
 	dieter_ash_attack_off = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
 		set = { UseDieterAshAsAttack = 0 },
@@ -747,6 +750,13 @@ SCENARIOS = {
 		set = { UseEiraTwisterCutter = 1, UseEiraAbsoluteZephyr = 1 },
 		expect = { "Absolute Zephyr" } },
 
+	-- a pack is worth her AoE: SP is saved for The One Fighter Rises instead of being spent on combo chains
+	eleanor_pack_aoe = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = cluster, ticks = 1800, minAttacks = 0,
+		checks = { ["The One Fighter Rises is cast at least 10 times in 180 s"] = function()
+			local n = 0
+			for _, c in ipairs(HarnessCasts) do if c.name == "The One Fighter Rises" then n = n + 1 end end
+			return n >= 10
+		end } },
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoComboMode = 0, AutoMobCount = 1 },
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
