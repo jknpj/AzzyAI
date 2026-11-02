@@ -299,7 +299,7 @@ SCENARIOS = {
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)
-	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single,
+	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
 		expect = { "Glanzen Spies", "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand" } },
 	-- both AoEs on and fully learned: the cheap ranged Stange must not starve the caster-centered Pferd
 	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
