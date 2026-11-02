@@ -14,15 +14,11 @@ namespace AzzyAIConfig
         private HomConf _hconf;
         private TabControl tabControl;
         private TextBox searchBox;
-        private ComboBox homunculusSFilter;
-        private ComboBox homunculusBaseFilter;
         private ComboBox scopeCombo;
         private Button scopeResetButton;
         private Label scopeLabel;
         private bool changingScope;
         private Label searchLabel;
-        private Label homunculusSLabel;
-        private Label homunculusBaseLabel;
         private TextBox helpTextBox;
         private Label helpLabel;
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
@@ -148,8 +144,6 @@ namespace AzzyAIConfig
             clearButton.Click += delegate
             {
                 searchBox.Clear();
-                homunculusSFilter.SelectedIndex = 0;
-                homunculusBaseFilter.SelectedIndex = 0;
             };
             searchRow.Controls.Add(searchLabel, 0, 0);
             searchRow.Controls.Add(searchBox, 1, 0);
@@ -179,32 +173,8 @@ namespace AzzyAIConfig
                 Margin = new Padding(6, 1, 3, 0)
             };
             scopeResetButton.Click += ScopeReset_Click;
-            homunculusSLabel = new Label
-            {
-                Text = "Homunculus S:", AutoSize = true, Margin = new Padding(3, 6, 3, 0)
-            };
-            homunculusSFilter = new ComboBox
-            {
-                Name = "homunculusSFilter", Width = 120, DropDownStyle = ComboBoxStyle.DropDownList,
-                AccessibleName = "Filter Homunculus S settings", TabIndex = 2
-            };
-            homunculusSFilter.Items.AddRange(new string[] { "All Types", "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" });
-            homunculusSFilter.SelectedIndex = 0;
-            homunculusSFilter.SelectedIndexChanged += Filter_Changed;
-            homunculusBaseLabel = new Label
-            {
-                Text = "Base homunculus:", AutoSize = true, Margin = new Padding(15, 6, 3, 0)
-            };
-            homunculusBaseFilter = new ComboBox
-            {
-                Name = "homunculusBaseFilter", Width = 120, DropDownStyle = ComboBoxStyle.DropDownList,
-                AccessibleName = "Filter inherited base homunculus settings", TabIndex = 3
-            };
-            homunculusBaseFilter.Items.AddRange(new string[] { "All Types", "Lif", "Amistr", "Filir", "Vanilmirth" });
-            homunculusBaseFilter.SelectedIndex = 0;
-            homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
             filters.Controls.AddRange(new Control[] {
-                scopeLabel, scopeCombo, scopeResetButton, homunculusSLabel, homunculusSFilter, homunculusBaseLabel, homunculusBaseFilter
+                scopeLabel, scopeCombo, scopeResetButton
             });
             filters.SetFlowBreak(scopeResetButton, true);
             UpdateScopeUI();
@@ -262,19 +232,11 @@ namespace AzzyAIConfig
             layout.Controls.Add(helpTextBox, 0, 4);
             Controls.Add(layout);
 
-            // Load saved filter settings
-            LoadFilterSettings();
         }
 
         private void SearchBox_TextChanged(object sender, EventArgs e)
         {
             ApplyFilters();
-        }
-
-        private void Filter_Changed(object sender, EventArgs e)
-        {
-            ApplyFilters();
-            SaveFilterSettings();
         }
 
         private void PropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -305,58 +267,15 @@ namespace AzzyAIConfig
             }
         }
 
-        private void LoadFilterSettings()
+        // A Homunculus S shows its own skills (all base skills stay listed); a base homunculus hides every S skill.
+        private void ScopeFilters(out string sType, out string baseType)
         {
-            try
-            {
-                // Load saved filter settings
-                string savedHomunculusS = Properties.Settings.Default.HomunculusSFilter;
-                string savedHomunculusBase = Properties.Settings.Default.HomunculusBaseFilter;
-
-                if (!string.IsNullOrEmpty(savedHomunculusS))
-                {
-                    for (int i = 0; i < homunculusSFilter.Items.Count; i++)
-                    {
-                        if (homunculusSFilter.Items[i].ToString() == savedHomunculusS)
-                        {
-                            homunculusSFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(savedHomunculusBase))
-                {
-                    for (int i = 0; i < homunculusBaseFilter.Items.Count; i++)
-                    {
-                        if (homunculusBaseFilter.Items[i].ToString() == savedHomunculusBase)
-                        {
-                            homunculusBaseFilter.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // If settings don't exist or are invalid, use defaults
-                homunculusSFilter.SelectedIndex = 0;
-                homunculusBaseFilter.SelectedIndex = 0;
-            }
-        }
-
-        private void SaveFilterSettings()
-        {
-            try
-            {
-                Properties.Settings.Default.HomunculusSFilter = homunculusSFilter.SelectedItem != null ? homunculusSFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.HomunculusBaseFilter = homunculusBaseFilter.SelectedItem != null ? homunculusBaseFilter.SelectedItem.ToString() : "";
-                Properties.Settings.Default.Save();
-            }
-            catch
-            {
-                // Ignore save errors
-            }
+            string scope = _hconf != null ? _hconf.Scope : "";
+            sType = "All Types";
+            baseType = "All Types";
+            if (scope.Length == 0) return;
+            if (Array.IndexOf(new[] { "Sera", "Eira", "Eleanor", "Bayeri", "Dieter" }, scope) >= 0) sType = scope;
+            else { sType = "None"; baseType = scope; }
         }
 
         private void RefreshAllTabs()
@@ -390,8 +309,8 @@ namespace AzzyAIConfig
         private void ApplyFilterToPropertyGrid(PropertyGrid propertyGrid, string category)
         {
             string searchText = searchBox != null && searchBox.Text != null ? searchBox.Text.ToLower() : "";
-            string homunculusSType = homunculusSFilter != null && homunculusSFilter.SelectedItem != null ? homunculusSFilter.SelectedItem.ToString() : "All";
-            string homunculusBaseType = homunculusBaseFilter != null && homunculusBaseFilter.SelectedItem != null ? homunculusBaseFilter.SelectedItem.ToString() : "All";
+            string homunculusSType, homunculusBaseType;
+            ScopeFilters(out homunculusSType, out homunculusBaseType);
 
             // Create or get the filtered wrapper object
             string key = category;

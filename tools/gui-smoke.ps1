@@ -63,8 +63,9 @@ try {
     $config = $binding.GetValue($hom, $null)
     $properties = [ComponentModel.TypeDescriptor]::GetProperties($config)
     $search = $hom.Controls.Find('settingsSearch', $true)[0]
-    $sFilter = $hom.Controls.Find('homunculusSFilter', $true)[0]
-    $baseFilter = $hom.Controls.Find('homunculusBaseFilter', $true)[0]
+    $scope = $hom.Controls.Find('settingsScope', $true)[0]
+    # Visiting the tactics tabs raises change events; start the scope checks from a clean state
+    $form.Controls.Find('buttonApply', $true)[0].Enabled = $false
     $clear = $hom.Controls.Find('clearFilters', $true)[0]
     $categories = $hom.Controls.Find('homunculusCategories', $true)[0]
     $clear.PerformClick()
@@ -80,36 +81,39 @@ try {
         throw 'Description search did not find CastTimeRatio.'
     }
     $search.Clear()
-    $sFilter.SelectedItem = 'Eira'
-    $baseFilter.SelectedItem = 'Amistr'
+    $scope.SelectedItem = 'Eira'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
     $buffProperties = [ComponentModel.TypeDescriptor]::GetProperties($categories.TabPages[3].Controls[0].SelectedObject)
     if ($null -eq $visibleProperties['UseEiraTwisterCutter'] -or
         $null -eq $buffProperties['HealOwnerBreeze'] -or
         $null -ne $visibleProperties['UseEleanorCBC'] -or
         $null -ne $visibleProperties['SphereTrackInterval']) {
-        throw 'Combined Eira/Amistr filters hid Eira options or included Eleanor options.'
+        throw 'The Eira scope hid Eira options or included Eleanor options.'
     }
-    $sFilter.SelectedItem = 'All Types'
-    $baseFilter.SelectedItem = 'Vanilmirth'
+    $scope.SelectedItem = 'Vanilmirth'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
-    if ($null -eq $visibleProperties['UseVanilCaprice']) {
-        throw 'Vanilmirth filter did not expose UseVanilCaprice.'
+    if ($null -eq $visibleProperties['UseVanilCaprice'] -or $null -ne $visibleProperties['UseEiraTwisterCutter']) {
+        throw 'The Vanilmirth scope must show UseVanilCaprice and hide Homunculus S options.'
     }
-    $clear.PerformClick()
-    $sFilter.SelectedItem = 'Eleanor'
+    $scope.SelectedItem = 'Eleanor'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
     if ($null -eq $visibleProperties['SphereTrackInterval']) {
-        throw 'Eleanor filter did not expose SphereTrackInterval.'
+        throw 'The Eleanor scope did not expose SphereTrackInterval.'
     }
+    $scope.SelectedItem = 'Dieter'
+    $dieterMobs = $binding.GetValue($hom, $null).AutoMobCount
+    if ($dieterMobs -ne 1) {
+        throw "The Dieter scope should load AutoMobCount 1 from Types\Dieter.lua, got $dieterMobs."
+    }
+    $scope.SelectedIndex = 0
     $search.Text = 'no-such-setting'
     $summary = $hom.Controls.Find('settingsSummary', $true)[0]
     if (!$summary.Text.StartsWith('No matching settings.')) {
         throw 'Empty search results need an explicit message.'
     }
     $clear.PerformClick()
-    if ($search.Text -ne '' -or $sFilter.SelectedIndex -ne 0 -or $baseFilter.SelectedIndex -ne 0) {
-        throw 'Clear filters did not reset the search and both type filters.'
+    if ($search.Text -ne '') {
+        throw 'Clear filters did not reset the search.'
     }
     foreach ($size in @(@(800, 580), @(1100, 760))) {
         $form.Size = New-Object Drawing.Size($size[0], $size[1])

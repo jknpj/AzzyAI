@@ -44,6 +44,7 @@ foreach ($file in @('Defaults.lua', 'H_Config.lua', 'M_Config.lua', 'H_Extra.lua
     'M_Extra.lua', 'H_Tactics.lua', 'M_Tactics.lua', 'H_PVP_Tact.lua', 'M_PVP_Tact.lua')) {
     Copy-Item (Join-Path $root "USER_AI\$file") $sandbox -Force
 }
+Copy-Item (Join-Path $root 'USER_AI\Types') $sandbox -Recurse -Force
 
 if ($Action -eq 'Run') {
     $process = Start-Process $executable -WorkingDirectory $sandbox -PassThru
