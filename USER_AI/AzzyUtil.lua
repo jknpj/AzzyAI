@@ -3088,7 +3088,7 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 		mobmode=1
 	end
 	local count = GetMobCount(skill,level,target,mobmode)
-	if count < AutoMobCount then
+	if count < AutoMobCount and not EleanorLoneTofrWorthIt(skill, count, target) then
 		return false
 	end
 	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
@@ -4059,6 +4059,35 @@ end
 BAYERI_SPIES_VS_STAHL = 0.6
 BAYERI_PAIR_MIN_DEF = 110
 BAYERI_PACK_SKILL_FULL_COUNT = 3
+-- Eleanor: The One Fighter Rises ignores DEF while her Sonic Claw combos do not. On a lone target it
+-- breaks even near DEF 230 and wins from there (homun_bench.py: +13% at DEF 400, -19% at DEF 0).
+ELEANOR_LONE_TOFR_MIN_DEF = 300
+-- With a pack her Sonic Claw chains only keep SP under the AoE's price: skipping them is +19..32%
+ELEANOR_PACK_NO_SONIC_COUNT = 3
+function EleanorLoneTofrWorthIt(skill, count, target)
+	if MyHomunType ~= ELEANOR or skill ~= MH_THE_ONE_FIGHTER_RISES or count < 1 then
+		return false
+	end
+	local info = GetMobInfo(target)
+	return info ~= nil and info[7] ~= nil and info[7] >= ELEANOR_LONE_TOFR_MIN_DEF
+end
+
+-- True when Sonic Claw should not start a chain because the pack is better served by The One Fighter Rises
+function EleanorPackSkipsSonicClaw(target)
+	if MyHomunType ~= ELEANOR or UseEleanorTheOneFighterRises ~= 1 then
+		return false
+	end
+	local lv = GetCastableSkillLevel(MH_THE_ONE_FIGHTER_RISES, EleanorTheOneFighterRisesLevel or 10)
+	if lv <= 0 then
+		return false
+	end
+	local mobmode = 0
+	if AutoMobMode == 2 then
+		mobmode = 1
+	end
+	return GetMobCount(MH_THE_ONE_FIGHTER_RISES, lv, target, mobmode) >= ELEANOR_PACK_NO_SONIC_COUNT
+end
+
 function SpiesBeatsStahlHorn(target)
 	local info = GetMobInfo(target)
 	if info == nil or info[7] == nil then

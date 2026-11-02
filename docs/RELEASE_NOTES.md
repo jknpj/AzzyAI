@@ -38,6 +38,10 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   monsters the area skills always win (+16% to +69%). `homun_bench.py` has `--def` and
   `--mdef` for these measurements. Eleanor's dance is no longer blocked by a combo that cannot
   be cast, and her preset enables The One Fighter Rises with `AutoMobCount = 2`.
+- Eleanor: The One Fighter Rises ignores DEF, her Sonic Claw combos do not. A lone target
+  with DEF 300 or more now gets The One Fighter Rises (+13% at DEF 400, worse below DEF 230),
+  and with 3 or more monsters she no longer starts Sonic Claw chains while The One Fighter
+  Rises is learned (+19% to +32%). Simulated figures.
 - Amistr Castling: Castle Route no longer repeats the cast at the same route point,
   and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
   (cooldown, SP above cost, skill learned).
