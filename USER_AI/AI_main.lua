@@ -1151,7 +1151,7 @@ function OnATTACK_ST()
                     end
                 end
             end
-            if eleanorSaveSP and skilltouse[2] == MH_SONIC_CRAW then
+            if skilltouse[2] == MH_SONIC_CRAW and (eleanorSaveSP or EleanorPackSkipsSonicClaw(MyEnemy)) then
                 skilltouse = {-1, 0, 0}
             end
             TraceAI("skill selected "..skilltouse[2])

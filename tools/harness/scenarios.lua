@@ -777,11 +777,25 @@ SCENARIOS = {
 
 	-- a pack is worth her AoE: SP is saved for The One Fighter Rises instead of being spent on combo chains
 	eleanor_pack_aoe = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = cluster, ticks = 1800, minAttacks = 0,
+		forbid = { "Sonic Claw" },
 		checks = { ["The One Fighter Rises is cast at least 10 times in 180 s"] = function()
 			local n = 0
 			for _, c in ipairs(HarnessCasts) do if c.name == "The One Fighter Rises" then n = n + 1 end end
 			return n >= 10
 		end } },
+	-- a lone target only gets The One Fighter Rises when its DEF makes the combos too weak
+	eleanor_lone_low_def = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		set = { UseEleanorTheOneFighterRises = 1, AutoMobCount = 2 },
+		forbid = { "The One Fighter Rises" }, expect = { "Sonic Claw" } },
+	eleanor_lone_high_def = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		set = { UseEleanorTheOneFighterRises = 1, AutoMobCount = 2 },
+		afterLoad = function()
+			local info = {}
+			for i, v in ipairs(MobInfo[1002]) do info[i] = v end
+			info[7] = 400
+			MobInfo[1002] = info
+		end,
+		expect = { "The One Fighter Rises" } },
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoComboMode = 0, AutoMobCount = 1 },
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
