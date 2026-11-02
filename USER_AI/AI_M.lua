@@ -59,30 +59,8 @@ if CVersion==nil then
 		ErrorCode="File version error"
 		ErrorInfo=ErrorInfo.."AI_main.lua wrong version "..string.gfind(MainVersion,verspattern)().."\n"
 	end
-	--[[
-	if fsize("./AI/USER_AI/AzzyUtil.lua")~=AULen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." AzzyUtil.lua has been modified or is corrupted"
-	end
-	if fsize("./AI/USER_AI/Const_.lua")~=ConstLen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." Const_.lua has been modified or is corrupted"
-	end
-	if fsize("./AI/USER_AI/AI_main.lua")~=MainLen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." AI_main.lua has been modified or corrupted"
-	end
-	--]]
-	if fsize("./AI/USER_AI/M_Config.lua")==3017 then
-		ConfigVers="Default: "..LastSavedDate
-	else
-		ConfigVers="Custom, edited "..LastSavedDate
-	end
-	if fsize("./AI/USER_AI/M_Tactics.lua")==547 then
-		TacticVers="Default: "..TactLastSavedDate
-	else
-		TacticVers="Custom, edited "..TactLastSavedDate
-	end	
+	ConfigVers="loaded"
+	TacticVers="loaded"
 	if GetSkillInfo(ML_PIERCE,2,10) > 1 then
 		ErrorCode=ErrorCode.."AI has been modified to use the ranged pierce exploit, this may be illegal on the RO you play, contact your game administrators if you are unsure."
 	end
@@ -99,13 +77,6 @@ if CVersion==nil then
 		OutFile:write(OutString)
 		OutFile:close()
 	end
-end
-
-function fsize(file)
-	local f=io.open(file,"r")
-	local size = f:seek("end")
-	f:close()
-	return size
 end
 
 WriteStartupLog(Version,ErrorCode,ErrorInfo)

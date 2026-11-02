@@ -43,11 +43,16 @@ for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIG
 end
 -----------Config checking----------------
 
+function GetStartupLogPath()
+	return TypeString=="M" and "AAIStartM.txt" or "AAIStartH.txt"
+end
+
 function doInit(myid)
 	local logstring="Checking config..."
 	logstring=logstring..ApplyTypeConfig(myid)
 	if IsHomun(myid) == 0 then -- if the stupid devs made GetV(V_MERTYPE,id) work i wouldnt need this!
 		MercType=GetMerType(myid)
+		logstring=logstring.."\n"..GetMercenaryStartupDiagnostics(myid)
 	end
 	if (UseAttackSkill==0 and UseSkillOnly==1) then
 		UseSkillOnly = 0
@@ -69,7 +74,7 @@ function doInit(myid)
 	if LintUserOptions ~= 0 then
 		logstring = LintSkillOptions(myid, logstring)
 	end
-	OutFile=io.open("AAIStartH.txt","a")
+	OutFile=io.open(GetStartupLogPath(),"a")
 	if OutFile == nil then
 		error("No write permissions for RO folder, please fix permissions on the RO folder in order to use AzzyAI.\n"..logstring)
 	else
@@ -2539,10 +2544,12 @@ function DoAutoBuffs(buffmode)
 	end
 	if (UseAutoMag == buffmode and MagTimeout ~=-1) then
 		if (GetTick() > MagTimeout) then
-			if (GetV(V_MERTYPE,MyID)~=4) then
+			local reportedMercType = GetV(V_MERTYPE,MyID)
+			local profileMagnificatLevel = SkillList[MercType] and SkillList[MercType][MER_MAGNIFICAT]
+			if (reportedMercType~=4 and profileMagnificatLevel==nil) then
 				MagTimeout = -1
-			elseif (40 <= GetV(V_SP,MyID) and level ~=0) then
-				DoSkill(MER_MAGNIFICAT,1,MyID,3)
+			elseif (40 <= GetV(V_SP,MyID) and (profileMagnificatLevel~=nil or level ~=0)) then
+				DoSkill(MER_MAGNIFICAT,profileMagnificatLevel or 1,MyID,3)
 				MagTimeout = GetTick() + 34000
 				UpdateTimeoutFile()
 				return
