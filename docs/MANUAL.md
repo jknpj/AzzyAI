@@ -44,6 +44,10 @@ Do not overwrite personalized files blindly or replace new code with an old
 full folder. Compare/import settings into the updated installation, save, reload
 and test.
 
+The Windows GUI can do this for you (menu **Update**, section 3). It never
+overwrites the files in the table above (nor `Types\*.lua`, unless you tick the
+box) and backs up everything it replaces.
+
 ## 3. Configure with a GUI
 
 ### Windows application
@@ -61,6 +65,22 @@ Search finds option names and descriptions. Type filters make options easier
 to find; **hiding a setting does not turn it off**. Use **Clear filters** to see
 everything. Click **Apply** to save; **Revert** discards pending edits.
 The desktop labels are in English.
+
+**Update menu (Windows application only):**
+
+- **Update AI from git...** pulls your local git clone (`git pull --ff-only`) or
+  downloads the `LATAM-HG` branch from GitHub (no git needed) and copies its
+  `USER_AI` over the folder the GUI runs from. Your settings, tactics, extra and
+  avoid lists are kept; with *Also overwrite the homunculus presets* ticked,
+  `Types\*.lua` are replaced too. Replaced files are copied to
+  `backup\update-<time>\`. A newer `AzzyAIConfig.exe` is saved as `.exe.new` and
+  swapped in when you accept the restart. Reload the AI in game afterwards.
+- **Update monster/skill data from rAthena...** runs `tools\harness\rathena_sync.py`
+  in your clone (needs Python 3 and internet) and copies the regenerated
+  `MobInfo.lua` here. The clone also receives the harness fixtures and
+  `webgui\mobdata.js`, which you commit if you maintain the repository.
+
+The clone folder is remembered in `AzzyAIConfig.update.txt`.
 
 ### Browser application
 

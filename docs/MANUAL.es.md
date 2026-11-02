@@ -45,6 +45,10 @@ No sobrescribas archivos personalizados sin revisarlos ni sustituyas el código
 nuevo con la carpeta antigua completa. Compara/importa los ajustes en la
 instalación actualizada, guarda, recarga y prueba.
 
+La GUI de Windows puede hacerlo por ti (menú **Update**, sección 3). Nunca
+sobrescribe los archivos de la tabla anterior (ni `Types\*.lua`, salvo que
+marques la opción) y hace copia de seguridad de todo lo que reemplaza.
+
 ## 3. Configurar con las GUIs
 
 ### Aplicación Windows
@@ -62,6 +66,22 @@ La búsqueda encuentra nombres y descripciones. Los filtros por tipo ayudan a
 encontrar opciones; **ocultar un ajuste no lo desactiva**. Usa **Clear filters**
 para ver todo. **Apply** guarda; **Revert** descarta cambios pendientes.
 Las etiquetas de la aplicación Windows están en inglés.
+
+**Menú Update (solo en la aplicación Windows):**
+
+- **Update AI from git...** hace `git pull --ff-only` en tu clon local o descarga
+  la rama `LATAM-HG` de GitHub (sin necesitar git) y copia su `USER_AI` sobre la
+  carpeta donde se ejecuta la GUI. Tus ajustes, tactics, extra y listas de avoid
+  se conservan; con *Also overwrite the homunculus presets* marcado, también se
+  reemplazan los `Types\*.lua`. Lo reemplazado se copia a `backup\update-<hora>\`.
+  Un `AzzyAIConfig.exe` más nuevo se guarda como `.exe.new` y se cambia al
+  aceptar el reinicio. Recarga la IA en el juego después.
+- **Update monster/skill data from rAthena...** ejecuta `tools\harness\rathena_sync.py`
+  en tu clon (necesita Python 3 e internet) y copia aquí el `MobInfo.lua`
+  regenerado. El clon también recibe los fixtures del harness y
+  `webgui\mobdata.js`, que haces commit si mantienes el repositorio.
+
+La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
 
 ### Navegador
 
