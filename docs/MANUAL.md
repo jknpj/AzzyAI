@@ -125,17 +125,17 @@ differ; the installed file's value is what matters.
 | Homunculus | What to check |
 |---|---|
 | Eira | Enable the attacks you want, such as Twister Cutter or Absolute Zephyr. Light of Regenerate is optional and disabled by default: it requires Loyal intimacy, reduces intimacy on cast, and sacrifices Eira for the owner's resurrection. |
-| Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. Pferd is disabled in the bundled preset: enable it if wanted. Heilige Stange and other area attacks can take priority over Spies. |
+| Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. The Bayeri preset enables Pferd and Spies and picks by the target's DEF (from `MobInfo.lua`): Spies only above about DEF 320, Stahl Horn otherwise; with exactly two monsters Stange/Pferd are used only from DEF 110. |
 | Sera | Toxin of Mandara and Needle Stinger have casts that may be interrupted. Keep the target in range and check the failure-pause options below. Pain Killer and Summon Legion have their own switches. |
 | Dieter | Enable the desired attacks/buffs individually. Fire resistance or immunity can prevent fire skills from being selected. |
-| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target. |
+| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target, except The One Fighter Rises against a lone target with DEF 300 or more. With 3+ monsters she skips Sonic Claw chains, and Blazing And Furious is only cast with 6+ spheres. |
 | Vanilmirth | **Caprice** (also inherited by Vanilmirth-based Homunculus S) is controlled by `UseVanilCaprice` (on by default). Chaotic Blessing follows `UseAutoHeal`. Self Destruct is never used automatically. |
 These are configuration tips, not a ranking or an optimal build. Server rules
 may differ, including skill ranges and targeting.
 
 The bundled preset sets `AutoMobCount` to 2 and leaves **Twister Cutter** (Eira),
-**Glanzen Spies** (Bayeri), **Needle Stinger** (Sera) and **Blazing And Furious**
-(Eleanor) off, because the AI prefers them to cheaper skills that did at least as
+and **Needle Stinger** (Sera) off (the per-type presets in `Types/` turn on Bayeri's
+Spies and Eleanor's Blazing And Furious), because the AI prefers them to cheaper skills that did at least as
 well in offline tests, and turns **Blast Forge** (Dieter) on. These choices come
 from a simulation, not from an official server: enable any of them if you prefer
 it. Dieter's attacks are all area skills, so with `AutoMobCount` 2 he does not attack
