@@ -600,6 +600,63 @@ SCENARIOS = {
 		checks = { ["Vanilmirth base remains detected when Caprice is disabled"] = function()
 			return DetectedOldHomunType == VANILMIRTH
 		end } },
+	homun_base_type = { homuntype = 48, skills = EIRA_SKILLS, mobs = single,
+		checks = {
+			["regular homunculus ids map to their base type"] = function()
+				local saved = MyHomunType
+				local expected = { LIF, AMISTR, FILIR, VANILMIRTH }
+				local ok = true
+				for id = 1, 16 do
+					MyHomunType = id
+					ok = ok and GetHomunBaseType(MyID) == expected[(id - 1) % 4 + 1]
+				end
+				MyHomunType = saved
+				return ok
+			end,
+			["unknown types match no base type instead of Vanilmirth"] = function()
+				local saved = MyHomunType
+				MyHomunType = 0
+				local zero = GetHomunBaseType(MyID)
+				MyHomunType = nil
+				local nilType = GetHomunBaseType(MyID)
+				MyHomunType = saved
+				return zero == 0 and nilType == 0
+			end,
+			["Homunculus S falls back to OldHomunType, then retries and detects later"] = function()
+				local saved = { MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType, GetV, GetTick }
+				local clock, learned, probes = 1000, false, 0
+				GetTick = function() return clock end
+				GetV = function(v, id, skill, ...)
+					if v == V_SKILLATTACKRANGE then
+						probes = probes + 1
+						if learned and skill == HAMI_DEFENCE then return 0 end
+						return 1
+					end
+					return saved[5](v, id, skill, ...)
+				end
+				MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType = EIRA, nil, 0, FILIR
+				local first = GetHomunBaseType(MyID)
+				local afterFirst = probes
+				GetHomunBaseType(MyID)
+				local throttled = probes == afterFirst
+				learned = true
+				clock = clock + 5000
+				local second = GetHomunBaseType(MyID)
+				local cached = DetectedOldHomunType == AMISTR
+				local before = probes
+				GetHomunBaseType(MyID)
+				local noReprobe = probes == before
+				MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType, GetV, GetTick = unpack(saved, 1, 6)
+				return first == FILIR and afterFirst == 4 and throttled and second == AMISTR and cached and noReprobe
+			end,
+			["an invalid OldHomunType config yields no base type"] = function()
+				local saved = { MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType }
+				MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType = EIRA, nil, 0, 9
+				local result = GetHomunBaseType(MyID)
+				MyHomunType, DetectedOldHomunType, NextHomunTypeProbe, OldHomunType = unpack(saved, 1, 4)
+				return result == 0
+			end,
+		} },
 	eira_s = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster,
 		set = { UseEiraTwisterCutter = 1, UseEiraAbsoluteZephyr = 1 },
 		expect = { "Absolute Zephyr" } },
