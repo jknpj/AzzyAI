@@ -298,6 +298,35 @@ SCENARIOS = {
 		} },
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
+	-- damage-aware defence: HP drops inside the 3 s window trigger it only below DamageDangerHP;
+	-- heals and old samples do not count
+	damage_danger = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseDamageDanger = 1 },
+		checks = {
+			["InDanger follows the HP lost in the window"] = function()
+				local realGetV, realTick = GetV, GetTick
+				local hp, t = 20000, 100000
+				GetTick = function() return t end
+				GetV = function(f, id)
+					if id == HOMUN and f == V_HP then return hp end
+					if id == HOMUN and f == V_MAXHP then return 20000 end
+					return realGetV(f, id)
+				end
+				ActorHPCache = {}
+				DamageSamples, DamageLastHP = {}, nil
+				DamageSample(HOMUN)
+				local calm = InDanger(HOMUN) == 0
+				hp = 9000; t = t + 500; ActorHPCache = {}; DamageSample(HOMUN)
+				local hurt = InDanger(HOMUN) == 1
+				hp = 20000; t = t + 500; ActorHPCache = {}; DamageSample(HOMUN)
+				local healed = InDanger(HOMUN) == 0
+				hp = 9000; t = t + 500; ActorHPCache = {}; DamageSample(HOMUN)
+				t = t + 4000; ActorHPCache = {}; DamageSample(HOMUN)
+				local expired = InDanger(HOMUN) == 0
+				GetV, GetTick = realGetV, realTick
+				DamageSamples, DamageLastHP, ActorHPCache = {}, nil, {}
+				return calm and hurt and healed and expired
+			end,
+		} },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)
 	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
 		expect = { "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand", "Glanzen Spies" } },

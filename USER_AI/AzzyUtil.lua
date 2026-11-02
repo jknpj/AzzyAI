@@ -1345,6 +1345,33 @@ function HPPercent(id)
 	return percHP
 end
 
+-- Damage-aware defence: the AI cannot see incoming hits, only its own HP. Each tick records
+-- the HP drop since the previous tick (heals are ignored) and sums them over a 3 s window.
+DamageSamples = {}
+DamageLastHP = nil
+DAMAGE_WINDOW = 3000
+function DamageSample(myid)
+	local hp = GetV(V_HP,myid)
+	local now = GetTick()
+	if DamageLastHP ~= nil and hp < DamageLastHP then
+		DamageSamples[#DamageSamples+1] = {now, DamageLastHP-hp}
+	end
+	DamageLastHP = hp
+	while DamageSamples[1] ~= nil and now - DamageSamples[1][1] > DAMAGE_WINDOW do
+		table.remove(DamageSamples,1)
+	end
+end
+
+function InDanger(myid)
+	if (UseDamageDanger or 0) ~= 1 then return 0 end
+	local maxhp = GetV(V_MAXHP,myid)
+	if maxhp <= 0 or HPPercent(myid) >= (DamageDangerHP or 60) then return 0 end
+	local lost = 0
+	for i,v in ipairs(DamageSamples) do lost = lost + v[2] end
+	if 100*lost/maxhp >= (DamageDangerDrop or 30) then return 1 end
+	return 0
+end
+
 function SPPercent(id)
 	local maxSP=GetV(V_MAXSP,id)
 	local curSP=GetV(V_SP,id)

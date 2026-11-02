@@ -3835,6 +3835,9 @@ function AI(myid)
 	end
 
 	OnAImiddle()
+	if UseDamageDanger == 1 and IsHomun(MyID)==1 then
+		DamageSample(MyID)
+	end
 	
 	--###EMERGENCY HANDLING###
 	
@@ -3880,6 +3883,14 @@ function AI(myid)
 			if CastleDefendThreshold <= ownertargetweight and ownertargetweight > mytargetweight then
 				DoSkill(HAMI_CASTLE,5,MyID)
 			end
+		end
+	end
+	if MyHomunType==BAYERI and UseDamageDanger==1 and InDanger(MyID)==1 then
+		local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
+		if wandlevel ~= nil and AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
+			DoSkill(MH_STEINWAND,wandlevel,MyID)
+			TraceAI("DamageDanger: Stein Wand")
+			return
 		end
 	end
 	object = SelectEnemy(GetEnemyList(MyID,-2))
@@ -3956,7 +3967,7 @@ function AI(myid)
 		end
 	end
 	-- Check to see if mercenary should activate kiting routine
-	if ((KiteMonsters==1 and (KiteOK(MyID)==1 or ForceKite == 1)) or HPPercent(MyID) < FleeHP) then
+	if ((KiteMonsters==1 and (KiteOK(MyID)==1 or ForceKite == 1)) or HPPercent(MyID) < FleeHP or InDanger(MyID)==1) then
 		local x,y=GetV(V_POSITION,MyID)
 		if ((x==KiteDestX and y==KiteDestY) or (KiteDestX==0 and KiteDestY==0)) then
 			local actors = GetActors()
