@@ -144,6 +144,8 @@
     <Compile Include="HomConf.cs" />
     <Compile Include="HomConf.Additional.cs" />
     <Compile Include="TypePreset.cs" />
+    <Compile Include="UpdateTools.cs" />
+    <Compile Include="UpdateForm.cs"><SubType>Form</SubType></Compile>
     <Compile Include="HomunculusConfigControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -57,6 +57,16 @@ try {
     if (@($menuTexts | Where-Object { $_ -like '*Reset*' }).Count -ne 0) {
         throw 'The Reset to Defaults menu item should have been removed.'
     }
+    $updateMenu = @($form.MainMenuStrip.Items | Where-Object { $_.Text -eq 'Update' })
+    if ($updateMenu.Count -ne 1 -or $updateMenu[0].DropDownItems.Count -ne 2) {
+        throw 'Expected an Update menu with two items.'
+    }
+    $modeType = $assembly.GetType('AzzyAIConfig.UpdateMode', $true)
+    foreach ($mode in 'Ai', 'Databases') {
+        $dialog = [Activator]::CreateInstance($assembly.GetType('AzzyAIConfig.UpdateForm', $true),
+            @([Enum]::Parse($modeType, $mode)))
+        $dialog.Dispose()
+    }
     $hom = $form.Controls.Find('homunculusConfigControl', $true)[0]
     $binding = $hom.GetType().GetProperty('SelectedObject',
         [Reflection.BindingFlags]'Instance, Public, NonPublic')
