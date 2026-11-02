@@ -1242,7 +1242,13 @@ function OnATTACK_ST()
             DoSkill(MySkill, MySkillLevel, SkillTarget, -1, SkillTargetX, SkillTargetY)
         end
     end
-    local comboPending = MyHomunType == ELEANOR and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())
+    local comboPending = false
+    if MyHomunType == ELEANOR and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
+        -- only hold the dance back while the follow-up can really be cast; otherwise the window just wastes attacks
+        local nextCombo = ComboSCTimeout > GetTick() and MH_SILVERVEIN_RUSH or MH_MIDNIGHT_FRENZY
+        local lv = GetCastableSkillLevel(nextCombo, 5)
+        comboPending = lv > 0 and IsSkillReady(nextCombo) and GetV(V_SP,MyID) >= GetSkillInfo(nextCombo,3,lv)
+    end
     if not comboPending and ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
         nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
         if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
