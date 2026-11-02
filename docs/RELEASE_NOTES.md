@@ -9,6 +9,17 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Desktop GUI: new **Update** menu. "Update AI from git..." pulls a local clone
+  (`git pull --ff-only`) or downloads the `LATAM-HG` zip from GitHub and copies
+  `USER_AI` over the folder the GUI runs from. `H_Config.lua`, `M_Config.lua`,
+  the tactics, extra and avoid lists and (unless ticked) `Types\*.lua` are never
+  overwritten; replaced files go to `backup\update-<time>\`, and a newer
+  `AzzyAIConfig.exe` is staged as `.exe.new` and swapped on restart.
+  "Update monster/skill data from rAthena..." runs
+  `tools/harness/rathena_sync.py` in the clone (needs Python and network) and
+  copies the regenerated `MobInfo.lua` here. The clone path is remembered in
+  `AzzyAIConfig.update.txt`.
+
 - Sera: Summon Legion was never cast under the default tactics (the default
   skill class is `CLASS_S`, and only the minion classes selected it); it now
   fires for any class when `UseSeraCallLegion = 1`, and its recast waits for

@@ -29,7 +29,22 @@ namespace AzzyAIConfig
         {
             // Pregenerated designer code
             InitializeComponent();
+            AddUpdateMenu();
             FormClosing += MainForm_FormClosing;
+        }
+
+        // The Update menu is built here instead of in the designer file
+        private void AddUpdateMenu()
+        {
+            ToolStripMenuItem update = new ToolStripMenuItem("Update");
+            update.DropDownItems.Add("Update AI from git...", null,
+                delegate { using (UpdateForm f = new UpdateForm(UpdateMode.Ai)) f.ShowDialog(this); });
+            update.DropDownItems.Add("Update monster/skill data from rAthena...", null,
+                delegate { using (UpdateForm f = new UpdateForm(UpdateMode.Databases)) f.ShowDialog(this); });
+            ToolStripItem help = null;
+            foreach (ToolStripItem item in MainMenuStrip.Items)
+                if (item.Text == "Help") help = item;
+            MainMenuStrip.Items.Insert(help == null ? MainMenuStrip.Items.Count : MainMenuStrip.Items.IndexOf(help), update);
         }
 
         private bool TrySaveChanges()
