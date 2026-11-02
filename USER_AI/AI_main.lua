@@ -26,6 +26,7 @@ AutoSkillCooldown[MH_POISON_MIST]=0
 AutoSkillCooldown[MH_LAVA_SLIDE]=0
 AutoSkillCooldown[MH_STEINWAND]=0 	
 AutoSkillCooldown[MH_SUMMON_LEGION]=0
+AutoSkillCooldown[HAMI_CASTLE]=0
 -- Old homunculus buffs: the reuse delay can outlast the buff (rAthena Bulwark Lv5: 20 s buff,
 -- 30 s cooldown), so recasting when the buff drops only produced "Skill failed".
 for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_FLEET,HFLI_SPEED}) do
@@ -1087,6 +1088,7 @@ function OnATTACK_ST()
             local TargetedSkills = GetTargetedSkills(MyID)
             TraceAI("Begin autoskill routine")
             local availsp = GetV(V_SP, MyID)
+            local eleanorSaveSP = false
             if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
                 availsp = availsp - tact_sp
             end
@@ -1101,6 +1103,11 @@ function OnATTACK_ST()
                                 mobskill_level = v[3]
                             end
                             mobskill_level = math.min(v[3], mobskill_level)
+                            -- Eleanor: when a pack is worth her AoE but SP is short, don't start a Sonic Claw chain (its small costs keep SP under the AoE's price)
+                            if skilltype == CLASS_NEW_MOB and MyHomunType == ELEANOR and v[2] == MH_THE_ONE_FIGHTER_RISES
+                                and availsp < GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
+                                eleanorSaveSP = true
+                            end
                             if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
                             end
@@ -1143,6 +1150,9 @@ function OnATTACK_ST()
                         end
                     end
                 end
+            end
+            if eleanorSaveSP and skilltouse[2] == MH_SONIC_CRAW then
+                skilltouse = {-1, 0, 0}
             end
             TraceAI("skill selected "..skilltouse[2])
 
@@ -2858,13 +2868,12 @@ function	OnIDLEWALK_ST ()
 	local motion=GetV(V_MOTION,MyID)
 	if (GetDistanceAPR(MyID,MyDestX,MyDestY)<=1) then --we're there.
 		local isAmistr = GetHomunBaseType(MyID)==AMISTR
-		if isAmistr and UseCastleRoute==1 and (UseIdleWalk==5 or UseIdleWalk==6) and RelativeRoute==0 and GetDistanceP(x,y,ox,oy) > 2 then
-			if GetTick() > AutoSkillTimeout then
-				DoSkill(HAMI_CASTLE,5,MyID)
-				TraceAI("Castle Route: Casting castling on self")
-			else
-				TraceAI("Castle Route: Skill timeout not OK - can't cast castling")
-			end
+		if isAmistr and UseCastleRoute==1 and (UseIdleWalk==5 or UseIdleWalk==6) and RelativeRoute==0 and GetDistanceP(x,y,ox,oy) > 2 and CanCastle() then
+			DoSkill(HAMI_CASTLE,5,MyID)
+			TraceAI("Castle Route: Casting castling on self")
+			-- we land on the owner's cell: continue the route from here instead of walking back
+			-- to the point we just left and castling there again
+			MyDestX,MyDestY=GetIdleWalkDest(MyID)
 			return
 		elseif UseCastleRoute==1 and isAmistr and RelativeRoute==0 then
 			TraceAI("We're set to use castling route, but can't, UseIdleWalk="..UseIdleWalk.." distance: "..GetDistanceP(x,y,ox,oy))
@@ -3849,7 +3858,7 @@ function AI(myid)
 		return
 	end
 	if GetHomunBaseType(MyID)==AMISTR and UseCastleDefend ==1 then
-		if GetTick() > AutoSkillTimeout then
+		if CanCastle() then
 			local mytargetweight =0
 			local ownertargetweight =0
 			for k,v in pairs(Targets) do 
@@ -3920,7 +3929,7 @@ function AI(myid)
 				end
 			elseif tactcast == CAST_REACT_CASTLE then
 				if GetHomunBaseType(MyID)==AMISTR and v[2]==2 then
-					if AutoSkillTimeout < GetTick() and GetSkillInfo(HAMI_CASTLE,3,5) < GetV(V_SP,MyID) then
+					if CanCastle() then
 						DoSkill(HAMI_CASTLE,5,MyID)
 						TraceAI("CAST_REACT_CASTLE being enabled against target"..k.." with tactic "..tactcast)
 						return

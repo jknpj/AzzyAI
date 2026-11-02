@@ -21,6 +21,16 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   time) before recasting; the earlier recasts were refused. New option
   `UseDieterAshAsAttack` casts Volcanic Ash as an attack skill without the
   debuff tactic (enabled in `Types/Dieter.lua`; needs `UseDieterVolcanicAsh`).
+- Preset tuning from the DPS benchmark (`tools/harness/homun_bench.py`, 1 to 5
+  monsters, several SP regeneration rates): Eira, Bayeri and Sera already had the
+  best or tied settings. `Types/Dieter.lua` now sets `UseDieterAshAsAttack = 0`
+  (Ash as an attack cost about 33% of Dieter's DPS; set it to 1 to cast it between
+  Lava Slides). Eleanor no longer starts a Sonic Claw chain while a pack is worth
+  The One Fighter Rises and SP is short for it: about +11% DPS against 2 monsters,
+  +26% against 3 and +39% against 5, unchanged against one. These are simulated figures.
+- Amistr Castling: Castle Route no longer repeats the cast at the same route point,
+  and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
+  (cooldown, SP above cost, skill learned).
 - Instance clearing with an ungeared owner: `StayAwayDistance` keeps the
   homunculus that many cells from the owner (clamped to the move bounds);
   `StayAwayHold` parks it at one spot and returns after fights. `AttackMVPs`
