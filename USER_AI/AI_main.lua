@@ -3573,7 +3573,8 @@ function AI(myid)
 			--Why are we in cooldown when there are no bugs out? Cast must have failed, or something killed them. 
 			AutoSkillCooldown[MH_SUMMON_LEGION]=1
 			TraceAI("Sera Legion: Legion cooldown canceled, bugs not present")
-		elseif SeraLegionBugged > 2 then
+		elseif SeraLegionBugged > 2 and ServerType ~= SERVER_PRIVATE then
+			-- on rAthena a recast with the bugs alive spawns nothing, so it is never worth it
 			AutoSkillCooldown[MH_SUMMON_LEGION]=1
 			TraceAI("Sera Legion: Legion cooldown canceled, bugs bugged")
 		end
