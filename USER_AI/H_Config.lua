@@ -16,6 +16,9 @@ UseCastleDefend          = 0
 CastleDefendThreshold    = 4
 IdleWalkDistance         = 4
 FleeHP                   = 0
+UseDamageDanger          = 0
+DamageDangerDrop         = 30
+DamageDangerHP           = 60
 RescueOwnerLowHP         = 0
 LiveMobID                = 0
 

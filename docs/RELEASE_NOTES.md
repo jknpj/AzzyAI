@@ -9,6 +9,14 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Damage-aware self-defence (`UseDamageDanger`, default off; `DamageDangerDrop`
+  30, `DamageDangerHP` 60). The AI cannot read enemy buffs, but it samples its
+  own HP every tick; losing `DamageDangerDrop`% of max HP within 3 s while below
+  `DamageDangerHP`% makes the homunculus kite away (even with `KiteMonsters`
+  off) and Bayeri cast Stein Wand. Editable in `H_Config.lua` and the web GUI;
+  not yet in the desktop GUI. Covered by the `damage_danger` harness check, not
+  yet verified in game.
+
 - Desktop GUI: new **Update** menu. "Update AI from git..." pulls a local clone
   (`git pull --ff-only`) or downloads the `LATAM-HG` zip from GitHub and copies
   `USER_AI` over the folder the GUI runs from. `H_Config.lua`, `M_Config.lua`,
