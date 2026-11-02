@@ -127,8 +127,8 @@ valor do arquivo instalado.
 | Bayeri | **Glanzen Spies** usa um alvo; **Heilige Pferd** é centrada no Bayeri. Pferd está desligada no preset incluído: ative se quiser. Heilige Stange e outras áreas podem ter prioridade sobre Spies. |
 | Sera | Toxin of Mandara e Needle Stinger têm casts que podem ser interrompidos. Mantenha o alvo no alcance e confira as pausas de falha abaixo. Pain Killer e Summon Legion têm opções próprias. |
 | Dieter | Ative ataques e buffs separadamente. Resistência ou imunidade ao fogo pode impedir a escolha de habilidades de fogo. |
-| Eleanor | Sonic Claw e a sequência de luta exigem estilo de luta; Tinder Breaker/CBC/EQC exigem agarrar. Esferas, SP e tempo do combo importam. |
-
+| Eleanor | Sonic Claw e a sequência de luta exigem estilo de luta; Tinder Breaker/CBC/EQC exigem agarrar. Esferas, SP e tempo do combo importam. The One Fighter Rises e Blazing And Furious são habilidades em área: seguem `AutoMobMode`/`AutoMobCount` em vez de serem usadas contra um único alvo. |
+| Vanilmirth | **Caprice** (herdada também pelos Homunculus S baseados em Vanilmirth) é controlada por `UseVanilCaprice` (ligada por padrão). Chaotic Blessing segue `UseAutoHeal`. Self Destruct nunca é usada automaticamente. |
 São dicas de configuração, não um ranking ou uma build ideal. As regras do
 servidor podem variar, inclusive alcance e forma de mirar habilidades.
 

@@ -124,8 +124,8 @@ differ; the installed file's value is what matters.
 | Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. Pferd is disabled in the bundled preset: enable it if wanted. Heilige Stange and other area attacks can take priority over Spies. |
 | Sera | Toxin of Mandara and Needle Stinger have casts that may be interrupted. Keep the target in range and check the failure-pause options below. Pain Killer and Summon Legion have their own switches. |
 | Dieter | Enable the desired attacks/buffs individually. Fire resistance or immunity can prevent fire skills from being selected. |
-| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. |
-
+| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target. |
+| Vanilmirth | **Caprice** (also inherited by Vanilmirth-based Homunculus S) is controlled by `UseVanilCaprice` (on by default). Chaotic Blessing follows `UseAutoHeal`. Self Destruct is never used automatically. |
 These are configuration tips, not a ranking or an optimal build. Server rules
 may differ, including skill ranges and targeting.
 
