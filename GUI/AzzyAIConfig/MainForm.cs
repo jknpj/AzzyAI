@@ -85,11 +85,29 @@ namespace AzzyAIConfig
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            homunculusConfigControl.ScopeChanging += homunculusConfigControl_ScopeChanging;
+            homunculusConfigControl.ScopeChanged += homunculusConfigControl_ScopeChanged;
             // Set the homunculusConfigControl selected object to the homunculus configurations
             homunculusConfigControl.SelectedObject = _hconf;
 
             // Set the propertyGridMercenary selected object to the mercanery configurations
             propertyGridMercenary.SelectedObject = _mconf;
+        }
+
+        private void homunculusConfigControl_ScopeChanging(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!buttonApply.Enabled) return;
+            var result = MessageBox.Show(this, "Save your configuration changes before switching settings?",
+                "Unsaved changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            e.Cancel = result == DialogResult.Cancel || (result == DialogResult.Yes && !TrySaveChanges());
+        }
+
+        private void homunculusConfigControl_ScopeChanged(object sender, EventArgs e)
+        {
+            // The new scope was just loaded, so nothing is pending
+            buttonApply.Enabled = false;
+            applySettingsToolStripMenuItem.Enabled = false;
+            revertToolStripMenuItem.Enabled = false;
         }
 
         private void ConfigChanged(object sender, EventArgs e)

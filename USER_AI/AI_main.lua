@@ -44,6 +44,7 @@ end
 
 function doInit(myid)
 	local logstring="Checking config..."
+	logstring=logstring..ApplyTypeConfig(myid)
 	if IsHomun(myid) == 0 then -- if the stupid devs made GetV(V_MERTYPE,id) work i wouldnt need this!
 		MercType=GetMerType(myid)
 	end

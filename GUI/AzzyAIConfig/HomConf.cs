@@ -312,12 +312,62 @@ namespace AzzyAIConfig
 
         public void Revert()
         {
-            // Reload the configurations from the file
-            H_Config.Load(_file);
+            // Reload the configurations (global or the selected type preset)
+            LoadScope(_scope);
+        }
 
-            // Reinitialize the values for this object
-            InitValues();
-            LoadAdditionalOptions(_file);
+        // "" is the global H_Config.lua; a homunculus name edits its Types\<name>.lua overrides
+        string _scope = "";
+        internal string Scope { get { return _scope; } }
+
+        internal void LoadScope(string scope)
+        {
+            _scope = scope ?? "";
+            string path = _file;
+            string temp = null;
+            try
+            {
+                string typeFile = TypePreset.PathFor(_scope);
+                if (_scope.Length > 0 && File.Exists(typeFile))
+                {
+                    temp = Path.GetTempFileName();
+                    File.WriteAllText(temp, TypePreset.Merge(File.ReadAllText(_file), File.ReadAllText(typeFile)));
+                    path = temp;
+                }
+                H_Config.Load(path);
+                InitValues();
+                LoadAdditionalOptions(path);
+            }
+            finally
+            {
+                if (temp != null) File.Delete(temp);
+            }
+        }
+
+        // Removes the overrides of the selected type, so it follows the global settings again
+        internal void ResetScope()
+        {
+            string typeFile = TypePreset.PathFor(_scope);
+            if (_scope.Length > 0 && File.Exists(typeFile)) File.Delete(typeFile);
+            LoadScope(_scope);
+        }
+
+        void SaveScope()
+        {
+            string globalText = File.ReadAllText(_file);
+            string defaultsFile = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_file)), "Defaults.lua");
+            string defaultsText = File.Exists(defaultsFile) ? File.ReadAllText(defaultsFile) : "";
+            string temp = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(temp, globalText);
+                Save(temp);
+                TypePreset.Write(_scope, defaultsText, globalText, File.ReadAllText(temp));
+            }
+            finally
+            {
+                File.Delete(temp);
+            }
         }
 
         public void SetDefaults()
@@ -472,6 +522,11 @@ namespace AzzyAIConfig
 
         public void Save()
         {
+            if (_scope.Length > 0)
+            {
+                SaveScope();
+                return;
+            }
             // Save the file
             Save(_file);
         }

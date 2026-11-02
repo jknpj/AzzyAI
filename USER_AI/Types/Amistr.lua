@@ -1,0 +1,2 @@
+-- Amistr preset. Loaded after H_Config.lua: only options that differ for Amistr are listed.
+-- Delete a line to use the global H_Config.lua value, or delete this file to disable the preset.
