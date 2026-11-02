@@ -553,6 +553,9 @@ MyMaxSP					= 0
 MyBuffSPCosts			= {}
 MyBuffSPCost			= 0		
 ComboSCTimeout=0
+ComboFollowAt=0
+-- ms to wait after an Eleanor combo skill before sending its follow-up (0 = immediately)
+EleanorComboGap=600
 ComboSVTimeout=0
 
 modtwROMoveDid =0

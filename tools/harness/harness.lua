@@ -489,6 +489,8 @@ local function loadAI()
 		local r = realdofile(path)
 		if path:find("H_Config.lua", 1, true) then
 			if sc.private then ServerType = SERVER_PRIVATE end
+			TrustSkillProbe = 1 -- the simulated client answers the learned-level probe honestly
+			EleanorComboGap = 0 -- and the simulated server accepts follow-ups immediately
 			if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
 		end
 		return r
