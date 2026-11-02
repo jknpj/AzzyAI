@@ -42,6 +42,10 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   with DEF 300 or more now gets The One Fighter Rises (+13% at DEF 400, worse below DEF 230),
   and with 3 or more monsters she no longer starts Sonic Claw chains while The One Fighter
   Rises is learned (+19% to +32%). Simulated figures.
+- Eleanor: Blazing and Furious hits once per sphere (about 1/7 of a The One Fighter Rises hit
+  each) and costs the same SP, so it lost 8-41% DPS when cast with the 1-2 spheres the other
+  skills leave. It is now only cast with 6 or more spheres (`ELEANOR_BLAZING_MIN_SPHERES`) and
+  the Eleanor preset enables it: +9% to +15% DPS against packs at DEF 0, up to +29% at DEF 400.
 - Amistr Castling: Castle Route no longer repeats the cast at the same route point,
   and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
   (cooldown, SP above cost, skill learned).
