@@ -3440,7 +3440,6 @@ function AI(myid)
 	tMobID=""
 	TankMonsterCount=0
 	local seralegionCount=0
-	SeraLegionList=""
 	local seralegionActive=0
 	local seralegionBugged=0
 
@@ -3458,7 +3457,7 @@ function AI(myid)
 			end
 			AAIActors[v] = 1
 		end
-		if x == 174 and 33 == y and GetV(V_HOMUNTYPE, v) == 1102 and GetV(V_MOTION, v) == MOTION_STAND then
+		if x == 174 and 33 == y and GetActorClass(v) == 1102 and GetActorMotion(v) == MOTION_STAND then
 			-- This is the eden group bathory, ignore it.
 		else
 			-- same test as IsOutOfSight(myid,v), without fetching both positions again
@@ -3466,11 +3465,10 @@ function AI(myid)
 				Actors[v] = 1
 				--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." in sight")
 				if MyHomunType == SERA then
-					local actortype = GetV(V_HOMUNTYPE, v)
+					local actortype = GetActorClass(v)
 					if (actortype > 2157 and actortype < 2161) then
 						seralegionCount = seralegionCount + 1
-						SeraLegionList = SeraLegionList .. v .. " "
-						if GetV(V_MOTION, v) == MOTION_STAND and GetDistanceAR(MyID, v) > 3 then
+						if GetActorMotion(v) == MOTION_STAND and GetDistanceAR(MyID, v) > 3 then
 							seralegionBugged = seralegionBugged + 1
 						else
 							seralegionActive = seralegionActive + 1
@@ -3585,7 +3583,6 @@ function AI(myid)
 			AutoSkillCooldown[MH_SUMMON_LEGION]=1
 			TraceAI("Sera Legion: Legion cooldown canceled, bugs bugged")
 		end
-		--logappend("AAI_Legion","Sera Legion - "..SeraLegionCount.." bugs out "..SeraLegionActive.." active and "..SeraLegionBugged.." bugged. "..SeraLegionList)
 	end
 	if PVPmode==1 then
 		for k,v in pairs(Players) do

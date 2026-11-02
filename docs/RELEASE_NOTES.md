@@ -20,6 +20,9 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   Pope variants; unsupported hire classes remain unprofiled rather than being
   misidentified from matching stats. rAthena data does not prove that a hire
   is available on every server.
+- Sera's on-screen legion scan now reuses the per-tick actor class and motion
+  caches instead of repeating client API reads, and no longer builds an unused
+  debug string for the legion list.
 - Damage-aware self-defence (`UseDamageDanger`, default off; `DamageDangerDrop`
   30, `DamageDangerHP` 60). The AI cannot read enemy buffs, but it samples its
   own HP every tick; losing `DamageDangerDrop`% of max HP within 3 s while below
