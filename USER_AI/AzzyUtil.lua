@@ -1190,49 +1190,93 @@ end
 
 function GetMerType(myid)
 	local merctype=GetV(V_MERTYPE,myid)
+	local classid=GetV(V_TYPE,myid)
 	TraceAI("Merc is homun?"..IsHomun(myid))
-	if (merctype~=1) then
-		return merctype
-	elseif merctype > 30 then
-		logappend("AAI_ERROR","Invalid merctype reported"..merctype)
+	if (merctype~=1 and merctype~=nil) then
+		if type(merctype) == "number" and merctype > 30 then
+			logappend("AAI_ERROR","Invalid merctype reported"..merctype)
+		end
 		return merctype
 	else
-		mhp=GetV(V_MAXHP,myid)
-		msp=GetV(V_MAXSP,myid)
-		if (mhp > 250 and mhp < 333 and msp >= 200 and 250 >= msp ) then -- it's an archer 1
+		local classProfile=MercenaryClassMap[classid]
+		if classProfile~=nil then
+			return classProfile
+		end
+		local mhp=GetV(V_MAXHP,myid)
+		local msp=GetV(V_MAXSP,myid)
+		if (mhp ~= nil and msp ~= nil and mhp > 250 and mhp < 333 and msp >= 200 and 250 >= msp ) then -- it's an archer 1
 			return ARCHER01
-		elseif (mhp == 7513 and msp == 201) then 
+		elseif (mhp == 7513 and msp == 201) then
 			TraceAI("Newly summoned Pengineer")
 			return PENGINEER
-		elseif (mhp >= 4000 and 5000 >= mhp and msp >= 50 and msp < 65 ) then -- looks like a kitty!
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 4000 and 5000 >= mhp and msp >= 50 and msp < 65 ) then -- looks like a kitty!
 			TraceAI("Wild Rose")
 			return WILDROSE
-		elseif (mhp >= 7513 and 8500 >= mhp and msp >= 201 and msp < 250 ) then 
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 7513 and 8500 >= mhp and msp >= 201 and msp < 250 ) then
 			TraceAI("Pengineer")
 			return PENGINEER
-		elseif (mhp >= 7200 and 7512 >= mhp and msp >= 200 and msp < 250 ) then -- looks like a dopple!
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 7200 and 7512 >= mhp and msp >= 200 and msp < 250 ) then -- looks like a dopple!
 			TraceAI("Dopple Merc")
 			return DOPPLEMERC
-		elseif (mhp >= 10000 and 13000 >= mhp and msp >= 220 and msp < 300 ) then -- looks like alice!
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 10000 and 13000 >= mhp and msp >= 220 and msp < 300 ) then -- looks like alice!
 			TraceAI("Alice")
 			return ALICE
-		elseif	(mhp >= 6100 and 7200 >= mhp and msp >= 180 and msp < 250 ) then -- looks like a mimic!
+		elseif	(mhp ~= nil and msp ~= nil and mhp >= 6100 and 7200 >= mhp and msp >= 180 and msp < 250 ) then -- looks like a mimic!
 			TraceAI("Mimic")
 			return MIMIC
-		elseif (mhp >= 7500 and 9500 >= mhp and msp >= 180 and msp < 220 ) then -- looks like a disguise!
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 7500 and 9500 >= mhp and msp >= 180 and msp < 220 ) then -- looks like a disguise!
 			TraceAI("Disguise")
 			return DISGUISE
-		elseif (mhp >= 7000 and 8500 >= mhp and msp >= 250 and msp < 320 ) then -- looks like a male GM mercenary!
+		elseif (mhp ~= nil and msp ~= nil and mhp >= 7000 and 8500 >= mhp and msp >= 250 and msp < 320 ) then -- looks like a male GM mercenary!
 			TraceAI("GM Mercenary")
 			return GMMALE
-		elseif (mhp > 12300 and 14500 >= mhp and msp >= 450 and msp < 600 ) then -- Nice stats, must be one of them overpowerd isis mercs
+		elseif (mhp ~= nil and msp ~= nil and mhp > 12300 and 14500 >= mhp and msp >= 450 and msp < 600 ) then -- Nice stats, must be one of them overpowerd isis mercs
 			TraceAI("ISIS Mercenary")
 			return ISIS
 		else
-			TraceAI("Unknown merc type. Contact the developer ASAP.") 
+			TraceAI("Unknown merc type. Contact the developer ASAP.")
 			return UNKNOWNMER
 		end
 	end
+end
+
+function GetMercenaryStartupDiagnostics(myid)
+	local merctype = MercType or UNKNOWNMER
+	local skills, skillids, candidateids = {}, {}, {}
+	for skill in pairs(SkillList[merctype] or {}) do
+		skillids[#skillids+1] = skill
+	end
+	table.sort(skillids)
+	for _,skill in ipairs(skillids) do
+		local info = SkillInfo[skill]
+		local name = info and info[1] or tostring(skill)
+		local level = SkillList[merctype][skill]
+		local range = GetV(V_SKILLATTACKRANGE,myid,skill)
+		skills[#skills+1] = name.." Lv"..level.." range "..tostring(range)
+	end
+	for profile, profileSkills in pairs(SkillList) do
+		if type(profile) == "number" and ((profile >= 1 and profile <= 30) or (profile >= UNKNOWNMER and profile <= MERC_PROFILE_MAX)) then
+			for skill in pairs(profileSkills) do
+				candidateids[skill] = true
+			end
+		end
+	end
+	local observed = {}
+	for skill in pairs(candidateids) do
+		local range = GetV(V_SKILLATTACKRANGE,myid,skill)
+		if range ~= nil and range > 1 then
+			local info = SkillInfo[skill]
+			observed[#observed+1] = (info and info[1] or tostring(skill)).." range "..tostring(range)
+		end
+	end
+	table.sort(observed)
+	return "Mercenary profile: class="..tostring(GetV(V_TYPE,myid))
+		.." reportedType="..tostring(GetV(V_MERTYPE,myid))
+		.." detectedType="..tostring(merctype)
+		.." maxHP="..tostring(GetV(V_MAXHP,myid))
+		.." maxSP="..tostring(GetV(V_MAXSP,myid))
+		.." profileSkills=["..table.concat(skills,", ").."]"
+		.." observedSkillRanges=["..table.concat(observed,", ").."]"
 end
 
 function IsNotKS(myid,target)

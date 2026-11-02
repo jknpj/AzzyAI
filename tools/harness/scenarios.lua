@@ -214,6 +214,97 @@ local function kiteScenario(byRange, runChecks)
 end
 
 SCENARIOS = {
+	mercenary_diagnostics = { homuntype = 2, skills = {}, mobs = single, checks = {
+		["mercenary class IDs select known profiles before legacy stat fallbacks"] = function()
+			local fakeMerc, fakeClass, fakeHP, fakeSP, fakeReportedType = 900001, 6017, 999, 777, 1
+			local realGetV, realMercType = GetV, MercType
+			local realSkillList, realSkillInfo = SkillList, SkillInfo
+			local realTypeString = TypeString
+			dofile("./AI/USER_AI/M_SkillList.lua")
+			GetV = function(field, id, extra, extra2)
+				if id == fakeMerc then
+					if field == V_HOMUNTYPE then return nil end
+					if field == V_TYPE then return fakeClass end
+					if field == V_MERTYPE then return fakeReportedType end
+					if field == V_MAXHP then return fakeHP end
+					if field == V_MAXSP then return fakeSP end
+					if field == V_SKILLATTACKRANGE and extra == MA_DOUBLE then return 9 end
+				end
+				return realGetV(field, id, extra, extra2)
+			end
+			MercType = GetMerType(fakeMerc)
+			local archerType = MercType == ARCHER01
+			local archerLog = GetMercenaryStartupDiagnostics(fakeMerc)
+			fakeClass = 6027
+			MercType = GetMerType(fakeMerc)
+			local lancerType = MercType == LANCER01
+			fakeClass = 6037
+			local swordmanType = GetMerType(fakeMerc) == SWORDMAN01
+			fakeClass = 6046
+			local swordmanTenType = GetMerType(fakeMerc) == SWORDMAN10
+			fakeClass = 1965
+			local wildRoseType = GetMerType(fakeMerc) == WILDROSE
+			fakeClass, fakeHP, fakeSP = 2342, 7513, 201
+			MercType = GetMerType(fakeMerc)
+			local kasaType = MercType == KASAMERC
+			local kasaHasKnownSkills = SkillList[KASAMERC][MER_CRASH] == 5
+				and SkillList[KASAMERC][MS_MAGNUM] == 5
+			local skill, level = GetMobSkill(fakeMerc)
+			local kasaSelectsMobSkill = skill == MS_MAGNUM and level == 5
+			skill, level = GetDebuffSkill(fakeMerc)
+			local kasaSelectsDebuff = skill == MER_CRASH and level == 5
+			fakeClass = 2213
+			MercType = GetMerType(fakeMerc)
+			skill, level = GetGuardSkill(fakeMerc)
+			local wanderSelectsGuard = skill == MS_PARRYING and level == 4
+			skill, level = GetMobSkill(fakeMerc)
+			local wanderSelectsMobSkill = skill == MS_BOWLINGBASH and level == 5
+			fakeClass = 2217
+			MercType = GetMerType(fakeMerc)
+			skill, level = GetGuardSkill(fakeMerc)
+			local teddySelectsDefender = skill == ML_DEFENDER and level == 1
+			fakeClass = 3569
+			MercType = GetMerType(fakeMerc)
+			local popeType = MercType == POPEMERC
+			local popeHasKnownSkills = SkillList[POPEMERC][MER_BLESSING] == 3
+				and SkillList[POPEMERC][MER_DECAGI] == 1
+				and SkillList[POPEMERC][MER_MAGNIFICAT] == 1
+			skill, level = GetSOffensiveSkill(fakeMerc)
+			local popeSelectsBlessing = skill == MER_BLESSING and level == 3
+			skill, level = GetDebuffSkill(fakeMerc)
+			local popeSelectsDebuff = skill == MER_DECAGI and level == 1
+			fakeClass = 3570
+			local casualPopeType = GetMerType(fakeMerc) == POPEMERC
+			fakeClass = 2344
+			local unsupportedType = GetMerType(fakeMerc) == UNKNOWNMER
+			fakeClass, fakeHP, fakeSP = 999999, 300, 220
+			local fallbackType = GetMerType(fakeMerc) == ARCHER01
+			fakeClass, fakeHP, fakeSP, fakeReportedType = 6018, 999, 777, 3
+			local reportedTypeIsPreserved = GetMerType(fakeMerc) == 3
+			fakeReportedType = 1
+			fakeClass, fakeHP, fakeSP = 2344, 7513, 201
+			MercType = GetMerType(fakeMerc)
+			local unknownLog = GetMercenaryStartupDiagnostics(fakeMerc)
+			TypeString = "M"
+			local mercenaryLogPath = GetStartupLogPath()
+			TypeString = realTypeString
+			GetV, MercType, SkillList, SkillInfo = realGetV, realMercType, realSkillList, realSkillInfo
+			return archerType
+				and archerLog:find("class=6017", 1, true) ~= nil
+				and archerLog:find("reportedType=1", 1, true) ~= nil
+				and archerLog:find("maxHP=999", 1, true) ~= nil
+				and lancerType and swordmanType and swordmanTenType and wildRoseType and kasaType
+				and kasaHasKnownSkills and kasaSelectsMobSkill and kasaSelectsDebuff
+				and wanderSelectsGuard and wanderSelectsMobSkill and teddySelectsDefender
+				and popeType and casualPopeType and popeHasKnownSkills
+				and popeSelectsBlessing and popeSelectsDebuff
+				and unsupportedType and fallbackType and reportedTypeIsPreserved
+				and unknownLog:find("detectedType=100", 1, true) ~= nil
+				and unknownLog:find("profileSkills=[]", 1, true) ~= nil
+				and unknownLog:find("observedSkillRanges=[Double Strafe range 9]", 1, true) ~= nil
+				and mercenaryLogPath == "AAIStartM.txt"
+		end,
+	} },
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {

@@ -1370,8 +1370,9 @@ namespace AzzyAIConfig
         UseAutoMagOptions _UseAutoMag = UseAutoMagOptions.Idle;
         [Category("Autobuff Options"),
         Description(
-            "Enable this if you want your level 4 archer mercenary" +
-            "to use magnificat. This works like all other buffs"
+            "Use Magnificat on mercenary profiles that have the skill, " +
+            "including Wicked Nymph and Official/Casual Pope. This works " +
+            "like the other mercenary buffs."
             ),
         DefaultValue(UseAutoMagOptions.Idle)]
         public UseAutoMagOptions UseAutoMag

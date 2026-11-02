@@ -60,30 +60,8 @@ function WriteStartupLog(Version,ErrorCode,ErrorInfo)
 		ErrorCode="File version error"
 		ErrorInfo=ErrorInfo.."AI_main.lua wrong version "..string.gfind(MainVersion,verspattern)().."\n"
 	end
-	--[[
-	if fsize("./AI/USER_AI/AzzyUtil.lua")~=AULen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." AzzyUtil.lua has been modified or is corrupted"
-	end
-	if fsize("./AI/USER_AI/Const_.lua")~=ConstLen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." Const_.lua has been modified or is corrupted"
-	end
-	if fsize("./AI/USER_AI/AI_main.lua")~=MainLen then
-		ErrorCode="Damaged File"
-		ErrorInfo=ErrorInfo.." AI_main.lua has been modified or corrupted"
-	end
-	--]]
-	if fsize("./AI/USER_AI/H_Config.lua")==3898 then
-		ConfigVers="Default: "..LastSavedDate
-	else
-		ConfigVers="Custom, edited "..LastSavedDate
-	end
-	if fsize("./AI/USER_AI/H_Tactics.lua")==5393 then
-		TacticVers="Default: "..TactLastSavedDate
-	else
-		TacticVers="Custom, edited "..TactLastSavedDate
-	end
+	ConfigVers="loaded"
+	TacticVers="loaded"
 	local OutString
 	if ErrorCode=="" then
 		OutString="AzzyAI (hom) version "..Version.."\nMain version:"..MainVersion.."\nAzzyUtil version:"..AUVersion.."\nConstant version:"..CVersion.."\nConfig: "..ConfigVers.."\nTactics: "..TacticVers.." \nTime: "..os.date("%c").."\nLua Version:".._VERSION.."\nstarted successfully. \n This AI is installed properly"
@@ -98,13 +76,6 @@ function WriteStartupLog(Version,ErrorCode,ErrorInfo)
 		OutFile:write(OutString)
 		OutFile:close()
 	end
-end
-
-function fsize(file)
-	local f=io.open(file,"r")
-	local size = f:seek("end")
-	f:close()
-	return size
 end
 
 WriteStartupLog(Version,ErrorCode,ErrorInfo)

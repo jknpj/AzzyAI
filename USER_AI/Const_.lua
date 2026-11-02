@@ -99,6 +99,52 @@ DISGUISE	= 105
 GMMALE		= 106
 PENGINEER   = 107
 ISIS		= 108
+WANDERMAN	= 109
+WICKEDNYMPH	= 110
+KASAMERC	= 111
+SALAMANDER	= 112
+TEDDYBEAR	= 113
+BAPHOMETMERC	= 114
+GALAPAGOMERC	= 115
+POPEMERC	= 116
+MERC_PROFILE_MAX = POPEMERC
+
+MercenaryClassMap = {}
+for classid = 6017, 6046 do
+	MercenaryClassMap[classid] = classid - 6016
+end
+MercenaryClassMap[1191] = MIMIC
+MercenaryClassMap[1275] = ALICE
+MercenaryClassMap[1506] = DISGUISE
+MercenaryClassMap[1965] = WILDROSE
+MercenaryClassMap[1966] = DOPPLEMERC
+MercenaryClassMap[1967] = DOPPLEMERC
+MercenaryClassMap[2034] = UNKNOWNMER
+MercenaryClassMap[2037] = UNKNOWNMER
+MercenaryClassMap[2038] = UNKNOWNMER
+MercenaryClassMap[2058] = MIMIC
+MercenaryClassMap[2059] = DISGUISE
+MercenaryClassMap[2060] = ALICE
+MercenaryClassMap[2213] = WANDERMAN
+MercenaryClassMap[2214] = WICKEDNYMPH
+MercenaryClassMap[2215] = KASAMERC
+MercenaryClassMap[2216] = SALAMANDER
+MercenaryClassMap[2217] = TEDDYBEAR
+MercenaryClassMap[2325] = BAPHOMETMERC
+MercenaryClassMap[2326] = GALAPAGOMERC
+MercenaryClassMap[2342] = KASAMERC
+MercenaryClassMap[2344] = UNKNOWNMER
+MercenaryClassMap[2345] = KASAMERC
+MercenaryClassMap[2346] = UNKNOWNMER
+MercenaryClassMap[2347] = KASAMERC
+MercenaryClassMap[2348] = UNKNOWNMER
+MercenaryClassMap[2349] = UNKNOWNMER
+MercenaryClassMap[2350] = UNKNOWNMER
+MercenaryClassMap[2351] = UNKNOWNMER
+MercenaryClassMap[2378] = UNKNOWNMER
+MercenaryClassMap[2937] = UNKNOWNMER
+MercenaryClassMap[3569] = POPEMERC
+MercenaryClassMap[3570] = POPEMERC
 ------------------
 MOTION_STAND = 0 	-- Standing still
 MOTION_MOVE = 1 	-- Moving
@@ -145,15 +191,6 @@ MotionClassLU[28]=4
 MotionClassLU[38]=4
 MotionClassLU[39]=0
 MotionClassLU[42]=4
-
--- Backward compatibility
-MOTION_PP = MOTION_TOSS
-MOTION_SLIMPP = MOTION_BIGTOSS
-MOTION_PICKUP = MOTION_BENDDOWN 
---------------------------
-
-
-
 
 --------------------------
 -- command  

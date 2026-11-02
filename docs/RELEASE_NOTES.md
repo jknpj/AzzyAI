@@ -9,6 +9,17 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Mercenary startup diagnostics now go to `AAIStartM.txt` and include the raw
+  and detected mercenary type, max HP/SP, mapped skills, and client-reported
+  ranges for known mercenary skills. This helps identify custom or newer hires;
+  it cannot reveal skills that are not in AzzyAI's skill catalog.
+- Mercenary detection now uses client class IDs for the standard 30 mercenary
+  grades and recognized monster mercenaries before falling back to legacy
+  HP/SP fingerprints. Added rAthena-listed profiles for Wander Man, Wicked
+  Nymph, Kasa-family hires, Salamander, Teddy Bear, Baphomet, Galapago and
+  Pope variants; unsupported hire classes remain unprofiled rather than being
+  misidentified from matching stats. rAthena data does not prove that a hire
+  is available on every server.
 - Damage-aware self-defence (`UseDamageDanger`, default off; `DamageDangerDrop`
   30, `DamageDangerHP` 60). The AI cannot read enemy buffs, but it samples its
   own HP every tick; losing `DamageDangerDrop`% of max HP within 3 s while below
