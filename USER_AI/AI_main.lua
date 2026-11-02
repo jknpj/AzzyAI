@@ -837,7 +837,7 @@ function OnCHASE_ST()
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
-                    elseif (skilltype == MINION_ATK and UseHomunSSkillChase == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_MINION or tact_skillclass == CLASS_MIN_OLD or tact_skillclass == CLASS_MIN_S)) then
+                    elseif (skilltype == MINION_ATK and UseHomunSSkillChase == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_MINION or tact_skillclass == CLASS_MIN_OLD or tact_skillclass == CLASS_MIN_S or LegionClassOK(tact_skillclass))) then
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
@@ -1139,7 +1139,7 @@ function OnATTACK_ST()
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
-                        elseif (skilltype == MINION_ATK and UseHomunSSkillAttack == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_MINION or tact_skillclass == CLASS_MIN_OLD or tact_skillclass == CLASS_MIN_S)) then
+                        elseif (skilltype == MINION_ATK and UseHomunSSkillAttack == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_MINION or tact_skillclass == CLASS_MIN_OLD or tact_skillclass == CLASS_MIN_S or LegionClassOK(tact_skillclass))) then
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end

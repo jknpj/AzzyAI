@@ -2544,6 +2544,11 @@ function GetDebuffSkill(myid)
 	return 0,0
 end
 
+-- The default tactic class (CLASS_S) never selected the minion classes, so Summon Legion was never cast
+function LegionClassOK(tactClass)
+	return MyHomunType==SERA and UseSeraCallLegion==1
+end
+
 function GetMinionSkill(myid)
 	local level,skill=0,0
 	if (IsHomun(myid)==1) then
@@ -3296,7 +3301,8 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		local reuse = GetSkillInfo(skill,9,level)
 		-- the server allows a single active ground unit of these (ActiveInstance: 1): a new cast
 		-- is refused until the previous one has expired
-		if skill==MH_LAVA_SLIDE or skill==MH_POISON_MIST then
+		-- Summon Legion refuses (harness) or wastes the cast (server) while its bugs are alive
+		if skill==MH_LAVA_SLIDE or skill==MH_POISON_MIST or skill==MH_SUMMON_LEGION then
 			reuse = math.max(reuse, GetSkillInfo(skill,8,level))
 		end
 		AutoSkillCooldown[skill]=t+reuse+delay

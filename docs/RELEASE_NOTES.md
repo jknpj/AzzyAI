@@ -9,6 +9,15 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Sera: Summon Legion was never cast under the default tactics (the default
+  skill class is `CLASS_S`, and only the minion classes selected it); it now
+  fires for any class when `UseSeraCallLegion = 1`, and its recast waits for
+  the bugs' duration. The harness now models Poison Mist as per-tick magic
+  damage (`BF_MAGIC` in `skill.cpp`), which corrects the earlier note that it
+  deals no damage, and spawns the legion bugs. The bugs' own damage is not
+  modelled: the cast costs about 3-4% of the benchmark's damage (140 SP, 3 s
+  of casting), so five bugs only need a small DPS to pay for it.
+
 - Per-type presets: `USER_AI/Types/<Name>.lua` (Lif, Amistr, Filir, Vanilmirth,
   Eira, Bayeri, Sera, Dieter, Eleanor) is loaded at init after `H_Config.lua`
   and overrides only the keys it lists. `Dieter.lua` sets `AutoMobCount = 1`
@@ -321,7 +330,7 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 
 The complete comparison is in [`docs/preset-tuning/`](preset-tuning/README.md): the previous preset against the current one for every homunculus with 1, 2, 3 and 5 monsters, and 49 rows with one option changed at a time (DPS, damage per SP, refused casts and the casts of each run). The same data is in two spreadsheets, [preset-before-after.csv](preset-tuning/preset-before-after.csv) and [preset-options.csv](preset-tuning/preset-options.csv). `python tools/harness/preset_report.py` regenerates all three files in under a minute (`--old-ref <sha>` selects the preset to compare against; the tables here compare against `0cc1f35`).
 
-What this does not prove: the model is validated against measured damage only for Sonic Claw and Xeno Slasher, the SP regeneration of the other homunculi is not measured (their decisions held from 30 to 400 SP/s), `AutoSkillDelay` made no difference in these runs, and none of it was run on an official server, whose skill data differ (`ServerType` stays `SERVER_OFFICIAL`). The GUIs' own defaults and `Defaults.lua` were not changed. Two corrections to the damage model came out of this work: Poison Mist's unit only applies a status (it deals no damage) and Tinder Breaker, CBC and EQC add a flat 2,500, 4,000 and 6,000 per level after DEF and element.
+What this does not prove: the model is validated against measured damage only for Sonic Claw and Xeno Slasher, the SP regeneration of the other homunculi is not measured (their decisions held from 30 to 400 SP/s), `AutoSkillDelay` made no difference in these runs, and none of it was run on an official server, whose skill data differ (`ServerType` stays `SERVER_OFFICIAL`). The GUIs' own defaults and `Defaults.lua` were not changed. Two corrections to the damage model came out of this work: Poison Mist's unit only applies a status (it deals no damage; later corrected: it hits with magic damage every tick) and Tinder Breaker, CBC and EQC add a flat 2,500, 4,000 and 6,000 per level after DEF and element.
 
 ### Eleanor benchmark
 
