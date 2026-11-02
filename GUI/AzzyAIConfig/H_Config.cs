@@ -201,6 +201,11 @@ namespace AzzyAIConfig
             {
                 UseHomunSSkillAttack = Convert.ToInt32(Regex.Match(file, "UseHomunSSkillAttack\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
             }
+            UseVanilCaprice = 1;
+            if (Regex.IsMatch(file, "UseVanilCaprice\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                UseVanilCaprice = Convert.ToInt32(Regex.Match(file, "UseVanilCaprice\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
             if (Regex.IsMatch(file, "AoEMaximizeTargets\\s*=\\s*-?\\d+", RegexOptions.Multiline))
             {
                 AoEMaximizeTargets = Convert.ToInt32(Regex.Match(file, "AoEMaximizeTargets\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
@@ -990,6 +995,14 @@ namespace AzzyAIConfig
             else
             {
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseHomunSSkillAttack", UseHomunSSkillAttack);
+            }
+            if (Regex.IsMatch(file, "UseVanilCaprice\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
+            {
+                file = Regex.Replace(file, "(UseVanilCaprice\\s*=\\s*)(\\d+|-\\+)", string.Format("{0,-25}= {1}", "UseVanilCaprice", UseVanilCaprice), RegexOptions.Multiline);
+            }
+            else
+            {
+                file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseVanilCaprice", UseVanilCaprice);
             }
             if (Regex.IsMatch(file, "AoEMaximizeTargets\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
             {
@@ -2082,6 +2095,12 @@ namespace AzzyAIConfig
         {
             get { return _UseHomunSSkillAttack; }
             set { _UseHomunSSkillAttack = value; }
+        }
+        static int _UseVanilCaprice = 1;
+        public static int UseVanilCaprice
+        {
+            get { return _UseVanilCaprice; }
+            set { _UseVanilCaprice = value; }
         }
         static int _AoEMaximizeTargets = 0;
         public static int AoEMaximizeTargets

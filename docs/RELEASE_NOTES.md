@@ -13,6 +13,10 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   combo starter thresholds, confirmed follow-up sequencing and dance suppression
   during chains. Manual Style Change tracking is limited to casts the AI sees;
   a player's direct client command may bypass it.
+- Eleanor: Blazing And Furious and The One Fighter Rises are treated as AoE mob
+  skills, so `AutoMobCount` can prevent them from being spent on a lone target.
+- Vanilmirth-based Homunculus S can enable or disable inherited Caprice with
+  `UseVanilCaprice`, which defaults to enabled.
 - Both configuration GUIs expose `SphereTrackInterval` and allow zero extra
   `AutoSkillDelay`, without changing server cooldowns.
 - Automatic actions pause during pending casts. Offensive cast backoff defaults

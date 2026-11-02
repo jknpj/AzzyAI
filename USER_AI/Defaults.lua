@@ -61,6 +61,7 @@ UseAutoPushback		=0
 AutoPushbackThreshold		=2
 UseHomunSSkillChase 		= 1
 UseHomunSSkillAttack 		= 1 
+UseVanilCaprice 		= 1
 AutoSkillDelay          	= 400 
 AoEMaximizeTargets					=  0
 CastTimeRatio				= .5

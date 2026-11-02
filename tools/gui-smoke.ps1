@@ -90,6 +90,13 @@ try {
         $null -ne $visibleProperties['SphereTrackInterval']) {
         throw 'Combined Eira/Amistr filters hid Eira options or included Eleanor options.'
     }
+    $sFilter.SelectedItem = 'All Types'
+    $baseFilter.SelectedItem = 'Vanilmirth'
+    $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
+    if ($null -eq $visibleProperties['UseVanilCaprice']) {
+        throw 'Vanilmirth filter did not expose UseVanilCaprice.'
+    }
+    $clear.PerformClick()
     $sFilter.SelectedItem = 'Eleanor'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
     if ($null -eq $visibleProperties['SphereTrackInterval']) {

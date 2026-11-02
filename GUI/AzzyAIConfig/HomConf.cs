@@ -361,6 +361,7 @@ namespace AzzyAIConfig
             _AutoComboSpheres = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AutoComboSpheres"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseHomunSSkillChase = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseHomunSSkillChase"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseHomunSSkillAttack = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseHomunSSkillAttack"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _UseVanilCaprice = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseVanilCaprice"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _AoEMaximizeTargets = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AoEMaximizeTargets"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseEiraXenoSlasher = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseEiraXenoSlasher"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _EiraXenoSlasherLevel = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["EiraXenoSlasherLevel"].Attributes[typeof(DefaultValueAttribute)]).Value);
@@ -524,6 +525,7 @@ namespace AzzyAIConfig
             H_Config.AutoComboSpheres = _AutoComboSpheres;
             H_Config.UseHomunSSkillChase = Convert.ToInt32(_UseHomunSSkillChase);
             H_Config.UseHomunSSkillAttack = Convert.ToInt32(_UseHomunSSkillAttack);
+            H_Config.UseVanilCaprice = Convert.ToInt32(_UseVanilCaprice);
             H_Config.AoEMaximizeTargets = Convert.ToInt32(_AoEMaximizeTargets);
             H_Config.UseEiraXenoSlasher = Convert.ToInt32(_UseEiraXenoSlasher);
             H_Config.EiraXenoSlasherLevel = _EiraXenoSlasherLevel;
@@ -691,6 +693,7 @@ namespace AzzyAIConfig
             _AutoComboSpheres = H_Config.AutoComboSpheres;
             _UseHomunSSkillChase = Convert.ToBoolean(H_Config.UseHomunSSkillChase);
             _UseHomunSSkillAttack = Convert.ToBoolean(H_Config.UseHomunSSkillAttack);
+            _UseVanilCaprice = Convert.ToBoolean(H_Config.UseVanilCaprice);
             _AoEMaximizeTargets = Convert.ToBoolean(H_Config.AoEMaximizeTargets);
             _UseEiraXenoSlasher = Convert.ToBoolean(H_Config.UseEiraXenoSlasher);
             _EiraXenoSlasherLevel = H_Config.EiraXenoSlasherLevel;
@@ -1488,6 +1491,16 @@ namespace AzzyAIConfig
         {
             get { return _UseHomunSSkillAttack; }
             set { _UseHomunSSkillAttack = value; }
+        }
+
+        bool _UseVanilCaprice = true;
+        [Category("AutoSkill Options"),
+        Description("Enable the inherited Vanilmirth attack skill Caprice for Vanilmirth-based homunculi."),
+        DefaultValue(true)]
+        public bool UseVanilCaprice
+        {
+            get { return _UseVanilCaprice; }
+            set { _UseVanilCaprice = value; }
         }
 
         bool _AoEMaximizeTargets = false;
