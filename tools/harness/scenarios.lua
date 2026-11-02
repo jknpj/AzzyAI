@@ -370,6 +370,51 @@ SCENARIOS = {
 	-- regression: Blast Forge has range 1, which the old learned-skill check read as "not learned"
 	dieter_forge = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
 		set = { UseDieterBlastForge = 1 }, expect = { "Blast Forge" } },
+	-- Lava Slide allows one active instance, so Volcanic Ash (a debuff) is used as an attack skill
+	dieter_ash_attack = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
+		expect = { "Lava Slide", "Volcanic Ash" } },
+	dieter_ash_attack_off = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
+		set = { UseDieterAshAsAttack = 0 },
+		checks = { ["Volcanic Ash stays a debuff-only skill when the option is off"] = function()
+			for _, c in ipairs(HarnessCasts) do if c.name == "Volcanic Ash" then return false end end
+			return true
+		end } },
+	-- stay away from the owner (instances with an ungeared owner)
+	stay_away = { homuntype = 51, skills = DIETER_SKILLS, mobs = {}, minAttacks = 0, ticks = 300,
+		set = { StayAwayDistance = 6 },
+		checks = { ["parks about 6 cells from the owner"] = function()
+			local h, o = HarnessMob(2001), HarnessMob(2000001)
+			local d = math.max(math.abs(h.x - o.x), math.abs(h.y - o.y))
+			return d >= 5 and d <= 7
+		end } },
+	stay_away_owner_walks = { homuntype = 51, skills = DIETER_SKILLS, mobs = {}, minAttacks = 0, ticks = 300, reloadAt = 150,
+		set = { StayAwayDistance = 6 },
+		afterReload = function() local o = HarnessMob(2000001); o.x = o.x + 3 end,
+		checks = { ["moves further away, never toward the owner who walked closer"] = function()
+			local h, o = HarnessMob(2001), HarnessMob(2000001)
+			return h.x >= 106 and o.x >= 103
+		end } },
+	stay_away_off = { homuntype = 51, skills = DIETER_SKILLS, mobs = {}, minAttacks = 0, ticks = 300,
+		checks = { ["follows closely when the option is off"] = function()
+			local h, o = HarnessMob(2001), HarnessMob(2000001)
+			return math.max(math.abs(h.x - o.x), math.abs(h.y - o.y)) <= 5		end } },
+	stay_away_hold = { homuntype = 51, skills = DIETER_SKILLS, mobs = {}, minAttacks = 0, ticks = 300,
+		set = { StayAwayDistance = 6, StayAwayHold = 1 },
+		checks = { ["a parked spot is kept and the homunculus is back near it"] = function()
+			local h, o = HarnessMob(2001), HarnessMob(2000001)
+			local d = math.max(math.abs(h.x - o.x), math.abs(h.y - o.y))
+			return StayAwayParkX ~= 0 and d >= 5 and d <= 7
+		end } },
+	-- MVPs: Baphomet (1039) is a passive MVP here; BossAggro 1 alone leaves it alone
+	mvp_default = { homuntype = 51, skills = DIETER_SKILLS, mobs = { { 103, 100, 1039 } }, passive = true, minAttacks = 0,
+		checks = { ["an MVP is only reacted to by default"] = function() return (HarnessMob(2001).attacks or 0) == 0 end } },
+	mvp_attack = { homuntype = 51, skills = DIETER_SKILLS, mobs = { { 103, 100, 1039 } }, passive = true, minAttacks = 1,
+		set = { AttackMVPs = 1 } },
+	mvp_only = { homuntype = 51, skills = DIETER_SKILLS, mobs = { { 103, 100, 1002 }, { 103, 101, 1039 } }, passive = true, minAttacks = 1,
+		set = { AttackMVPs = 1, AttackOnlyMVPs = 2 },
+		checks = { ["only the MVP is attacked"] = function()
+			return (HarnessMob(60001).hitsTaken or 0) == 0 and (HarnessMob(60002).hitsTaken or 0) > 0
+		end } },
 	-- per-type preset (Types/Dieter.lua): AutoMobCount 1 lets Dieter use his area skills on one monster
 	dieter_type_preset = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
 		checks = {

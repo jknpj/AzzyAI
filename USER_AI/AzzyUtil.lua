@@ -310,15 +310,28 @@ function SkillElementOKFor(skill, target)
 end
 
 -- Tactic changes from the monster database, applied on top of the tactics file:
+--   MVPs: AttackMVPs = 1 turns "react" tactics into attacking ones, so the homunculus engages them
+--   non-MVPs: AttackOnlyMVPs = 1 makes them react-only, 2 ignores them completely (TACT_IGNORE)
 --   bosses: attacking tactics become "react" ones (BossAggro: 1 = MVPs, 2 = all bosses)
 --   plants: no skills (PlantSkills = 0) and no weight in AoE counts, since they take 1 damage
 REACT_FOR_ATTACK = {}
+ATTACK_FOR_REACT = {}
 function MobInfoTact(t, x, m)
 	if UseMobInfo == 0 or MobInfo == nil then
 		return x
 	end
 	if t == TACT_BASIC then
-		if BossAggro ~= nil and BossAggro > 0 and x ~= TACT_IGNORE and GetBossLevel(m) >= 3 - BossAggro then
+		local boss = GetBossLevel(m)
+		if boss >= 2 and AttackMVPs == 1 then
+			return ATTACK_FOR_REACT[x] or x
+		end
+		if boss < 2 and x ~= TACT_IGNORE and AttackOnlyMVPs ~= nil and AttackOnlyMVPs > 0 then
+			if AttackOnlyMVPs >= 2 then
+				return TACT_IGNORE
+			end
+			return REACT_FOR_ATTACK[x] or x
+		end
+		if BossAggro ~= nil and BossAggro > 0 and x ~= TACT_IGNORE and boss >= 3 - BossAggro then
 			return REACT_FOR_ATTACK[x] or x
 		end
 	elseif (t == TACT_SKILL or t == TACT_WEIGHT) and PlantSkills == 0 and IsPlantMob(m) then
@@ -326,6 +339,9 @@ function MobInfoTact(t, x, m)
 	end
 	return x
 end
+ATTACK_FOR_REACT[TACT_REACT_L] = TACT_ATTACK_L
+ATTACK_FOR_REACT[TACT_REACT_M] = TACT_ATTACK_M
+ATTACK_FOR_REACT[TACT_REACT_H] = TACT_ATTACK_H
 REACT_FOR_ATTACK[TACT_ATTACK_L] = TACT_REACT_L
 REACT_FOR_ATTACK[TACT_ATTACK_M] = TACT_REACT_M
 REACT_FOR_ATTACK[TACT_ATTACK_H] = TACT_REACT_H
@@ -1488,6 +1504,90 @@ function GetMoveBounds()
 	else
 		return MobileMoveBounds
 	end
+end
+
+-- Stay-away: while idle, keep about StayAwayDistance cells (square distance) from the owner,
+-- never more than the move bounds allow. StayAwayHold = 1 parks at one spot and returns to it
+-- after fights instead of following the owner's every step.
+StayAwayParkX, StayAwayParkY = 0, 0
+StayAwayTries = 0
+StayAwayRetryTick = 0
+StayAwayAngles = { 0, 45, -45, 90, -90, 135, -135, 180 }
+
+function GetStayAwayDistance()
+	local n = StayAwayDistance
+	if n == nil or n <= 0 or IsHomun(MyID) ~= 1 then
+		return 0
+	end
+	return math.max(2, math.min(n, GetMoveBounds() - 2))
+end
+
+-- true: moving to the keep-away spot, false: in place, nil: not applicable (normal following)
+function DoStayAway()
+	local n = GetStayAwayDistance()
+	if n == 0 or ReturnToMoveHold ~= 0 or GetTick() < StayAwayRetryTick then
+		StayAwayParkX, StayAwayParkY = 0, 0
+		return nil
+	end
+	local od = GetDistanceAR(MyID, OwnerID)
+	if od >= 999 or od > GetMoveBounds() then
+		StayAwayParkX, StayAwayParkY = 0, 0
+		return nil
+	end
+	local mx, my = GetV(V_POSITION, MyID)
+	local destx, desty
+	if StayAwayHold == 1 and StayAwayParkX ~= 0 then
+		local pd = GetDistanceAPR(OwnerID, StayAwayParkX, StayAwayParkY)
+		-- never walk toward the owner: only an owner closer than the distance moves us
+		if pd >= n - 1 then
+			if GetDistanceAPR(MyID, StayAwayParkX, StayAwayParkY) <= 1 then
+				StayAwayTries = 0
+				return false
+			end
+			destx, desty = StayAwayParkX, StayAwayParkY
+		else
+			StayAwayParkX, StayAwayParkY = 0, 0 -- the owner left the spot: park again
+		end
+	end
+	if destx == nil then
+		if od >= n - 1 then
+			-- far enough (the owner may have walked away): stay; normal following only
+			-- resumes beyond the move bounds
+			StayAwayTries = 0
+			if StayAwayHold == 1 then
+				StayAwayParkX, StayAwayParkY = mx, my
+			end
+			return false
+		else
+			local ox, oy = GetV(V_POSITION, OwnerID)
+			local dx, dy = mx - ox, my - oy
+			if dx == 0 and dy == 0 then
+				dx = 1
+			end
+			local a = math.rad(StayAwayAngles[StayAwayTries % #StayAwayAngles + 1])
+			local len = math.sqrt(dx * dx + dy * dy)
+			local ux, uy = dx / len, dy / len
+			local rx = ux * math.cos(a) - uy * math.sin(a)
+			local ry = ux * math.sin(a) + uy * math.cos(a)
+			local m = math.max(math.abs(rx), math.abs(ry))
+			destx = math.floor(ox + rx / m * n + 0.5)
+			desty = math.floor(oy + ry / m * n + 0.5)
+		end
+	end
+	if GetV(V_MOTION, MyID) == MOTION_MOVE then
+		return true
+	end
+	StayAwayTries = StayAwayTries + 1
+	if StayAwayTries > 2 * #StayAwayAngles then
+		-- can't reach it (walls?): follow normally for a while
+		StayAwayTries = 0
+		StayAwayRetryTick = GetTick() + 10000
+		StayAwayParkX, StayAwayParkY = 0, 0
+		return nil
+	end
+	MyDestX, MyDestY = destx, desty
+	Move(MyID, destx, desty)
+	return true
 end
 function IsToRight(id1,id2)
 	local x1,y1=GetV(V_POSITION,id1)
@@ -3172,7 +3272,13 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	delay=AutoSkillDelay + GetSkillInfo(skill,4,level)+GetSkillInfo(skill,5,level)*CastTimeRatio
 	AutoSkillCastTimeout=delay+t
 	if AutoSkillCooldown[skill]~=nil then
-		AutoSkillCooldown[skill]=t+GetSkillInfo(skill,9,level)+delay
+		local reuse = GetSkillInfo(skill,9,level)
+		-- the server allows a single active ground unit of these (ActiveInstance: 1): a new cast
+		-- is refused until the previous one has expired
+		if skill==MH_LAVA_SLIDE or skill==MH_POISON_MIST then
+			reuse = math.max(reuse, GetSkillInfo(skill,8,level))
+		end
+		AutoSkillCooldown[skill]=t+reuse+delay
 		-- cooldowns survive map changes on the server; save them so the reloaded AI
 		-- doesn't recast early and get "Skill failed"
 		if GetSkillInfo(skill,9,level) > 0 then

@@ -99,6 +99,8 @@ DieterLavaSlideLevel		=10
 PoisonMistMode				=0
 LavaSlideMode				=0
 UseDieterVolcanicAsh		=0
+-- 1 = Dieter also casts Volcanic Ash as an attack skill (needs UseDieterVolcanicAsh = 1 and skills allowed by the tactics), without needing the debuff tactic
+UseDieterAshAsAttack		=0
 AshMaximizeTargets			=0
 HealOwnerBreeze				=0
 PainkillerFriends			=0
@@ -110,6 +112,8 @@ UseMobInfo					=1	-- 0 = ignore the monster database
 SkillElementMinRate			=50	-- skip attack skills that would do less than this % because of the target's element
 PlantSkills					=0	-- 1 = also use skills on plants (they take 1 damage from everything)
 BossAggro					=1	-- 0 = tactics decide, 1 = only react to MVPs, 2 = only react to any boss
+AttackMVPs					=0	-- 1 = MVPs are always attacked (react tactics become attack ones); wins over BossAggro
+AttackOnlyMVPs				=0	-- 1 = other monsters only get a reaction, 2 = other monsters are ignored (needs UseMobInfo)
 TargetPriority				=0	-- 1 = among equal tactics: attackers first, plants last, targets your skills can hurt, biggest AoE cluster, then closest
 
 --Autobuff options
@@ -142,6 +146,11 @@ HealOwnerHP              = 50
 UseAutoHeal              = 0 
 
 FollowStayBack =1
+-- Stay away from the owner (useful for instances: the owner has no gear and the homunculus tanks)
+-- 0 = off. N = keep about N cells from the owner while idle (limited by the move bounds, which are
+-- 9 while the owner moves and 14 while standing still)
+StayAwayDistance =0
+StayAwayHold =0	-- 1 = park at one spot and return to it after fights instead of following the owner
 StationaryAggroDist 	=12
 MobileAggroDist			=7
 StationaryMoveBounds    =14
