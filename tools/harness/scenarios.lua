@@ -798,6 +798,7 @@ SCENARIOS = {
 		expect = { "The One Fighter Rises" } },
 	eleanor = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoComboMode = 0, AutoMobCount = 1 },
+		afterLoad = function() ELEANOR_BLAZING_MIN_SPHERES = 1 end,
 		expect = { "Sonic Claw", "Blazing And Furious", "The One Fighter Rises" },
 		checks = {
 			["grapple skills obey their individual config switches"] = function()

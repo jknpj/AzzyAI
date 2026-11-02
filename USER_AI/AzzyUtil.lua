@@ -4064,6 +4064,9 @@ BAYERI_PACK_SKILL_FULL_COUNT = 3
 ELEANOR_LONE_TOFR_MIN_DEF = 300
 -- With a pack her Sonic Claw chains only keep SP under the AoE's price: skipping them is +19..32%
 ELEANOR_PACK_NO_SONIC_COUNT = 3
+-- Blazing And Furious hits once per sphere for about 1/7 of The One Fighter Rises per hit and costs the
+-- same SP, so it only pays with a lot of spheres (the minimum is set by homun_bench.py)
+ELEANOR_BLAZING_MIN_SPHERES = 6
 function EleanorLoneTofrWorthIt(skill, count, target)
 	if MyHomunType ~= ELEANOR or skill ~= MH_THE_ONE_FIGHTER_RISES or count < 1 then
 		return false
@@ -4137,7 +4140,8 @@ function GetNewMobSkill(myid,target,tact_skillclass)
 		for _, candidate in ipairs(candidates) do
 			local skill = candidate[2]
 			if candidate[1] ~= nil and candidate[1] ~= 0 and IsSkillReady(skill)
-				and not IsOffensiveCastPaused(skill) then
+				and not IsOffensiveCastPaused(skill)
+				and not (skill == MH_BLAZING_AND_FURIOUS and (MySpheres or 0) < ELEANOR_BLAZING_MIN_SPHERES) then
 				local level = candidate[3] or SkillList[htype][skill] or 0
 				if level ~= 0 and (target == nil or ShouldUseMobSkill(skill, level, target, tact_skillclass)) then
 					return skill, level
