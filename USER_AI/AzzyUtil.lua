@@ -3087,7 +3087,19 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 	if AutoMobMode==2 then
 		mobmode=1
 	end
-	return GetMobCount(skill,level,target,mobmode) >= AutoMobCount
+	local count = GetMobCount(skill,level,target,mobmode)
+	if count < AutoMobCount then
+		return false
+	end
+	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
+	-- monsters when their DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win
+	if MyHomunType == BAYERI and (skill == MH_HEILIGE_STANGE or skill == MH_HEILIGE_PFERD) and count < BAYERI_PACK_SKILL_FULL_COUNT then
+		local info = GetMobInfo(target)
+		if info ~= nil and info[7] ~= nil and info[7] < BAYERI_PAIR_MIN_DEF then
+			return false
+		end
+	end
+	return true
 end
 
 function GetTargetedSkills(myid)
@@ -4045,6 +4057,8 @@ end
 -- Spies only pays off against high DEF (about 320 for a neutral target; the element moves that).
 -- Without monster data it stays the user's choice.
 BAYERI_SPIES_VS_STAHL = 0.6
+BAYERI_PAIR_MIN_DEF = 110
+BAYERI_PACK_SKILL_FULL_COUNT = 3
 function SpiesBeatsStahlHorn(target)
 	local info = GetMobInfo(target)
 	if info == nil or info[7] == nil then

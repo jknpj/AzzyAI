@@ -310,6 +310,17 @@ SCENARIOS = {
 			MobInfo[1002] = info
 		end,
 		expect = { "Glanzen Spies" } },
+	-- a pair of monsters only gets the DEF-ignoring area skills when their DEF is high
+	bayeri_pair_low_def = { homuntype = 49, skills = BAYERI_SKILLS, mobs = { {103,100}, {104,101} },
+		forbid = { "Heilige Pferd", "Heilige Stange" }, expect = { "Stahl Horn" } },
+	bayeri_pair_high_def = { homuntype = 49, skills = BAYERI_SKILLS, mobs = { {103,100}, {104,101} },
+		afterLoad = function()
+			local info = {}
+			for i, v in ipairs(MobInfo[1002]) do info[i] = v end
+			info[7] = 300
+			MobInfo[1002] = info
+		end,
+		expect = { "Heilige Pferd" } },
 	-- both AoEs on and fully learned: the cheap ranged Stange must not starve the caster-centered Pferd
 	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		set = { UseBayeriHeiligePferd = 1 },
@@ -327,6 +338,8 @@ SCENARIOS = {
 	-- chain it from range 9 and never get close enough for the caster-centered Pferd (or melee).
 	-- Glanzen Spies is off too, or it spends the SP the Pferd probes need.
 	bayeri_partial = { homuntype = 49, mobs = cluster, maxRefused = 8, minAttacks = 100, ticks = 500,
+		-- a pair of low-DEF monsters would not get Pferd (BAYERI_PAIR_MIN_DEF); these scenarios need the attempts
+		afterLoad = function() local i = {} for k, v in ipairs(MobInfo[1002]) do i[k] = v end i[7] = 300 MobInfo[1002] = i end,
 		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
 			"MH_STEINWAND:1", "MH_GLANZEN_SPIES", "MH_GOLDENE_TONE" },
 		set = { UseBayeriHeiligePferd = 1, UseBayeriHailegeStar = 0, UseBayeriGlanzenSpies = 0 },
@@ -361,6 +374,8 @@ SCENARIOS = {
 	-- steps down after refusals and remembers it in data/; after a map change (AI reload) it doesn't
 	-- try again until LEARNED_SKILL_RECHECK_SECONDS have passed.
 	bayeri_pferd_unlearned = { homuntype = 49, mobs = cluster, maxRefused = 8, ticks = 500, reloadAt = 400,
+		-- a pair of low-DEF monsters would not get Pferd (BAYERI_PAIR_MIN_DEF); these scenarios need the attempts
+		afterLoad = function() local i = {} for k, v in ipairs(MobInfo[1002]) do i[k] = v end i[7] = 300 MobInfo[1002] = i end,
 		skills = { "MH_STAHL_HORN", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS", "MH_STEINWAND", "MH_GOLDENE_TONE" },
 		set = { UseBayeriHeiligePferd = 1, UseBayeriHailegeStar = 0 },
 		forbid = { "Heilige Pferd" },
