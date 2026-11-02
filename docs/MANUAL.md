@@ -112,6 +112,7 @@ Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits
 | `SuperPassive` | Prevents normal combat behavior; check it if nothing attacks. |
 | `DoNotChase` | Stops chasing targets. A distant target may never enter skill range. |
 | `KiteMonsters` | Enables keeping distance when tactics also allow it. |
+| `UseDamageDanger` | Off by default. If the homunculus loses `DamageDangerDrop`% (30) of its max HP within 3 s while below `DamageDangerHP`% (60) HP, it kites away even with `KiteMonsters` off, and Bayeri casts Stein Wand. It only sees its own HP, not enemy buffs. |
 | `UseDanceAttack` | Enables attack movement. It can affect positioning; it is not a skill-cooldown remover. |
 
 Automatic server detection helps on some private clients, but select your

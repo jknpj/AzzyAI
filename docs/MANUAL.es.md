@@ -113,6 +113,7 @@ Ambas GUIs tienen el selector **Configuración de** en la pestaña Homúnculo. *
 | `SuperPassive` | Impide el combate normal; revísalo si no ataca. |
 | `DoNotChase` | Impide perseguir objetivos. Uno lejano puede no entrar en alcance. |
 | `KiteMonsters` | Permite mantener distancia si las tácticas también lo permiten. |
+| `UseDamageDanger` | Desactivado por defecto. Si el homúnculo pierde `DamageDangerDrop`% (30) de su HP máximo en 3 s con HP por debajo de `DamageDangerHP`% (60), kitea aunque `KiteMonsters` esté desactivado, y Bayeri usa Stein Wand. Solo ve su propio HP, no los buffs de los enemigos. |
 | `UseDanceAttack` | Activa movimiento durante ataques. Puede cambiar la posición; no elimina cooldowns. |
 
 La detección automática ayuda en algunos clientes privados, pero elige el tipo
