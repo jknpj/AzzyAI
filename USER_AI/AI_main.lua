@@ -511,13 +511,19 @@ function	OnIDLE_ST ()
 		end
 	end
 	--Following
+	local stayaway = DoStayAway()
+	if stayaway == true then
+		return
+	end
 	local distance
 	if ReturnToMoveHold ~=0 then
 		distance = GetDistanceAP(MyID,StickyX,StickyY)
 	else
 		distance = GetDistanceFromOwner(MyID)
 	end
-	if (UseIdleWalk~=0 and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP)) then -- CHECK
+	if stayaway ~= nil then
+		-- keeping the stay-away distance: no following or idle walking
+	elseif (UseIdleWalk~=0 and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP)) then -- CHECK
 		if ( distance > GetMoveBounds() or distance == -1) then		-- MYOWNER_OUTSIGNT_IN
 			MyState = FOLLOW_ST
 			TraceAI ("IDLE_ST -> FOLLOW_ST")
@@ -537,7 +543,7 @@ function	OnIDLE_ST ()
 		end
 	end
 	DoAutoBuffs(-2)
-	if UseIdleWalk ~=0 and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP) then
+	if UseIdleWalk ~=0 and stayaway == nil and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP) then
 		TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk)
 		MyState=IDLEWALK_ST
 	end
@@ -554,7 +560,8 @@ function	OnFOLLOW_ST ()
 	if ReturnToMoveHold ~=0 then
 		dist = GetDistanceAP(MyID,StickyX,StickyY)
 	end
-	if (dist <= DiagonalDist(FollowStayBack+1)) then		--  DESTINATION_ARRIVED_IN 
+	if (dist <= DiagonalDist(FollowStayBack+1)
+		or (ReturnToMoveHold == 0 and GetStayAwayDistance() > 0 and GetDistanceAR(MyID,OwnerID) <= GetStayAwayDistance()+1)) then		--  DESTINATION_ARRIVED_IN 
 		FollowTryCount=0
 		MyState = IDLE_ST
 		TraceAI ("FOLLOW_ST -> IDLE_ST ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10))
@@ -1097,8 +1104,10 @@ function OnATTACK_ST()
                             if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
                             end
-                        elseif (skilltype == DEBUFF_ATK and AttackDebuffUsed < AttackDebuffLimit and (IsFriendOrSelf(GetV(V_TARGET, MyEnemy)) == 1 or AttackDebuffWhenAttacked ~= 1)) then
-                            if (tact_debuff == v[2] or (tact_debuff == 1 and BasicDebuffs[v[2]] ~= nil)) then
+                        elseif (skilltype == DEBUFF_ATK and not (v[2] == MH_VOLCANIC_ASH and skilltouse[2] == MH_LAVA_SLIDE) and AttackDebuffUsed < AttackDebuffLimit and (IsFriendOrSelf(GetV(V_TARGET, MyEnemy)) == 1 or AttackDebuffWhenAttacked ~= 1)) then
+                            if (tact_debuff == v[2] or (tact_debuff == 1 and BasicDebuffs[v[2]] ~= nil)
+                                or (v[2] == MH_VOLCANIC_ASH and UseDieterAshAsAttack == 1 and tact_skill ~= SKILL_NEVER
+                                    and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)))) then
                                 if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                     skilltouse = v
                                 end

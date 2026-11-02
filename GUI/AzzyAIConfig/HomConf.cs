@@ -434,6 +434,11 @@ namespace AzzyAIConfig
             _EleanorDoNotSwitchMode = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["EleanorDoNotSwitchMode"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseDieterLavaSlide = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterLavaSlide"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseDieterVolcanicAsh = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterVolcanicAsh"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _UseDieterAshAsAttack = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterAshAsAttack"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _StayAwayDistance = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["StayAwayDistance"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _StayAwayHold = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["StayAwayHold"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _AttackMVPs = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AttackMVPs"].Attributes[typeof(DefaultValueAttribute)]).Value);
+            _AttackOnlyMVPs = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["AttackOnlyMVPs"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _DieterLavaSlideLevel = Convert.ToInt32(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["DieterLavaSlideLevel"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseDieterBlastForge = Convert.ToBoolean(((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterBlastForge"].Attributes[typeof(DefaultValueAttribute)]).Value);
             _UseDieterTempering = (UseDieterTemperingOptions)((DefaultValueAttribute)TypeDescriptor.GetProperties(this)["UseDieterTempering"].Attributes[typeof(DefaultValueAttribute)]).Value;
@@ -603,6 +608,11 @@ namespace AzzyAIConfig
             H_Config.EleanorMidnightLevel = _EleanorMidnightLevel;
             H_Config.UseDieterLavaSlide = Convert.ToInt32(_UseDieterLavaSlide);
             H_Config.UseDieterVolcanicAsh = Convert.ToInt32(_UseDieterVolcanicAsh);
+            H_Config.UseDieterAshAsAttack = Convert.ToInt32(_UseDieterAshAsAttack);
+            H_Config.StayAwayDistance = _StayAwayDistance;
+            H_Config.StayAwayHold = Convert.ToInt32(_StayAwayHold);
+            H_Config.AttackMVPs = Convert.ToInt32(_AttackMVPs);
+            H_Config.AttackOnlyMVPs = _AttackOnlyMVPs;
             H_Config.DieterLavaSlideLevel = _DieterLavaSlideLevel;
             H_Config.UseDieterBlastForge = Convert.ToInt32(_UseDieterBlastForge);
             H_Config.UseDieterTempering = Convert.ToInt32(_UseDieterTempering);
@@ -771,6 +781,11 @@ namespace AzzyAIConfig
             _EleanorMidnightLevel = H_Config.EleanorMidnightLevel;
             _UseDieterLavaSlide = Convert.ToBoolean(H_Config.UseDieterLavaSlide);
             _UseDieterVolcanicAsh = Convert.ToBoolean(H_Config.UseDieterVolcanicAsh);
+            _UseDieterAshAsAttack = Convert.ToBoolean(H_Config.UseDieterAshAsAttack);
+            _StayAwayDistance = H_Config.StayAwayDistance;
+            _StayAwayHold = Convert.ToBoolean(H_Config.StayAwayHold);
+            _AttackMVPs = Convert.ToBoolean(H_Config.AttackMVPs);
+            _AttackOnlyMVPs = H_Config.AttackOnlyMVPs;
             _DieterLavaSlideLevel = H_Config.DieterLavaSlideLevel;
             _UseDieterBlastForge = Convert.ToBoolean(H_Config.UseDieterBlastForge);
             _UseDieterTempering = (UseDieterTemperingOptions)H_Config.UseDieterTempering;
@@ -1987,6 +2002,62 @@ namespace AzzyAIConfig
         {
             get { return _UseDieterVolcanicAsh; }
             set { _UseDieterVolcanicAsh = value; }
+        }
+        bool _UseDieterAshAsAttack = false;
+        [Category("AutoSkill Options"),
+        Description(
+            "Also cast Volcanic Ash as an attack skill, without needing the debuff tactic. Requires UseDieterVolcanicAsh and skills allowed by the tactics."
+            ),
+        DefaultValue(false)]
+        public bool UseDieterAshAsAttack
+        {
+            get { return _UseDieterAshAsAttack; }
+            set { _UseDieterAshAsAttack = value; }
+        }
+        int _StayAwayDistance = 0;
+        [Category("Walk/Follow Options"),
+        Description(
+            "Keep this many cells away from you (0 = follow normally). Useful to clear instances with an ungeared owner. " +
+            "Limited by the move bounds; the homunculus still fights monsters that come near."
+            ),
+        DefaultValue(0)]
+        public int StayAwayDistance
+        {
+            get { return _StayAwayDistance; }
+            set { _StayAwayDistance = Math.Max(0, Math.Min(20, value)); }
+        }
+        bool _StayAwayHold = false;
+        [Category("Walk/Follow Options"),
+        Description(
+            "With StayAwayDistance: park at one spot and return to it after fights, instead of following your every step."
+            ),
+        DefaultValue(false)]
+        public bool StayAwayHold
+        {
+            get { return _StayAwayHold; }
+            set { _StayAwayHold = value; }
+        }
+        bool _AttackMVPs = false;
+        [Category("Basic Options"),
+        Description(
+            "Always attack MVPs, even when the tactics only react to them or BossAggro avoids them. Requires UseMobInfo."
+            ),
+        DefaultValue(false)]
+        public bool AttackMVPs
+        {
+            get { return _AttackMVPs; }
+            set { _AttackMVPs = value; }
+        }
+        int _AttackOnlyMVPs = 0;
+        [Category("Basic Options"),
+        Description(
+            "0: off. 1: other monsters are only fought back (react). 2: other monsters are ignored entirely. Requires UseMobInfo."
+            ),
+        DefaultValue(0)]
+        public int AttackOnlyMVPs
+        {
+            get { return _AttackOnlyMVPs; }
+            set { _AttackOnlyMVPs = Math.Max(0, Math.Min(2, value)); }
         }
         int _DieterLavaSlideLevel = 0;
         [Category("AutoSkill Options"),

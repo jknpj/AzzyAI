@@ -14,7 +14,19 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   and overrides only the keys it lists. `Dieter.lua` sets `AutoMobCount = 1`
   (the global value of 2 left Dieter nearly idle against a single monster).
   Deleting a type file disables its preset. Both GUIs have a "Settings for:"
-  selector that saves only differences to `Types/` and replaces the old\n  Homunculus S / Base homunculus filters (it also limits the listed skill settings).
+  selector that saves only differences to `Types/` and replaces the old
+  Homunculus S / Base homunculus filters (it also limits the listed skill settings).
+- Dieter: Lava Slide and Poison Mist allow a single active instance on the
+  server, so the AI now waits for the skill's duration (not just its reuse
+  time) before recasting; the earlier recasts were refused. New option
+  `UseDieterAshAsAttack` casts Volcanic Ash as an attack skill without the
+  debuff tactic (enabled in `Types/Dieter.lua`; needs `UseDieterVolcanicAsh`).
+- Instance clearing with an ungeared owner: `StayAwayDistance` keeps the
+  homunculus that many cells from the owner (clamped to the move bounds);
+  `StayAwayHold` parks it at one spot and returns after fights. `AttackMVPs`
+  always attacks MVPs (overriding react tactics and `BossAggro`), and
+  `AttackOnlyMVPs` 1/2 makes other monsters react-only/ignored. The MVP options
+  need `UseMobInfo`. A user hold command (`ReturnToMoveHold`) wins over stay-away.
 - Eleanor: throttled sphere estimation for clients that hide attack animations,
   combo starter thresholds, confirmed follow-up sequencing and dance suppression
   during chains. Manual Style Change tracking is limited to casts the AI sees;

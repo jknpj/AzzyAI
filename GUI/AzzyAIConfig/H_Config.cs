@@ -294,6 +294,26 @@ namespace AzzyAIConfig
             {
                 UseDieterVolcanicAsh = Convert.ToInt32(Regex.Match(file, "UseDieterVolcanicAsh\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
             }
+            if (Regex.IsMatch(file, "UseDieterAshAsAttack\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                UseDieterAshAsAttack = Convert.ToInt32(Regex.Match(file, "UseDieterAshAsAttack\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "StayAwayDistance\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                StayAwayDistance = Convert.ToInt32(Regex.Match(file, "StayAwayDistance\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "StayAwayHold\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                StayAwayHold = Convert.ToInt32(Regex.Match(file, "StayAwayHold\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "AttackMVPs\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                AttackMVPs = Convert.ToInt32(Regex.Match(file, "AttackMVPs\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
+            if (Regex.IsMatch(file, "AttackOnlyMVPs\\s*=\\s*-?\\d+", RegexOptions.Multiline))
+            {
+                AttackOnlyMVPs = Convert.ToInt32(Regex.Match(file, "AttackOnlyMVPs\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
+            }
             if (Regex.IsMatch(file, "DieterLavaSlideLevel\\s*=\\s*-?\\d+", RegexOptions.Multiline))
             {
                 DieterLavaSlideLevel = Convert.ToInt32(Regex.Match(file, "DieterLavaSlideLevel\\s*=\\s*-?\\d+", RegexOptions.Multiline).Value.Split('=')[1].Trim());
@@ -1180,6 +1200,26 @@ namespace AzzyAIConfig
             else
             {
                 file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseDieterVolcanicAsh", UseDieterVolcanicAsh);
+            }
+            if (Regex.IsMatch(file, "UseDieterAshAsAttack\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
+            {
+                file = Regex.Replace(file, "(UseDieterAshAsAttack\\s*=\\s*)(\\d+|-\\+)", string.Format("{0,-25}= {1}", "UseDieterAshAsAttack", UseDieterAshAsAttack), RegexOptions.Multiline);
+            }
+            else
+            {
+                file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, "UseDieterAshAsAttack", UseDieterAshAsAttack);
+            }
+            foreach (var opt in new[] { "StayAwayDistance", "StayAwayHold", "AttackMVPs", "AttackOnlyMVPs" })
+            {
+                int optValue = opt == "StayAwayDistance" ? StayAwayDistance : opt == "StayAwayHold" ? StayAwayHold : opt == "AttackMVPs" ? AttackMVPs : AttackOnlyMVPs;
+                if (Regex.IsMatch(file, opt + "\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
+                {
+                    file = Regex.Replace(file, "(" + opt + "\\s*=\\s*)(\\d+|-\\d+)", string.Format("{0,-25}= {1}", opt, optValue), RegexOptions.Multiline);
+                }
+                else
+                {
+                    file = string.Format("{1}{0}{2,-25}= {3}", Environment.NewLine, file, opt, optValue);
+                }
             }
             if (Regex.IsMatch(file, "DieterLavaSlideLevel\\s*=\\s*(\\d+|-\\d+)", RegexOptions.Multiline))
             {
@@ -2235,6 +2275,16 @@ namespace AzzyAIConfig
             get { return _UseDieterVolcanicAsh; }
             set { _UseDieterVolcanicAsh = value; }
         }
+        static int _UseDieterAshAsAttack = 0;
+        public static int UseDieterAshAsAttack
+        {
+            get { return _UseDieterAshAsAttack; }
+            set { _UseDieterAshAsAttack = value; }
+        }
+        public static int StayAwayDistance = 0;
+        public static int StayAwayHold = 0;
+        public static int AttackMVPs = 0;
+        public static int AttackOnlyMVPs = 0;
         static int _DieterLavaSlideLevel = 0;
         public static int DieterLavaSlideLevel
         {
