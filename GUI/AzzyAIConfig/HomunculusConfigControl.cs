@@ -16,6 +16,10 @@ namespace AzzyAIConfig
         private TextBox searchBox;
         private ComboBox homunculusSFilter;
         private ComboBox homunculusBaseFilter;
+        private ComboBox scopeCombo;
+        private Button scopeResetButton;
+        private Label scopeLabel;
+        private bool changingScope;
         private Label searchLabel;
         private Label homunculusSLabel;
         private Label homunculusBaseLabel;
@@ -24,6 +28,52 @@ namespace AzzyAIConfig
         private Dictionary<string, FilteredHomConfWrapper> categoryWrappers;
 
         public event EventHandler PropertyValueChanged;
+        // Raised before another settings scope loads; set Cancel to keep the current one
+        public event System.ComponentModel.CancelEventHandler ScopeChanging;
+        public event EventHandler ScopeChanged;
+
+        private string SelectedScope
+        {
+            get { return scopeCombo.SelectedIndex <= 0 ? "" : scopeCombo.SelectedItem.ToString(); }
+        }
+
+        private void ScopeCombo_Changed(object sender, EventArgs e)
+        {
+            if (changingScope || _hconf == null) return;
+            var args = new System.ComponentModel.CancelEventArgs();
+            if (ScopeChanging != null) ScopeChanging(this, args);
+            if (args.Cancel)
+            {
+                changingScope = true;
+                scopeCombo.SelectedIndex = _hconf.Scope.Length == 0 ? 0 : scopeCombo.Items.IndexOf(_hconf.Scope);
+                changingScope = false;
+                return;
+            }
+            LoadScope(SelectedScope);
+        }
+
+        private void ScopeReset_Click(object sender, EventArgs e)
+        {
+            if (_hconf == null || _hconf.Scope.Length == 0) return;
+            if (MessageBox.Show(this, "Delete the overrides of " + _hconf.Scope + " so it uses the global values?",
+                "Use global values", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            _hconf.ResetScope();
+            RefreshAllTabs();
+            if (ScopeChanged != null) ScopeChanged(this, EventArgs.Empty);
+        }
+
+        private void LoadScope(string scope)
+        {
+            _hconf.LoadScope(scope);
+            UpdateScopeUI();
+            RefreshAllTabs();
+            if (ScopeChanged != null) ScopeChanged(this, EventArgs.Empty);
+        }
+
+        private void UpdateScopeUI()
+        {
+            scopeResetButton.Visible = _hconf != null && _hconf.Scope.Length > 0;
+        }
 
         public HomunculusConfigControl()
         {
@@ -110,6 +160,25 @@ namespace AzzyAIConfig
                 Dock = DockStyle.Fill, AutoSize = true, WrapContents = true,
                 Margin = new Padding(0, 4, 0, 4)
             };
+            scopeLabel = new Label
+            {
+                Text = "Settings for:", AutoSize = true, Margin = new Padding(3, 6, 3, 0)
+            };
+            scopeCombo = new ComboBox
+            {
+                Name = "settingsScope", Width = 170, DropDownStyle = ComboBoxStyle.DropDownList,
+                AccessibleName = "Edit global settings or the overrides of one homunculus type", TabIndex = 2
+            };
+            scopeCombo.Items.Add(TypePreset.Global);
+            scopeCombo.Items.AddRange(TypePreset.Names);
+            scopeCombo.SelectedIndex = 0;
+            scopeCombo.SelectedIndexChanged += ScopeCombo_Changed;
+            scopeResetButton = new Button
+            {
+                Name = "resetTypeOverrides", Text = "Use global values", AutoSize = true, TabIndex = 3,
+                Margin = new Padding(6, 1, 3, 0)
+            };
+            scopeResetButton.Click += ScopeReset_Click;
             homunculusSLabel = new Label
             {
                 Text = "Homunculus S:", AutoSize = true, Margin = new Padding(3, 6, 3, 0)
@@ -135,8 +204,10 @@ namespace AzzyAIConfig
             homunculusBaseFilter.SelectedIndex = 0;
             homunculusBaseFilter.SelectedIndexChanged += Filter_Changed;
             filters.Controls.AddRange(new Control[] {
-                homunculusSLabel, homunculusSFilter, homunculusBaseLabel, homunculusBaseFilter
+                scopeLabel, scopeCombo, scopeResetButton, homunculusSLabel, homunculusSFilter, homunculusBaseLabel, homunculusBaseFilter
             });
+            filters.SetFlowBreak(scopeResetButton, true);
+            UpdateScopeUI();
 
             tabControl = new TabControl
             {
@@ -311,7 +382,9 @@ namespace AzzyAIConfig
             int count = categoryWrappers.Values.Sum(wrapper => wrapper.GetProperties().Count);
             helpLabel.Text = count == 0 ? "No matching settings. Clear filters to see all options."
                 : count + " matching settings. Select a setting for its description.";
-            helpTextBox.Text = "Filters only change what is displayed; they do not enable or disable skills.";
+            helpTextBox.Text = _hconf.Scope.Length > 0
+                ? "Editing " + _hconf.Scope + ": only values that differ from the global settings are saved, in Types\\" + _hconf.Scope + ".lua. Filters only change what is displayed."
+                : "Filters only change what is displayed; they do not enable or disable skills.";
         }
 
         private void ApplyFilterToPropertyGrid(PropertyGrid propertyGrid, string category)

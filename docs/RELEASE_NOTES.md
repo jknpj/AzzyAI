@@ -9,6 +9,12 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
 
 ## Recent HG changes
 
+- Per-type presets: `USER_AI/Types/<Name>.lua` (Lif, Amistr, Filir, Vanilmirth,
+  Eira, Bayeri, Sera, Dieter, Eleanor) is loaded at init after `H_Config.lua`
+  and overrides only the keys it lists. `Dieter.lua` sets `AutoMobCount = 1`
+  (the global value of 2 left Dieter nearly idle against a single monster).
+  Deleting a type file disables its preset. Both GUIs have a "Settings for:"
+  selector that saves only differences to `Types/`.
 - Eleanor: throttled sphere estimation for clients that hide attack animations,
   combo starter thresholds, confirmed follow-up sequencing and dance suppression
   during chains. Manual Style Change tracking is limited to casts the AI sees;

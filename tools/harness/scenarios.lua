@@ -370,6 +370,47 @@ SCENARIOS = {
 	-- regression: Blast Forge has range 1, which the old learned-skill check read as "not learned"
 	dieter_forge = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
 		set = { UseDieterBlastForge = 1 }, expect = { "Blast Forge" } },
+	-- per-type preset (Types/Dieter.lua): AutoMobCount 1 lets Dieter use his area skills on one monster
+	dieter_type_preset = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
+		checks = {
+			["Types/Dieter.lua is applied over the global config"] = function()
+				return TypeConfigApplied == "Dieter" and AutoMobCount == 1
+			end,
+		} },
+	dieter_type_preset_global = { homuntype = 51, skills = DIETER_SKILLS, mobs = single, minAttacks = 0,
+		set = { AutoMobCount = 2 },
+		checks = { ["a scenario override stays above the type preset"] = function() return AutoMobCount == 2 end } },
+	type_config_loader = { homuntype = 48, skills = EIRA_SKILLS, mobs = single,
+		checks = {
+			["a type without overrides keeps the global value"] = function()
+				return TypeConfigApplied == "Eira" and AutoMobCount == 2
+			end,
+			["type names cover regular homunculi and Homunculus S"] = function()
+				local saved = MyHomunType
+				local names = {}
+				for _, id in ipairs({ 1, 2, 3, 4, 5, 8, 9, 16, 48, 49, 50, 51, 52, 0, 99 }) do
+					MyHomunType = id
+					names[#names + 1] = tostring(GetHomunTypeName())
+				end
+				MyHomunType = saved
+				return table.concat(names, ",") == "Lif,Amistr,Filir,Vanilmirth,Lif,Vanilmirth,Lif,Vanilmirth,Eira,Bayeri,Sera,Dieter,Eleanor,nil,nil"
+			end,
+			["a type file overrides globals and a broken file is reported without crashing"] = function()
+				local path = ConfigPath .. "Types/Eira.lua"
+				local f = assert(io.open(path, "w"))
+				f:write("AutoMobCount = 7\n")
+				f:close()
+				local applied = ApplyTypeConfig(MyID)
+				local overridden = AutoMobCount == 7
+				f = assert(io.open(path, "w"))
+				f:write("AutoMobCount = = 3\n")
+				f:close()
+				local broken = ApplyTypeConfig(MyID)
+				os.remove(path)
+				local missing = ApplyTypeConfig(MyID)
+				return overridden and applied:find("Eira.lua", 1, true) and broken:find("error", 1, true) and missing == ""
+			end,
+		} },
 
 	sera = { homuntype = 50, skills = SERA_SKILLS, mobs = cluster,
 		expect = { "Needle of Paralyze", "Poison Mist", "Pain Killer" } },

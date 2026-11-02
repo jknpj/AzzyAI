@@ -3733,6 +3733,49 @@ function GetHomunBaseType(myid)
     return 0
 end
 
+HomunBaseNames = { [LIF] = "Lif", [AMISTR] = "Amistr", [FILIR] = "Filir", [VANILMIRTH] = "Vanilmirth" }
+HomunSNames = { [EIRA] = "Eira", [BAYERI] = "Bayeri", [SERA] = "Sera", [DIETER] = "Dieter", [ELEANOR] = "Eleanor" }
+
+---
+-- Name used by the per-type preset file (Types/<Name>.lua): the base name for a regular
+-- homunculus, the Homunculus S name otherwise. nil for an unknown type.
+---
+function GetHomunTypeName()
+    local base = HomunBaseOfId[MyHomunType]
+    if base ~= nil then
+        return HomunBaseNames[base]
+    end
+    return HomunSNames[MyHomunType]
+end
+
+---
+-- Applies Types/<Name>.lua on top of H_Config.lua. The file only lists the options that
+-- differ for this homunculus type; a missing file means the global config is used as is.
+-- @return (string): a line for the startup log, or "" when nothing was applied.
+---
+function ApplyTypeConfig(myid)
+    if IsHomun(myid) ~= 1 then
+        return ""
+    end
+    local name = GetHomunTypeName()
+    if name == nil then
+        return ""
+    end
+    local path = ConfigPath .. "Types/" .. name .. ".lua"
+    local f = io.open(path, "r")
+    if f == nil then
+        return ""
+    end
+    f:close()
+    local ok, err = pcall(dofile, path)
+    if not ok then
+        logappend("AAI_ERROR", "Type config " .. path .. " failed: " .. tostring(err))
+        return "\nType config " .. name .. ".lua has an error and was not fully applied: " .. tostring(err)
+    end
+    TypeConfigApplied = name
+    return "\nType config applied: " .. name .. ".lua"
+end
+
 ---
 -- Checks and corrects user configuration at startup. This is the definitive version.
 -- 1. Disables all skill options not relevant to the current homunculus type.

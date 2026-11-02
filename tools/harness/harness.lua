@@ -485,6 +485,13 @@ local function loadAI()
 	local ok, e = pcall(realdofile, "./AI/USER_AI/AI.lua")
 	dofile = realdofile
 	if not ok then error(e, 0) end
+	-- scenario overrides stay on top of the per-type preset applied by doInit
+	local applyTypeConfig = ApplyTypeConfig
+	ApplyTypeConfig = function(...)
+		local r = applyTypeConfig(...)
+		if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
+		return r
+	end
 	-- monsters whose H_Tactics.lua row is removed, to test the defaults for unknown monsters
 	for _, id in ipairs(sc.dropTactics or {}) do MyTact[id] = nil end
 	-- tactics rows for monster classes: the default row with these indexes replaced
