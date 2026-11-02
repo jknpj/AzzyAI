@@ -300,7 +300,16 @@ SCENARIOS = {
 		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)
 	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
-		expect = { "Glanzen Spies", "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand" } },
+		expect = { "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand", "Glanzen Spies" } },
+	-- Glanzen Spies ignores DEF: it only replaces Stahl Horn against a high-DEF target
+	bayeri_spies_high_def = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
+		afterLoad = function()
+			local info = {}
+			for i, v in ipairs(MobInfo[1002]) do info[i] = v end
+			info[7] = 400
+			MobInfo[1002] = info
+		end,
+		expect = { "Glanzen Spies" } },
 	-- both AoEs on and fully learned: the cheap ranged Stange must not starve the caster-centered Pferd
 	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
 		set = { UseBayeriHeiligePferd = 1 },
@@ -1247,8 +1256,14 @@ for name, h in pairs(HOMUN_BENCH) do
 	local set = {}
 	for key, value in pairs(h.set or {}) do set[key] = value end
 	for key, value in (os.getenv("HBENCH_SET") or ""):gmatch("(%w+)=([%w%.%-]+)") do set[key] = tonumber(value) end
+	-- HBENCH_DEF / HBENCH_MDEF: hard DEF and MDEF of the dummies (default 0)
+	local over = { def = tonumber(os.getenv("HBENCH_DEF") or ""), mdef = tonumber(os.getenv("HBENCH_MDEF") or "") }
+	local benchMobs = {}
+	for i, m in ipairs({ unpack(cluster, 1, math.min(math.max(tonumber(os.getenv("HBENCH_MOBS") or "") or 1, 1), #cluster)) }) do
+		benchMobs[i] = { m[1], m[2], nil, over }
+	end
 	SCENARIOS["hbench_" .. name] = { homuntype = h[1], skills = h[2],
-		mobs = { unpack(cluster, 1, math.min(math.max(tonumber(os.getenv("HBENCH_MOBS") or "") or 1, 1), #cluster)) },
+		mobs = benchMobs,
 		private = true, passive = true, sp = h[3], spregen = tonumber(os.getenv("HBENCH_SPREGEN") or "") or h.spregen or 60,
 		swingMs = h.swingMs, castPauseMs = h.castPauseMs, attackMotion = h.attackMotion,
 		ticks = (tonumber(os.getenv("HBENCH_SECONDS") or "") or 180) * 10,
@@ -1260,6 +1275,7 @@ for name, h in pairs(HOMUN_BENCH) do
 				local info = {}
 				for i, v in ipairs(MobInfo[1002]) do info[i] = v end
 				info[2] = 0
+				info[7], info[8] = over.def or 0, over.mdef or 0
 				MobInfo[1002] = info
 			end
 		end,
