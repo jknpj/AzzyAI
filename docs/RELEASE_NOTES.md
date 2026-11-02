@@ -32,8 +32,11 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   against packs, never cast on a lone target). Glanzen Spies ignores DEF but is Holy and
   slower, so it replaced Stahl Horn and lost up to 40% DPS; it is now only chosen when the
   target's DEF (new in `MobInfo.lua`: DEF and MDEF after the attack range) makes it pay off
-  (about DEF 320 for a neutral target, +9% at 400, +26% at 567). `homun_bench.py` has
-  `--def` and `--mdef` for this. Eleanor's dance is no longer blocked by a combo that cannot
+  (about DEF 320 for a neutral target, +9% at 400, +26% at 567). With exactly two monsters
+  his DEF-ignoring area skills (Heilige Stange and Pferd) are only cast when their DEF is
+  110 or more; below that Stahl Horn is better (+27% at DEF 0), and with 3 or more
+  monsters the area skills always win (+16% to +69%). `homun_bench.py` has `--def` and
+  `--mdef` for these measurements. Eleanor's dance is no longer blocked by a combo that cannot
   be cast, and her preset enables The One Fighter Rises with `AutoMobCount = 2`.
 - Amistr Castling: Castle Route no longer repeats the cast at the same route point,
   and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
