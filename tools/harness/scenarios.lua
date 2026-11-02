@@ -338,6 +338,7 @@ SCENARIOS = {
 	-- the cheap Stange chain above, with Stange on: casts stay at the learned Lv2
 	bayeri_partial_stange = { homuntype = 49, mobs = cluster, minAttacks = 0,
 		skills = { "MH_STAHL_HORN:3", "MH_HEILIGE_STANGE:2", "MH_STEINWAND:1" },
+		set = { UseBayeriHeiligePferd = 0 },
 		expect = { "Heilige Stange" },
 		checks = {
 			["Heilige Stange stays at the learned Lv2"] = function()
