@@ -82,7 +82,10 @@ function GetMsg(id) return { 0 } end
 function GetResMsg(id) return { 0 } end
 function GetActors()
 	local r = {}
-	for id, e in pairs(world) do if not e.dead then r[#r + 1] = id end end
+	for id, e in pairs(world) do
+		if e.expires and now >= e.expires then e.dead = true end
+		if not e.dead then r[#r + 1] = id end
+	end
 	table.sort(r)
 	return r
 end
@@ -282,6 +285,14 @@ local function recordCast(kind, id, lvl, skill, a, b)
 		local cd = serverField(skill, "cooldown", lvl)
 		if cd > 0 then cooldownUntil[skill] = castEnd + cd end
 		if EXCLUSIVE[skill] then statusUntil[skill] = castEnd + serverField(skill, "duration", lvl) end
+		if skill == MH_SUMMON_LEGION then
+			-- the summoned bugs (mob ids 2158-2160) stay next to the homunculus until they expire
+			local legionBase = 3000000
+			for i = 1, ({ 3, 3, 4, 4, 5 })[lvl] or 3 do
+				ent(legionBase + i, { x = e.x, y = e.y, class = 2159, hp = 1, maxhp = 1, sp = 0, maxsp = 0,
+					expires = castEnd + serverField(skill, "duration", lvl) })
+			end
+		end
 		if id == HOMUN and e.homuntype == ELEANOR then
 			server.spheres = server.spheres - sphereCost(skill, lvl)
 			-- spirit-sphere skills hit once per sphere left after paying their cost
