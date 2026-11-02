@@ -118,7 +118,7 @@ local function damageModelChecks()
 		return true
 	end
 	checks["skills whose unit only applies a status deal no damage"] = function()
-		assert(Damage.unmodelled(MH_POISON_MIST) == "its unit only applies a status", "Poison Mist")
+		assert(Damage.unmodelled(MH_POISON_MIST) == nil, "Poison Mist hits every tick with BF_MAGIC")
 		assert(Damage.unmodelled(MH_LAVA_SLIDE) == nil, "Lava Slide hits every tick")
 		return true
 	end

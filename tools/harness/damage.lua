@@ -116,8 +116,10 @@ end
 
 -- why Damage.skill can't price this skill, or nil
 -- Ground units that hit their targets every Interval (skill_unit_onplace_timer); the other units
--- (Poison Mist, Safety Wall, Volcanic Ash) only apply a status, e.g. skill.cpp UNT_POISON_MIST
-local DAMAGE_UNITS = { Lava_Slide = true, Dummyskill = true }
+-- (Safety Wall, Volcanic Ash) only apply a status. Poison Mist attacks with BF_MAGIC (skill.cpp
+-- UNT_POISON_MIST) even though its Type is Weapon, so it is priced with the magic formula.
+local DAMAGE_UNITS = { Lava_Slide = true, Dummyskill = true, Poison_Mist = true }
+local MAGIC_UNITS = { Poison_Mist = true }
 function Damage.unmodelled(skill)
 	local ra = RA_SKILL and RA_SKILL[skill]
 	if not ra then return "no rAthena data" end
@@ -156,7 +158,7 @@ function Damage.skill(hs, skill, lvl, mob, ctx)
 	local targets = math.max(ctx and ctx.targets or 1, 1)
 	local dmg, hit
 
-	if ra.type == "Magic" then
+	if ra.type == "Magic" or MAGIC_UNITS[ra.unitid] then
 		-- battle_calc_magic_attack: MATK, split, skill ratio, MRES, MDEF, minimum 1, element
 		dmg = meanRange(hs.matkMin, hs.matkMax)
 		if ra.splitsplash then dmg = idiv(dmg, targets) end
