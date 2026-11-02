@@ -128,17 +128,17 @@ de la IA pueden diferir; importa el valor del archivo instalado.
 | Homúnculo | Qué revisar |
 |---|---|
 | Eira | Activa los ataques deseados, como Twister Cutter o Absolute Zephyr. Light of Regenerate es opcional y está desactivada por defecto: exige lealtad, reduce intimidad al lanzarse y sacrifica a Eira para resucitar al dueño. |
-| Bayeri | **Glanzen Spies** usa un objetivo; **Heilige Pferd** está centrada en Bayeri. Pferd está desactivada en el preset incluido: actívala si quieres. Heilige Stange y otras áreas pueden tener prioridad sobre Spies. |
+| Bayeri | **Glanzen Spies** usa un objetivo; **Heilige Pferd** está centrada en Bayeri. El preset de Bayeri activa Pferd y Spies y elige según la DEF del objetivo (de `MobInfo.lua`): Spies solo por encima de DEF 320, si no Stahl Horn; con exactamente dos monstruos, Stange/Pferd solo desde DEF 110. |
 | Sera | Toxin of Mandara y Needle Stinger tienen lanzamientos que pueden interrumpirse. Mantén el objetivo en alcance y revisa las pausas por fallos. Pain Killer y Summon Legion tienen sus propios ajustes. |
 | Dieter | Activa ataques y buffs por separado. La resistencia o inmunidad al fuego puede impedir seleccionar habilidades de fuego. |
-| Eleanor | Sonic Claw y la cadena de lucha exigen estilo de lucha; Tinder Breaker/CBC/EQC exigen agarre. Importan esferas, SP y tiempos del combo. The One Fighter Rises y Blazing And Furious son habilidades de área: siguen `AutoMobMode`/`AutoMobCount` en lugar de usarse contra un solo objetivo. |
+| Eleanor | Sonic Claw y la cadena de lucha exigen estilo de lucha; Tinder Breaker/CBC/EQC exigen agarre. Importan esferas, SP y tiempos del combo. The One Fighter Rises y Blazing And Furious son habilidades de área: siguen `AutoMobMode`/`AutoMobCount` en lugar de usarse contra un solo objetivo, salvo The One Fighter Rises contra un objetivo aislado con DEF 300 o más. Con 3+ monstruos omite las cadenas de Sonic Claw, y Blazing And Furious solo se usa con 6+ esferas. |
 | Vanilmirth | **Caprice** (heredada también por los Homunculus S basados en Vanilmirth) se controla con `UseVanilCaprice` (activada por defecto). Chaotic Blessing sigue `UseAutoHeal`. Self Destruct nunca se usa automáticamente. |
 Son consejos de configuración, no un ranking ni una build óptima. Las reglas
 del servidor pueden variar, incluso el alcance y el tipo de objetivo.
 
 El preset incluido usa `AutoMobCount` 2 y deja desactivadas **Twister Cutter**
-(Eira), **Glanzen Spies** (Bayeri), **Needle Stinger** (Sera) y **Blazing And
-Furious** (Eleanor), porque la IA las prefiere a habilidades más baratas que
+(Eira) y **Needle Stinger** (Sera) (los presets por tipo en `Types/` activan la
+Spies de Bayeri y la Blazing And Furious de Eleanor), porque la IA las prefiere a habilidades más baratas que
 rindieron al menos igual en pruebas sin conexión, y activa **Blast Forge**
 (Dieter). Estas elecciones vienen de una simulación, no de un servidor oficial:
 activa cualquiera si lo prefieres. Todas las habilidades de ataque de Dieter son de área, así que con
