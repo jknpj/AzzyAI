@@ -79,7 +79,7 @@ Some browser resources need an internet connection.
 
 ### Settings per homunculus type
 
-Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits `H_Config.lua`; choosing a type (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edits `Types/<Name>.lua`, which only stores the values that differ from the global ones and is applied after `H_Config.lua` when that homunculus starts. **Use global values** removes the type's overrides. Deleting a type file disables its preset. Dieter ships with `AutoMobCount = 1`, because all his attacks are area skills and the global value of 2 left him almost idle against a single monster.
+Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits `H_Config.lua`; choosing a type (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edits `Types/<Name>.lua`, which only stores the values that differ from the global ones and is applied after `H_Config.lua` when that homunculus starts. **Use global values** removes the type's overrides. The selector also replaces the old Homunculus S / Base homunculus filters: a Homunculus S lists its own skill settings, a base homunculus lists only its own, and *Global* lists everything. Deleting a type file disables its preset. Dieter ships with `AutoMobCount = 1`, because all his attacks are area skills and the global value of 2 left him almost idle against a single monster.
 
 ## 4. Basic behavior
 

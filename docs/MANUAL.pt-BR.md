@@ -81,7 +81,7 @@ Alguns recursos do navegador precisam de conexão com a internet.
 
 ### Configurações por tipo de homúnculo
 
-As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* edita o `H_Config.lua`; escolher um tipo (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edita o `Types/<Nome>.lua`, que guarda só os valores diferentes dos globais e é aplicado depois do `H_Config.lua` quando aquele homúnculo inicia. **Usar valores globais** remove os ajustes do tipo. Apagar o arquivo do tipo desativa o preset. O Dieter já vem com `AutoMobCount = 1`, pois todos os ataques dele são em área e o valor global 2 o deixava quase parado contra um único monstro.
+As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* edita o `H_Config.lua`; escolher um tipo (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edita o `Types/<Nome>.lua`, que guarda só os valores diferentes dos globais e é aplicado depois do `H_Config.lua` quando aquele homúnculo inicia. **Usar valores globais** remove os ajustes do tipo. O seletor também substitui os antigos filtros Homúnculo S / Homúnculo base: um Homúnculo S lista as habilidades próprias, um base lista só as suas, e *Global* lista tudo. Apagar o arquivo do tipo desativa o preset. O Dieter já vem com `AutoMobCount = 1`, pois todos os ataques dele são em área e o valor global 2 o deixava quase parado contra um único monstro.
 
 ## 4. Comportamento básico
 
