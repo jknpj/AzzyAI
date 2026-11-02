@@ -18,8 +18,9 @@ MyPVPTact={}
 AggroHP                  = 60
 AggroSP                  = 0
 OldHomunType			= 3
--- This will store the detected type after the first run to prevent re-running.
+-- Set after the first successful base type detection (Homunculus S only); see GetDetectedHomunType.
 DetectedOldHomunType = nil
+NextHomunTypeProbe = 0
 UseSkillOnly			=-1 
 UseAttackSkill			=1
 OpportunisticTargeting  =0

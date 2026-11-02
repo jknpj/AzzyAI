@@ -17,6 +17,10 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   skills, so `AutoMobCount` can prevent them from being spent on a lone target.
 - Vanilmirth-based Homunculus S can enable or disable inherited Caprice with
   `UseVanilCaprice`, which defaults to enabled.
+- Base type resolution (`GetHomunBaseType`) no longer treats an unknown type as
+  Vanilmirth. Regular homunculi use a lookup table; a Homunculus S probes its
+  inherited skills, retrying every 5 s until one is found instead of caching
+  the `OldHomunType` fallback forever. Unknown types match no base skill.
 - Both configuration GUIs expose `SphereTrackInterval` and allow zero extra
   `AutoSkillDelay`, without changing server cooldowns.
 - Automatic actions pause during pending casts. Offensive cast backoff defaults

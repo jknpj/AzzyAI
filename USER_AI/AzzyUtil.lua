@@ -2357,13 +2357,8 @@ function GetAtkSkill(myid)
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
-		htype=MyHomunType
-		if htype < 17 then
-			homuntype=modulo(MyHomunType,4)
-		else
-			homuntype=modulo(DetectedOldHomunType,4)
-		end
-		if (homuntype==0) and (UseVanilCaprice~=0) then -- It's a vanil!
+		local homuntype=GetHomunBaseType(myid)
+		if (homuntype==VANILMIRTH) and (UseVanilCaprice~=0) then
 			skill=HVAN_CAPRICE
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
@@ -2373,7 +2368,7 @@ function GetAtkSkill(myid)
 			else
 				level=VanCapriceLevel
 			end
-		elseif	(homuntype==3) then -- It's a filir!
+		elseif	(homuntype==FILIR) then
 			skill=HFLI_MOON
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
@@ -2551,23 +2546,18 @@ function	GetQuickenSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=MyHomunType
-		if htype < 17 then
-			homuntype=modulo(MyHomunType,4)
-		else
-			homuntype=modulo(DetectedOldHomunType,4)
-		end
-		if (homuntype==1) then -- It's a lif!
+		local homuntype=GetHomunBaseType(myid)
+		if (homuntype==LIF) then
 			skill=HLIF_CHANGE
 			level=SkillList[LIF][HLIF_CHANGE]
-		elseif	(homuntype==3) then -- It's a filer!
+		elseif	(homuntype==FILIR) then
 			skill=HFLI_FLEET
 			if (FilirFlitLevel==nil) then
 				level=SkillList[FILIR][HFLI_FLEET]
 			else
 				level=FilirFlitLevel
 			end
-		elseif  (homuntype==2) and AllowBloodlust == 1 then --it's an amistr
+		elseif  (homuntype==AMISTR) and AllowBloodlust == 1 then
 			skill=HAMI_BLOODLUST
 			level=SkillList[AMISTR][HAMI_BLOODLUST]
 		end
@@ -2736,27 +2726,22 @@ function	GetGuardSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=MyHomunType
-		if htype < 17 then
-			homuntype=modulo(MyHomunType,4)
-		else
-			homuntype=modulo(DetectedOldHomunType,4)
-		end
-		if (homuntype==1) then -- It's a lif!
+		local homuntype=GetHomunBaseType(myid)
+		if (homuntype==LIF) then
 			skill=HLIF_AVOID
 			if (LifEscapeLevel==nil) then
 				level=SkillList[LIF][HLIF_AVOID]
 			else
 				level=LifEscapeLevel
 			end
-		elseif (homuntype==2) then -- It's an amistr!
+		elseif (homuntype==AMISTR) then
 			skill=HAMI_DEFENCE
 			if (AmiBulwarkLevel==nil) then
 				level=SkillList[AMISTR][HAMI_DEFENCE]
 			else
 				level=AmiBulwarkLevel
 			end
-		elseif (homuntype==3) then -- It's an filir!
+		elseif (homuntype==FILIR) then
 			skill=HFLI_SPEED
 			if (FilirAccelLevel==nil) then
 				level=SkillList[FILIR][HFLI_SPEED]
@@ -2855,22 +2840,17 @@ function GetHealingSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		htype=MyHomunType
-		if htype < 17 then --if it's not a homun S just run it through modulo. 
-			homuntype=modulo(MyHomunType,4)
-		else --If it's a homun S, get the OldHomunType
-			if htype == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
-				skill=MH_SILENT_BREEZE
-				if not IsSkillReady(skill) then
-					level=0
-				else
-					level=EiraSilentBreezeLevel or SkillList[EIRA][MH_SILENT_BREEZE]
-				end
-				return skill,level
+		if MyHomunType == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
+			skill=MH_SILENT_BREEZE
+			if not IsSkillReady(skill) then
+				level=0
+			else
+				level=EiraSilentBreezeLevel or SkillList[EIRA][MH_SILENT_BREEZE]
 			end
-			homuntype=modulo(DetectedOldHomunType,4)
+			return skill,level
 		end
-		if (homuntype==1) then -- It's a lif
+		local homuntype=GetHomunBaseType(myid)
+		if (homuntype==LIF) then
 			skill=HLIF_HEAL
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
@@ -2879,7 +2859,7 @@ function GetHealingSkill(myid)
 			else
 				level=LifHealLevel
 			end
-		elseif homuntype==0 then -- It's a vani
+		elseif homuntype==VANILMIRTH then
 			skill=HVAN_CHAOTIC
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
@@ -3111,12 +3091,8 @@ end
 function KiteOK(myid)
 	mertype=GetV(V_MERTYPE,myid)
 	if (mertype==nil) then
-		if MyHomunType < 17 then
-			homuntype=modulo(MyHomunType,4)
-		else
-			homuntype=modulo(DetectedOldHomunType or OldHomunType,4)
-		end
-		if ((homuntype==0 or homuntype==3 )and DoNotChase==1) then
+		local homuntype=GetHomunBaseType(myid)
+		if ((homuntype==VANILMIRTH or homuntype==FILIR) and DoNotChase==1) then
 			return 1
 		else
 			return 0
@@ -3524,8 +3500,8 @@ function GetLearnedSkillLevel(myid, skillID)
 
         -- Check if the skill belongs to one of the original four homunculi.
         if SkillList[LIF][skillID] or SkillList[AMISTR][skillID] or SkillList[FILIR][skillID] or SkillList[VANILMIRTH][skillID] then
-            -- It's an old skill. Use our reliable detection function to get the base type.
-            typeForLookup = GetDetectedHomunType(myid)
+        -- Old skill: resolve the base type (Lif/Amistr/Filir/Vanilmirth) for any homunculus.
+        typeForLookup = GetHomunBaseType(myid)
         end
         
         -- Now, get the max possible level for this skill from the correct table entry.
@@ -3688,54 +3664,73 @@ function SkillCastResult(skill, level, success)
 end
 
 ---
--- Gets the fundamental base type for ANY homunculus.
--- This is the final, corrected version that uses unambiguous skill checks
--- and the correct API return value logic.
--- It runs a detection check only on the very first call. If detection
--- fails, it uses the global OldHomunType as a failsafe.
--- @param myid (number): The ID of the homunculus.
--- @return (number): The numeric constant for the homunculus base type (LIF, AMISTR, etc.).
+-- Base type (LIF, AMISTR, FILIR, VANILMIRTH) of a regular homunculus, indexed by V_HOMUNTYPE.
+-- IDs 1-16 repeat the four base types in order; anything else (0, Homunculus S) is absent.
+---
+HomunBaseOfId = {}
+for id = 1, 16 do
+    HomunBaseOfId[id] = (id - 1) - math.floor((id - 1) / 4) * 4 + 1
+end
+
+local HomunProbeOrder = {
+    { HFLI_FLEET, FILIR, "Filir" },
+    { HVAN_CAPRICE, VANILMIRTH, "Vanilmirth" },
+    { HAMI_DEFENCE, AMISTR, "Amistr" },
+    { HLIF_HEAL, LIF, "Lif" },
+}
+
+local function ConfiguredHomunBase()
+    if OldHomunType ~= nil and OldHomunType >= LIF and OldHomunType <= VANILMIRTH then
+        return OldHomunType
+    end
+    return 0
+end
+
+---
+-- Probes the skills a Homunculus S inherited from its base homunculus.
+-- Only a successful detection is cached in DetectedOldHomunType. While nothing is detected
+-- (e.g. no inherited skill learned yet) the configured OldHomunType is used as a failsafe
+-- and the probe is retried every few seconds, so learning a skill later is picked up.
+-- @return (number): LIF, AMISTR, FILIR or VANILMIRTH; 0 when unknown.
 ---
 function GetDetectedHomunType(myid)
-    -- If we have already run the detection, return the stored result instantly.
     if DetectedOldHomunType ~= nil then
         return DetectedOldHomunType
     end
-
-    TraceAI("=== Running Homunculus Type Detection (v5) ===")
-
-    -- THE FIX: We check for a single, defining skill for each type.
-    -- The check `GetV(V_SKILLATTACKRANGE, myid, SKILL_ID) ~= 1` is the correct
-    -- way to see if a skill is known, as it returns 1 if not learned.
-    -- We prioritize checking skills that do NOT have a range of 1 to avoid ambiguity.
-    
-    -- Check for Filir using a buff (range 0) first. This is the most reliable check.
-    if GetV(V_SKILLATTACKRANGE, myid, HFLI_FLEET) ~= 1 then
-        DetectedOldHomunType = FILIR
-        TraceAI("Homunculus base type auto-detected as: Filir")
-        return DetectedOldHomunType
-    -- Check for Vanilmirth (range 9)
-    elseif GetV(V_SKILLATTACKRANGE, myid, HVAN_CAPRICE) ~= 1 then
-        DetectedOldHomunType = VANILMIRTH
-        TraceAI("Homunculus base type auto-detected as: Vanilmirth")
-        return DetectedOldHomunType
-    -- Check for Amistr using a buff (range 0)
-    elseif GetV(V_SKILLATTACKRANGE, myid, HAMI_DEFENCE) ~= 1 then
-        DetectedOldHomunType = AMISTR
-        TraceAI("Homunculus base type auto-detected as: Amistr")
-        return DetectedOldHomunType
-    -- Check for Lif using a buff (range 0)
-    elseif GetV(V_SKILLATTACKRANGE, myid, HLIF_HEAL) ~= 1 then
-        DetectedOldHomunType = LIF
-        TraceAI("Homunculus base type auto-detected as: Lif")
-        return DetectedOldHomunType
+    local now = GetTick()
+    if now < NextHomunTypeProbe then
+        return ConfiguredHomunBase()
     end
 
-    -- Failsafe: If auto-detection fails (e.g., no skills learned),
-    -- fall back to the user's manually configured setting.
-    TraceAI("Auto-detection failed. Using manually configured OldHomunType as failsafe.")
-    DetectedOldHomunType = OldHomunType -- The global variable from the config
-    return DetectedOldHomunType
+    -- V_SKILLATTACKRANGE returns 1 for skills that are not learned. Skills with range 0 or
+    -- a range above 1 are used so a learned skill can't be mistaken for an unlearned one.
+    for _, probe in ipairs(HomunProbeOrder) do
+        if GetV(V_SKILLATTACKRANGE, myid, probe[1]) ~= 1 then
+            DetectedOldHomunType = probe[2]
+            TraceAI("Homunculus base type auto-detected as: " .. probe[3])
+            return DetectedOldHomunType
+        end
+    end
+
+    NextHomunTypeProbe = now + 5000
+    TraceAI("Base type not detected yet. Using configured OldHomunType as failsafe.")
+    return ConfiguredHomunBase()
+end
+
+---
+-- Base type of the current homunculus, for any regular homunculus or Homunculus S.
+-- Unknown types return 0, which matches no base type (so no inherited skill is assumed).
+-- @return (number): LIF, AMISTR, FILIR or VANILMIRTH; 0 when unknown.
+---
+function GetHomunBaseType(myid)
+    local base = HomunBaseOfId[MyHomunType]
+    if base ~= nil then
+        return base
+    end
+    if MyHomunType ~= nil and MyHomunType >= 17 then
+        return GetDetectedHomunType(myid)
+    end
+    return 0
 end
 
 ---
