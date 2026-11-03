@@ -227,11 +227,27 @@ para seu alvo.
 A web GUI pode **Suggest tactics** por mapa ou monstro. Revise antes de aplicar:
 a base de monstros pode não corresponder exatamente ao seu servidor.
 
-- `UseMobInfo`: usa as informações de monstros incluídas.
-- `PlantSkills`: desligada por padrão para não desperdiçar skills em plantas.
-- `BossAggro`: por padrão evita iniciar combate com MVPs, mas permite defesa.
-- `TargetPriority`: ordenação inteligente opcional entre alvos.
-- `KiteByRange`: distância baseada em alcance, opcional, com kiting habilitado.
+### O que o banco de monstros muda (só homúnculo)
+
+A HG traz uma lista com cerca de 2.700 monstros, com elemento, raça e se cada um
+é chefe, MVP ou planta. O homúnculo lê qual monstro está vendo e usa essa lista,
+então age de forma sensata até em monstros para os quais você nunca escreveu uma
+linha de tática. Mercenários não usam isso.
+
+| Opção | Padrão | Em palavras simples |
+|---|---|---|
+| `UseMobInfo` | Ligado | Chave geral. Desligada = comportamento antigo, e nenhuma das opções abaixo faz efeito. |
+| `SkillElementMinRate` | 50 | A habilidade é pulada quando o elemento do monstro reduziria o dano dela abaixo dessa porcentagem, e a IA ataca de outro jeito. Monstros imunes são sempre pulados. Diminua o número para usar habilidades com mais liberdade; 0 pula só os imunes. |
+| `PlantSkills` | Desligado | Plantas e cogumelos recebem 1 de dano de tudo, então nenhuma habilidade é gasta neles. Ligue para usar habilidades neles mesmo assim. |
+| `BossAggro` | Reagir a MVPs | O homúnculo nunca *começa* uma luta com um MVP, mas ainda defende você e a si mesmo. `React to bosses` inclui os mini-chefes; `Tactics` deixa as suas táticas decidirem. |
+| `AttackMVPs` | Desligado | Ataca sempre os MVPs. Vale mais que o `BossAggro`. |
+| `AttackOnlyMVPs` | Desligado | `1` = os outros monstros só recebem reação, `2` = os outros monstros são ignorados. Útil para limpar uma instância. |
+| `TargetPriority` | Desligado | Escolhe o próximo alvo por mais do que a distância. Entre monstros com a mesma prioridade de tática: primeiro os que atacam você ou um amigo, plantas por último, depois os monstros que suas habilidades conseguem ferir, depois o centro do maior grupo quando você tem habilidade em área e, por fim, o mais próximo. |
+| `KiteByRange` | Desligado | Com kiting ligado, mantém distância pelo alcance real do monstro: um arqueiro faz o homúnculo recuar mais cedo e mais longe do que um monstro corpo a corpo. Não foge de um monstro cujo alcance chega ao `KiteBounds`, porque não haveria para onde ir. Só importa quando o kiting já funciona para você: `KiteMonsters` ligado, a tática de kite do monstro definida e `ForceKite` para homúnculos sem ataque à distância. |
+
+A lista de monstros vem do rAthena (Renewal), então alguns monstros podem ser
+diferentes no seu servidor. `TargetPriority` e `KiteByRange` são novas e ainda
+não foram verificadas no jogo; teste primeiro em monstros fáceis.
 
 Para um teste controlado em boneco, configure aquele monstro como **Ignore**
 na escolha automática e mande o homúnculo atacar com **Alt + botão direito**.
