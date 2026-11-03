@@ -189,6 +189,8 @@ AtkPosbugTimeoutLimit  = 3
 FollowTryPanic		=3 
 SphereTrackFactor	=2 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average)
 SphereTrackInterval     = 800 -- minimum ms between estimated fighting-style hits
+EleanorComboGap         = 500 -- Eleanor: ms to wait before each combo follow-up
+EleanorComboDance       = 1 -- Eleanor: 1 = keep dancing between combo skills to cancel animations
 CastInterruptLimit      = 3 -- confirmed offensive cast interruptions before a pause; 0 disables
 CastInterruptPause      = 5000 -- temporary per-skill pause in ms
 CastInterruptUnconfirmed = 0 -- also count offensive failures without visible casting; may include refusals
