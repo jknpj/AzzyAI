@@ -163,6 +163,10 @@ RestXOff		=0
 RestYOff		=-2	
 AoEReserveSP=0
 
+-- 1 = a monster you ordered the homunculus to attack is chased and fought until it dies or you give
+-- another order, even when the owner walks away (move bounds ignored for that monster only);
+-- 0 = give up when it leaves the move bounds
+CommandedFightStay       = 1
 MoveSticky               = 0
 MoveStickyFight          = 0
 
