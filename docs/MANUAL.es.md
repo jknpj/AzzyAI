@@ -115,6 +115,7 @@ Ambas GUIs tienen el selector **Configuración de** en la pestaña Homúnculo. *
 | `KiteMonsters` | Permite mantener distancia si las tácticas también lo permiten. |
 | `UseDamageDanger` | Desactivado por defecto. Si el homúnculo pierde `DamageDangerDrop`% (30) de su HP máximo en 3 s con HP por debajo de `DamageDangerHP`% (60), kitea aunque `KiteMonsters` esté desactivado, y Bayeri usa Stein Wand. Solo ve su propio HP, no los buffs de los enemigos. |
 | `UseDanceAttack` | Activa movimiento durante ataques. Puede cambiar la posición; no elimina cooldowns. |
+| `CommandedFightStay` | Activado por defecto. Un monstruo que ordenas atacar al homúnculo se combate hasta que muera o des otra orden, aunque te alejes. Usa 0 para que desista y vuelva cuando el objetivo salga de los límites de movimiento o pase el tiempo límite de ataque. |
 
 La detección automática ayuda en algunos clientes privados, pero elige el tipo
 de servidor explícitamente al investigar problemas. La detección del tipo

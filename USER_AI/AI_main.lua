@@ -1033,7 +1033,7 @@ function OnATTACK_ST()
             end
         end
     end
-    if (AttackTimeout < GetTick() and AttackTimeLimit > 0) then -- Attack time limit reached.
+    if (AttackTimeout < GetTick() and AttackTimeLimit > 0 and not (CommandedFightStay == 1 and MyEnemy == CommandedEnemy)) then -- Attack time limit reached.
         MyState = FOLLOW_ST
         Unreachable[MyEnemy] = 1
         MyEnemy = 0

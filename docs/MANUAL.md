@@ -114,6 +114,7 @@ Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits
 | `KiteMonsters` | Enables keeping distance when tactics also allow it. |
 | `UseDamageDanger` | Off by default. If the homunculus loses `DamageDangerDrop`% (30) of its max HP within 3 s while below `DamageDangerHP`% (60) HP, it kites away even with `KiteMonsters` off, and Bayeri casts Stein Wand. It only sees its own HP, not enemy buffs. |
 | `UseDanceAttack` | Enables attack movement. It can affect positioning; it is not a skill-cooldown remover. |
+| `CommandedFightStay` | On by default. A monster you order the homunculus to attack is fought until it dies or you give another order, even if you walk away. Set to 0 to let it give up and return when the target leaves the move bounds or the attack time limit passes. |
 
 Automatic server detection helps on some private clients, but select your
 server explicitly when troubleshooting. Base-homunculus detection and learned

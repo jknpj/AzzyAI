@@ -19,6 +19,8 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   down on refusal. Base-type detection (Filir/Vanilmirth/Amistr/Lif) uses the
   same check. `LogEnable["AAI_PROBE"]=1` dumps the raw answers per skill.
 - Eleanor combos on the official server: EleanorComboGap (default 500 ms) delays Silvervein Rush / Midnight Frenzy / CBC / EQC after the previous combo skill. EleanorComboDance (default 1) keeps the dance attack running between combo skills, which cancels part of the animation (~10% faster chains). AutoComboSpheres defaults to 1 (only decides when a chain starts; follow-ups ignore the sphere estimate) and SphereTrackFactor to 2. Follow-ups are no longer sent at a dead target.
+- CommandedFightStay (default 1, all homunculi): a monster you order the homunculus to attack is chased and fought until it dies or you give another order, even when you walk away. The move-bounds give-up, the leave-behind check and `AttackTimeLimit` no longer apply to that one target. Set 0 for the old behavior.
+- Dieter: with `AutoMobCount` 1 a lone monster is always enough for his area skills. Before, a target whose element took less than full damage (for example 0.9 from fire on Water) counted below 1 and he used only normal attacks.
 - Guard and Quicken buffs (`SkillRetryLimit` 1 and 2) retry once instead of four
   times, since a refusal there is normally "buff still active".
 
