@@ -172,6 +172,8 @@ For combos, set `AutoComboMode` to **Always** or **Tactics** and review
 not a requirement repeated for every follow-up. A high threshold means waiting
 longer. New offensive skills can compete with the chain.
 
+Chain pacing: `EleanorComboGap` (default 500 ms) is the wait before each follow-up, and `EleanorComboDance` (default 1) keeps the dance attack running between combo skills to cancel part of the animation. Set the latter to 0 and the gap to about 800 if skills get refused. Both go in `H_Extra.lua`.
+
 For a Sonic-only offensive experiment:
 
 1. Enable `UseEleanorSonicClaw`.

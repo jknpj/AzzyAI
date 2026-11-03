@@ -176,6 +176,8 @@ Para combos, escolha **Always** ou **Tactics** em `AutoComboMode` e confira
 não uma exigência repetida em cada etapa. Um limite alto faz esperar mais.
 As novas habilidades ofensivas podem competir com o combo.
 
+Ritmo da sequência: `EleanorComboGap` (padrão 500 ms) é a espera antes de cada etapa seguinte, e `EleanorComboDance` (padrão 1) mantém o ataque com dança entre as habilidades do combo para cancelar parte da animação. Se habilidades forem recusadas, use 0 no segundo e cerca de 800 no primeiro. Ambos vão no `H_Extra.lua`.
+
 Para um experimento ofensivo só com Sonic:
 
 1. Ative `UseEleanorSonicClaw`.
