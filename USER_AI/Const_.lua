@@ -555,7 +555,9 @@ MyBuffSPCost			= 0
 ComboSCTimeout=0
 ComboFollowAt=0
 -- ms to wait after an Eleanor combo skill before sending its follow-up (0 = immediately)
-EleanorComboGap=600
+EleanorComboGap=500
+-- 1 = keep dancing (UseDanceAttack) between Eleanor's combo skills instead of holding the dance back
+EleanorComboDance=1
 ComboSVTimeout=0
 
 modtwROMoveDid =0

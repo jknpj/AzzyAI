@@ -2460,15 +2460,18 @@ function GetComboSkill(myid)
 		htype=MyHomunType
 		if htype==ELEANOR then
 			if EleanorMode==FIGHTING_MODE then
-				-- Sonic Claw already used one sphere, so the follow-up needs one less than the start
-				if ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and MySpheres >= AutoComboSpheres - 1 and IsSkillReady(MH_SILVERVEIN_RUSH) then
+				-- a follow-up sent at a monster that just died is refused by the server
+				local targetGone = MyEnemy ~= nil and MyEnemy > 0 and GetV(V_MOTION,MyEnemy) == MOTION_DEAD
+				-- Follow-ups ignore the sphere estimate: it only decides when a chain starts, and a
+				-- refused follow-up just ends the chain (the estimate is left alone)
+				if not targetGone and ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_SILVERVEIN_RUSH, true) then
 					skill=MH_SILVERVEIN_RUSH
 					if EleanorSilverveinLevel==nil then
 						level=SkillList[ELEANOR][MH_SILVERVEIN_RUSH]
 					else
 						level=EleanorSilverveinLevel
 					end
-				elseif ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_MIDNIGHT_FRENZY) then
+				elseif not targetGone and ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_MIDNIGHT_FRENZY, true) then
 					skill=MH_MIDNIGHT_FRENZY
 					if EleanorMidnightLevel==nil then
 						level=SkillList[ELEANOR][MH_MIDNIGHT_FRENZY]
@@ -3106,7 +3109,7 @@ function IsOffensiveCastPaused(skill)
 	return CastInterruptLimit ~= 0 and castInterruptUntil[skill] ~= nil and GetTick() < castInterruptUntil[skill]
 end
 
-function IsSkillReady(skill)
+function IsSkillReady(skill, ignoreSpheres)
 	if IsOffensiveCastPaused(skill) then
 		return false
 	end
@@ -3115,7 +3118,7 @@ function IsSkillReady(skill)
 	end
 	-- without enough spirit spheres the server only answers "Skill failed"
 	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
-	if sphereCost ~= nil and MySpheres < sphereCost then
+	if not ignoreSpheres and sphereCost ~= nil and MySpheres < sphereCost then
 		return false
 	end
 	return true
