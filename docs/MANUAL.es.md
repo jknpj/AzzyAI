@@ -227,11 +227,27 @@ específica del objetivo.
 La web GUI puede **Suggest tactics** por mapa o monstruo. Revisa las sugerencias:
 la base de monstruos puede diferir de tu servidor.
 
-- `UseMobInfo`: usa la información de monstruos incluida.
-- `PlantSkills`: desactivada por defecto para no gastar habilidades en plantas.
-- `BossAggro`: por defecto evita iniciar combate con MVPs, pero permite defenderse.
-- `TargetPriority`: orden inteligente opcional entre objetivos.
-- `KiteByRange`: distancia opcional basada en alcance, con kiting habilitado.
+### Qué cambia la base de datos de monstruos (solo homúnculo)
+
+HG incluye una lista de unos 2.700 monstruos con su elemento, raza y si cada uno
+es jefe, MVP o planta. El homúnculo lee qué monstruo está viendo y usa esa lista,
+así que actúa con sentido incluso con monstruos para los que nunca escribiste una
+fila de táctica. Los mercenarios no la usan.
+
+| Opción | Por defecto | En palabras simples |
+|---|---|---|
+| `UseMobInfo` | Activada | Interruptor general. Desactivada = el comportamiento anterior, y ninguna de las opciones siguientes hace efecto. |
+| `SkillElementMinRate` | 50 | La habilidad se omite cuando el elemento del monstruo reduciría su daño por debajo de este porcentaje, y la IA ataca de otra forma. Los monstruos inmunes siempre se omiten. Baja el número para usar habilidades con más libertad; 0 omite solo los inmunes. |
+| `PlantSkills` | Desactivada | Las plantas y los hongos reciben 1 de daño de todo, así que no se gastan habilidades en ellos. Actívala para usar habilidades en ellos de todos modos. |
+| `BossAggro` | Reaccionar a MVPs | El homúnculo nunca *empieza* una pelea con un MVP, pero igual te defiende a ti y a sí mismo. `React to bosses` incluye los mini-jefes; `Tactics` deja que decidan tus tácticas. |
+| `AttackMVPs` | Desactivada | Ataca siempre a los MVP. Pesa más que `BossAggro`. |
+| `AttackOnlyMVPs` | Desactivada | `1` = los demás monstruos solo reciben una reacción, `2` = los demás monstruos se ignoran. Útil para limpiar una instancia. |
+| `TargetPriority` | Desactivada | Elige el siguiente objetivo por algo más que la distancia. Entre monstruos con la misma prioridad de táctica: primero los que te atacan a ti o a un amigo, las plantas al final, luego los monstruos que tus habilidades pueden dañar, luego el centro del grupo más grande si tienes una habilidad de área y, por último, el más cercano. |
+| `KiteByRange` | Desactivada | Con el kiting activado, mantiene la distancia según el alcance real del monstruo: un arquero hace que retroceda antes y más lejos que un monstruo cuerpo a cuerpo. No huye de un monstruo cuyo alcance llega a `KiteBounds`, porque no habría adónde ir. Solo importa cuando el kiting ya funciona para ti: `KiteMonsters` activado, la táctica de kite del monstruo definida y `ForceKite` para homúnculos sin ataque a distancia. |
+
+La lista de monstruos viene de rAthena (Renewal), así que algunos monstruos
+pueden ser distintos en tu servidor. `TargetPriority` y `KiteByRange` son nuevas
+y aún no se han verificado en el juego; pruébalas primero con monstruos fáciles.
 
 Para una prueba controlada con un muñeco, pon ese monstruo en **Ignore** para
 la selección automática y ordena atacar con **Alt + clic derecho**.

@@ -222,11 +222,27 @@ specific row for your target.
 The web GUI can **Suggest tactics** by map or monster. Review suggestions before
 applying: they come from a monster database that may differ from your server.
 
-- `UseMobInfo`: uses the included monster information.
-- `PlantSkills`: disabled by default to avoid wasting skills on plants.
-- `BossAggro`: by default prevents initiating combat with MVPs, while allowing defense.
-- `TargetPriority`: optional smarter ordering among targets.
-- `KiteByRange`: optional range-aware distance behavior, with kiting enabled.
+### What the monster database changes (homunculus only)
+
+HG ships a list of about 2,700 monsters with their element, race and whether
+each is a boss, an MVP or a plant. The homunculus reads which monster it is
+looking at and uses that list, so it behaves sensibly even on monsters you never
+wrote a tactics row for. Mercenaries do not use it.
+
+| Option | Default | In plain words |
+|---|---|---|
+| `UseMobInfo` | On | Master switch. Off = the old behavior, and none of the options below do anything. |
+| `SkillElementMinRate` | 50 | A skill is skipped when the monster's element would cut its damage below this percent, and the AI attacks another way. Monsters that are immune are always skipped. Lower the number to use skills more freely; 0 skips only immune monsters. |
+| `PlantSkills` | Off | Plants and mushrooms take 1 damage from everything, so no skills are spent on them. Turn on to use skills on them anyway. |
+| `BossAggro` | React to MVPs | The homunculus never *starts* a fight with an MVP, but still defends you and itself. `React to bosses` also covers mini-bosses; `Tactics` lets your tactics decide. |
+| `AttackMVPs` | Off | Always attack MVPs. Wins over `BossAggro`. |
+| `AttackOnlyMVPs` | Off | `1` = other monsters only get a reaction, `2` = other monsters are ignored. Useful for clearing an instance. |
+| `TargetPriority` | Off | Chooses the next target by more than distance. Among monsters with the same tactics priority: the ones attacking you or a friend first, plants last, then monsters your skills can hurt, then the middle of the biggest group when you have an area skill, then the closest. |
+| `KiteByRange` | Off | With kiting on, keeps distance by the monster's real attack range: an archer makes it back off earlier and farther than a melee monster. It does not run from a monster whose range reaches `KiteBounds`, since there would be nowhere to go. It only matters when kiting already works for you: `KiteMonsters` on, the monster's kite tactic set, and `ForceKite` for a homunculus without a ranged attack. |
+
+The monster list is data from rAthena (Renewal), so a few monsters may differ on
+your server. `TargetPriority` and `KiteByRange` are new and have not been verified
+in game yet; try them on easy monsters first.
 
 For a controlled dummy test, set that monster to **Ignore** for automatic
 selection, then command the homunculus with **Alt + right-click**. This affects

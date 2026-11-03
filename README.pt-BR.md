@@ -2,25 +2,74 @@
 
 [English](README.md) | [Português (BR)](README.pt-BR.md) | [Español](README.es.md)
 
-Configure como seu **homúnculo ou mercenário** segue você, ataca monstros e
-usa habilidades, sem precisar editar código.
+Um cérebro mais esperto para o seu **homúnculo ou mercenário**. Ele decide
+quem atacar, qual habilidade usar e quando, e você ajusta tudo numa janela ou
+no navegador, sem editar código.
 
 HG é uma versão comunitária baseada no [AzzyAI original](https://github.com/SpenceKonde/AzzyAI),
 não um produto oficial da Gravity. Esta branch está em testes para RO LATAM
 e servidores privados; o comportamento e as habilidades disponíveis dependem
 do servidor. Respeite as regras do seu servidor sobre IA personalizada.
 
-## O que ela faz?
+## Por que usar esta?
 
-- Configura habilidades e buffs de Eira, Bayeri, Sera, Dieter e Eleanor.
-- Define comportamentos diferentes para cada monstro.
-- Permite escolher quando atacar, seguir, manter distância ou usar área.
-- Tenta outras opções por um tempo quando uma conjuração ofensiva é interrompida repetidamente.
-- Oferece configuração por **aplicativo Windows** ou **navegador**.
+O AzzyAI original (a branch `master`) continua sendo uma boa IA. A HG mantém o
+que ele faz e acrescenta o que está abaixo. É o que você notaria no jogo:
 
-Habilidades novas só funcionam se o servidor as oferecer e o homúnculo as
-tiver aprendido. Ativar uma habilidade não significa usá-la em todo ataque:
-alcance, SP, cooldown, elemento e outras configurações também influenciam.
+| | AzzyAI original | HG |
+|---|---|---|
+| **Que monstro é este?** | Sem dados de monstros. Você escreve uma linha de tática para cada um. | Conhece elemento, raça e se é chefe/MVP/planta de cada monstro (cerca de 2.700), então funciona bem em monstros que você nunca configurou. |
+| **Habilidades x elemento** | Usa a habilidade mesmo num monstro que resiste a ela. | Pula a habilidade que daria menos da metade do dano (ajustável) e usa outro ataque. O Dieter não joga Lava Slide num monstro de Fogo. |
+| **Habilidades em área** | Conta monstros, seja qual for o elemento. | Conta só os monstros que realmente sofreriam dano e mira neles, mesmo quando o da frente é imune. |
+| **Plantas e cogumelos** | Adivinha as plantas pelo comportamento (`AutoDetectPlant`). | Sabe exatamente quais são plantas (recebem 1 de dano de tudo) e guarda o SP para os outros. |
+| **MVPs** | Só o que você colocar nas táticas. | Por padrão não *começa* luta com MVP, mas ainda defende você. Opcional: atacar sempre os MVPs. |
+| **Conjuração que vive sendo interrompida** | Limite fixo de tentativas (`SkillRetryLimit`), nada mais esperto. | Pausa a habilidade por alguns segundos depois de algumas interrupções e usa outra coisa. |
+| **Níveis das habilidades** | A maioria das habilidades de Homúnculo S para no nível 5 na tabela dele. | Níveis máximos atuais (10 na maioria) e só conjura níveis que o homúnculo já aprendeu. |
+| **Habilidades de Homúnculo S** | O básico de Eira, Bayeri, Sera, Dieter e Eleanor. | Também Twister Cutter, Absolute Zephyr, Toxin of Mandara, Needle Stinger, Glanzen Spies, Heilige Pferd, Goldene Tone, Blazing And Furious, The One Fighter Rises, Blast Forge e Tempering. |
+| **Eleanor** | Troca de estilo e combos. | Também esferas pelas regras do servidor (quanto cada habilidade custa), tempo dos combos e as duas habilidades novas. |
+| **Os números do seu servidor** | Um único conjunto de valores. | Dados oficiais (RO LATAM, Episódio 19) ou do rAthena, escolhidos com `ServerType`, para que cooldowns, alcances e custos batam com o seu servidor. |
+| **Configuração** | Aplicativo Windows. | O aplicativo Windows e uma **página no navegador** em English, Português e Español, com descrições das habilidades, presets por homúnculo e sugestão de táticas de monstros por mapa. |
+| **Atualizações** | Manuais. | O aplicativo Windows atualiza a IA e os dados de monstros para você, sem mexer nas suas configurações. |
+| **Testes** | Sem suíte de testes offline. | Cada mudança roda contra um servidor simulado (dezenas de cenários) antes de ser publicada. |
+
+As funções que reconhecem monstros são para **homúnculos**. Mercenários recebem
+as ferramentas e as correções de bugs, mas não o banco de monstros.
+
+## Vale a pena trocar?
+
+**Combina com você se** joga com Eira, Bayeri, Sera, Dieter ou Eleanor, quer
+ajustar o comportamento sem ler código, ou caça grupos de monstros e quer
+habilidades em área bem usadas.
+
+**Talvez não precise se** a sua IA atual já faz o que você quer, ou se o seu
+servidor tem regras de habilidades diferentes e você prefere não testar.
+
+**Experimentar é seguro:** faça backup da pasta `AI` antes. Voltar é só
+restaurar o backup. Suas táticas e lista de amigos podem ser mantidas (veja o
+[checklist de atualização](docs/MANUAL.pt-BR.md#atualizações-e-backups)).
+
+## O que muda por padrão
+
+Isto vem ligado desde o início; cada item pode ser desligado na ferramenta de
+configuração.
+
+- **Banco de monstros** (`UseMobInfo`): elemento, plantas e chefes são levados em conta.
+- **MVPs** (`BossAggro`): o homúnculo não começa lutas com MVPs.
+- **Lutas ordenadas** (`CommandedFightStay`): um monstro que você mandou atacar é combatido até morrer.
+
+Extras opcionais, desligados por padrão: escolha de alvo mais esperta
+(`TargetPriority`), manter distância pelo alcance real do monstro
+(`KiteByRange`) e fugir quando o HP cai rápido (`UseDamageDanger`). Os testes
+offline cobrem esses extras, mas eles ainda não foram verificados no jogo.
+
+## Situação real
+
+A HG é testada offline e num servidor rAthena local. Isso não garante o
+funcionamento em todo cliente ou servidor oficial. Habilidades novas só
+funcionam se o servidor as oferecer e o homúnculo as tiver aprendido. Ativar
+uma habilidade não significa usá-la em todo ataque: alcance, SP, cooldown e
+elemento também influenciam. Cooldowns do servidor, custos de SP e
+interrupções de conjuração continuam valendo.
 
 ## Instalação rápida
 
@@ -59,9 +108,6 @@ de downloads ou no código-fonte.
 - Ative somente as habilidades desejadas, nos níveis já aprendidos.
 - Confira ataque e uso de área antes de mexer nas opções avançadas.
 - Altere uma coisa por vez e recarregue a IA entre os testes.
-
-Cooldowns do servidor, custos de SP, interrupções e requisitos das habilidades
-continuam valendo. HG não remove essas regras.
 
 ## Guias e ajuda
 
