@@ -22,7 +22,7 @@ namespace AzzyAIConfig
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
-            "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "EleanorComboGap", "EleanorComboDance", "UseProvokeOwner",
+            "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "EleanorComboGap", "EleanorComboDance", "CommandedFightStay", "UseProvokeOwner",
             "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
             "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
@@ -93,6 +93,10 @@ namespace AzzyAIConfig
         [Category("AutoSkill Options"), DefaultValue(true),
         Description("Eleanor: keep the dance attack running between combo skills, which cancels part of the attack animation and shortens chains by about 10%. Turn off (and raise EleanorComboGap to about 800) if skills get refused. Has no effect when UseDanceAttack is off. An H_Extra.lua override takes precedence.")]
         public bool EleanorComboDance { get; set; }
+
+        [Category("Basic Options"), DefaultValue(true),
+        Description("A monster you order the homunculus to attack is fought until it dies or you give another order, even if you walk away. Turn off to let it give up and return when the target leaves the move bounds or AttackTimeLimit passes. An H_Extra.lua override takes precedence.")]
+        public bool CommandedFightStay { get; set; }
         private int _castInterruptLimit;
         [Category("AutoSkill Options"), DefaultValue(false),
         Description("Also count failed offensive casts with no visible casting motion or confirmed completion, when the target is alive and in range and SP is sufficient. May include server refusals, not just interruptions. Uses CastInterruptLimit/Pause. Disabled by default; H_Extra.lua overrides take precedence.")]
