@@ -18,9 +18,7 @@ otherwise. The historical upstream changelog remains in [Changelog.md](../Change
   "not learned" for the filler answers, other skills are tried and never stepped
   down on refusal. Base-type detection (Filir/Vanilmirth/Amistr/Lif) uses the
   same check. `LogEnable["AAI_PROBE"]=1` dumps the raw answers per skill.
-- Eleanor combos on the official server: `EleanorComboGap` (default 600 ms)
-  delays Silvervein Rush / Midnight Frenzy / CBC / EQC after the previous combo
-  skill, `AutoComboSpheres` defaults to 3 and `SphereTrackFactor` to 2.
+- Eleanor combos on the official server: EleanorComboGap (default 500 ms) delays Silvervein Rush / Midnight Frenzy / CBC / EQC after the previous combo skill. EleanorComboDance (default 1) keeps the dance attack running between combo skills, which cancels part of the animation (~10% faster chains). AutoComboSpheres defaults to 1 (only decides when a chain starts; follow-ups ignore the sphere estimate) and SphereTrackFactor to 2. Follow-ups are no longer sent at a dead target.
 - Guard and Quicken buffs (`SkillRetryLimit` 1 and 2) retry once instead of four
   times, since a refusal there is normally "buff still active".
 
