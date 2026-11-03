@@ -2,9 +2,6 @@
 
 [English](README.md) | [Português (BR)](README.pt-BR.md) | [Español](README.es.md)
 
-> [!IMPORTANT]
-> Descarga AzzyAI HG solo desde [jknpj/AzzyAI](https://github.com/jknpj/AzzyAI) (rama **LATAM-HG**) o sus [Releases](https://github.com/jknpj/AzzyAI/releases). Un repositorio con nombre parecido o un README copiado no hace oficial una descarga. **Haz un respaldo de la carpeta `AI` del juego antes de instalar** y respeta las reglas de tu servidor sobre IA personalizada.
-
 [![AzzyAI HG: IA de homúnculo y mercenario para Ragnarok Online](docs/hg-banner.svg)](#inicio-rápido)
 
 * * *
@@ -213,14 +210,20 @@ interrupciones de lanzamiento siguen vigentes.
 | English | [Installation, settings, homunculi and troubleshooting](docs/MANUAL.md) |
 | Português (BR) | [Instalação, configurações, homúnculos e problemas comuns](docs/MANUAL.pt-BR.md) |
 
-Para reportar un problema, indica homúnculo, servidor/cliente, habilidades
-activadas y lo que ocurrió. **Nunca compartas contraseñas, credenciales ni
-archivos privados.** Usa [Issues](https://github.com/jknpj/AzzyAI/issues).
+Para reportar un problema, usa el [formulario de reporte de errores](https://github.com/jknpj/AzzyAI/issues/new/choose)
+e indica homúnculo, servidor/cliente, habilidades activadas y lo que ocurrió.
+**Nunca compartas contraseñas, credenciales ni archivos privados.**
+¿Encontraste un problema de seguridad? No lo publiques: consulta la [política de seguridad](SECURITY.md) (en inglés).
+¿Quieres ayudar? Lee [cómo contribuir](CONTRIBUTING.md) (en inglés).
 
 Para desarrolladores y usuarios avanzados:
 [notas de versión y referencia técnica, en inglés](docs/RELEASE_NOTES.md).
 La documentación antigua incluida es una referencia histórica, no el manual
 actual de HG.
+
+**Descarga solo de las fuentes oficiales** (este repositorio y sus Releases, y
+la página web indicada arriba): un repositorio con nombre parecido o un README
+copiado no hace oficial una descarga.
 
 ## Créditos
 
@@ -228,3 +231,14 @@ Basado en AzzyAI de Dr. Azzy / [SpenceKonde](https://github.com/SpenceKonde/Azzy
 con contribuciones de [samufacanha2](https://github.com/samufacanha2/AzzyAI),
 [Kisaro](https://github.com/Kisaro/AzzyAI) y
 [vorpal1337](https://github.com/vorpal1337). Sitio original: [drazzy.com](http://drazzy.com/ro/ai).
+
+## Licencia
+
+El AzzyAI original no tiene licencia de su autor, así que el código que HG heredó
+de él tampoco la tiene. Lo que es nuevo en HG (el arnés de pruebas, las
+herramientas, los manuales, los datos de monstruos y los presets por tipo) está
+bajo la **GNU General Public License v3.0**. [NOTICE.md](NOTICE.md) (en inglés)
+indica exactamente qué archivos son cuáles, y [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)
+tiene el texto de la licencia. La herramienta de configuración en el navegador
+tiene su propia licencia GPL-3.0. Ragnarok Online pertenece a Gravity Co., Ltd.;
+este proyecto no está afiliado a ella.

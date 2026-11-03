@@ -56,7 +56,8 @@ jobs:
           Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
           Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
           Copy-Item docs "$pkgRoot\docs" -Recurse
-          Copy-Item README.md, README.pt-BR.md, README.es.md, Changelog.md $pkgRoot
+          Copy-Item LICENSES "$pkgRoot\LICENSES" -Recurse
+          Copy-Item README.md, README.pt-BR.md, README.es.md, Changelog.md, NOTICE.md, SECURITY.md, CONTRIBUTING.md $pkgRoot
           Compress-Archive -Path "$pkgRoot\*" -DestinationPath AzzyAI.zip
       - uses: actions/upload-artifact@v4
         with:
