@@ -1,4 +1,4 @@
-﻿// HomConf.cs
+// HomConf.cs
 //
 // Programmed by Machiavellian of iRO Chaos
 //
@@ -1516,15 +1516,15 @@ namespace AzzyAIConfig
             set { _AutoComboMode = value; }
         }
 
-        int _AutoComboSpheres = 10;
+        int _AutoComboSpheres = 1;
         [Category("AutoSkill Options"),
         Description(
             "When automatic combos are enabled, Eleanor waits for this many spheres " +
-            "before starting Sonic Claw or Tinder Breaker. Follow-ups require their own " +
-            "sphere costs and a confirmed previous cast. With combos disabled, starters " +
+            "before starting Sonic Claw or Tinder Breaker. Follow-ups ignore the " +
+            "sphere estimate and only need a confirmed previous cast. With combos disabled, starters " +
             "only require their normal sphere cost. Sphere counts are estimates."
             ),
-        DefaultValue(10)]
+        DefaultValue(1)]
         public int AutoComboSpheres
         {
             get { return _AutoComboSpheres; }
