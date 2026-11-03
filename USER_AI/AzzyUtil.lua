@@ -3167,7 +3167,12 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 		mobmode=1
 	end
 	local count = GetMobCount(skill,level,target,mobmode)
-	if count < AutoMobCount and not EleanorLoneTofrWorthIt(skill, count, target) then
+	-- element weights are fractions (fire on Water 1 = 0.9): with AutoMobCount 1, any monster hit is enough
+	local needed = AutoMobCount
+	if needed <= 1 and count > 0 then
+		needed = 0
+	end
+	if count < needed and not EleanorLoneTofrWorthIt(skill, count, target) then
 		return false
 	end
 	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
