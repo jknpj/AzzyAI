@@ -262,6 +262,7 @@ function	OnATTACK_OBJECT_CMD (id)
 	ResetCounters()
 	MySkill = 0
 	MyEnemy = id
+	CommandedEnemy = id
 	BypassKSProtect=1
 	if (UseBerserkAttack==1) then
 		BerserkMode=1
@@ -944,7 +945,7 @@ function OnCHASE_ST()
             end
         end
         ox, oy = GetV(V_POSITION, OwnerID)
-        if GetDistanceAPR(OwnerID, x, y) < GetMoveBounds() then
+        if GetDistanceAPR(OwnerID, x, y) < GetMoveBounds() or (CommandedFightStay == 1 and MyEnemy == CommandedEnemy) then
             if ((x ~= MyDestX or y ~= MyDestY) or GetV(V_MOTION, MyID) ~= MOTION_MOVE) then
                 MyDestX, MyDestY = x, y
                 Move(MyID, MyDestX, MyDestY)
@@ -3864,7 +3865,9 @@ function AI(myid)
 	-- Otherwise, IDLE_ST handles it
 	
 	local dist2owner=GetDistanceRect(MyID,OwnerID)
-	if (MyState ~=FOLLOW_ST and dist2owner > GetMoveBounds()) then
+	local commandedFight = CommandedFightStay == 1 and MyEnemy ~= 0 and MyEnemy == CommandedEnemy
+		and (MyState == CHASE_ST or MyState == ATTACK_ST)
+	if (MyState ~=FOLLOW_ST and dist2owner > GetMoveBounds() and not commandedFight) then
 		MyState=FOLLOW_ST
 	end
 	--Cancel all action during the spawn invulnerability
