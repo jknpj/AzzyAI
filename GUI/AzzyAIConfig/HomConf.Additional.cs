@@ -22,7 +22,7 @@ namespace AzzyAIConfig
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
-            "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "UseProvokeOwner",
+            "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "EleanorComboGap", "EleanorComboDance", "UseProvokeOwner",
             "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
             "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
@@ -76,6 +76,23 @@ namespace AzzyAIConfig
             }
         }
 
+        private int _eleanorComboGap;
+        [Category("AutoSkill Options"), DefaultValue(500),
+        Description("Eleanor: milliseconds to wait before sending each combo follow-up (Silvervein Rush, Midnight Frenzy, CBC, EQC) after the previous combo skill. 0 sends it immediately. Too low can cause refused skills; about 800 is safer. Non-negative integer; default 500 ms. An H_Extra.lua override takes precedence.")]
+        public int EleanorComboGap
+        {
+            get { return _eleanorComboGap; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", "EleanorComboGap must not be negative.");
+                _eleanorComboGap = value;
+            }
+        }
+
+        [Category("AutoSkill Options"), DefaultValue(true),
+        Description("Eleanor: keep the dance attack running between combo skills, which cancels part of the attack animation and shortens chains by about 10%. Turn off (and raise EleanorComboGap to about 800) if skills get refused. Has no effect when UseDanceAttack is off. An H_Extra.lua override takes precedence.")]
+        public bool EleanorComboDance { get; set; }
         private int _castInterruptLimit;
         [Category("AutoSkill Options"), DefaultValue(false),
         Description("Also count failed offensive casts with no visible casting motion or confirmed completion, when the target is alive and in range and SP is sufficient. May include server refusals, not just interruptions. Uses CastInterruptLimit/Pause. Disabled by default; H_Extra.lua overrides take precedence.")]
