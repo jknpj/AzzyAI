@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="t d">
+  <title id="t">How AzzyAI HG decides what to do</title>
+  <desc id="d">Four steps: a monster appears; HG looks up its element, race and boss, MVP or plant flags; it decides who to attack and which skill to use; it casts only what the server allows. The monster database feeds step 2, your settings feed step 3 and server data feeds step 4.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b6fbf"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b8860b"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="450" rx="16" fill="#eaf2fb"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#0b2545">
+    <text x="45" y="38" font-size="22" font-weight="700">How AzzyAI HG decides what to do</text>
+
+    <g stroke="#1b6fbf" stroke-width="2" fill="#ffffff">
+      <rect x="45" y="60" width="240" height="170" rx="12"/>
+      <rect x="335" y="60" width="240" height="170" rx="12"/>
+      <rect x="625" y="60" width="240" height="170" rx="12"/>
+      <rect x="915" y="60" width="240" height="170" rx="12"/>
+    </g>
+    <g fill="#1b6fbf">
+      <circle cx="75" cy="90" r="16"/><circle cx="365" cy="90" r="16"/>
+      <circle cx="655" cy="90" r="16"/><circle cx="945" cy="90" r="16"/>
+    </g>
+    <g fill="#ffffff" font-size="18" font-weight="700" text-anchor="middle">
+      <text x="75" y="96">1</text><text x="365" y="96">2</text>
+      <text x="655" y="96">3</text><text x="945" y="96">4</text>
+    </g>
+    <g font-size="20" font-weight="700">
+      <text x="103" y="96">Monster appears</text>
+      <text x="393" y="96">Looks it up</text>
+      <text x="683" y="96">Decides</text>
+      <text x="973" y="96">Casts</text>
+    </g>
+    <g font-size="16">
+      <text x="65" y="132">HG reads which monster</text>
+      <text x="65" y="154">it is, by its ID.</text>
+
+      <text x="355" y="132">Element and race; is it</text>
+      <text x="355" y="154">a boss, MVP or plant?</text>
+      <text x="355" y="176">(about 2,700 monsters)</text>
+
+      <text x="645" y="132">Who to attack first,</text>
+      <text x="645" y="154">which skill, and where</text>
+      <text x="645" y="176">to aim it.</text>
+
+      <text x="935" y="132">Only what the server</text>
+      <text x="935" y="154">allows: SP, cooldown,</text>
+      <text x="935" y="176">range, learned level.</text>
+    </g>
+
+    <g stroke="#1b6fbf" stroke-width="3" marker-end="url(#a)">
+      <line x1="289" y1="145" x2="330" y2="145"/>
+      <line x1="579" y1="145" x2="620" y2="145"/>
+      <line x1="869" y1="145" x2="910" y2="145"/>
+    </g>
+
+    <g stroke="#b8860b" stroke-width="2" fill="#fff7e0">
+      <rect x="335" y="300" width="240" height="96" rx="12"/>
+      <rect x="625" y="300" width="240" height="96" rx="12"/>
+      <rect x="915" y="300" width="240" height="96" rx="12"/>
+    </g>
+    <g stroke="#b8860b" stroke-width="3" marker-end="url(#b)">
+      <line x1="455" y1="297" x2="455" y2="236"/>
+      <line x1="745" y1="297" x2="745" y2="236"/>
+      <line x1="1035" y1="297" x2="1035" y2="236"/>
+    </g>
+    <g font-size="18" font-weight="700">
+      <text x="355" y="330">Monster database</text>
+      <text x="645" y="330">Your settings</text>
+      <text x="935" y="330">Server data</text>
+    </g>
+    <g font-size="15">
+      <text x="355" y="356">MobInfo.lua, built from</text>
+      <text x="355" y="377">rAthena data</text>
+      <text x="645" y="356">H_Config.lua, tactics</text>
+      <text x="645" y="377">and type presets</text>
+      <text x="935" y="356">RO LATAM (Episode 19)</text>
+      <text x="935" y="377">or rAthena (ServerType)</text>
+    </g>
+
+    <text x="45" y="428" font-size="15" fill="#3a4a63">Homunculus only: mercenaries do not use the monster database. Cooldowns, SP costs and interruptions of the server still apply.</text>
+  </g>
+</svg>

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="t d">
+  <title id="t">Cómo decide qué hacer AzzyAI HG</title>
+  <desc id="d">Cuatro pasos: aparece un monstruo; HG consulta su elemento, raza y si es jefe, MVP o planta; decide a quién atacar y qué habilidad usar; lanza solo lo que el servidor permite. La base de monstruos alimenta el paso 2, tus ajustes el paso 3 y los datos del servidor el paso 4.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b6fbf"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b8860b"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="450" rx="16" fill="#eaf2fb"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#0b2545">
+    <text x="45" y="38" font-size="22" font-weight="700">Cómo decide qué hacer AzzyAI HG</text>
+
+    <g stroke="#1b6fbf" stroke-width="2" fill="#ffffff">
+      <rect x="45" y="60" width="240" height="170" rx="12"/>
+      <rect x="335" y="60" width="240" height="170" rx="12"/>
+      <rect x="625" y="60" width="240" height="170" rx="12"/>
+      <rect x="915" y="60" width="240" height="170" rx="12"/>
+    </g>
+    <g fill="#1b6fbf">
+      <circle cx="75" cy="90" r="16"/><circle cx="365" cy="90" r="16"/>
+      <circle cx="655" cy="90" r="16"/><circle cx="945" cy="90" r="16"/>
+    </g>
+    <g fill="#ffffff" font-size="18" font-weight="700" text-anchor="middle">
+      <text x="75" y="96">1</text><text x="365" y="96">2</text>
+      <text x="655" y="96">3</text><text x="945" y="96">4</text>
+    </g>
+    <g font-size="20" font-weight="700">
+      <text x="103" y="96">Aparece monstruo</text>
+      <text x="393" y="96">Lo consulta</text>
+      <text x="683" y="96">Decide</text>
+      <text x="973" y="96">Lanza</text>
+    </g>
+    <g font-size="16">
+      <text x="65" y="132">HG lee qué monstruo es,</text>
+      <text x="65" y="154">según su ID.</text>
+
+      <text x="355" y="132">Elemento y raza; si es</text>
+      <text x="355" y="154">jefe, MVP o planta</text>
+      <text x="355" y="176">(unos 2.700 monstruos)</text>
+
+      <text x="645" y="132">A quién atacar primero,</text>
+      <text x="645" y="154">qué habilidad y dónde</text>
+      <text x="645" y="176">apuntarla.</text>
+
+      <text x="935" y="132">Solo lo que el servidor</text>
+      <text x="935" y="154">permite: SP, cooldown,</text>
+      <text x="935" y="176">alcance, nivel aprendido.</text>
+    </g>
+
+    <g stroke="#1b6fbf" stroke-width="3" marker-end="url(#a)">
+      <line x1="289" y1="145" x2="330" y2="145"/>
+      <line x1="579" y1="145" x2="620" y2="145"/>
+      <line x1="869" y1="145" x2="910" y2="145"/>
+    </g>
+
+    <g stroke="#b8860b" stroke-width="2" fill="#fff7e0">
+      <rect x="335" y="300" width="240" height="96" rx="12"/>
+      <rect x="625" y="300" width="240" height="96" rx="12"/>
+      <rect x="915" y="300" width="240" height="96" rx="12"/>
+    </g>
+    <g stroke="#b8860b" stroke-width="3" marker-end="url(#b)">
+      <line x1="455" y1="297" x2="455" y2="236"/>
+      <line x1="745" y1="297" x2="745" y2="236"/>
+      <line x1="1035" y1="297" x2="1035" y2="236"/>
+    </g>
+    <g font-size="18" font-weight="700">
+      <text x="355" y="330">Base de monstruos</text>
+      <text x="645" y="330">Tus ajustes</text>
+      <text x="935" y="330">Datos del servidor</text>
+    </g>
+    <g font-size="15">
+      <text x="355" y="356">MobInfo.lua, generado con</text>
+      <text x="355" y="377">datos de rAthena</text>
+      <text x="645" y="356">H_Config.lua, tácticas</text>
+      <text x="645" y="377">y presets por tipo</text>
+      <text x="935" y="356">RO LATAM (Episodio 19)</text>
+      <text x="935" y="377">o rAthena (ServerType)</text>
+    </g>
+
+    <text x="45" y="428" font-size="15" fill="#3a4a63">Solo homúnculo: los mercenarios no usan la base de monstruos. Los cooldowns, costos de SP e interrupciones del servidor siguen vigentes.</text>
+  </g>
+</svg>
