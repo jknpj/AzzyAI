@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/jknpj/AzzyAI/security/advisories/new
+    about: Do not post vulnerabilities, passwords or account files in a public issue.
+  - name: Read the user manual
+    url: https://github.com/jknpj/AzzyAI/blob/LATAM-HG/docs/MANUAL.md
+    about: Installation, settings, each homunculus and troubleshooting.

@@ -1,0 +1,78 @@
+name: Bug report
+description: Something behaves wrongly in game or in the configuration tools
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A good report lets us reproduce the problem.
+        **Do not paste passwords, account credentials or private files.** Remove
+        anything personal from logs before you paste them.
+        For a security problem, do not use this form: see the [security policy](https://github.com/jknpj/AzzyAI/security/policy).
+  - type: dropdown
+    id: unit
+    attributes:
+      label: Homunculus or mercenary
+      options:
+        - Eira
+        - Bayeri
+        - Sera
+        - Dieter
+        - Eleanor
+        - Lif / Amistr / Filir / Vanilmirth
+        - Mercenary
+        - Configuration tool (Windows app or web page)
+    validations:
+      required: true
+  - type: dropdown
+    id: server
+    attributes:
+      label: Server
+      options:
+        - Official (RO LATAM)
+        - Official (other)
+        - Private (rAthena / Hercules)
+        - Offline harness only
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HG version
+      description: The release, or the commit of the LATAM-HG branch you installed.
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead. Say which monster or map if it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce it
+      placeholder: |
+        1. ...
+        2. ...
+  - type: textarea
+    id: settings
+    attributes:
+      label: Relevant settings
+      description: The enabled skills and the lines of H_Config.lua (or the Types preset) that matter. Not the whole file unless needed.
+      render: lua
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Lines from AAIStartH.txt (the startup report) and AAI_ERROR.log, if they exist.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I reloaded the AI in game (`/hoai`) after my last change.
+        - label: I removed passwords, account details and other private information.
+          required: true
