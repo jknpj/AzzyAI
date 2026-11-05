@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" role="img" aria-labelledby="t d">
-  <title id="t">AzzyAI HG for Ragnarok Online</title>
-  <desc id="d">Banner: AzzyAI HG, homunculus and mercenary AI for Ragnarok Online. Homunculus and mercenary, RO LATAM and private servers, Windows app and Web GUI.</desc>
+  <title id="t">AzzyAI for Ragnarok Online</title>
+  <desc id="d">Banner: AzzyAI, homunculus and mercenary AI for Ragnarok Online. Homunculus and mercenary, RO LATAM and private servers, Windows app and Web GUI.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b2545"/>
@@ -14,7 +14,7 @@
   <circle cx="1120" cy="110" r="90" fill="#ffffff" fill-opacity="0.06"/>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
     <text x="28" y="27" font-size="16" font-weight="600" fill="#ffffff">AzzyAI</text>
-    <text x="60" y="130" font-size="76" font-weight="700" fill="#ffffff">AzzyAI HG</text>
+    <text x="60" y="130" font-size="76" font-weight="700" fill="#ffffff">AzzyAI</text>
     <text x="62" y="172" font-size="28" fill="#cfe3f7">Homunculus and mercenary AI for Ragnarok Online</text>
     <g font-size="20" fill="#0b2545">
       <rect x="60" y="198" width="280" height="38" rx="19" fill="#e6f1fc"/>

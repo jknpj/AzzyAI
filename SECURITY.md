@@ -1,6 +1,6 @@
 # Security policy
 
-AzzyAI HG runs as Lua inside the Ragnarok Online client and ships a Windows
+AzzyAI runs as Lua inside the Ragnarok Online client and ships a Windows
 configuration app and a browser configuration page. This policy covers those
 parts. For game-rule questions, see your server's rules; they are not security
 issues.
@@ -10,7 +10,7 @@ issues.
 Only the latest commit of the **LATAM-HG** branch and the latest
 [release](https://github.com/jknpj/AzzyAI/releases). Older versions are not patched.
 
-## Get HG only from official sources
+## Get AzzyAI only from official sources
 
 - This repository, [jknpj/AzzyAI](https://github.com/jknpj/AzzyAI), branch **LATAM-HG**, and its Releases.
 - The web configuration at <https://jknpj.github.io/AzzyAI-webgui/>.
@@ -23,7 +23,7 @@ the sources above.
 ## What to report privately
 
 Anything that could let someone run code, read or overwrite files they should
-not, or learn private information through HG. For example:
+not, or learn private information through AzzyAI. For example:
 
 - **The Update menu** of the Windows app (it downloads and copies files, can run
   `rathena_sync.py` and stages a new `AzzyAIConfig.exe`): a downloaded archive

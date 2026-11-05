@@ -1,4 +1,4 @@
-# Manual do usuário: AzzyAI HG
+# Manual do usuário: AzzyAI
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
@@ -6,7 +6,7 @@
 
 ## 1. Antes de começar
 
-Use a IA somente onde seu servidor permitir. HG configura o comportamento:
+Use a IA somente onde seu servidor permitir. O AzzyAI configura o comportamento:
 não desbloqueia habilidades, remove cooldowns ou impede interrupções por dano.
 Clientes e servidores podem se comportar de formas diferentes. Comece em
 monstros fáceis.
@@ -24,10 +24,10 @@ em inglês para corresponder às ferramentas.
    Para mercenários, use `/merai`.
 5. Invoque novamente ou reconecte. Repita a recarga após salvar configurações.
 
-Instalar HG substitui a IA daquela pasta. Para manter outra IA em um dos tipos
+Instalar o AzzyAI substitui a IA daquela pasta. Para manter outra IA em um dos tipos
 de unidade, preserve o arquivo de entrada correspondente: `AI.lua` para
 homúnculos ou `AI_M.lua` para mercenários. Não misture versões dos arquivos
-de suporte da HG.
+de suporte do AzzyAI.
 
 ### Atualizações e backups
 
@@ -87,7 +87,7 @@ A pasta do clone fica salva em `AzzyAIConfig.update.txt`.
 ### Navegador
 
 Abra a [web GUI](https://jknpj.github.io/AzzyAI-webgui/).
-Escolha **AzzyAI HG**, o idioma e **File > Open USER_AI folder** para abrir a
+Escolha **AzzyAI** (não o Classic), o idioma e **File > Open USER_AI folder** para abrir a
 pasta instalada no jogo.
 
 - Chrome/Edge podem gravar diretamente quando o acesso à pasta é suportado e autorizado.
@@ -229,7 +229,7 @@ a base de monstros pode não corresponder exatamente ao seu servidor.
 
 ### O que o banco de monstros muda (só homúnculo)
 
-A HG traz uma lista com cerca de 2.700 monstros, com elemento, raça e se cada um
+Esta versão traz uma lista com cerca de 2.700 monstros, com elemento, raça e se cada um
 é chefe, MVP ou planta. O homúnculo lê qual monstro está vendo e usa essa lista,
 então age de forma sensata até em monstros para os quais você nunca escreveu uma
 linha de tática. Mercenários não usam isso.

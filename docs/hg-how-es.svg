@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="t d">
-  <title id="t">Cómo decide qué hacer AzzyAI HG</title>
-  <desc id="d">Cuatro pasos: aparece un monstruo; HG consulta su elemento, raza y si es jefe, MVP o planta; decide a quién atacar y qué habilidad usar; lanza solo lo que el servidor permite. La base de monstruos alimenta el paso 2, tus ajustes el paso 3 y los datos del servidor el paso 4.</desc>
+  <title id="t">Cómo decide qué hacer AzzyAI</title>
+  <desc id="d">Cuatro pasos: aparece un monstruo; se consultan su elemento, raza y si es jefe, MVP o planta; la IA decide a quién atacar y qué habilidad usar; lanza solo lo que el servidor permite. La base de monstruos alimenta el paso 2, tus ajustes el paso 3 y los datos del servidor el paso 4.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
       <path d="M0,0 L10,5 L0,10 z" fill="#1b6fbf"/>
@@ -11,7 +11,7 @@
   </defs>
   <rect width="1200" height="450" rx="16" fill="#eaf2fb"/>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#0b2545">
-    <text x="45" y="38" font-size="22" font-weight="700">Cómo decide qué hacer AzzyAI HG</text>
+    <text x="45" y="38" font-size="22" font-weight="700">Cómo decide qué hacer AzzyAI</text>
 
     <g stroke="#1b6fbf" stroke-width="2" fill="#ffffff">
       <rect x="45" y="60" width="240" height="170" rx="12"/>
@@ -34,7 +34,7 @@
       <text x="973" y="96">Lanza</text>
     </g>
     <g font-size="16">
-      <text x="65" y="132">HG lee qué monstruo es,</text>
+      <text x="65" y="132">Lee qué monstruo es,</text>
       <text x="65" y="154">según su ID.</text>
 
       <text x="355" y="132">Elemento y raza; si es</text>
