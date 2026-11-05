@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="t d">
+  <title id="t">AzzyAI for Ragnarok Online</title>
+  <desc id="d">Banner: AzzyAI, homunculus and mercenary AI for Ragnarok Online. RO LATAM and private servers, Windows app and Web GUI.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1628"/>
+      <stop offset="0.6" stop-color="#0f2a4d"/>
+      <stop offset="1" stop-color="#1a4a7a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5cc8ff"/>
+      <stop offset="1" stop-color="#9b8cff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5cc8ff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#5cc8ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="280" rx="18" fill="url(#bg)"/>
+  <circle cx="930" cy="140" r="230" fill="url(#glow)"/>
+
+  <g stroke="#5cc8ff" stroke-opacity="0.45" stroke-width="2" fill="none">
+    <path d="M760 140 L860 70 L980 70 L1060 140"/>
+    <path d="M760 140 L860 210 L980 210 L1060 140"/>
+    <path d="M860 70 L860 210"/>
+    <path d="M980 70 L980 210"/>
+    <path d="M1060 140 L1130 140"/>
+    <path d="M700 140 L760 140"/>
+  </g>
+  <g fill="#0a1628" stroke="url(#accent)" stroke-width="3">
+    <circle cx="760" cy="140" r="14"/>
+    <circle cx="860" cy="70" r="11"/>
+    <circle cx="980" cy="70" r="11"/>
+    <circle cx="860" cy="210" r="11"/>
+    <circle cx="980" cy="210" r="11"/>
+    <circle cx="1060" cy="140" r="14"/>
+  </g>
+  <g fill="url(#accent)">
+    <circle cx="760" cy="140" r="6"/>
+    <circle cx="1060" cy="140" r="6"/>
+    <circle cx="1130" cy="140" r="9"/>
+  </g>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="60" y="52" font-size="15" font-weight="600" letter-spacing="3" fill="#5cc8ff">RAGNAROK ONLINE</text>
+    <text x="58" y="132" font-size="84" font-weight="700" fill="#ffffff">AzzyAI</text>
+    <rect x="60" y="152" width="120" height="5" rx="2.5" fill="url(#accent)"/>
+    <text x="60" y="196" font-size="26" fill="#d6e6f7">Homunculus and mercenary AI</text>
+    <text x="60" y="240" font-size="17" fill="#8fb3d9">Homunculus  ·  Mercenary  ·  RO LATAM  ·  Private servers  ·  Windows app  ·  Web GUI</text>
+  </g>
+</svg>

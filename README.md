@@ -1,10 +1,10 @@
-# AzzyAI for Ragnarok Online
+<p align="center">
+  <a href="#install"><img src="docs/banner.svg" alt="AzzyAI: homunculus and mercenary AI for Ragnarok Online" width="100%"></a>
+</p>
 
-[English](README.md) | [Português (BR)](README.pt-BR.md) | [Español](README.es.md)
-
-[![AzzyAI: homunculus and mercenary AI for Ragnarok Online](docs/hg-banner.svg)](#install)
-
-* * *
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.pt-BR.md">Português (BR)</a> · <a href="README.es.md">Español</a>
+</p>
 
 A smarter brain for your **homunculus or mercenary** in Ragnarok Online. It picks
 who to attack and which skill to use, and you change how it behaves in a window
