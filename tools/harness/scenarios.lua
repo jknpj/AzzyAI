@@ -308,6 +308,43 @@ SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {
+			["attack range reuses positions until the next tick"] = function()
+				local realGetV, realRange = GetV, AttackRange
+				local savedCache = ActorPosCache
+				local savedSkill, savedLevel = MySkill, MySkillLevel
+				local reads, targetX = 0, 103
+				ActorPosCache = {}
+				GetV = function(field, id, ...)
+					if field == V_POSITION and (id == MyID or id == OwnerID) then
+						reads = reads + 1
+						if id == MyID then return 100, 100 end
+						return targetX, 100
+					end
+					return realGetV(field, id, ...)
+				end
+				AttackRange = function(_, skill, level)
+					assert(skill == 123 and level == 2, "skill arguments changed")
+					return 3
+				end
+				MySkill, MySkillLevel = 123, 2
+				local ok, err = pcall(function()
+					assert(IsInAttackSight(MyID, OwnerID, 123, 2), "exact range rejected")
+					assert(IsInAttackSight(MyID, OwnerID), "default skill rejected")
+					assert(reads == 2, "positions read more than once per actor")
+					targetX = 104
+					ActorPosCache = {}
+					assert(not IsInAttackSight(MyID, OwnerID, 123, 2), "out-of-range target accepted")
+					assert(reads == 4, "positions not refreshed after cache reset")
+					targetX = -1
+					ActorPosCache = {}
+					assert(not IsInAttackSight(MyID, OwnerID, 123, 2), "invisible target accepted")
+				end)
+				GetV, AttackRange = realGetV, realRange
+				ActorPosCache = savedCache
+				MySkill, MySkillLevel = savedSkill, savedLevel
+				if not ok then error(err, 0) end
+				return true
+			end,
 			["fallback settings use the names read by the AI"] = function()
 				local defaults = setmetatable({}, { __index = _G })
 				setfenv(assert(loadfile("./AI/USER_AI/Defaults.lua")), defaults)()

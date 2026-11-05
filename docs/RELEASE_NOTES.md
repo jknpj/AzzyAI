@@ -49,6 +49,21 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Attack-range checks and attack-state position diagnostics now reuse the existing
+  per-AI-call position cache instead of querying the same positions repeatedly.
+  The cache is reset on every AI call; range calculations and trace output are
+  unchanged. A targeted regression check covers the range boundary, invisible
+  targets, default skill arguments and position-query reuse. User-run validation:
+  `python tools\harness\run.py amistr_fresh` passed (1/1);
+  `python tools\harness\run.py --profile --ticks 3000 bayeri sera dieter eleanor`
+  passed (4/4), with identical attack counts, cast summaries and AI-call counts
+  before and after the change. Reported `GetV` calls per AI call fell from
+  70 to 59 for Bayeri, 72 to 63 for Sera, 67 to 59 for Dieter and 52 to 42
+  for Eleanor (approximately 12-19% fewer queries, using the harness's rounded
+  counts). This measures reduced API queries, not a proven speedup: average
+  profiled times increased in this run and maximum times reached 471-482 ms;
+  their cause has not been isolated. This does not change skill damage or cooldowns.
+
 - Fixed fallback option names in `Defaults.lua`: `AoEFixedLevel` and the
   `UseBerserk*` / `Berserk_*` options now match the names read by the AI,
   including a default for `Berserk_ComboAlways`. The initial `BerserkMode`
