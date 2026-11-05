@@ -104,7 +104,10 @@ def all_scenarios():
 def run_scenario(lua, name, ticks, env):
     with tempfile.TemporaryDirectory(prefix="azzyai-") as tmp:
         dst = os.path.join(tmp, "AI", "USER_AI")
-        shutil.copytree(USER_AI, dst, ignore=shutil.ignore_patterns("*.exe", "*.pdb", "*.pdf", "data"))
+        ignore = ["*.exe", "*.pdb", "*.pdf", "data"]
+        if env.get("HARNESS_NO_TYPES"):
+            ignore.append("Types")  # the benchmarks compare the global preset alone against the per-type files
+        shutil.copytree(USER_AI, dst, ignore=shutil.ignore_patterns(*ignore))
         os.makedirs(os.path.join(dst, "data"))
         # fixed config so the tests don't depend on the user's own H_Config.lua; HARNESS_CONFIG
         # points at another one (the benchmarks compare against the shipped USER_AI/H_Config.lua)
