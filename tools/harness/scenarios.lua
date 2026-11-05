@@ -308,6 +308,57 @@ SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {
+			["fallback settings use the names read by the AI"] = function()
+				local defaults = setmetatable({}, { __index = _G })
+				setfenv(assert(loadfile("./AI/USER_AI/Defaults.lua")), defaults)()
+				local expected = {
+					AoEFixedLevel = 1, UseBerserkMobbed = 0, UseBerserkSkill = 0,
+					UseBerserkAttack = 0, Berserk_SkillAlways = 0, Berserk_Dance = 0,
+					Berserk_IgnoreMinSP = 0, Berserk_ComboAlways = 0,
+				}
+				for name, value in pairs(expected) do
+					assert(rawget(defaults, name) == value, "missing or incorrect fallback: " .. name)
+				end
+				assert(BerserkMode == 0, "BerserkMode was not initialized")
+				return true
+			end,
+			["Lif level zero skips Urgent Escape without casting"] = function()
+				local realBase, realDoSkill = GetHomunBaseType, DoSkill
+				local realGuard = GetGuardSkill
+				local savedLevel, savedBuff, savedTimeout = LifEscapeLevel, UseDefensiveBuff, GuardTimeout
+				local savedAutoTimeout = AutoSkillTimeout
+				local savedCooldown = AutoSkillCooldown[HLIF_AVOID]
+				local casts, guardCalls = 0, 0
+				GetHomunBaseType = function() return LIF end
+				DoSkill = function(skill)
+					if skill == HLIF_AVOID then casts = casts + 1 end
+					return 0
+				end
+				GetGuardSkill = function(id)
+					guardCalls = guardCalls + 1
+					return realGuard(id)
+				end
+				LifEscapeLevel, UseDefensiveBuff, GuardTimeout = 0, 1, 0
+				AutoSkillTimeout = 0
+				AutoSkillCooldown[HLIF_AVOID] = 0
+				local ok, err = pcall(function()
+					local skill, level = GetGuardSkill(MyID)
+					assert(skill == HLIF_AVOID and level == 0, "zero did not disable Urgent Escape")
+					guardCalls = 0
+					DoAutoBuffs(1)
+					assert(guardCalls == 1 and casts == 0, "Urgent Escape level zero was not safely skipped")
+					LifEscapeLevel = 5
+					skill, level = GetGuardSkill(MyID)
+					assert(skill == HLIF_AVOID and level == 5, "valid Urgent Escape level was changed")
+				end)
+				GetHomunBaseType, DoSkill = realBase, realDoSkill
+				GetGuardSkill = realGuard
+				LifEscapeLevel, UseDefensiveBuff, GuardTimeout = savedLevel, savedBuff, savedTimeout
+				AutoSkillTimeout = savedAutoTimeout
+				AutoSkillCooldown[HLIF_AVOID] = savedCooldown
+				if not ok then error(err, 0) end
+				return true
+			end,
 			["targeting diagnostics are off by default"] = function()
 				local f = io.open("AAI_TARGETING.log", "r")
 				if f then f:close(); return false end

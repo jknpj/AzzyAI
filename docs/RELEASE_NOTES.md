@@ -49,6 +49,15 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Fixed fallback option names in `Defaults.lua`: `AoEFixedLevel` and the
+  `UseBerserk*` / `Berserk_*` options now match the names read by the AI,
+  including a default for `Berserk_ComboAlways`. The initial `BerserkMode`
+  in `Const_.lua` now also uses the correct spelling. This prevents missing
+  options in older or trimmed configurations from leaving these values nil;
+  explicit configuration values still take precedence.
+- Clarified `LifEscapeLevel = 0`: it safely suppresses Urgent Escape without
+  attempting a level-zero cast. No Lif configuration was changed.
+
 - Official-server (LATAM) skill detection. The official client answers the
   `V_SKILLATTACKRANGE_LEVEL` probe differently from rAthena: learned skills report
   their table range (or +2 for range-1 melee skills), unlearned skills report
