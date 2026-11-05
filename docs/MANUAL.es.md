@@ -2,7 +2,7 @@
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
-[Volver al README](../README.es.md) | [Notas técnicas en inglés](RELEASE_NOTES.md)
+[Volver al README](../README.es.md) | [Notas técnicas en inglés](RELEASE_NOTES.md) | [Referencia de comandos, opciones y tácticas](REFERENCE.es.md)
 
 ## 1. Antes de empezar
 

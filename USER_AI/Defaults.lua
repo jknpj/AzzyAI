@@ -45,7 +45,7 @@ ChaseSPPause 			= 0
 ChaseSPPauseSP 			= -80
 ChaseSPPauseTime 		= 3000
 RescueOwnerLowHP		=0
-AOEFixedLevel		=1
+AoEFixedLevel		=1
 LiveMobID=0
 
 UseBlessingOwner		= 1
@@ -199,13 +199,14 @@ CastInterruptLimit      = 3 -- confirmed offensive cast interruptions before a p
 CastInterruptPause      = 5000 -- temporary per-skill pause in ms
 CastInterruptUnconfirmed = 0 -- also count offensive failures without visible casting; may include refusals
 
---Berzerk Settings:
-UseBerzerkMobbed         = 0 
-UseBerzerkSkill          = 0 
-UseBerzerkAttack         = 0 
-Berzerk_SkillAlways      = 0 
-Berzerk_Dance            = 0
-Berzerk_IgnoreMinSP      = 0 
+--Berserk Settings:
+UseBerserkMobbed         = 0
+UseBerserkSkill          = 0
+UseBerserkAttack         = 0
+Berserk_SkillAlways      = 0
+Berserk_Dance            = 0
+Berserk_IgnoreMinSP      = 0
+Berserk_ComboAlways      = 0
 
 --Misc settings:
 StandbyFriending         = 1  
