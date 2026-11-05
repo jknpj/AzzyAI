@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="t d">
-  <title id="t">Como a AzzyAI HG decide o que fazer</title>
-  <desc id="d">Quatro passos: um monstro aparece; a HG consulta elemento, raça e se é chefe, MVP ou planta; decide quem atacar e qual habilidade usar; conjura só o que o servidor permite. O banco de monstros alimenta o passo 2, as suas configurações o passo 3 e os dados do servidor o passo 4.</desc>
+  <title id="t">Como o AzzyAI decide o que fazer</title>
+  <desc id="d">Quatro passos: um monstro aparece; consultam-se elemento, raça e se é chefe, MVP ou planta; a IA decide quem atacar e qual habilidade usar; conjura só o que o servidor permite. O banco de monstros alimenta o passo 2, as suas configurações o passo 3 e os dados do servidor o passo 4.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
       <path d="M0,0 L10,5 L0,10 z" fill="#1b6fbf"/>
@@ -11,7 +11,7 @@
   </defs>
   <rect width="1200" height="450" rx="16" fill="#eaf2fb"/>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#0b2545">
-    <text x="45" y="38" font-size="22" font-weight="700">Como a AzzyAI HG decide o que fazer</text>
+    <text x="45" y="38" font-size="22" font-weight="700">Como o AzzyAI decide o que fazer</text>
 
     <g stroke="#1b6fbf" stroke-width="2" fill="#ffffff">
       <rect x="45" y="60" width="240" height="170" rx="12"/>
@@ -34,7 +34,7 @@
       <text x="973" y="96">Conjura</text>
     </g>
     <g font-size="16">
-      <text x="65" y="132">A HG lê qual monstro</text>
+      <text x="65" y="132">Lê qual monstro</text>
       <text x="65" y="154">é, pelo ID dele.</text>
 
       <text x="355" y="132">Elemento e raça; se é</text>

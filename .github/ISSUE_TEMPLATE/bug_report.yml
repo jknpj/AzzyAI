@@ -38,8 +38,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: HG version
-      description: The release, or the commit of the LATAM-HG branch you installed.
+      label: Version
+      description: The "Release:" line in AAIStartH.txt (or AAIStartM.txt for a mercenary), for example 2.0.0. If it is missing, write the commit of the LATAM-HG branch you installed.
     validations:
       required: true
   - type: textarea

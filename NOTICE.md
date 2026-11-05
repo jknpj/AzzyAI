@@ -1,6 +1,6 @@
 # Licensing notice
 
-AzzyAI HG is a fork of [SpenceKonde/AzzyAI](https://github.com/SpenceKonde/AzzyAI).
+This version of AzzyAI is a fork of [SpenceKonde/AzzyAI](https://github.com/SpenceKonde/AzzyAI).
 Different parts of this repository have different origins, so they have
 different terms. This file says which is which. It describes the situation as
 the maintainers understand it; it is not legal advice.
@@ -9,8 +9,8 @@ the maintainers understand it; it is not legal advice.
 
 | Part | Terms |
 |---|---|
-| Code and data inherited from the original AzzyAI | **No license from the original author.** HG does not and cannot grant one. See [below](#inherited-code). |
-| New work written for HG (listed [below](#covered-by-the-gnu-gpl-v3)) | **GNU General Public License v3.0**, full text in [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt). |
+| Code and data inherited from the original AzzyAI | **No license from the original author.** This repository does not and cannot grant one. See [below](#inherited-code). |
+| New work written for this version (listed [below](#covered-by-the-gnu-gpl-v3)) | **GNU General Public License v3.0**, full text in [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt). |
 | Data generated from rAthena | GPL-3.0, like rAthena itself. |
 | Ragnarok Online names, skill text and icons | Not covered. They belong to Gravity Co., Ltd. and others. |
 | The browser configuration tool (`webgui`) | Its own repository and its own GPL-3.0 `LICENSE`. |
@@ -24,12 +24,12 @@ found are comments in `USER_AI/H_SkillList.lua` and `USER_AI/M_SkillList.lua`
 ("This may be distributed and used in AIs freely") and in `USER_AI/AI_main.lua`
 ("You may expand the AI freely through the M_Extra and H_Extra files").
 
-HG's edits to those files are derived from them. Only the original author can
-license the original work, so **HG does not put a license on the inherited
-files, or on HG's modifications to them.** The inherited parts are:
+This version's edits to those files are derived from them. Only the original
+author can license the original work, so **this repository does not put a license
+on the inherited files, or on its modifications to them.** The inherited parts are:
 
 - `DEFAULT/`
-- `GUI/` (the configuration application, apart from files that are new to HG)
+- `GUI/` (the configuration application, apart from files that are new to this version)
 - `USER_AI/` (apart from the new files listed below)
 - `Changelog.md`, `Doc1.doc` and `USER_AI/Documentation.pdf`
 - the fixture `tools/harness/fixtures/H_Config.lua`, which is a copy of the
@@ -43,7 +43,7 @@ repository be licensed consistently, which is the maintainers' wish.
 
 ## Covered by the GNU GPL v3
 
-These files did not exist in the original AzzyAI and were written for HG:
+These files did not exist in the original AzzyAI and were written for this version:
 
 - `tools/`, except `tools/harness/fixtures/H_Config.lua` and
   `tools/harness/fixtures/divinepride_latam.json`

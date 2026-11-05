@@ -1,4 +1,4 @@
-# AzzyAI HG user manual
+# AzzyAI user manual
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
@@ -6,7 +6,7 @@
 
 ## 1. Before you begin
 
-Use the AI only where your server permits it. HG configures behavior; it does
+Use the AI only where your server permits it. AzzyAI configures behavior; it does
 not unlock skills, bypass cooldowns or make casts immune to damage.
 Server support and client behavior vary. Test on easy monsters first.
 
@@ -23,9 +23,9 @@ English so they match the options shown in the tools.
    Use `/merai` for custom mercenary AI.
 5. Summon again or reconnect. Repeat the reload after saving configuration changes.
 
-Installing HG replaces the AI in that folder. If you want to use a different AI
+Installing AzzyAI replaces the AI in that folder. If you want to use a different AI
 for one unit type, preserve its entry file: `AI.lua` for homunculi or `AI_M.lua`
-for mercenaries. Do not mix versions of HG's supporting files.
+for mercenaries. Do not mix versions of AzzyAI's supporting files.
 
 ### Updates and backups
 
@@ -85,7 +85,7 @@ The clone folder is remembered in `AzzyAIConfig.update.txt`.
 ### Browser application
 
 Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).
-Choose **AzzyAI HG**, your language, then **File > Open USER_AI folder** and
+Choose **AzzyAI** (not Classic), your language, then **File > Open USER_AI folder** and
 select the folder installed in the game.
 
 - Chrome/Edge can write directly when folder access is supported and permitted.
@@ -224,7 +224,7 @@ applying: they come from a monster database that may differ from your server.
 
 ### What the monster database changes (homunculus only)
 
-HG ships a list of about 2,700 monsters with their element, race and whether
+This version ships a list of about 2,700 monsters with their element, race and whether
 each is a boss, an MVP or a plant. The homunculus reads which monster it is
 looking at and uses that list, so it behaves sensibly even on monsters you never
 wrote a tactics row for. Mercenaries do not use it.

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450" role="img" aria-labelledby="t d">
-  <title id="t">How AzzyAI HG decides what to do</title>
-  <desc id="d">Four steps: a monster appears; HG looks up its element, race and boss, MVP or plant flags; it decides who to attack and which skill to use; it casts only what the server allows. The monster database feeds step 2, your settings feed step 3 and server data feeds step 4.</desc>
+  <title id="t">How AzzyAI decides what to do</title>
+  <desc id="d">Four steps: a monster appears; its element, race and boss, MVP or plant flags are looked up; the AI decides who to attack and which skill to use; it casts only what the server allows. The monster database feeds step 2, your settings feed step 3 and server data feeds step 4.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
       <path d="M0,0 L10,5 L0,10 z" fill="#1b6fbf"/>
@@ -11,7 +11,7 @@
   </defs>
   <rect width="1200" height="450" rx="16" fill="#eaf2fb"/>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#0b2545">
-    <text x="45" y="38" font-size="22" font-weight="700">How AzzyAI HG decides what to do</text>
+    <text x="45" y="38" font-size="22" font-weight="700">How AzzyAI decides what to do</text>
 
     <g stroke="#1b6fbf" stroke-width="2" fill="#ffffff">
       <rect x="45" y="60" width="240" height="170" rx="12"/>
@@ -34,7 +34,7 @@
       <text x="973" y="96">Casts</text>
     </g>
     <g font-size="16">
-      <text x="65" y="132">HG reads which monster</text>
+      <text x="65" y="132">It reads which monster</text>
       <text x="65" y="154">it is, by its ID.</text>
 
       <text x="355" y="132">Element and race; is it</text>

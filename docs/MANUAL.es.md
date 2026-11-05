@@ -1,4 +1,4 @@
-# Manual del usuario: AzzyAI HG
+# Manual del usuario: AzzyAI
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
@@ -6,7 +6,7 @@
 
 ## 1. Antes de empezar
 
-Usa la IA solo donde tu servidor lo permita. HG configura el comportamiento:
+Usa la IA solo donde tu servidor lo permita. AzzyAI configura el comportamiento:
 no desbloquea habilidades, elimina cooldowns ni evita interrupciones por daño.
 Clientes y servidores pueden comportarse de manera diferente. Empieza con
 monstruos fáciles.
@@ -24,9 +24,9 @@ opciones se mantienen en inglés para coincidir con las herramientas.
    Para mercenarios, usa `/merai`.
 5. Invoca nuevamente o reconéctate. Repite la recarga después de guardar ajustes.
 
-Instalar HG reemplaza la IA de esa carpeta. Para conservar otra IA en un tipo
+Instalar AzzyAI reemplaza la IA de esa carpeta. Para conservar otra IA en un tipo
 de unidad, preserva su archivo de entrada: `AI.lua` para homúnculos o `AI_M.lua`
-para mercenarios. No mezcles versiones de los archivos de soporte de HG.
+para mercenarios. No mezcles versiones de los archivos de soporte de AzzyAI.
 
 ### Actualizaciones y respaldos
 
@@ -86,7 +86,7 @@ La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
 ### Navegador
 
 Abre [la web GUI](https://jknpj.github.io/AzzyAI-webgui/).
-Elige **AzzyAI HG**, tu idioma y **File > Open USER_AI folder** para abrir la
+Elige **AzzyAI** (no el Classic), tu idioma y **File > Open USER_AI folder** para abrir la
 carpeta instalada en el juego.
 
 - Chrome/Edge pueden escribir directamente si el acceso a carpetas está admitido y autorizado.
@@ -229,7 +229,7 @@ la base de monstruos puede diferir de tu servidor.
 
 ### Qué cambia la base de datos de monstruos (solo homúnculo)
 
-HG incluye una lista de unos 2.700 monstruos con su elemento, raza y si cada uno
+Esta versión incluye una lista de unos 2.700 monstruos con su elemento, raza y si cada uno
 es jefe, MVP o planta. El homúnculo lee qué monstruo está viendo y usa esa lista,
 así que actúa con sentido incluso con monstruos para los que nunca escribiste una
 fila de táctica. Los mercenarios no la usan.
