@@ -2344,6 +2344,56 @@ function DiagonalDist(distance)
 	return math.floor(math.sqrt(distance*distance))
 end
 
+SkillAnimationDance = {}
+local pendingSkillDance
+
+function HasEleanorComboWindow()
+	return MyHomunType == ELEANOR
+		and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())
+end
+
+function QueueSkillAnimationDance(skill, target)
+	pendingSkillDance = nil
+	if SkillAnimationDance[skill] == 1 and IsHomun(MyID) == 1
+		and MyState == ATTACK_ST and target ~= 0 and target == MyEnemy then
+		pendingSkillDance = { target = target, time = GetTick() }
+	end
+end
+
+function PerformAttackDance()
+	local nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
+	if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
+		logappend("AAI_DANCE", "Dance attack canceled, too close to move bounds "..GetDistanceAPR(OwnerID, nx, ny).." "..GetMoveBounds())
+		return false
+	end
+	logappend("AAI_DANCE", "Dancing between "..MyAttackStanceX..","..MyAttackStanceY.." and "..nx..","..ny)
+	Move(MyID, nx, ny)
+	Attack(MyID, MyEnemy)
+	Move(MyID, MyAttackStanceX, MyAttackStanceY)
+	return true
+end
+
+function TrySkillAnimationDance()
+	local pending = pendingSkillDance
+	pendingSkillDance = nil
+	if not pending or pending.target ~= MyEnemy or GetTick() - pending.time > 300 then
+		return false
+	end
+	-- The normal attack path owns dancing between combo steps and must select the follow-up first.
+	if HasEleanorComboWindow() then
+		return false
+	end
+	if IsHomun(MyID) ~= 1 or UseDanceAttack ~= 1 or UseSkillOnly == 1
+		or GetV(V_SP, MyID) < DanceMinSP or CastSkill ~= 0
+		or GetV(V_MOTION, MyID) == MOTION_CASTING
+		or GetTick() < AutoSkillCastTimeout
+		or GetDistanceRect(MyEnemy, OwnerID) >= 13
+		or not IsInAttackSight(MyID, MyEnemy, 0, 0) then
+		return false
+	end
+	return PerformAttackDance()
+end
+
 function GetDanceCell(x,y,enemy)
 	local enemyx,enemyy=GetV(V_POSITION,enemy)
 	if IsInAttackSight(MyID,enemy) == false then --Why is this being called?! 

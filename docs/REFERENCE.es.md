@@ -450,6 +450,33 @@ como esa cantidad. Dos monstruos de peso 0.4, uno de 0.5 y uno de 1.2 cuentan co
 <a id="5-advanced-settings"></a>
 ## 5. Configuración avanzada
 
+### Baile experimental después de habilidades
+
+`SkillAnimationDance` es una tabla Lua opcional en `H_Extra.lua`, indexada por el ID de
+habilidad: `SkillAnimationDance[MH_STAHL_HORN] = 1` es un ejemplo, **no una recomendación
+validada**. La tabla empieza vacía; ninguna habilidad nueva cambia su comportamiento por defecto.
+
+El watcher existente debe confirmar el éxito de la habilidad ofensiva indicada. La IA
+puede entonces intentar un baile de ataque normal contra el mismo objetivo, dentro de los
+300 ms posteriores a la confirmación. Requiere `UseDanceAttack = 1`, ataques normales permitidos,
+`DanceMinSP` suficiente, alcance de ataque cuerpo a cuerpo y los límites habituales de movimiento.
+Los lanzamientos pendientes y su tiempo de espera bloquean el baile; los comandos del jugador
+cancelan el baile pendiente. Este ocupa esa actualización del estado de ataque en lugar de
+solicitar otra habilidad inmediatamente. No reduce recargas ni intervalos de habilidades y no
+altera el baile de los combos de Eleanor.
+Durante una ventana de continuación de Silvervein Rush o Midnight Frenzy de Eleanor, se
+descarta la solicitud de baile posterior: el flujo normal del combo selecciona primero la
+siguiente habilidad y `EleanorComboDance` controla el baile entre pasos. Así, la nueva rutina
+no retrasa el combo. Fuera de esas ventanas, las habilidades indicadas usan el mecanismo
+experimental compartido.
+
+Es experimental: la confirmación del watcher no demuestra que el servidor permita cancelar
+la animación. El harness prueba las protecciones, no una ganancia de DPS por cancelación.
+Prueba una habilidad a la vez en tu servidor, comprobando daño, regeneración de SP,
+posición y habilidades rechazadas. Elimina la entrada de la tabla para desactivarla.
+
+### Archivos y opciones extra
+
 Está en `H_Extra.lua` / `M_Extra.lua`, archivos Lua cargados después de todo lo demás.
 Sobrescriben la GUI; compruébalos primero cuando un cambio guardado no surte efecto.
 Los archivos distribuidos contienen ejemplos comentados.
