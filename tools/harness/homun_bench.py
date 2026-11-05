@@ -2,7 +2,7 @@
 """Compares configurations of one Homunculus S in the harness (expected damage, see damage.lua).
 
 Each configuration is a set of H_Config.lua overrides applied on top of the shipped USER_AI/H_Config.lua
-(--config picks another base).
+(--config picks another base) and of the homunculus' own USER_AI/Types/<Name>.lua; the overrides win.
 Runs the hbench_<homunculus> scenario (180 simulated seconds against a zero-defense Neutral dummy,
 or a pack of five) and prints DPS, SP spent and the casts of every configuration.
 
@@ -20,9 +20,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def run(homun, overrides, mobs, spregen, seconds, config, mob_def=None, mob_mdef=None):
+def run(homun, overrides, mobs, spregen, seconds, config, mob_def=None, mob_mdef=None, no_types=False):
     env = dict(os.environ, HARNESS_DAMAGE="1", HBENCH_SET=overrides, HBENCH_MOBS=str(mobs),
                HBENCH_SECONDS=str(seconds))
+    if no_types:
+        env["HARNESS_NO_TYPES"] = "1"
+    else:
+        env.pop("HARNESS_NO_TYPES", None)
     if mob_def is not None:
         env["HBENCH_DEF"] = str(mob_def)
     if mob_mdef is not None:

@@ -15,6 +15,7 @@ Needs Lua 5.1 like run.py. The runs are independent and executed in parallel.
 """
 import argparse
 import csv
+import re
 import os
 import subprocess
 import sys
@@ -42,12 +43,15 @@ OPTIONS = [
     ("eira", 3, 0, "AutoMobCount 3", "AutoMobCount=3"),
     ("bayeri", 1, 0, "current preset", ""),
     ("bayeri", 1, 0, "AutoMobCount 1", "AutoMobCount=1"),
-    ("bayeri", 1, 0, "Glanzen Spies on", "UseBayeriGlanzenSpies=1"),
+    ("bayeri", 1, 0, "Glanzen Spies off", "UseBayeriGlanzenSpies=0"),
+    ("bayeri", 1, 0, "Heilige Pferd off", "UseBayeriHeiligePferd=0"),
     ("bayeri", 2, 80, "current preset", ""),
     ("bayeri", 2, 80, "AutoMobCount 3", "AutoMobCount=3"),
+    ("bayeri", 2, 80, "Heilige Pferd off", "UseBayeriHeiligePferd=0"),
     ("bayeri", 3, 80, "current preset", ""),
     ("bayeri", 3, 80, "AutoMobCount 3", "AutoMobCount=3"),
     ("bayeri", 3, 80, "AutoMobCount 4", "AutoMobCount=4"),
+    ("bayeri", 3, 80, "Heilige Pferd off", "UseBayeriHeiligePferd=0"),
     ("sera", 1, 0, "current preset", ""),
     ("sera", 1, 0, "AutoMobCount 1", "AutoMobCount=1"),
     ("sera", 1, 0, "Needle Stinger on", "UseSeraNeedleStinger=1"),
@@ -55,11 +59,12 @@ OPTIONS = [
     ("sera", 3, 0, "Needle Stinger on", "UseSeraNeedleStinger=1"),
     ("sera", 3, 0, "Toxin of Mandara off", "UseSeraToxinOfMandara=0"),
     ("dieter", 1, 0, "current preset", ""),
-    ("dieter", 1, 0, "AutoMobCount 1", "AutoMobCount=1"),
+    ("dieter", 1, 0, "AutoMobCount 2 (the global value)", "AutoMobCount=2"),
+    ("dieter", 1, 0, "Volcanic Ash as an attack on", "UseDieterAshAsAttack=1"),
     ("dieter", 1, 0, "AutoMobCount 1, Blast Forge off (previous preset)", "AutoMobCount=1,UseDieterBlastForge=0"),
     ("dieter", 2, 0, "current preset", ""),
     ("dieter", 2, 0, "Blast Forge off", "UseDieterBlastForge=0"),
-    ("dieter", 2, 0, "AutoMobCount 1", "AutoMobCount=1"),
+    ("dieter", 2, 0, "AutoMobCount 2 (the global value)", "AutoMobCount=2"),
     ("dieter", 2, 0, "AutoMobCount 3", "AutoMobCount=3"),
     ("dieter", 2, 0, "Lava Slide off", "UseDieterLavaSlide=0"),
     ("dieter", 3, 0, "current preset", ""),
@@ -67,20 +72,21 @@ OPTIONS = [
     ("dieter", 3, 0, "AutoMobCount 3", "AutoMobCount=3"),
     ("dieter", 3, 0, "Magma Flow off", "UseDieterMagmaFlow=0"),
     ("eleanor", 1, 12, "current preset", ""),
-    ("eleanor", 1, 12, "Blazing And Furious on", "UseEleanorBlazingAndFurious=1"),
+    ("eleanor", 1, 12, "Blazing And Furious off", "UseEleanorBlazingAndFurious=0"),
     ("eleanor", 1, 22, "current preset", ""),
-    ("eleanor", 1, 22, "Blazing And Furious on", "UseEleanorBlazingAndFurious=1"),
+    ("eleanor", 1, 22, "Blazing And Furious off", "UseEleanorBlazingAndFurious=0"),
+    ("eleanor", 1, 22, "AutoMobCount 1", "AutoMobCount=1"),
     ("eleanor", 1, 22, "The One Fighter Rises off", "UseEleanorTheOneFighterRises=0"),
     ("eleanor", 1, 22, "AutoComboSpheres 3", "AutoComboSpheres=3"),
     ("eleanor", 1, 22, "AutoComboSpheres 6", "AutoComboSpheres=6"),
     ("eleanor", 3, 22, "current preset", ""),
-    ("eleanor", 3, 22, "Blazing And Furious on", "UseEleanorBlazingAndFurious=1"),
+    ("eleanor", 3, 22, "Blazing And Furious off", "UseEleanorBlazingAndFurious=0"),
     ("eleanor", 3, 22, "The One Fighter Rises off", "UseEleanorTheOneFighterRises=0"),
     ("eleanor", 3, 22, "AutoComboSpheres 3", "AutoComboSpheres=3"),
     ("eleanor", 3, 40, "current preset", ""),
-    ("eleanor", 3, 40, "Blazing And Furious on", "UseEleanorBlazingAndFurious=1"),
+    ("eleanor", 3, 40, "Blazing And Furious off", "UseEleanorBlazingAndFurious=0"),
     ("eleanor", 5, 22, "current preset", ""),
-    ("eleanor", 5, 22, "Blazing And Furious on", "UseEleanorBlazingAndFurious=1"),
+    ("eleanor", 5, 22, "Blazing And Furious off", "UseEleanorBlazingAndFurious=0"),
 ]
 
 
@@ -90,8 +96,8 @@ def casts_text(skills):
 
 
 def run(job):
-    homun, mobs, spregen, overrides, config = job
-    return homun_bench.run(homun, overrides, mobs, spregen, 180, config)
+    homun, mobs, spregen, overrides, config, no_types = job
+    return homun_bench.run(homun, overrides, mobs, spregen, 180, config, no_types=no_types)
 
 
 def main():
@@ -115,9 +121,9 @@ def main():
             for mobs in PACKS:
                 spregen = DEFAULT_SPREGEN.get(homun, 60)
                 ab_keys.append((homun, mobs, spregen))
-                ab_jobs.append((homun, mobs, spregen, "", old_config))
-                ab_jobs.append((homun, mobs, spregen, "", new_config))
-        opt_jobs = [(h, m, s, o, new_config) for h, m, s, _l, o in OPTIONS]
+                ab_jobs.append((homun, mobs, spregen, "", old_config, True))
+                ab_jobs.append((homun, mobs, spregen, "", new_config, False))
+        opt_jobs = [(h, m, s, o, new_config, False) for h, m, s, _l, o in OPTIONS]
         with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(run, ab_jobs + opt_jobs))
     ab_results, opt_results = results[:len(ab_jobs)], results[len(ab_jobs):]
@@ -151,6 +157,43 @@ def main():
     with open(os.path.join(args.out, "README.md"), "w", newline="\n", encoding="utf-8") as f:
         f.write(markdown(sha, ab_rows, opt_rows))
     print(f"wrote {len(ab_rows)} before/after rows and {len(opt_rows)} option rows to {args.out} (previous preset {sha})")
+    update_release_notes(ab_rows)
+
+
+NOTES_START = "<!-- preset-table:start -->"
+NOTES_END = "<!-- preset-table:end -->"
+
+
+def type_settings(homun):
+    """The options a homunculus' USER_AI/Types/<Name>.lua sets, as Markdown."""
+    pairs = []
+    with open(os.path.join(REPO, "USER_AI", "Types", homun.title() + ".lua"), encoding="utf-8") as f:
+        for line in f:
+            m = re.match(r"\s*(\w+)\s*=\s*(-?\d+(?:\.\d+)?)", line)
+            if m:
+                pairs.append(f"`{m.group(1)}` {m.group(2)}")
+    return ", ".join(pairs) or "none"
+
+
+def update_release_notes(ab_rows):
+    """Rewrites the table between the preset-table markers of docs/RELEASE_NOTES.md."""
+    path = os.path.join(REPO, "docs", "RELEASE_NOTES.md")
+    with open(path, encoding="utf-8", newline="") as f:
+        text = f.read()
+    start, end = text.find(NOTES_START), text.find(NOTES_END)
+    if start < 0 or end < start:
+        print("release notes not updated: the preset-table markers were not found")
+        return
+    rows = []
+    for homun in HOMUNCULI:
+        cells = [f"{n(r[4])} ({r[5]}%)" for r in ab_rows if r[0] == homun]
+        rows.append([homun.title()] + cells + [type_settings(homun)])
+    block = table(["Homunculus", "1 monster", "2", "3", "5", "Individual settings (`Types/<Name>.lua`)"], rows)
+    nl = "\r\n" if "\r\n" in text else "\n"
+    text = text[:start] + NOTES_START + nl + nl + block.replace("\n", nl) + nl + nl + text[end:]
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+    print("updated the preset table in docs/RELEASE_NOTES.md")
 
 
 def n(value):
@@ -173,14 +216,17 @@ def markdown(sha, ab_rows, opt_rows):
         "Generated by `python tools/harness/preset_report.py`; do not edit by hand. Every number is the expected value of an "
         "offline simulation (`tools/harness/damage.lua`): a zero-defense Neutral dummy for 180 s, the level 275 homunculi "
         "of `tools/harness/fixtures/homun_stats.lua`, rAthena data of the commit pinned in `fixtures/rathena.lua`, no "
-        "SP refill. It is **not** a measurement on a server: only Sonic Claw and Xeno Slasher were checked against "
-        "measured damage. DPS is expected damage per second; damage/SP is expected damage divided by the SP the casts "
+        "SP refill. It is **not** a measurement on a server: the homunculus stats are hypothetical and the real DPS "
+        "depends on the server (the RO LATAM homunculi are much stronger than rAthena's), so read the tables as a "
+        "comparison between configurations, not as expected in-game DPS; only Sonic Claw and Xeno Slasher were "
+        "checked against measured damage. DPS is expected damage per second; damage/SP is expected damage divided by the SP the casts "
         "spent. SP regeneration is 60 SP/s unless stated (Eleanor 22 SP/s, measured on the test server). Monsters are "
         "the same dummy, standing together in a pack.",
         "",
-        f"## 1. Previous preset (`{sha}`) against the current `USER_AI/H_Config.lua`",
+        f"## 1. Previous preset (`{sha}`) against the current settings",
         "",
-        "No overrides on either side.",
+        "Previous: that commit's `H_Config.lua` alone. Current: `USER_AI/H_Config.lua` plus each homunculus' own "
+        "`USER_AI/Types/<Name>.lua`. No overrides on either side.",
         "",
     ]
     for homun in HOMUNCULI:
