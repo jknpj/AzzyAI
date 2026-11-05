@@ -32,5 +32,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.5")]
-[assembly: AssemblyFileVersion("1.5")]
+// Same number as CVersion in USER_AI\Const_.lua (the AI's release): tools\harness\run.py checks it.
+[assembly: AssemblyVersion("2.0.0")]
+[assembly: AssemblyFileVersion("2.0.0")]

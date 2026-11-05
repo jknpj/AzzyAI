@@ -269,7 +269,7 @@ namespace AzzyAIConfig
             //AzzyAIAboutBox about = new AzzyAIAboutBox();
             // Show the about box
             //about.ShowDialog();
-            MessageBox.Show("AzzyAI LATAM HG\nAI by Dr. Azzy; GUI by Machiavellian and contributors\n\nIncludes current Homunculus S settings and official/private server selection.\n\nIcon by Kami Kali",
+            MessageBox.Show("AzzyAI\nAI by Dr. Azzy; GUI by Machiavellian and contributors\n\nIncludes current Homunculus S settings and official/private server selection.\n\nIcon by Kami Kali",
                 "About AzzyAI", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

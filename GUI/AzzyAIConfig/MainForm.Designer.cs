@@ -519,7 +519,7 @@
             this.MainMenuStrip = menuStrip1;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "AzzyAI Configuration - LATAM HG";
+            this.Text = "AzzyAI Configuration";
             this.Load += new System.EventHandler(this.MainForm_Load);
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
