@@ -15,6 +15,7 @@ ventana o en el navegador, sin código que editar.
 - Conoce a cada monstruo: Dieter no lanza Lava Slide contra un monstruo de Fuego
   y no se gasta SP en plantas.
 - No despierta a un MVP sin querer, pero igual te defiende si uno ataca.
+- Un monstruo al que le ordenas atacar se combate hasta que muera, aunque te alejes.
 - Las habilidades de área apuntan al grupo más grande de monstruos que realmente
   recibiría daño.
 - Una habilidad que se interrumpe una y otra vez se pausa unos segundos, y usa

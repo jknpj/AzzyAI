@@ -15,6 +15,7 @@ comportamento dele numa janela ou no navegador, sem código para editar.
 - Ele conhece cada monstro: o Dieter não joga Lava Slide num monstro de Fogo e
   não se gasta SP em plantas.
 - Ele não acorda um MVP sem querer, mas ainda defende você se um atacar.
+- Um monstro que você manda atacar é combatido até morrer, mesmo que você se afaste.
 - Habilidades em área são apontadas para o maior grupo de monstros que realmente
   sofreria dano.
 - Uma habilidade que vive sendo interrompida é pausada por alguns segundos, e ele
