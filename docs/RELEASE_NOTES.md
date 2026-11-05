@@ -1,4 +1,4 @@
-# AzzyAI HG: release notes and technical reference
+# AzzyAI: release notes and technical reference
 
 [User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md)
 
@@ -7,7 +7,47 @@ intended for maintainers and advanced users, not as the installation guide.
 Paths and commands below are relative to the repository root unless stated
 otherwise. The historical upstream changelog remains in [Changelog.md](../Changelog.md).
 
-## Recent HG changes
+## Version
+
+**Current release: 2.0.0**
+
+The AI has its own release number, in [semantic versioning](https://semver.org/)
+form (`MAJOR.MINOR.PATCH`). It is set once, as `CVersion` in `USER_AI/Const_.lua`,
+and shown on the `Release:` line of `AAIStartH.txt` and `AAIStartM.txt` (the startup
+reports), so a bug report can say exactly which version it is about. `python
+tools\harness\run.py` fails if that number and the "Current release" line above
+differ.
+
+| Part | Raise it when |
+|---|---|
+| MAJOR | A change can break an existing installation or its settings: a renamed or removed option, a changed file layout, a different default that alters behavior for everyone. |
+| MINOR | A new feature, option or skill that works without touching existing settings. |
+| PATCH | Only fixes, data updates (`MobInfo.lua`, skill values) and documentation. |
+
+**2.0.0 is the first release of this series.** The original AzzyAI ended at 1.56, so
+the new series starts a major number higher. Everything under "Changes since the
+original 1.56" is part of it.
+
+**File check.** `AI.lua` and `AI_M.lua` read the `MAJOR.MINOR` out of `CVersion` and
+compare it with three more numbers, to detect files copied from different installations.
+If one differs, `File version error` is written in the startup report. The three are
+`Version` (in `AI.lua` and `AI_M.lua`), `MainVersion` (`AI_main.lua`) and `AUVersion`
+(`AzzyUtil.lua`), and each holds just the `MAJOR.MINOR`: `"2.0"` for 2.0.x, `"2.1"` for
+2.1.x. The original AzzyAI used `"1.56"` in all four, so mixing old and new files is
+reported instead of failing in strange ways. Raise the three together when MAJOR or MINOR
+changes, never for a PATCH; `run.py` fails if one does not match `CVersion`.
+
+The Windows configuration app has the same number: `AssemblyVersion` and
+`AssemblyFileVersion` in `GUI/AzzyAIConfig/Properties/AssemblyInfo.cs` are set to the
+release, **Help > About** shows it, and `run.py` checks it. The web page has no number
+of its own.
+
+To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
+changed, the two numbers in `AssemblyInfo.cs` and the line above, add the changes below,
+run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the commit
+`v<number>` (for example `v2.0.0`). The CI builds the ZIP for tags that start with `v`.
+
+## Changes since the original 1.56 (release 2.0.0)
 
 - Official-server (LATAM) skill detection. The official client answers the
   `V_SKILLATTACKRANGE_LEVEL` probe differently from rAthena: learned skills report
@@ -165,7 +205,7 @@ optimal build.
 
 ## Project and compatibility background
 
-HG is a community fork of [SpenceKonde/AzzyAI](https://github.com/SpenceKonde/AzzyAI).
+This is a community continuation of [SpenceKonde/AzzyAI](https://github.com/SpenceKonde/AzzyAI).
 Original project website: [drazzy.com](http://drazzy.com/ro/ai).
 
 ## Organization
@@ -250,6 +290,10 @@ enabled, a gap between AI
 calls alone is not completion evidence for a cast never observed starting.
 
 ### Windows desktop GUI development
+
+To build the app without PowerShell, run `tools\build-gui.cmd`: it builds the Release
+x86 executable and copies it to `USER_AI\AzzyAIConfig.exe`, the copy that is committed and
+that players run. The PowerShell commands below do the same build and also run and test the app.
 
 The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
 Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
@@ -451,7 +495,7 @@ The targeting log records a snapshot every 5 seconds, with up to 20 actors:
 native monster detection, player classification, target-list membership, tactics,
 kill-steal checks, distance, and passive/standby/HP/SP settings.
 If no log is created, open `AAIStartH.txt` (rewritten on every AI load). Its last lines show
-the `Build`, the `ServerType` and `Logs enabled`. No `Build: LATAM-HG` line means the client
+the `Release`, the `Build`, the `ServerType` and `Logs enabled`. No `Release:` or `Build: LATAM-HG` line means the client
 is still running older `USER_AI` files; `AAI_TARGETING` missing from `Logs enabled` means the
 `H_Extra.lua` line is still commented out (`--`). If the file isn't updated at all, check the
 custom-AI selection (`/hoai`) and folder write permissions (clients under `Program Files` may

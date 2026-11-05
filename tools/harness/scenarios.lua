@@ -319,6 +319,32 @@ SCENARIOS = {
 				f:close()
 				return text:find("started successfully", 1, true) ~= nil and text:find("Logs enabled: AAI_ERROR", 1, true) ~= nil
 			end,
+			["AAIStartH.txt shows the release number"] = function()
+				local f = assert(io.open("AAIStartH.txt", "r"))
+				local text = f:read("*a")
+				f:close()
+				if type(CVersion) ~= "string" or not CVersion:match("^%d+%.%d+%.%d+$") then
+					error("CVersion is not MAJOR.MINOR.PATCH: " .. tostring(CVersion), 0)
+				end
+				return text:find("\nRelease: " .. CVersion .. "\n", 1, true) ~= nil
+			end,
+			["the file-consistency numbers follow the release"] = function()
+				local expected = CVersion:match("^(%d+%.%d+)%.%d+$")
+				if not (Version == expected and MainVersion == expected and AUVersion == expected) then
+					error(("release %s needs %s, got Version=%s Main=%s AU=%s"):format(
+						CVersion, expected, tostring(Version), tostring(MainVersion), tostring(AUVersion)), 0)
+				end
+				return true
+			end,
+			["a file from another installation is reported"] = function()
+				-- what AI.lua does: read MAJOR.MINOR out of each number (the old 1.56 and the
+				-- release 2.0.0 alike) and compare it with Version
+				local verspattern = "%d+%.%d+"
+				return string.gfind(CVersion, verspattern)() == Version
+					and string.gfind(AUVersion, verspattern)() == Version
+					and string.gfind("1.56", verspattern)() ~= Version
+					and string.gfind("1.30b or earlier", verspattern)() ~= Version
+			end,
 		} },
 	amistr_fresh_alt = { homuntype = 6, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100 },
 	amistr_unlearned_bulwark = { homuntype = 2, skills = {}, mobs = single, private = true, passive = true,

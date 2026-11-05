@@ -53,6 +53,47 @@ def check_syntax(luac):
     return failed == 0
 
 
+def check_version():
+    """CVersion (USER_AI/Const_.lua) is the release number: docs/RELEASE_NOTES.md and the Windows app's
+    AssemblyInfo.cs must say the same, and the three file-check numbers (AI.lua and AI_M.lua Version,
+    AI_main.lua MainVersion, AzzyUtil.lua AUVersion) must be its MAJOR.MINOR, e.g. 2.0.0 -> "2.0"."""
+    def read(name, pattern):
+        with open(os.path.join(USER_AI, name), encoding="utf-8", errors="replace") as f:
+            return re.search(pattern, f.read(), re.M)
+
+    code = read("Const_.lua", r'^CVersion="(\d+)\.(\d+)\.(\d+)"')
+    if not code:
+        print('VERSION ERROR: CVersion="MAJOR.MINOR.PATCH" not found in USER_AI/Const_.lua')
+        return False
+    major, minor, patch = (int(g) for g in code.groups())
+    release = f"{major}.{minor}.{patch}"
+    ok = True
+    with open(os.path.join(REPO, "GUI", "AzzyAIConfig", "Properties", "AssemblyInfo.cs"),
+              encoding="utf-8-sig", errors="replace") as f:
+        asm = f.read()
+    for attr in ("AssemblyVersion", "AssemblyFileVersion"):
+        m = re.search(r'^\[assembly: %s\("([^"]*)"\)\]' % attr, asm, re.M)
+        if not m or m.group(1) != release:
+            print(f'VERSION ERROR: GUI AssemblyInfo.cs {attr} is {m.group(1) if m else "missing"}, release is {release}')
+            ok = False
+    with open(os.path.join(REPO, "docs", "RELEASE_NOTES.md"), encoding="utf-8") as f:
+        notes = re.search(r"Current release:\s*\**(\d+\.\d+\.\d+)", f.read())
+    if not notes or notes.group(1) != release:
+        print(f"VERSION ERROR: Const_.lua says {release}, docs/RELEASE_NOTES.md says "
+              f"{notes.group(1) if notes else 'no \"Current release\" line'}")
+        ok = False
+    expected = f"{major}.{minor}"
+    for name, var in (("AI.lua", "Version"), ("AI_M.lua", "Version"), ("AI_main.lua", "MainVersion"),
+                      ("AzzyUtil.lua", "AUVersion")):
+        m = read(name, rf'^{var}="([^"]*)"')
+        if not m or m.group(1) != expected:
+            print(f'VERSION ERROR: {name} {var} is {m.group(1) if m else "missing"}, release {release} needs "{expected}"')
+            ok = False
+    if ok:
+        print(f"version: {release} (file check {expected})")
+    return ok
+
+
 def all_scenarios():
     with open(os.path.join(HERE, "scenarios.lua"), encoding="utf-8") as f:
         text = f.read()
@@ -119,6 +160,7 @@ def main():
     ok = True
     if not args.skip_syntax:
         ok = check_syntax(luac)
+        ok = check_version() and ok
 
     env = dict(os.environ, HARNESS_VERBOSE="1" if args.verbose else "0", HARNESS_TRACE="1" if args.trace else "0",
                HARNESS_PROFILE="1" if args.profile else "0")

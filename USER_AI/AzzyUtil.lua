@@ -4,7 +4,7 @@
 -- it is reccomended that you use the seperately available
 -- version, which does not utilize AAI-specific systems. 
 -- Written by Dr. Azzy of iRO Chaos
-AUVersion="1.56"
+AUVersion="2.0"
 -------------------------------
 
 
@@ -397,7 +397,8 @@ function StartupDiagnostics()
 		if on == 1 then logs[#logs + 1] = name end
 	end
 	table.sort(logs)
-	return "\nBuild: LATAM-HG (self-target fix, targeting log)"
+	return "\nRelease: "..tostring(CVersion)
+		.."\nBuild: LATAM-HG (self-target fix, targeting log)"
 		.."\nServerType: "..tostring(ServerType).." (auto-detect "..tostring(AutoDetectServerType)..")"
 		.."\nLogs enabled: "..(#logs > 0 and table.concat(logs, ", ") or "none")
 		.."\nMonster database (MobInfo.lua): "..(MobInfo ~= nil and "loaded" or "missing")

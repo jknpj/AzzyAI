@@ -1,4 +1,4 @@
-# Contributing to AzzyAI HG
+# Contributing to AzzyAI
 
 Thanks for helping. You do not need to write code: bug reports, in-game test
 results, translations and clearer docs are all welcome.
@@ -8,7 +8,7 @@ results, translations and clearer docs are all welcome.
 - **Report a bug** with the [bug report form](https://github.com/jknpj/AzzyAI/issues/new/choose).
   Say what homunculus, server and client you use, which skills are enabled and
   what happened. **Never share passwords, account credentials or private files.**
-- **Test in game.** Most of HG is checked only on a simulated server. Reports
+- **Test in game.** Most of this version is checked only on a simulated server. Reports
   from real clients, official or private, are the most valuable thing you can send.
   Say what worked as well as what did not.
 - **Translate.** The manuals and READMEs exist in English, Portuguese (BR) and
@@ -69,6 +69,16 @@ Do not edit these by hand. Regenerate them:
   `data` folder or any log;
 - API keys or credentials of any kind.
 
+## Releases
+
+The AI's release number lives in one place: `CVersion` in `USER_AI\Const_.lua`.
+Do not change it in a pull request unless asked: a maintainer raises it when a release
+is cut. How the number works, and what to raise, is in
+[docs\RELEASE_NOTES.md](docs/RELEASE_NOTES.md#version). Three other numbers (`Version`,
+`MainVersion`, `AUVersion`, all `"2.0"` today) are a file check, and the Windows app has
+the same release number in `AssemblyInfo.cs`: leave them all alone unless a maintainer
+raises them with the release.
+
 ## The web page is a separate repository
 
 `webgui` is a git submodule of [jknpj/AzzyAI-webgui](https://github.com/jknpj/AzzyAI-webgui).
@@ -77,7 +87,7 @@ Clone with `git clone --recursive`, or run `git submodule update --init`.
 
 ## Licensing of contributions
 
-New files for HG are under the GNU GPL v3; inherited files have no license from
+New files in this version are under the GNU GPL v3; inherited files have no license from
 their original author. [NOTICE.md](NOTICE.md) explains which is which. By
 sending a contribution you confirm that you wrote it, or have the right to send
 it, and that it may be distributed under the terms that [NOTICE.md](NOTICE.md)
