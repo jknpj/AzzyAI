@@ -1901,8 +1901,8 @@ function	IsInAttackSight (myid,target,skill,level)
 	elseif (level==nil) then
 		logappend("AAI_ERROR","IsInAttackSight called with nil level but skill is not nil. State:"..MyState.." skill "..skill)
 	end
-	local x1,y1 = GetV (V_POSITION,myid)
-	local x2,y2 = GetV (V_POSITION,target)
+	local x1,y1 = GetPos(myid)
+	local x2,y2 = GetPos(target)
 	if (x1 == -1 or x2 == -1) then
 		return false
 	end
