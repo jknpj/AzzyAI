@@ -19,11 +19,18 @@ namespace AzzyAIConfig
         ReactToBosses = 2
     }
 
+    enum TrustSkillProbeOptions
+    {
+        Automatic = -1,
+        Distrust = 0,
+        Trust = 1
+    }
+
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
             "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "EleanorComboGap", "EleanorComboDance", "CommandedFightStay", "UseProvokeOwner",
-            "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed",
+            "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed", "TrustSkillProbe",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
             "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel",
             "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel",
@@ -219,6 +226,9 @@ namespace AzzyAIConfig
         [Category("Kiting Options"), DefaultValue(false),
         Description("Kite by the monster's real attack range (monster database). Ranged monsters make the homunculus kite earlier and with a longer step, a monster that never chases only matters inside its range, and none is kited when its range reaches KiteBounds (there would be no way out). Melee monsters keep KiteThreshold. Needs UseMobInfo.")]
         public bool KiteByRange { get; set; }
+        [Category("AutoSkill Options"), DefaultValue(TrustSkillProbeOptions.Automatic),
+        Description("Whether to believe the client's answer to the skill-range probe that tells which skills are learned. Automatic = distrust it on the official server and trust it on private servers (rAthena). Distrust / Trust force either. Distrusted, a skill is tried even when the probe says it is not learned, and never lowered after a refusal. An H_Extra.lua override takes precedence.")]
+        public TrustSkillProbeOptions TrustSkillProbe { get; set; }
 
         private void ResetAdditionalOptions()
         {
