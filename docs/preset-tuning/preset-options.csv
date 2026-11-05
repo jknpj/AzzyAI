@@ -8,43 +8,48 @@ eira,1,30,Twister Cutter on,UseEiraTwisterCutter=1,83102,-32,1285,0,Twister Cutt
 eira,3,60,current preset,(none),365708,0,4291,0,Xeno Slasher 118
 eira,3,60,AutoMobCount 3,AutoMobCount=3,365708,+0,4291,0,Xeno Slasher 118
 bayeri,1,60,current preset,(none),162736,0,1474,0,Stahl Horn 281
-bayeri,1,60,AutoMobCount 1,AutoMobCount=1,57579,-65,872,0,Heilige Stange 111
-bayeri,1,60,Glanzen Spies on,UseBayeriGlanzenSpies=1,97796,-40,1775,0,Glanzen Spies 89
-bayeri,2,80,current preset,(none),114247,0,1729,0,Heilige Stange 111
-bayeri,2,80,AutoMobCount 3,AutoMobCount=3,169034,+48,1474,0,Stahl Horn 292
-bayeri,3,80,current preset,(none),170915,0,2587,0,Heilige Stange 111
-bayeri,3,80,AutoMobCount 3,AutoMobCount=3,170915,+0,2587,0,Heilige Stange 111
-bayeri,3,80,AutoMobCount 4,AutoMobCount=4,168451,-1,1468,0,Stahl Horn 291
-sera,1,60,current preset,(none),173171,0,1846,0,Needle Of Paralyze 175
-sera,1,60,AutoMobCount 1,AutoMobCount=1,107297,-38,1560,0,Toxin Of Mandara 61; Needle Of Paralyze 45
-sera,1,60,Needle Stinger on,UseSeraNeedleStinger=1,130398,-25,1367,0,Needle Stinger 117
-sera,3,60,current preset,(none),230784,0,3354,0,Toxin Of Mandara 61; Needle Of Paralyze 45
-sera,3,60,Needle Stinger on,UseSeraNeedleStinger=1,209503,-9,2887,0,Toxin Of Mandara 54; Needle Stinger 40
-sera,3,60,Toxin of Mandara off,UseSeraToxinOfMandara=0,157458,-32,1664,0,Needle Of Paralyze 159
-dieter,1,60,current preset,(none),2192,0,1214,0,Magma Flow 2
-dieter,1,60,AutoMobCount 1,AutoMobCount=1,54786,+2399,1452,0,Blast Forge 33; Lava Slide 32; Magma Flow 1
-dieter,1,60,"AutoMobCount 1, Blast Forge off (previous preset)","AutoMobCount=1,UseDieterBlastForge=0",23010,+950,1255,0,Lava Slide 35; Magma Flow 2
-dieter,2,60,current preset,(none),108786,0,2884,0,Blast Forge 33; Lava Slide 32; Magma Flow 1
-dieter,2,60,Blast Forge off,UseDieterBlastForge=0,44929,-59,2451,0,Lava Slide 35; Magma Flow 2
-dieter,2,60,AutoMobCount 1,AutoMobCount=1,108786,+0,2884,0,Blast Forge 33; Lava Slide 32; Magma Flow 1
-dieter,2,60,AutoMobCount 3,AutoMobCount=3,2443,-98,1353,0,Magma Flow 2
-dieter,2,60,Lava Slide off,UseDieterLavaSlide=0,82510,-24,3088,0,Blast Forge 39; Magma Flow 2
-dieter,3,60,current preset,(none),155439,0,4288,0,Blast Forge 31; Lava Slide 31; Magma Flow 2
-dieter,3,60,Blast Forge off,UseDieterBlastForge=0,66597,-57,3633,0,Lava Slide 35; Magma Flow 2
-dieter,3,60,AutoMobCount 3,AutoMobCount=3,155439,+0,4288,0,Blast Forge 31; Lava Slide 31; Magma Flow 2
-dieter,3,60,Magma Flow off,UseDieterMagmaFlow=0,164400,+6,4336,0,Blast Forge 33; Lava Slide 33
-eleanor,1,12,current preset,(none),67753,0,2213,0,Sonic Claw 56; The One Fighter Rises 15; Midnight Frenzy 12; Silvervein Rush 12
-eleanor,1,12,Blazing And Furious on,UseEleanorBlazingAndFurious=1,46122,-32,1505,0,Sonic Claw 47; Blazing And Furious 16; The One Fighter Rises 8; Silvervein Rush 1
-eleanor,1,22,current preset,(none),93013,0,2303,0,Sonic Claw 64; Silvervein Rush 41; Midnight Frenzy 18; The One Fighter Rises 16
-eleanor,1,22,Blazing And Furious on,UseEleanorBlazingAndFurious=1,71234,-23,1762,0,Sonic Claw 54; Silvervein Rush 27; Blazing And Furious 17; The One Fighter Rises 9; Midnight Frenzy 6
-eleanor,1,22,The One Fighter Rises off,UseEleanorTheOneFighterRises=0,106096,+14,2678,0,Sonic Claw 78; Silvervein Rush 58; Midnight Frenzy 44
-eleanor,1,22,AutoComboSpheres 3,AutoComboSpheres=3,92346,-1,2288,8,Sonic Claw 73; Silvervein Rush 42; Midnight Frenzy 16; The One Fighter Rises 14
-eleanor,1,22,AutoComboSpheres 6,AutoComboSpheres=6,92336,-1,2287,8,Sonic Claw 74; Silvervein Rush 37; Midnight Frenzy 19; The One Fighter Rises 14
-eleanor,3,22,current preset,(none),133684,0,3301,0,Sonic Claw 76; Silvervein Rush 33; The One Fighter Rises 16; Midnight Frenzy 14
-eleanor,3,22,Blazing And Furious on,UseEleanorBlazingAndFurious=1,110379,-17,2728,0,Sonic Claw 65; Silvervein Rush 21; Blazing And Furious 17; The One Fighter Rises 9; Midnight Frenzy 1
-eleanor,3,22,The One Fighter Rises off,UseEleanorTheOneFighterRises=0,104841,-22,2645,0,Sonic Claw 83; Silvervein Rush 55; Midnight Frenzy 42
-eleanor,3,22,AutoComboSpheres 3,AutoComboSpheres=3,127802,-4,3155,7,Sonic Claw 84; Silvervein Rush 34; The One Fighter Rises 14; Midnight Frenzy 13
-eleanor,3,40,current preset,(none),192157,0,3299,0,Midnight Frenzy 63; Silvervein Rush 63; Sonic Claw 63; The One Fighter Rises 19
-eleanor,3,40,Blazing And Furious on,UseEleanorBlazingAndFurious=1,334581,+74,5776,0,Blazing And Furious 59; The One Fighter Rises 11
-eleanor,5,22,current preset,(none),178827,0,4428,0,Sonic Claw 64; Silvervein Rush 41; Midnight Frenzy 18; The One Fighter Rises 16
-eleanor,5,22,Blazing And Furious on,UseEleanorBlazingAndFurious=1,153874,-14,3806,0,Sonic Claw 54; Silvervein Rush 27; Blazing And Furious 17; The One Fighter Rises 9; Midnight Frenzy 6
+bayeri,1,60,AutoMobCount 1,AutoMobCount=1,162736,+0,1474,0,Stahl Horn 281
+bayeri,1,60,Glanzen Spies off,UseBayeriGlanzenSpies=0,162736,+0,1474,0,Stahl Horn 281
+bayeri,1,60,Heilige Pferd off,UseBayeriHeiligePferd=0,162736,+0,1474,0,Stahl Horn 281
+bayeri,2,80,current preset,(none),169034,0,1474,0,Stahl Horn 292
+bayeri,2,80,AutoMobCount 3,AutoMobCount=3,169034,+0,1474,0,Stahl Horn 292
+bayeri,2,80,Heilige Pferd off,UseBayeriHeiligePferd=0,169034,+0,1474,0,Stahl Horn 292
+bayeri,3,80,current preset,(none),188322,0,2473,1,Heilige Pferd 71
+bayeri,3,80,AutoMobCount 3,AutoMobCount=3,188322,+0,2473,1,Heilige Pferd 71
+bayeri,3,80,AutoMobCount 4,AutoMobCount=4,168451,-11,1468,0,Stahl Horn 291
+bayeri,3,80,Heilige Pferd off,UseBayeriHeiligePferd=0,170915,-9,2587,0,Heilige Stange 111
+sera,1,60,current preset,(none),167256,0,1800,0,Needle Of Paralyze 169
+sera,1,60,AutoMobCount 1,AutoMobCount=1,146405,-12,2149,0,Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10
+sera,1,60,Needle Stinger on,UseSeraNeedleStinger=1,125958,-25,1334,0,Needle Stinger 113
+sera,3,60,current preset,(none),344240,0,5054,0,Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10
+sera,3,60,Needle Stinger on,UseSeraNeedleStinger=1,334698,-3,4664,0,Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11
+sera,3,60,Toxin of Mandara off,UseSeraToxinOfMandara=0,285808,-17,3057,0,Needle Of Paralyze 158; Poison Mist 11
+dieter,1,60,current preset,(none),45841,0,1520,0,Blast Forge 37; Lava Slide 10; Magma Flow 2
+dieter,1,60,AutoMobCount 2 (the global value),AutoMobCount=2,2192,-95,1214,0,Magma Flow 2
+dieter,1,60,Volcanic Ash as an attack on,UseDieterAshAsAttack=1,34565,-25,1104,0,Blast Forge 27; Lava Slide 9; Magma Flow 2
+dieter,1,60,"AutoMobCount 1, Blast Forge off (previous preset)","AutoMobCount=1,UseDieterBlastForge=0",8135,-82,1246,0,Lava Slide 10; Magma Flow 2
+dieter,2,60,current preset,(none),90616,0,3004,0,Blast Forge 37; Lava Slide 10; Magma Flow 2
+dieter,2,60,Blast Forge off,UseDieterBlastForge=0,14577,-84,2233,0,Lava Slide 10; Magma Flow 2
+dieter,2,60,AutoMobCount 2 (the global value),AutoMobCount=2,90616,+0,3004,0,Blast Forge 37; Lava Slide 10; Magma Flow 2
+dieter,2,60,AutoMobCount 3,AutoMobCount=3,2443,-97,1353,0,Magma Flow 2
+dieter,2,60,Lava Slide off,UseDieterLavaSlide=0,82510,-9,3088,0,Blast Forge 39; Magma Flow 2
+dieter,3,60,current preset,(none),135390,0,4488,0,Blast Forge 37; Lava Slide 10; Magma Flow 2
+dieter,3,60,Blast Forge off,UseDieterBlastForge=0,20768,-85,3182,0,Lava Slide 10; Magma Flow 2
+dieter,3,60,AutoMobCount 3,AutoMobCount=3,135390,+0,4488,0,Blast Forge 37; Lava Slide 10; Magma Flow 2
+dieter,3,60,Magma Flow off,UseDieterMagmaFlow=0,140662,+4,4554,0,Blast Forge 39; Lava Slide 10
+eleanor,1,12,current preset,(none),74645,0,2436,26,Sonic Claw 87; Silvervein Rush 26; Midnight Frenzy 25
+eleanor,1,12,Blazing And Furious off,UseEleanorBlazingAndFurious=0,74645,+0,2436,26,Sonic Claw 87; Silvervein Rush 26; Midnight Frenzy 25
+eleanor,1,22,current preset,(none),99800,0,2464,31,Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35
+eleanor,1,22,Blazing And Furious off,UseEleanorBlazingAndFurious=0,99800,+0,2464,31,Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35
+eleanor,1,22,AutoMobCount 1,AutoMobCount=1,76593,-23,1890,12,Sonic Claw 37; The One Fighter Rises 28; Silvervein Rush 20; Midnight Frenzy 8; Blazing And Furious 3
+eleanor,1,22,The One Fighter Rises off,UseEleanorTheOneFighterRises=0,99800,+0,2464,31,Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35
+eleanor,1,22,AutoComboSpheres 3,AutoComboSpheres=3,98675,-1,2453,29,Sonic Claw 105; Silvervein Rush 47; Midnight Frenzy 31
+eleanor,1,22,AutoComboSpheres 6,AutoComboSpheres=6,99924,+0,2486,29,Sonic Claw 104; Silvervein Rush 48; Midnight Frenzy 31
+eleanor,3,22,current preset,(none),213518,0,5271,0,The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1
+eleanor,3,22,Blazing And Furious off,UseEleanorBlazingAndFurious=0,199288,-7,4979,0,The One Fighter Rises 46; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1
+eleanor,3,22,The One Fighter Rises off,UseEleanorTheOneFighterRises=0,102626,-52,2540,31,Sonic Claw 101; Silvervein Rush 40; Midnight Frenzy 21; Blazing And Furious 6
+eleanor,3,22,AutoComboSpheres 3,AutoComboSpheres=3,213518,+0,5271,0,The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1
+eleanor,3,40,current preset,(none),300606,0,5171,0,The One Fighter Rises 54; Blazing And Furious 14; Silvervein Rush 1; Sonic Claw 1
+eleanor,3,40,Blazing And Furious off,UseEleanorBlazingAndFurious=0,283592,-6,4912,0,The One Fighter Rises 67; Silvervein Rush 1; Sonic Claw 1
+eleanor,5,22,current preset,(none),345750,0,8692,0,The One Fighter Rises 34; Blazing And Furious 13
+eleanor,5,22,Blazing And Furious off,UseEleanorBlazingAndFurious=0,328535,-5,8170,0,The One Fighter Rises 47
