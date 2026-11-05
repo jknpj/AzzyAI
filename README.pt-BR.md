@@ -1,10 +1,10 @@
-# AzzyAI para Ragnarok Online
+<p align="center">
+  <a href="#instalar"><img src="docs/banner.pt-BR.svg" alt="AzzyAI: IA de homúnculo e mercenário para Ragnarok Online" width="100%"></a>
+</p>
 
-[English](README.md) | [Português (BR)](README.pt-BR.md) | [Español](README.es.md)
-
-[![AzzyAI: IA de homúnculo e mercenário para Ragnarok Online](docs/hg-banner.svg)](#instalar)
-
-* * *
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.pt-BR.md">Português (BR)</a> · <a href="README.es.md">Español</a>
+</p>
 
 Um cérebro mais esperto para o seu **homúnculo ou mercenário** em Ragnarok
 Online. Ele escolhe quem atacar e qual habilidade usar, e você muda o
