@@ -427,6 +427,31 @@ Stein Wand, Castling, Provoke...), this monster counts as that many. Two monster
 
 ## 5. Advanced settings
 
+### Experimental post-skill dance
+
+`SkillAnimationDance` is an opt-in Lua table in `H_Extra.lua`, keyed by skill ID:
+`SkillAnimationDance[MH_STAHL_HORN] = 1` is an example, **not a validated recommendation**.
+The table starts empty. No new skill or homunculus changes behavior by default.
+
+For a listed offensive skill, the existing cast watcher must first report success.
+The AI can then attempt one normal-attack dance while still fighting the same target,
+within 300 ms of that confirmation. It requires `UseDanceAttack = 1`, normal attacks
+enabled, sufficient `DanceMinSP`, melee attack range and the usual movement bounds.
+Pending casts and the cast timeout block it; player commands cancel the pending dance.
+The dance takes that attack-state update instead of requesting another skill immediately.
+Cooldowns and skill delays are not shortened, and Eleanor's existing combo dance is unchanged.
+While Eleanor has an active Silvervein Rush or Midnight Frenzy follow-up window, the
+post-skill request is discarded: the normal combo path selects the next skill first and
+`EleanorComboDance` controls dancing between steps. This prevents a second dance path from
+delaying the combo. Outside those windows, listed skills use the shared experimental path.
+
+This is experimental: watcher confirmation is not proof that the server permits animation
+canceling. The harness tests guards, not a DPS gain from animation cancellation.
+Test one skill at a time on your server, checking damage, SP regeneration, positioning and
+refused skills. Remove its table entry to disable it.
+
+### Extra files and options
+
 These live in `H_Extra.lua` / `M_Extra.lua`, a Lua file loaded after everything else. It overrides the
 GUI, so check it first when a saved change does nothing. The shipped files hold commented examples.
 

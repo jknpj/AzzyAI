@@ -308,6 +308,71 @@ SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {
+			["experimental skill dance is opt-in and respects cast guards"] = function()
+				local names = { "SkillAnimationDance", "IsHomun", "MyState", "MyEnemy",
+					"UseDanceAttack", "UseSkillOnly", "DanceMinSP", "CastSkill",
+					"AutoSkillCastTimeout", "GetV", "GetDistanceRect",
+					"IsInAttackSight", "PerformAttackDance", "MyHomunType",
+					"ComboSCTimeout", "ComboSVTimeout", "EleanorComboDance" }
+				local saved = {}
+				for _, name in ipairs(names) do saved[name] = _G[name] end
+				local dances, motion = 0, MOTION_STAND
+				SkillAnimationDance = {}
+				IsHomun = function() return 1 end
+				MyState, MyEnemy = ATTACK_ST, 12345
+				MyHomunType = AMISTR
+				ComboSCTimeout, ComboSVTimeout = 0, 0
+				UseDanceAttack, UseSkillOnly, DanceMinSP = 1, 0, 0
+				CastSkill, AutoSkillCastTimeout = 0, 0
+				GetV = function(field)
+					if field == V_SP then return 100 end
+					if field == V_MOTION then return motion end
+					error("unexpected skill dance query: " .. tostring(field))
+				end
+				GetDistanceRect = function() return 1 end
+				IsInAttackSight = function() return true end
+				PerformAttackDance = function() dances = dances + 1; return true end
+				local ok, err = pcall(function()
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(not TrySkillAnimationDance(), "unlisted skill danced")
+					SkillAnimationDance[123] = 1
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(TrySkillAnimationDance() and dances == 1, "listed skill did not dance")
+					assert(not TrySkillAnimationDance(), "confirmation danced twice")
+					MyHomunType = ELEANOR
+					for _, window in ipairs({ "ComboSCTimeout", "ComboSVTimeout" }) do
+						for _, enabled in ipairs({ 0, 1 }) do
+							EleanorComboDance = enabled
+							_G[window] = GetTick() + 2000
+							QueueSkillAnimationDance(123, MyEnemy)
+							assert(not TrySkillAnimationDance(), "post-skill dance delayed a combo")
+							assert(not TrySkillAnimationDance(), "combo dance was deferred instead of consumed")
+							_G[window] = 0
+						end
+					end
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(TrySkillAnimationDance() and dances == 2, "Eleanor without a combo could not dance")
+					QueueSkillAnimationDance(123, MyEnemy)
+					motion = MOTION_CASTING
+					assert(not TrySkillAnimationDance(), "dance interrupted casting")
+					motion = MOTION_STAND
+					QueueSkillAnimationDance(123, MyEnemy)
+					AutoSkillCastTimeout = GetTick() + 100
+					assert(not TrySkillAnimationDance(), "dance ignored cast timeout")
+					AutoSkillCastTimeout = 0
+					QueueSkillAnimationDance(123, MyEnemy)
+					MyEnemy = 54321
+					assert(not TrySkillAnimationDance(), "dance followed a changed target")
+					QueueSkillAnimationDance(123, MyEnemy)
+					QueueSkillAnimationDance(0, 0)
+					assert(not TrySkillAnimationDance(), "canceled dance survived")
+					assert(dances == 2, "blocked dance issued actions")
+				end)
+				QueueSkillAnimationDance(0, 0)
+				for _, name in ipairs(names) do _G[name] = saved[name] end
+				if not ok then error(err, 0) end
+				return true
+			end,
 			["attack range reuses positions until the next tick"] = function()
 				local realGetV, realRange = GetV, AttackRange
 				local savedCache = ActorPosCache

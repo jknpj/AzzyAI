@@ -49,6 +49,16 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Added experimental, per-skill post-cast dancing through the `SkillAnimationDance`
+  table in `H_Extra.lua` (empty by default). It shares the normal-attack dance
+  routine, requires offensive-cast success confirmation and preserves cast guards,
+  movement bounds and cooldowns. Player commands cancel queued dances. Eleanor's
+  existing combo-dance option is unchanged. No animation-cancellation DPS gain has
+  been validated; the harness regression checks opt-in behavior and safety guards.
+  Active Eleanor fighting-combo windows discard the experimental dance request
+  so follow-up selection retains priority and `EleanorComboDance` remains the
+  sole control for dancing between those combo steps.
+
 - Attack-range checks and attack-state position diagnostics now reuse the existing
   per-AI-call position cache instead of querying the same positions repeatedly.
   The cache is reset on every AI call; range calculations and trace output are

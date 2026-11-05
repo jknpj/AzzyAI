@@ -445,6 +445,31 @@ quantidade. Dois monstros de peso 0.4, um de 0.5 e um de 1.2 contam como
 <a id="5-advanced-settings"></a>
 ## 5. Configurações avançadas
 
+### Dança experimental após habilidades
+
+`SkillAnimationDance` é uma tabela Lua opcional em `H_Extra.lua`, indexada pelo ID da
+habilidade: `SkillAnimationDance[MH_STAHL_HORN] = 1` é um exemplo, **não uma recomendação
+validada**. A tabela começa vazia; nenhuma habilidade nova muda de comportamento por padrão.
+
+O watcher existente precisa confirmar o sucesso da habilidade ofensiva listada. A IA
+pode então tentar uma dança de ataque normal, contra o mesmo alvo, em até 300 ms após a
+confirmação. Exige `UseDanceAttack = 1`, ataques normais permitidos, `DanceMinSP` suficiente,
+alcance de ataque corpo a corpo e os limites usuais de movimento. Conjurações pendentes e
+o timeout de conjuração bloqueiam a dança; comandos do jogador cancelam a dança pendente.
+Ela ocupa aquela atualização do estado de ataque, em vez de pedir outra habilidade imediatamente.
+Não reduz cooldowns nem intervalos de habilidades e não altera a dança dos combos da Eleanor.
+Durante uma janela de continuação de Silvervein Rush ou Midnight Frenzy da Eleanor, o pedido
+de dança pós-habilidade é descartado: o fluxo normal do combo seleciona a próxima habilidade
+primeiro, e `EleanorComboDance` controla a dança entre etapas. Assim, a rotina nova não atrasa
+o combo. Fora dessas janelas, habilidades listadas usam o mecanismo experimental compartilhado.
+
+É experimental: a confirmação do watcher não comprova que o servidor permite cancelar a
+animação. O harness testa as proteções, não o ganho de DPS por cancelamento.
+Teste uma habilidade por vez no seu servidor, verificando dano, regeneração de SP,
+posicionamento e habilidades recusadas. Remova a entrada da tabela para desativar.
+
+### Arquivos e opções extras
+
 Ficam em `H_Extra.lua` / `M_Extra.lua`, arquivos Lua carregados após todo o resto. Eles
 sobrescrevem a GUI; confira-os primeiro quando uma alteração salva não faz efeito. Os arquivos
 distribuídos contêm exemplos comentados.
