@@ -1,5 +1,12 @@
 -- AzzyAI Constant File
-CVersion="1.56"
+-- CVersion is the release number of this AI (semantic versioning: MAJOR.MINOR.PATCH), shown on the
+-- "Release:" line of AAIStartH.txt and AAIStartM.txt. It is the only place to change for a release,
+-- together with the "Current release" line of docs\RELEASE_NOTES.md (run.py checks both).
+-- AI.lua and AI_M.lua also use it to catch files copied from different installations: they compare
+-- its MAJOR.MINOR ("2.0") with Version (AI.lua, AI_M.lua), MainVersion (AI_main.lua) and AUVersion
+-- (AzzyUtil.lua). Raise those three to the new MAJOR.MINOR when MAJOR or MINOR changes, never for a
+-- PATCH; run.py fails if one of them does not match.
+CVersion="2.0.0"
 
 --[[
 function	TraceAI (string) end

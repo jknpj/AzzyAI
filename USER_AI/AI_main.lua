@@ -4,7 +4,7 @@
 -- This AI is intended for use on official servers only
 -- Permission granted to distribute in unmodified form.
 -- You may expand the AI freely through the M_Extra and H_Extra files
-MainVersion="1.56"
+MainVersion="2.0"
 
 -- AI_main is loaded after H_Config/M_Config, so ServerType is final here
 ApplyServerType()
