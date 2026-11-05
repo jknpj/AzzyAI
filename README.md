@@ -15,6 +15,7 @@ or in your browser, with no code to edit.
 - It knows every monster, so Dieter does not throw Lava Slide at a Fire monster
   and no SP is wasted on plants.
 - It does not wake up an MVP by accident, but still defends you if one attacks.
+- A monster you order it to attack is fought until it dies, even if you walk away.
 - Area skills are aimed at the biggest group of monsters that would really be hurt.
 - A skill that keeps getting interrupted is paused for a few seconds, and it
   uses something else.
