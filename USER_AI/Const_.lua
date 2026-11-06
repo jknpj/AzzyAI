@@ -544,6 +544,7 @@ FriendCircleTimeout		= 0
 DoneInit				= 0
 AtkPosbugFixTimeout		= 0
 EleanorMode				= 0
+EleanorModeResyncPending	= 0
 LastAITime_ART			= 0
 StickyX,StickyY			= 0,0
 MyLastSP				= 0

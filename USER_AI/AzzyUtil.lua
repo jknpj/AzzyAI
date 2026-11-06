@@ -2393,6 +2393,7 @@ end
 --#########################
 
 function GetSAtkSkill(myid)
+	if MyHomunType == ELEANOR and CastSkill ~= 0 then return 0,0 end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
