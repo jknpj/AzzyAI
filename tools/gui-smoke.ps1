@@ -82,8 +82,9 @@ try {
     $search.Text = 'Twister'
     $grid = $categories.TabPages[1].Controls[0]
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
-    if ($visibleProperties.Count -ne 2 -or $null -eq $visibleProperties['UseEiraTwisterCutter']) {
-        throw 'Search did not expose both Twister Cutter controls.'
+    if ($visibleProperties.Count -ne 3 -or $null -eq $visibleProperties['UseEiraTwisterCutter'] -or
+        $null -eq $visibleProperties['EiraTwisterCutterDance']) {
+        throw 'Search did not expose the three Twister Cutter controls.'
     }
     $search.Text = 'variable cast time'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
@@ -91,6 +92,24 @@ try {
         throw 'Description search did not find CastTimeRatio.'
     }
     $search.Clear()
+    $danceByType = @{
+        Eira = @('EiraEraserCutterDance', 'EiraXenoSlasherDance', 'EiraTwisterCutterDance', 'EiraAbsoluteZephyrDance')
+        Bayeri = @('BayeriStahlHornDance', 'BayeriHeiligeStangeDance', 'BayeriGlanzenSpiesDance', 'BayeriHeiligePferdDance')
+        Sera = @('SeraNeedleOfParalyzeDance', 'SeraPoisonMistDance', 'SeraToxinOfMandaraDance', 'SeraNeedleStingerDance')
+        Dieter = @('DieterLavaSlideDance', 'DieterBlastForgeDance')
+        Eleanor = @('EleanorBlazingAndFuriousDance', 'EleanorTheOneFighterRisesDance')
+    }
+    foreach ($type in $danceByType.Keys) {
+        $scope.SelectedItem = $type
+        $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
+        foreach ($otherType in $danceByType.Keys) {
+            foreach ($name in $danceByType[$otherType]) {
+                if (($null -ne $visibleProperties[$name]) -ne ($type -eq $otherType)) {
+                    throw "$name has incorrect visibility in the $type scope."
+                }
+            }
+        }
+    }
     $scope.SelectedItem = 'Eira'
     $visibleProperties = [ComponentModel.TypeDescriptor]::GetProperties($grid.SelectedObject)
     $buffProperties = [ComponentModel.TypeDescriptor]::GetProperties($categories.TabPages[3].Controls[0].SelectedObject)
@@ -176,6 +195,20 @@ try {
         $properties['CastInterruptLimit'].SetValue($config, 2)
         $properties['CastInterruptPause'].SetValue($config, 4000)
         $properties['CastInterruptUnconfirmed'].SetValue($config, $true)
+        $danceOptions = @('SeraNeedleOfParalyzeDance', 'SeraPoisonMistDance',
+            'SeraToxinOfMandaraDance', 'SeraNeedleStingerDance',
+            'EiraEraserCutterDance', 'EiraXenoSlasherDance', 'EiraTwisterCutterDance', 'EiraAbsoluteZephyrDance',
+            'BayeriStahlHornDance', 'BayeriHeiligeStangeDance', 'BayeriGlanzenSpiesDance', 'BayeriHeiligePferdDance',
+            'DieterLavaSlideDance', 'DieterBlastForgeDance', 'EleanorBlazingAndFuriousDance', 'EleanorTheOneFighterRisesDance')
+        $optionalDances = @('SeraToxinOfMandaraDance',
+            'EiraAbsoluteZephyrDance', 'BayeriGlanzenSpiesDance', 'BayeriHeiligePferdDance')
+        foreach ($name in $danceOptions) {
+            $attribute = $properties[$name].Attributes[[ComponentModel.DefaultValueAttribute]]
+            if ($null -eq $attribute -or $attribute.Value -ne ($name -notin $optionalDances)) {
+                throw "$name has an unexpected dance default."
+            }
+            $properties[$name].SetValue($config, $false)
+        }
         foreach ($invalid in @(@('CastInterruptLimit', -1), @('CastInterruptPause', 0))) {
             $rejected = $false
             try { $properties[$invalid[0]].SetValue($config, $invalid[1]) } catch { $rejected = $true }
@@ -203,6 +236,11 @@ try {
             if ($text -notmatch $pattern) { throw "Round-trip did not preserve or save: $pattern" }
         }
         $config.Open($roundtrip)
+        foreach ($name in $danceOptions) {
+            if ($text -notmatch ("(?m)^" + $name + "\s*=\s*0") -or $properties[$name].GetValue($config)) {
+                throw "$name did not round-trip as disabled."
+            }
+        }
         if ($config.EiraTwisterCutterLevel -ne 3 -or $config.UseEleanorCBC -or
             $config.ServerType.ToString() -ne 'Private' -or $config.CastTimeRatio -ne 0.75 -or
             $config.SphereTrackInterval -ne 200 -or $config.AutoSkillDelay -ne 0 -or

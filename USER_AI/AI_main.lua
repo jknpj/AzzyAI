@@ -710,6 +710,9 @@ function OnCHASE_ST()
             return
         end
     end
+    if TrySkillAnimationDance() then
+        return
+    end
     if GetV(V_MOTION, MyID) ~= MOTION_MOVE then
         if ChaseGiveUpCount > ChaseGiveUp then
             Unreachable[MyEnemy] = 1

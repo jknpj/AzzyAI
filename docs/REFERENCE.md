@@ -427,11 +427,31 @@ Stein Wand, Castling, Provoke...), this monster counts as that many. Two monster
 
 ## 5. Advanced settings
 
-### Experimental post-skill dance
+### Post-skill dance
 
-`SkillAnimationDance` is an opt-in Lua table in `H_Extra.lua`, keyed by skill ID:
-`SkillAnimationDance[MH_STAHL_HORN] = 1` is an example, **not a validated recommendation**.
-The table starts empty. No new skill or homunculus changes behavior by default.
+`SkillAnimationDance` is a Lua table keyed by skill ID, overridable in `H_Extra.lua`.
+Post-skill dancing defaults on for these offensive Homunculus S skills:
+
+- Eleanor: The One Fighter Rises, Blazing and Furious.
+- Bayeri: Stahl Horn, Heilige Stange.
+- Eira: Eraser Cutter, Xeno Slasher, Twister Cutter.
+- Sera: Needle of Paralyze, Poison Mist, Needle Stinger.
+- Dieter: Lava Slide, Blast Forge.
+
+Disable one with `SkillAnimationDance[MH_STAHL_HORN] = 0`, or all dancing with
+`UseDanceAttack = 0`. This does not enable disabled skills. Buffs are not included.
+Both GUIs expose 16 individual `*Dance` switches in AutoSkill Options (for example
+`BayeriStahlHornDance` and `EleanorTheOneFighterRisesDance`). The 12 skills above
+default to 1; Absolute Zephyr, Glanzen Spies, Heilige Pferd and Toxin of Mandara
+are optional and default to 0 because they were not individually validated.
+Needle Stinger had a positive visual test; Blast Forge showed no visible difference
+in the user's test. Neither observation establishes a DPS gain.
+These save to the usual global/per-type configuration. An explicit
+`SkillAnimationDance[skill]` entry in `H_Extra.lua` takes precedence over that switch;
+remove the entry to let the GUI control the skill again. `EleanorComboDance` remains
+separate.
+The user reported good visual results on the private test server; a DPS gain and LATAM
+timings are not yet established. Unlisted skills remain opt-in (`= 1`).
 
 For a listed offensive skill, the existing cast watcher must first report success.
 The AI can then attempt one normal-attack dance while still fighting the same target,
@@ -439,6 +459,10 @@ within 300 ms of that confirmation. It requires `UseDanceAttack = 1`, normal att
 enabled, sufficient `DanceMinSP`, melee attack range and the usual movement bounds.
 Pending casts and the cast timeout block it; player commands cancel the pending dance.
 The dance takes that attack-state update instead of requesting another skill immediately.
+Confirmations during chase are also accepted, but only dance once the target is already
+in normal-attack range; the dance uses the homunculus's current position, not an old stance.
+Successful experimental attempts log `Post-skill dance skill <id>` in `AAI_DANCE`
+when that log is enabled. This records commands issued, not a confirmed animation cancel.
 Cooldowns and skill delays are not shortened, and Eleanor's existing combo dance is unchanged.
 While Eleanor has an active Silvervein Rush or Midnight Frenzy follow-up window, the
 post-skill request is discarded: the normal combo path selects the next skill first and
