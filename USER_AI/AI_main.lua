@@ -11,6 +11,27 @@ ApplyServerType()
 
 local nextEleanorSphereAttack = 0
 
+function TryEleanorModeResync(skill)
+	if MyHomunType ~= ELEANOR or EleanorModeResyncPending == 1 then
+		return false
+	end
+	local inferredMode
+	if skill == MH_SONIC_CRAW and EleanorMode == FIGHTING_MODE then
+		inferredMode = GRAPPLING_MODE
+	elseif skill == MH_TINDER_BREAKER and EleanorMode == GRAPPLING_MODE then
+		inferredMode = FIGHTING_MODE
+	end
+	if inferredMode == nil then
+		return false
+	end
+	EleanorMode = inferredMode
+	EleanorModeResyncPending = 1
+	TraceAI("Eleanor style starter was refused; resyncing tracked style to "..inferredMode)
+	logappend("AAI_SKILLFAIL", "Eleanor style starter "..FormatSkill(skill, 1).." was refused; resyncing tracked style to "..inferredMode)
+	UpdateTimeoutFile()
+	return true
+end
+
 local function IsVanilCapriceForS(skill)
     return skill == HVAN_CAPRICE and MyHomunType >= 17 and UseVanilCaprice ~= 0
 end
@@ -3646,7 +3667,9 @@ function AI(myid)
 		local skillcastingtime = GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel)*CastTimeRatio
 		logappend("AAI_SKILLFAIL", "Skillfail Watcher active: "..FormatSkill(CastSkill,CastSkillLevel).."mode"..CastSkillMode.."delay "..LastAIDelay.." motion "..GetV(V_MOTION,MyID))
 		if GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel) == 0 then 
-			if LastAIDelay > 500 then
+			local needsExplicitConfirmation = MyHomunType == ELEANOR
+				and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER)
+			if LastAIDelay > 500 and not needsExplicitConfirmation then
 				--Skill cast successfully
 				TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 				logappend("AAI_SKILLFAIL","successful skill use detected - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
@@ -3765,7 +3788,10 @@ function AI(myid)
 			else
 				EleanorMode=GRAPPLING_MODE
 			end
+			EleanorModeResyncPending=0
 			UpdateTimeoutFile()
+		elseif MyHomunType == ELEANOR and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER) then
+			EleanorModeResyncPending=0
 		end
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
@@ -3786,6 +3812,7 @@ function AI(myid)
 			and sp >= GetSkillInfo(CastSkill, 3, CastSkillLevel) then
 			interruptedOffensiveCast = true
 		end
+		local modeResynced = CastSkillMode == 0 and CastSkillState == 0 and TryEleanorModeResync(CastSkill)
 		RecordOffensiveCastResult(CastSkill, CastSkillLevel, false, interruptedOffensiveCast)
 		-- Only a cast that never started can be a refused level; a broken cast was accepted.
 		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
@@ -3794,9 +3821,15 @@ function AI(myid)
 		-- hits before the AI tries again.
 		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]
 		if MyHomunType == ELEANOR and CastSkillState == 0 and refusedCost ~= nil and refusedCost > 0 then
-			-- Follow-ups can fail because their combo or target disappeared, not only
-			-- because of spheres. Do not erase the estimate for those failures.
-			if CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
+			if CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER then
+				ComboSCTimeout = 0
+				ComboSVTimeout = 0
+			end
+			if modeResynced then
+				MySpheres = math.min(10, MySpheres + refusedCost)
+			elseif CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
+				-- Follow-ups can fail because their combo or target disappeared, not only
+				-- because of spheres. Do not erase the estimate for those failures.
 				ComboSCTimeout = 0
 				ComboSVTimeout = 0
 			else
