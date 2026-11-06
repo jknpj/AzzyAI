@@ -1690,7 +1690,7 @@ namespace AzzyAIConfig
         int _EiraEraseCutterLevel = 4;
         [Category("AutoSkill Options"),
         Description(
-            "Use this level of Erase Cutter. Overridden by skill tactics" +
+            "Use this level of Eraser Cutter. Overridden by skill tactics" +
             "Try level 2, it's more practical than 4 in many cases"
             ),
         DefaultValue(4)]
@@ -1758,7 +1758,7 @@ namespace AzzyAIConfig
         bool _UseBayeriHailegeStar = true;
         [Category("AutoSkill Options"),
         Description(
-            "Enable this to use the offensive AoE skill Hailage Star" +
+            "Enable this to use the offensive AoE skill Heilage Stange" +
             "                                                              "
             ),
         DefaultValue(true)]
@@ -1771,7 +1771,7 @@ namespace AzzyAIConfig
         int _BayeriHailegeStarLevel = 5;
         [Category("AutoSkill Options"),
         Description(
-            "Use this level of Hailage Star. Overridden by skill tactics " +
+            "Use this level of Heilage Stange. Overridden by skill tactics " +
             "unless MobSkillFixedLevel is enabled"
             ),
         DefaultValue(5)]
@@ -1798,7 +1798,7 @@ namespace AzzyAIConfig
         bool _UseSeraParalyze = true;
         [Category("AutoSkill Options"),
         Description(
-            "Enable this to use the attack skill Needle of Paralyze." +
+            "Enable this to use the attack skill Needle of Paralysis." +
             "                                                              "
             ),
         DefaultValue(true)]
@@ -1811,7 +1811,7 @@ namespace AzzyAIConfig
         int _SeraParalyzeLevel = 5;
         [Category("AutoSkill Options"),
         Description(
-            "Use this level of Needle of Paralyze. Overridden by skill tactics" +
+            "Use this level of Needle of Paralysis. Overridden by skill tactics" +
             "                                                              "
             ),
         DefaultValue(5)]
@@ -2549,7 +2549,7 @@ namespace AzzyAIConfig
         [Category("Autobuff Options"),
         Description(
             "Set this to when you want your homunculus to use offensive buff" +
-            "skills: Flitting, Mental Charge and Bloodlust"
+            "skills: Flitting, Mental Charge and Blood Lust"
             ),
         DefaultValue(UseOffensiveBuffOptions.Never)]
         public UseOffensiveBuffOptions UseOffensiveBuff
@@ -2888,7 +2888,7 @@ public int DieterPyroclasticLevel
         UseEiraOveredBoostOptions _UseEiraOveredBoost = UseEiraOveredBoostOptions.Never;
         [Category("Autobuff Options"),
         Description(
-            "Use the buff skill Overed Boost in the following states" +
+            "Use the buff skill Over Boost in the following states" +
             "                                                              "
             ),
         DefaultValue(UseEiraOveredBoostOptions.Never)]
@@ -3030,7 +3030,7 @@ bool _UseSteinWandTele = false;
 		"time set by SteinWandTelePause before acting normally. The " +
 		"idea is that you tele around looking for mobs, and then land " + 
 		"and the bay casts stienwand, waits for the monsters to get near" +
-		"and then kills them with Hailage Star."
+		"and then kills them with Heilage Stange."
 		),
 	DefaultValue(false)]
 	public bool UseSteinWandTele
