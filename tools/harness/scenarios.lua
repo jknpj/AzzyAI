@@ -308,12 +308,32 @@ SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {
-			["experimental skill dance is opt-in and respects cast guards"] = function()
+			["post-skill dance defaults, overrides and cast guards"] = function()
+				for _, skill in ipairs({8019,8020,8024,8025,8031,8034,8041,8044,
+					8047,8050,8051,8054}) do
+					assert(IsSkillAnimationDanceEnabled(skill), "missing default dance for "..skill)
+				end
+				for _, skill in ipairs({8006,8010,8021,8023,8028,8029,8030,8032,8039,8042,
+					8048,8053,8056,8057}) do
+					assert(not IsSkillAnimationDanceEnabled(skill), "buff or combo enabled by default: "..skill)
+				end
+				local savedStahl = BayeriStahlHornDance
+				BayeriStahlHornDance = 0
+				local guiDisabled = not IsSkillAnimationDanceEnabled(8031)
+				SkillAnimationDance[8031] = 1
+				local extraEnabled = IsSkillAnimationDanceEnabled(8031)
+				SkillAnimationDance[8031] = 0
+				BayeriStahlHornDance = 1
+				local extraDisabled = not IsSkillAnimationDanceEnabled(8031)
+				SkillAnimationDance[8031] = nil
+				BayeriStahlHornDance = savedStahl
+				assert(guiDisabled and extraEnabled and extraDisabled, "dance GUI/Extra precedence failed")
 				local names = { "SkillAnimationDance", "IsHomun", "MyState", "MyEnemy",
 					"UseDanceAttack", "UseSkillOnly", "DanceMinSP", "CastSkill",
 					"AutoSkillCastTimeout", "GetV", "GetDistanceRect",
 					"IsInAttackSight", "PerformAttackDance", "MyHomunType",
-					"ComboSCTimeout", "ComboSVTimeout", "EleanorComboDance" }
+					"ComboSCTimeout", "ComboSVTimeout", "EleanorComboDance",
+					"MyAttackStanceX", "MyAttackStanceY", "GetPos" }
 				local saved = {}
 				for _, name in ipairs(names) do saved[name] = _G[name] end
 				local dances, motion = 0, MOTION_STAND
@@ -332,12 +352,15 @@ SCENARIOS = {
 				GetDistanceRect = function() return 1 end
 				IsInAttackSight = function() return true end
 				PerformAttackDance = function() dances = dances + 1; return true end
+				GetPos = function() return 100, 101 end
+				MyAttackStanceX, MyAttackStanceY = 0, 0
 				local ok, err = pcall(function()
 					QueueSkillAnimationDance(123, MyEnemy)
 					assert(not TrySkillAnimationDance(), "unlisted skill danced")
 					SkillAnimationDance[123] = 1
 					QueueSkillAnimationDance(123, MyEnemy)
 					assert(TrySkillAnimationDance() and dances == 1, "listed skill did not dance")
+					assert(MyAttackStanceX == 100 and MyAttackStanceY == 101, "dance used an unset stance")
 					assert(not TrySkillAnimationDance(), "confirmation danced twice")
 					MyHomunType = ELEANOR
 					for _, window in ipairs({ "ComboSCTimeout", "ComboSVTimeout" }) do
@@ -367,6 +390,29 @@ SCENARIOS = {
 					QueueSkillAnimationDance(0, 0)
 					assert(not TrySkillAnimationDance(), "canceled dance survived")
 					assert(dances == 2, "blocked dance issued actions")
+					MyState = CHASE_ST
+					MyAttackStanceX, MyAttackStanceY = 90, 90
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(TrySkillAnimationDance() and dances == 3, "chase confirmation did not dance")
+					assert(MyAttackStanceX == 100 and MyAttackStanceY == 101, "chase dance used a stale stance")
+					IsInAttackSight = function() return false end
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(not TrySkillAnimationDance(), "chase dance ignored melee range")
+					IsInAttackSight = function() return true end
+					QueueSkillAnimationDance(123, MyEnemy)
+					motion = MOTION_DEAD
+					assert(not TrySkillAnimationDance(), "dance attacked a dead target")
+					motion = MOTION_STAND
+					QueueSkillAnimationDance(123, MyEnemy)
+					MyState = FOLLOW_ST
+					assert(not TrySkillAnimationDance(), "dance overrode follow state")
+					QueueSkillAnimationDance(123, MyEnemy)
+					MyState = ATTACK_ST
+					assert(not TrySkillAnimationDance(), "follow confirmation queued a dance")
+					assert(dances == 3, "blocked chase dance issued actions")
+					SkillAnimationDance[123] = 0
+					QueueSkillAnimationDance(123, MyEnemy)
+					assert(not TrySkillAnimationDance(), "disabled skill danced")
 				end)
 				QueueSkillAnimationDance(0, 0)
 				for _, name in ipairs(names) do _G[name] = saved[name] end

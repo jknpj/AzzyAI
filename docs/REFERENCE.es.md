@@ -452,16 +452,34 @@ como esa cantidad. Dos monstruos de peso 0.4, uno de 0.5 y uno de 1.2 cuentan co
 
 ### Baile experimental después de habilidades
 
-`SkillAnimationDance` es una tabla Lua opcional en `H_Extra.lua`, indexada por el ID de
-habilidad: `SkillAnimationDance[MH_STAHL_HORN] = 1` es un ejemplo, **no una recomendación
-validada**. La tabla empieza vacía; ninguna habilidad nueva cambia su comportamiento por defecto.
+`SkillAnimationDance` es una tabla Lua por ID de habilidad, ajustable en `H_Extra.lua`.
+El baile viene activado para TOFR/BaF (Eleanor); Stahl Horn y Heilige Stange
+(Bayeri); Eraser Cutter, Xeno Slasher y Twister Cutter
+(Eira); Needle of Paralyze, Poison Mist y Needle Stinger (Sera);
+Lava Slide y Blast Forge (Dieter). No activa habilidades desactivadas ni incluye buffs.
+Usa `SkillAnimationDance[MH_STAHL_HORN] = 0` para desactivar una habilidad, o
+`UseDanceAttack = 0` para desactivar todo el baile. El usuario reportó buenos resultados
+visuales en el servidor privado; faltan medir DPS y tiempos en LATAM.
+Las habilidades fuera de la lista siguen siendo opcionales (`= 1`).
+Ambas GUIs ofrecen 16 opciones individuales `*Dance` en AutoSkill Options
+(por ejemplo `BayeriStahlHornDance` y `EleanorTheOneFighterRisesDance`). Las 12 habilidades
+anteriores usan 1; Absolute Zephyr, Glanzen Spies, Heilige Pferd y Toxin of Mandara
+son opcionales, por defecto 0, porque no se validaron individualmente.
+Needle Stinger tuvo un resultado visual positivo; Blast Forge no mostró diferencia visual
+en la prueba del usuario. Ninguna observación demuestra una mejora de DPS.
+Se guardan en la configuración global/por tipo. Una entrada explícita
+`SkillAnimationDance[skill]` en `H_Extra.lua` tiene prioridad; elimínala para volver
+a controlar con la GUI. `EleanorComboDance` sigue separado.
 
 El watcher existente debe confirmar el éxito de la habilidad ofensiva indicada. La IA
 puede entonces intentar un baile de ataque normal contra el mismo objetivo, dentro de los
 300 ms posteriores a la confirmación. Requiere `UseDanceAttack = 1`, ataques normales permitidos,
 `DanceMinSP` suficiente, alcance de ataque cuerpo a cuerpo y los límites habituales de movimiento.
 Los lanzamientos pendientes y su tiempo de espera bloquean el baile; los comandos del jugador
-cancelan el baile pendiente. Este ocupa esa actualización del estado de ataque en lugar de
+cancelan el baile pendiente. También acepta confirmaciones durante la persecución, pero
+solo baila en alcance de ataque normal, usando la posición actual. Con `AAI_DANCE` activado,
+`Post-skill dance skill <id>` registra comandos enviados, no un cancelamiento confirmado.
+Este ocupa esa actualización del estado de ataque en lugar de
 solicitar otra habilidad inmediatamente. No reduce recargas ni intervalos de habilidades y no
 altera el baile de los combos de Eleanor.
 Durante una ventana de continuación de Silvervein Rush o Midnight Frenzy de Eleanor, se
