@@ -194,7 +194,64 @@ y `<Type><Skill>Level`. La IA no usa una habilidad por encima del nivel aprendid
 | Dieter | `UseDieterLavaSlide`, `UseDieterVolcanicAsh`, `UseDieterAshAsAttack`, `UseDieterBlastForge` |
 | Eleanor | `UseEleanorSonicClaw`, `EleanorSilverveinLevel`, `EleanorMidnightLevel`, `UseEleanorTinderBreaker`, `UseEleanorCBC`, `UseEleanorEQC`, `UseEleanorBlazingAndFurious`, `UseEleanorTheOneFighterRises` |
 
-Silvervein Rush y Midnight Frenzy solo tienen nivel, no una opción de activación. Los consejos
+**Nombres de las habilidades de homúnculo.** Los nombres en español vienen del catálogo de
+habilidades de [Latam RO](https://latam.ro/skills), con el idioma ES seleccionado. Los nombres en
+portugués de Brasil vienen de Divine Pride (servidor LATAM, `pt-BR`).
+
+| Homúnculo | ID / Divine Pride | Español | Português (Brasil) |
+|---|---|---|---|
+| Lif | [8001](https://www.divine-pride.net/database/skill/8001) | Manos Sanadoras | Cura pelas Mãos |
+| Lif | [8002](https://www.divine-pride.net/database/skill/8002) | Escape Urgente | Bater em Retirada |
+| Lif | [8004](https://www.divine-pride.net/database/skill/8004) | Carga Mental | Esforço Mental |
+| Amistr | [8005](https://www.divine-pride.net/database/skill/8005) | Cambio de Lugar | Troca de Lugar |
+| Amistr | [8006](https://www.divine-pride.net/database/skill/8006) | Bastión de Amistr | Fortaleza |
+| Amistr | [8008](https://www.divine-pride.net/database/skill/8008) | Lujuria de Sangre | Desejo de Sangue |
+| Filir | [8009](https://www.divine-pride.net/database/skill/8009) | Luz de Luna | Pica-Pau |
+| Filir | [8010](https://www.divine-pride.net/database/skill/8010) | Revoloteo | Voo Frenético |
+| Filir | [8011](https://www.divine-pride.net/database/skill/8011) | Vuelo Acelerado | Voo Acelerado |
+| Filir | [8012](https://www.divine-pride.net/database/skill/8012) | S.B.R.44 | S.B.R.44 |
+| Vanilmirth | [8013](https://www.divine-pride.net/database/skill/8013) | Capricho | Capricho |
+| Vanilmirth | [8014](https://www.divine-pride.net/database/skill/8014) | Bendiciones Caóticas | Bênção Caótica |
+| Vanilmirth | [8016](https://www.divine-pride.net/database/skill/8016) | Autodestrucción | Bioexplosão |
+| Sera | [8018](https://www.divine-pride.net/database/skill/8018) | Invocar a Legión | Convocação |
+| Sera | [8019](https://www.divine-pride.net/database/skill/8019) | Aguja de Parálisis | Ponto de Paralisia |
+| Sera | [8020](https://www.divine-pride.net/database/skill/8020) | Neblina Venenosa | Névoa Venenosa |
+| Sera | [8021](https://www.divine-pride.net/database/skill/8021) | Analgésico | Analgésico |
+| Eira | [8022](https://www.divine-pride.net/database/skill/8022) | Luz de Regeneración | Luz da Vida |
+| Eira | [8023](https://www.divine-pride.net/database/skill/8023) | Sobreimpulso | Superestimular |
+| Eira | [8024](https://www.divine-pride.net/database/skill/8024) | Cúter Borrador | Choque Supersônico |
+| Eira | [8025](https://www.divine-pride.net/database/skill/8025) | Xenotajo | Onda Supersônica |
+| Eira | [8026](https://www.divine-pride.net/database/skill/8026) | Brisa Silenciosa | Brisa da Calmaria |
+| Eleanor | [8027](https://www.divine-pride.net/database/skill/8027) | Cambio de Estilo | Estilo de Luta |
+| Eleanor | [8028](https://www.divine-pride.net/database/skill/8028) | Garra Sónica | Garra Supersônica |
+| Eleanor | [8029](https://www.divine-pride.net/database/skill/8029) | Ráfaga Trepadora | Rastro Brilhante |
+| Eleanor | [8030](https://www.divine-pride.net/database/skill/8030) | Frenesí de Medianoche | Delírio Noturno |
+| Bayeri | [8031](https://www.divine-pride.net/database/skill/8031) | Cuerno de Acero | Impacto Preciso |
+| Bayeri | [8032](https://www.divine-pride.net/database/skill/8032) | Furia Iluminada | Fúria Iluminada |
+| Bayeri | [8033](https://www.divine-pride.net/database/skill/8033) | Báculo de Stein | Luz Salvadora |
+| Bayeri | [8034](https://www.divine-pride.net/database/skill/8034) | Cetro Sagrado | Illuminatus |
+| Bayeri | [8035](https://www.divine-pride.net/database/skill/8035) | Modo Angriffs | Raiva Iluminada |
+| Eleanor | [8036](https://www.divine-pride.net/database/skill/8036) | Rompepiernas | Quebra-Costelas |
+| Eleanor | [8037](https://www.divine-pride.net/database/skill/8037) | Combo de Pausa Continua | Dreno Traumático |
+| Eleanor | [8038](https://www.divine-pride.net/database/skill/8038) | Combo Eterno Rápido | Estado Traumático |
+| Dieter | [8039](https://www.divine-pride.net/database/skill/8039) | Flujo de Magma | Inundação de Magma |
+| Dieter | [8040](https://www.divine-pride.net/database/skill/8040) | Armadura Granítica | Armadura de Granito |
+| Dieter | [8041](https://www.divine-pride.net/database/skill/8041) | Deslizamiento de Lava | Derretimento com Lava |
+| Dieter | [8042](https://www.divine-pride.net/database/skill/8042) | Piroclástico | Piroclástico |
+| Dieter | [8043](https://www.divine-pride.net/database/skill/8043) | Ceniza Volcánica | Cinzas Vulcânicas |
+| Dieter | [8044](https://www.divine-pride.net/database/skill/8044) | Gran Forja | Grande Fornalha |
+| Dieter | [8045](https://www.divine-pride.net/database/skill/8045) | Temple | Têmpera |
+| Eira | [8047](https://www.divine-pride.net/database/skill/8047) | Tajo Supersónico | Corte Supersônico |
+| Eira | [8048](https://www.divine-pride.net/database/skill/8048) | Céfiro Absoluto | Zéfiro Absoluto |
+| Eleanor | [8050](https://www.divine-pride.net/database/skill/8050) | Ardiente y Furioso | Veloz e Furiosa |
+| Eleanor | [8051](https://www.divine-pride.net/database/skill/8051) | Luchadora Ascendente | Lutadora Ascendente |
+| Sera | [8053](https://www.divine-pride.net/database/skill/8053) | Toxina de Mandara | Toxina de Mandara |
+| Sera | [8054](https://www.divine-pride.net/database/skill/8054) | Aguijonazo | Ferroada |
+| Bayeri | [8056](https://www.divine-pride.net/database/skill/8056) | Punta Reluciente | Ponta Reluzente |
+| Bayeri | [8057](https://www.divine-pride.net/database/skill/8057) | Equitatio | Equitatio |
+| Bayeri | [8058](https://www.divine-pride.net/database/skill/8058) | Cuero Dorado | Couro Dourado |
+
+Ráfaga Trepadora y Frenesí de Medianoche solo tienen nivel, no una opción de activación. Los consejos
 para elegir entre ellas están en la [sección 6 del manual](MANUAL.es.md#6-consejos-por-homúnculo-s).
 `LavaSlideMode` y `PoisonMistMode` (predeterminado 0) eligen cómo usar esas dos habilidades:
 0 las usa como ataques; otro valor las mantiene a tu alrededor como buff e indica cuándo

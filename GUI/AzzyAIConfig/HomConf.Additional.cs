@@ -149,9 +149,9 @@ namespace AzzyAIConfig
         [Category("AutoSkill Options"), DefaultValue(10), Description("Absolute Zephyr level, 1-10.")]
         public int EiraAbsoluteZephyrLevel { get; set; }
 
-        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eleanor's Blazing And Furious attack.")]
+        [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eleanor's Blazing and Furious attack.")]
         public bool UseEleanorBlazingAndFurious { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(10), Description("Blazing And Furious level, 1-10.")]
+        [Category("AutoSkill Options"), DefaultValue(10), Description("Blazing and Furious level, 1-10.")]
         public int EleanorBlazingAndFuriousLevel { get; set; }
         [Category("AutoSkill Options"), DefaultValue(false), Description("Enable Eleanor's The One Fighter Rises attack.")]
         public bool UseEleanorTheOneFighterRises { get; set; }
@@ -182,12 +182,12 @@ namespace AzzyAIConfig
         public int BayeriGoldeneToneLevel { get; set; }
 
         [Category("Autobuff Options"), DefaultValue(UseDefensiveBuffOptions.Never),
-        Description("Keep Eira's Light of Regenerate active in the selected AI states. If the owner dies while it is active, the Eira sacrifices itself to resurrect them. The skill needs Loyal intimacy and lowers it on every cast.")]
+        Description("Keep Eira's Light of Regeneration active in the selected AI states. If the owner dies while it is active, Eira sacrifices itself to resurrect them. The skill needs Loyal intimacy and lowers it on every cast.")]
         public UseDefensiveBuffOptions UseEiraLightOfRegene { get; set; }
-        [Category("Autobuff Options"), DefaultValue(5), Description("Light of Regenerate level, 1-5. Higher levels last longer and restore more HP.")]
+        [Category("Autobuff Options"), DefaultValue(5), Description("Light of Regeneration level, 1-5. Higher levels last longer and restore more HP.")]
         public int EiraLightOfRegeneLevel { get; set; }
         [Category("Autobuff Options"), DefaultValue(100),
-        Description("Only cast Light of Regenerate while the owner's HP percent is at or below this value (0-100). 100 keeps it up all the time.")]
+        Description("Only cast Light of Regeneration while the owner's HP percent is at or below this value (0-100). 100 keeps it up all the time.")]
         public int EiraLightOfRegeneOwnerHP { get; set; }
 
         [Category("AutoSkill Options"), DefaultValue(true), Description("Enable Eleanor's Tinder Breaker in grappling mode.")]
