@@ -1083,6 +1083,49 @@ SCENARIOS = {
 				return eqc == MH_EQC and cbc == MH_CBC and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
 			end,
 		} },
+	eleanor_manual_style_recovery = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		tactics = { [0] = { [7] = 3 } },
+		maxRefused = 1,
+		set = { AutoComboMode = 2, AutoComboSpheres = 1, AutoMobCount = 1,
+			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local changedStyle = false
+			AI = function(id)
+				if DoneInit ~= 0 and not changedStyle and CastSkill == 0 then
+					changedStyle = true
+					HarnessServer.style = "grappling"
+					HarnessServer.spheres = 10
+					MySpheres = 10
+				end
+				return realAI(id)
+			end
+		end,
+		expect = { "Tinder Breaker", "Continuous Brandishing Combo" },
+		forbid = { "Eternal Quickening Combo" },
+		checks = {
+			["a refused fighting starter resyncs a direct manual style change"] = function()
+				local refusedSonic = false
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.skill == MH_SONIC_CRAW and cast.refused then refusedSonic = true end
+				end
+				return refusedSonic and HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE
+			end,
+			["a second refused starter cannot toggle the inferred style back"] = function()
+				local previousMode, previousPending = EleanorMode, EleanorModeResyncPending
+				EleanorMode = FIGHTING_MODE
+				EleanorModeResyncPending = 0
+				local first = TryEleanorModeResync(MH_SONIC_CRAW)
+				local second = TryEleanorModeResync(MH_TINDER_BREAKER)
+				local passed = first and not second and EleanorMode == GRAPPLING_MODE
+					and EleanorModeResyncPending == 1
+				EleanorMode, EleanorModeResyncPending = previousMode, previousPending
+				return passed
+			end,
+			["an accepted grapple starter clears the resync lock"] = function()
+				return EleanorModeResyncPending == 0
+			end,
+		} },
 	eleanor_aoe_single = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
 			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },
@@ -1210,6 +1253,35 @@ SCENARIOS = {
 				assert(HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE,
 					"manual style change was not tracked")
 				return true
+			end,
+			["TOFR and Blazing remain available in grappling style"] = function()
+				local previous = {
+					mode = EleanorMode,
+					spheres = MySpheres,
+					blazing = UseEleanorBlazingAndFurious,
+					fighter = UseEleanorTheOneFighterRises,
+					isSkillReady = IsSkillReady,
+					isCastPaused = IsOffensiveCastPaused,
+					shouldUseMobSkill = ShouldUseMobSkill,
+				}
+				EleanorMode = GRAPPLING_MODE
+				MySpheres = 10
+				UseEleanorBlazingAndFurious = 1
+				UseEleanorTheOneFighterRises = 1
+				IsSkillReady = function() return true end
+				IsOffensiveCastPaused = function() return false end
+				ShouldUseMobSkill = function() return true end
+				local tofr = GetNewMobSkill(MyID, MyEnemy, CLASS_GRAPPLE_2)
+				UseEleanorTheOneFighterRises = 0
+				local blazing = GetNewMobSkill(MyID, MyEnemy, CLASS_GRAPPLE_2)
+				EleanorMode = previous.mode
+				MySpheres = previous.spheres
+				UseEleanorBlazingAndFurious = previous.blazing
+				UseEleanorTheOneFighterRises = previous.fighter
+				IsSkillReady = previous.isSkillReady
+				IsOffensiveCastPaused = previous.isCastPaused
+				ShouldUseMobSkill = previous.shouldUseMobSkill
+				return tofr == MH_THE_ONE_FIGHTER_RISES and blazing == MH_BLAZING_AND_FURIOUS
 			end,
 		} },
 	eleanor_hidden_motion = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
