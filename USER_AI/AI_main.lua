@@ -395,7 +395,7 @@ end
 
 
 function	ProcessCommand (msg)
-	QueueSkillAnimationDance(0, 0)
+
 	if	(msg[1] == MOVE_CMD) then
 		TraceAI ("MOVE_CMD")
 		OnMOVE_CMD (msg[2],msg[3])
@@ -710,9 +710,6 @@ function OnCHASE_ST()
             return
         end
     end
-    if TrySkillAnimationDance() then
-        return
-    end
     if GetV(V_MOTION, MyID) ~= MOTION_MOVE then
         if ChaseGiveUpCount > ChaseGiveUp then
             Unreachable[MyEnemy] = 1
@@ -995,9 +992,6 @@ function OnATTACK_ST()
         TraceAI("ATTACK_ST -> IDLE_ST  Enemy dead")
         return OnIDLE_ST()
     end
-    if TrySkillAnimationDance() then
-        return
-    end
     local mytarg = GetV(V_TARGET, MyID)
     if mytarg ~= MyEnemy and MyStates[1] == ATTACK_ST then
         AttackGiveUpCount = AttackGiveUpCount + 1
@@ -1255,14 +1249,22 @@ function OnATTACK_ST()
         end
     end
     local comboPending = false
-    if EleanorComboDance ~= 1 and HasEleanorComboWindow() then
+    if EleanorComboDance ~= 1 and MyHomunType == ELEANOR and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
         -- only hold the dance back while the follow-up can really be cast; otherwise the window just wastes attacks
         local nextCombo = ComboSCTimeout > GetTick() and MH_SILVERVEIN_RUSH or MH_MIDNIGHT_FRENZY
         local lv = GetCastableSkillLevel(nextCombo, 5)
         comboPending = lv > 0 and IsSkillReady(nextCombo, true) and GetV(V_SP,MyID) >= GetSkillInfo(nextCombo,3,lv)
     end
     if not comboPending and ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
-        PerformAttackDance()
+        nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
+        if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
+            logappend("AAI_DANCE", "Dance attack canceled, too close to move bounds "..GetDistanceAPR(OwnerID, nx, ny).." "..GetMoveBounds())
+        else
+            logappend("AAI_DANCE", "Dancing between "..MyAttackStanceX..","..MyAttackStanceY.." and "..nx..","..ny)
+            Move(MyID, nx, ny)
+            Attack(MyID, MyEnemy)
+            Move(MyID, MyAttackStanceX, MyAttackStanceY)
+        end
     end
     MySkill = 0
     MySkillLevel = 0
@@ -3754,7 +3756,6 @@ function AI(myid)
 	if clearcastskill==1 then
 		if CastSkillMode == 0 then
 			RecordOffensiveCastResult(CastSkill, CastSkillLevel, true, false)
-			QueueSkillAnimationDance(CastSkill, CastSkillEnemy)
 		end
 		-- Style Change went through (any watcher branch: it has no cast time, so the instant
 		-- branch is the usual one): the server flipped Eleanor's style

@@ -29,10 +29,6 @@ namespace AzzyAIConfig
     partial class HomConf
     {
         private static readonly string[] AdditionalOptionNames = {
-            "SeraNeedleOfParalyzeDance", "SeraPoisonMistDance", "SeraToxinOfMandaraDance", "SeraNeedleStingerDance",
-            "EiraEraserCutterDance", "EiraXenoSlasherDance", "EiraTwisterCutterDance", "EiraAbsoluteZephyrDance",
-            "BayeriStahlHornDance", "BayeriHeiligeStangeDance", "BayeriGlanzenSpiesDance", "BayeriHeiligePferdDance",
-            "DieterLavaSlideDance", "DieterBlastForgeDance", "EleanorBlazingAndFuriousDance", "EleanorTheOneFighterRisesDance",
             "ServerType", "AutoDetectServerType", "CastTimeRatio", "SphereTrackInterval", "EleanorComboGap", "EleanorComboDance", "CommandedFightStay", "UseProvokeOwner",
             "CastInterruptLimit", "CastInterruptPause", "CastInterruptUnconfirmed", "TrustSkillProbe",
             "UseEiraTwisterCutter", "EiraTwisterCutterLevel",
@@ -104,55 +100,6 @@ namespace AzzyAIConfig
         [Category("AutoSkill Options"), DefaultValue(true),
         Description("Eleanor: keep the dance attack running between combo skills, which cancels part of the attack animation and shortens chains by about 10%. Turn off (and raise EleanorComboGap to about 800) if skills get refused. Has no effect when UseDanceAttack is off. An H_Extra.lua override takes precedence.")]
         public bool EleanorComboDance { get; set; }
-
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Needle of Paralyze. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool SeraNeedleOfParalyzeDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Poison Mist. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool SeraPoisonMistDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(false),
-        Description("Post-skill dance after Toxin of Mandara. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool SeraToxinOfMandaraDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Needle Stinger. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool SeraNeedleStingerDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Eraser Cutter. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EiraEraserCutterDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Xeno Slasher. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EiraXenoSlasherDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Twister Cutter. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EiraTwisterCutterDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(false),
-        Description("Post-skill dance after Absolute Zephyr. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EiraAbsoluteZephyrDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Stahl Horn. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool BayeriStahlHornDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Heilige Stange. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool BayeriHeiligeStangeDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(false),
-        Description("Post-skill dance after Glanzen Spies. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool BayeriGlanzenSpiesDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(false),
-        Description("Post-skill dance after Heilige Pferd. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool BayeriHeiligePferdDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Lava Slide. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool DieterLavaSlideDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Blast Forge. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool DieterBlastForgeDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after Blazing and Furious, separate from EleanorComboDance. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EleanorBlazingAndFuriousDance { get; set; }
-        [Category("AutoSkill Options"), DefaultValue(true),
-        Description("Post-skill dance after The One Fighter Rises, separate from EleanorComboDance. Requires UseDanceAttack and normal-attack range; does not enable the skill or reduce cast time/cooldown. SkillAnimationDance in H_Extra.lua overrides this.")]
-        public bool EleanorTheOneFighterRisesDance { get; set; }
 
         [Category("Basic Options"), DefaultValue(true),
         Description("A monster you order the homunculus to attack is fought until it dies or you give another order, even if you walk away. Turn off to let it give up and return when the target leaves the move bounds or AttackTimeLimit passes. An H_Extra.lua override takes precedence.")]

@@ -3,8 +3,6 @@
 -- AggressiveRelogTracking = 1               -- see documentation
 -- AggressiveRelogPath = "./AI/USER_AI/data" -- do not uncomment without reading applicable documentation
 -- AggressiveAutofriend = 1 				-- see documentation
--- Post-skill dance defaults and guards: see REFERENCE section 5.
--- SkillAnimationDance[MH_STAHL_HORN] = 0 -- disable for this skill
 
 MyRoute={{0,0}}
 

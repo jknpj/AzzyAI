@@ -49,24 +49,15 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
-- Added experimental, per-skill post-cast dancing through the `SkillAnimationDance`
-  table, overridable in `H_Extra.lua`. It now defaults on for the 12 offensive
-  Homunculus S skills listed in REFERENCE section 5; buffs remain excluded.
-  Both GUIs provide individual `*Dance` switches, saved globally or per homunculus
-  type. Explicit `SkillAnimationDance[skill]` overrides take precedence.
-  Needle Stinger now defaults on after a positive visual test. Blast Forge showed
-  no visible difference in the user's test; no DPS gain is claimed.
-  Four additional controls (Absolute Zephyr, Glanzen Spies, Heilige Pferd, Toxin of
-  Mandara) remain off by default, pending individual validation.
-  Private-server visual testing was positive; LATAM tuning and DPS gains remain
-  unverified. Set an entry to 0 to disable it. It shares the normal-attack dance
-  routine, requires offensive-cast success confirmation and preserves cast guards,
-  movement bounds and cooldowns. Player commands cancel queued dances. Eleanor's
-  existing combo-dance option is unchanged. No animation-cancellation DPS gain has
-  been validated; the harness regression checks defaults, overrides and safety guards.
-  Active Eleanor fighting-combo windows discard the experimental dance request
-  so follow-up selection retains priority and `EleanorComboDance` remains the
-  sole control for dancing between those combo steps.
+- Removed experimental post-skill dancing and its 16 GUI controls. Local rAthena
+  A/B tests showed longer median cast intervals with it enabled: Stahl Horn
+  719 -> 859 ms and Eraser Cutter 1438 -> 1594 ms. Angriffs Modus also delayed
+  the next skill by one AI update. These are cast-timing results, not total DPS
+  measurements or proof about every skill/server. Normal attack dancing and
+  `EleanorComboDance` between combo steps are unchanged.
+  Remove obsolete `SkillAnimationDance[skill]` assignments from custom
+  `H_Extra.lua` files before upgrading; the table no longer exists. Old flat
+  per-skill `*Dance` settings have no effect.
 
 - Attack-range checks and attack-state position diagnostics now reuse the existing
   per-AI-call position cache instead of querying the same positions repeatedly.
