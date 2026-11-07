@@ -369,7 +369,10 @@ confirmado actualiza el estilo. Style Change también exige confirmación; una
 pausa en las llamadas de la AI no basta. El baile de combos no cambia.
 Al iniciar la AI y al detectar una resurrección, Sonic Claw habilitada prefiere
 Fighting, incluso con ambas habilidades iniciales habilitadas; solo Tinder
-Breaker prefiere Grappling. `EleanorDoNotSwitchMode=1` impide ese cambio
+Breaker prefiere Grappling solo con combos automáticos habilitados
+(`AutoComboMode` distinto de cero o `Berserk_ComboAlways=1`). Con combos
+deshabilitados, habilidades de área habilitadas prefieren Fighting para generar
+esferas con ataques normales. `EleanorDoNotSwitchMode=1` impide ese cambio
 automático. La muerte detectada limpia casts, objetivos, combos y esferas
 estimadas; la resurrección reconstruye las esferas. El marcador de muerte
 sobrevive a la recarga de la AI. Si el cliente nunca informa la muerte, una

@@ -1250,6 +1250,25 @@ SCENARIOS = {
 				UseEleanorSonicClaw, UseEleanorTinderBreaker = sonic, tinder
 				return both and fighting and grappling and disabled
 			end,
+			["disabled combos do not make AoE-only settings prefer grappling"] = function()
+				local names = { "UseEleanorSonicClaw", "UseEleanorTinderBreaker",
+					"AutoComboMode", "Berserk_ComboAlways", "UseEleanorBlazingAndFurious",
+					"UseEleanorTheOneFighterRises" }
+				local saved = {}
+				for _, name in ipairs(names) do saved[name] = _G[name] end
+				UseEleanorSonicClaw, UseEleanorTinderBreaker = 0, 1
+				AutoComboMode, Berserk_ComboAlways = 0, 0
+				UseEleanorBlazingAndFurious, UseEleanorTheOneFighterRises = 1, 0
+				local blazing = GetEleanorPreferredStyle() == FIGHTING_MODE
+				UseEleanorBlazingAndFurious, UseEleanorTheOneFighterRises = 0, 1
+				local fighter = GetEleanorPreferredStyle() == FIGHTING_MODE
+				UseEleanorTheOneFighterRises = 0
+				local disabled = GetEleanorPreferredStyle() == nil
+				Berserk_ComboAlways = 1
+				local berserk = GetEleanorPreferredStyle() == GRAPPLING_MODE
+				for _, name in ipairs(names) do _G[name] = saved[name] end
+				return blazing and fighter and disabled and berserk
+			end,
 		} },
 	eleanor_grapple_only_startup = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		private = true, passive = true,

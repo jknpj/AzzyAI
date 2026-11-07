@@ -308,7 +308,10 @@ Style Change também exige confirmação; uma pausa nas chamadas da AI não bast
 A dança dos combos não muda.
 Na inicialização e na ressurreição detectada, Sonic Claw habilitada prefere
 Fighting, inclusive com ambas as habilidades iniciais habilitadas; apenas
-Tinder Breaker prefere Grappling. `EleanorDoNotSwitchMode=1` impede essa troca
+Tinder Breaker prefere Grappling apenas com combos automáticos habilitados
+(`AutoComboMode` diferente de zero ou `Berserk_ComboAlways=1`). Com combos
+desabilitados, habilidades de área habilitadas preferem Fighting para gerar
+esferas com ataques normais. `EleanorDoNotSwitchMode=1` impede essa troca
 automática. A morte detectada limpa casts, alvos, combos e esferas estimadas;
 a ressurreição reconstrói as esferas. O marcador de morte sobrevive à recarga
 da AI. Se o cliente nunca informar a morte, uma pausa sozinha não permite
