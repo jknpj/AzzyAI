@@ -14,7 +14,12 @@ local eleanorPreferredStylePending = false
 
 function GetEleanorPreferredStyle()
 	if UseEleanorSonicClaw == 1 then return FIGHTING_MODE end
-	if UseEleanorTinderBreaker == 1 then return GRAPPLING_MODE end
+	if UseEleanorTinderBreaker == 1 and (AutoComboMode ~= 0 or Berserk_ComboAlways == 1) then
+		return GRAPPLING_MODE
+	end
+	if UseEleanorBlazingAndFurious == 1 or UseEleanorTheOneFighterRises == 1 then
+		return FIGHTING_MODE
+	end
 	return nil
 end
 

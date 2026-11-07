@@ -56,7 +56,9 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
   starters no longer use an AI-call pause alone as proof of an unseen cast.
   Normal attack dancing and Eleanor combo dancing are unchanged.
   Initialization and detected resurrection prefer Fighting with Sonic Claw
-  enabled (including both styles), or Grappling with only Tinder Breaker.
+  enabled (including both styles), or Grappling with only Tinder Breaker and
+  automatic combos enabled. AoE-only configurations with combos disabled
+  prefer Fighting, so normal attacks can build spheres for Blazing and Furious.
   The no-switch option remains authoritative. Detected death discards pending
   casts, targets, combo windows and sphere estimates, persisting a death marker
   across reloads. A pause alone is not treated as death/resurrection.

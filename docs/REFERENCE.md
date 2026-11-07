@@ -300,7 +300,10 @@ Only confirmed use changes the tracked style. Style Change also requires
 confirmation; an AI-call pause alone is not sufficient. Combo dancing is unchanged.
 On AI initialization and detected resurrection, enabled Sonic Claw selects
 Fighting as the preferred style (including when both starters are enabled);
-Tinder Breaker alone selects Grappling. `EleanorDoNotSwitchMode=1` prevents
+Tinder Breaker alone selects Grappling only when automatic combos are enabled
+(`AutoComboMode` nonzero or `Berserk_ComboAlways=1`). With combos disabled,
+enabled AoE skills prefer Fighting to build spheres through normal attacks.
+`EleanorDoNotSwitchMode=1` prevents
 automatic preference changes. Detected death clears pending casts, targets,
 combo windows and estimated spheres; resurrection rebuilds those spheres.
 The death marker survives AI reloads. If the client never reports the dead
