@@ -11,8 +11,19 @@ ApplyServerType()
 
 local nextEleanorSphereAttack = 0
 
+-- A refused style starter means the style was changed outside the AI (by hand). Right after a
+-- resync, a refusal of the other starter more likely means missing spheres, so another flip waits
+-- this long (the player may also have switched back).
+ELEANOR_RESYNC_RETRY_MS = 5000
+-- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
+-- for this long, go back to fighting style to build them by attacking
+ELEANOR_GRAPPLE_NO_HIT_MS = 5000
+
 function TryEleanorModeResync(skill)
-	if MyHomunType ~= ELEANOR or EleanorModeResyncPending == 1 then
+	if MyHomunType ~= ELEANOR then
+		return false
+	end
+	if EleanorModeResyncPending == 1 and GetTick() < EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS then
 		return false
 	end
 	local inferredMode
@@ -26,10 +37,29 @@ function TryEleanorModeResync(skill)
 	end
 	EleanorMode = inferredMode
 	EleanorModeResyncPending = 1
+	EleanorModeResyncTick = GetTick()
+	EleanorModeChangedTick = GetTick()
 	TraceAI("Eleanor style starter was refused; resyncing tracked style to "..inferredMode)
 	logappend("AAI_SKILLFAIL", "Eleanor style starter "..FormatSkill(skill, 1).." was refused; resyncing tracked style to "..inferredMode)
 	UpdateTimeoutFile()
 	return true
+end
+
+-- True when Eleanor sits in grappling style unable to start Tinder Breaker and nothing hits her
+-- (the owner tanks), so she would never get the spheres back
+function EleanorShouldLeaveGrappling(availsp)
+	if MyHomunType ~= ELEANOR or EleanorMode ~= GRAPPLING_MODE or EleanorDoNotSwitchMode == 1
+		or UseEleanorSonicClaw ~= 1 or CastSkill ~= 0 then
+		return false
+	end
+	local now = GetTick()
+	if MySpheres >= math.max(1, AutoComboSpheres or 1) or ComboSCTimeout > now or ComboSVTimeout > now then
+		return false
+	end
+	if now < math.max(EleanorLastHitTick, EleanorModeChangedTick) + ELEANOR_GRAPPLE_NO_HIT_MS then
+		return false
+	end
+	return availsp - ReserveSP >= GetSkillInfo(MH_STYLE_CHANGE, 3, 1)
 end
 
 local function IsVanilCapriceForS(skill)
@@ -835,7 +865,7 @@ function OnCHASE_ST()
                             mobskill_level = v[3]
                         end
                         mobskill_level = math.min(v[3], mobskill_level)
-                        if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
+                        if PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                             skilltouse = v
                         end
                     elseif (skilltype == DEBUFF_ATK and ChaseDebuffUsed == 0) then
@@ -868,7 +898,7 @@ function OnCHASE_ST()
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
-                    elseif (skilltype == CLASS_NEW_S and UseHomunSSkillChase == 1 and SkillTypeOutranks(skilltype, skilltouse[1]) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
+                    elseif (skilltype == CLASS_NEW_S and UseHomunSSkillChase == 1 and PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
@@ -1135,7 +1165,7 @@ function OnATTACK_ST()
                                 and availsp < GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 eleanorSaveSP = true
                             end
-                            if SkillTypeOutranks(skilltype, skilltouse[1]) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
+                            if PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
                             end
                         elseif (skilltype == DEBUFF_ATK and not (v[2] == MH_VOLCANIC_ASH and skilltouse[2] == MH_LAVA_SLIDE) and AttackDebuffUsed < AttackDebuffLimit and (IsFriendOrSelf(GetV(V_TARGET, MyEnemy)) == 1 or AttackDebuffWhenAttacked ~= 1)) then
@@ -1170,7 +1200,7 @@ function OnATTACK_ST()
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
-                        elseif (skilltype == CLASS_NEW_S and UseHomunSSkillAttack == 1 and SkillTypeOutranks(skilltype, skilltouse[1]) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
+                        elseif (skilltype == CLASS_NEW_S and UseHomunSSkillAttack == 1 and PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_NEW_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_S or tact_skillclass == CLASS_MIN_S)) then
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
@@ -1199,6 +1229,11 @@ function OnATTACK_ST()
             end
             -- ### Eleanor Grapple Tactic Fallback - END ###
             -- #################################################################
+            if skilltouse[2] == 0 and tact_skill ~= SKILL_NEVER and EleanorShouldLeaveGrappling(availsp) then
+                TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style")
+                logappend("AAI_SKILLFAIL", "Eleanor: no spheres in grappling style and no hit taken; Style Change to fighting")
+                DoSkill(MH_STYLE_CHANGE, 1, MyID, 8)
+            end
         end
         -- Now we finalize the selection
         if skilltouse[1] ~= -1 then
@@ -2711,7 +2746,22 @@ function UpdateTimeoutFile()
 		OutFile=io.open(ConfigPath.."data/M_"..OwnerID.."Timeouts.lua","w")
 	end
 	if OutFile~=nil then
-		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..TimeoutConv(SOffensiveTimeout).."\nSDefensiveTimeout="..TimeoutConv(SDefensiveTimeout).."\nSOwnerBuffTimeout="..TimeoutConv(SOwnerBuffTimeout).."\nSOwner2ndBuffTimeout="..TimeoutConv(SOwner2ndBuffTimeout).."\nGuardTimeout="..TimeoutConv(GuardTimeout).."\nQuickenTimeout="..TimeoutConv(QuickenTimeout).."\nOffensiveOwnerTimeout="..TimeoutConv(OffensiveOwnerTimeout).."\nDefensiveOwnerTimeout="..TimeoutConv(DefensiveOwnerTimeout).."\nOtherOwnerTimeout="..TimeoutConv(OtherOwnerTimeout).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
+		-- A buff whose cast the watcher hasn't confirmed yet is saved as not cast: if the AI
+		-- reloads before the result, it retries instead of waiting out the whole duration.
+		-- The watcher saves again once the cast succeeds.
+		local pending = 0
+		if CastSkill ~= nil and CastSkill ~= 0 then
+			pending = CastSkillMode or 0
+		end
+		local function conv(value, ...)
+			for _, mode in ipairs({...}) do
+				if pending == mode then
+					return 0
+				end
+			end
+			return TimeoutConv(value)
+		end
+		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..conv(SOffensiveTimeout,4).."\nSDefensiveTimeout="..conv(SDefensiveTimeout,5).."\nSOwnerBuffTimeout="..conv(SOwnerBuffTimeout,6).."\nSOwner2ndBuffTimeout="..conv(SOwner2ndBuffTimeout,6).."\nGuardTimeout="..conv(GuardTimeout,1).."\nQuickenTimeout="..conv(QuickenTimeout,2).."\nOffensiveOwnerTimeout="..conv(OffensiveOwnerTimeout,11).."\nDefensiveOwnerTimeout="..conv(DefensiveOwnerTimeout,12).."\nOtherOwnerTimeout="..conv(OtherOwnerTimeout,13).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
 		local tick=GetTick()
 		for skill,cooldown in pairs(AutoSkillCooldown) do
 			if cooldown > tick then
@@ -2770,8 +2820,8 @@ function OnPROVOKE_ST()
 		elseif IsPlayer(MyPMode) then -- to detect painkiller-friends, in which case PMode is the id of the friend
 			PKFriendsTimeout[MyPMode]=GetTick()+GetSkillInfo(MyPSkill,8,MyPSkillLevel)	
 		end
-		UpdateTimeoutFile()
 		DoSkill(MyPSkill,MyPSkillLevel,MyPEnemy,MyPMode)
+		UpdateTimeoutFile()
 		MyState=MyPState
 		TraceAI("PROVOKE_ST -> IDLE_ST - Buff/AoE okay"..MyState)
 		MyDestX,MyDestY,MyPEnemy,MyPSkill,MyPState,MyPSkillLevel,MyPMode=0,0,0,0,0,0,0
@@ -3424,6 +3474,9 @@ function AI(myid)
 	-- Grappling style gains spheres from damage taken. Fighting style uses throttled
 	-- attack attempts in OnATTACK_ST because some clients hide our attack animation.
 	if MyHomunType == ELEANOR then
+		if MyMotions[1] == MOTION_DAMAGE or (MyEnemy ~= 0 and GetV(V_TARGET, MyEnemy) == MyID) then
+			EleanorLastHitTick = GetTick()
+		end
 		local gain = false
 		if EleanorMode == GRAPPLING_MODE then
 			gain = MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE
@@ -3666,6 +3719,16 @@ function AI(myid)
 		local castskilloldlvl = CastSkillLevel -- remember these for the SP watcher down below. 
 		local skillcastingtime = GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel)*CastTimeRatio
 		logappend("AAI_SKILLFAIL", "Skillfail Watcher active: "..FormatSkill(CastSkill,CastSkillLevel).."mode"..CastSkillMode.."delay "..LastAIDelay.." motion "..GetV(V_MOTION,MyID))
+		-- the client doesn't call AI() while casting, so the first call after a pause is when the cast
+		-- (and its after-cast delay) ended; the server's cooldown starts there, which can be later
+		-- than DoSkill's CastTimeRatio estimate
+		if LastAIDelay > 220 and AutoSkillCooldown[CastSkill] ~= nil and AutoSkillCooldown[CastSkill] > 1 then
+			local reuse = GetSkillInfo(CastSkill,9,CastSkillLevel)
+			if reuse > 0 then
+				AutoSkillCooldown[CastSkill] = math.max(AutoSkillCooldown[CastSkill],
+					GetTick() + reuse - GetSkillInfo(CastSkill,6,CastSkillLevel))
+			end
+		end
 		if GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel) == 0 then 
 			local needsExplicitConfirmation = MyHomunType == ELEANOR
 				and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER)
@@ -3789,6 +3852,7 @@ function AI(myid)
 				EleanorMode=GRAPPLING_MODE
 			end
 			EleanorModeResyncPending=0
+			EleanorModeChangedTick=GetTick()
 			UpdateTimeoutFile()
 		elseif MyHomunType == ELEANOR and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER) then
 			EleanorModeResyncPending=0
@@ -3799,11 +3863,15 @@ function AI(myid)
 		if (LavaSlideMode==4 and CastSkill==MH_LAVA_SLIDE) then
 			SightTimeout=GetTick()+500
 		end
+		local confirmedBuff = CastSkillMode ~= 0
 		CastSkill=0
 		CastSkillLevel=0
 		CastSkillMode=0
 		CastSkillTime=0
-		CastSkillState=0	
+		CastSkillState=0
+		if confirmedBuff then
+			UpdateTimeoutFile() -- the buff's timeout was saved as 0 while unconfirmed
+		end
 	elseif clearcastskill==2 then
 		if CastInterruptUnconfirmed == 1 and CastSkillMode == 0 and CastSkillEnemy
 			and CastSkillEnemy ~= 0 and not IsOutOfSight(MyID, CastSkillEnemy)

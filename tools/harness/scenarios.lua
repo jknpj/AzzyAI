@@ -538,8 +538,9 @@ SCENARIOS = {
 			end,
 		} },
 	-- AoE must not be wasted on a single target (AutoMobCount = 2)
+	-- low SP compares by damage per SP, where Glanzen Spies beats Stahl Horn, so it may appear late
 	bayeri_single = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
-		expect = { "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand", "Glanzen Spies" } },
+		expect = { "Stahl Horn" }, forbid = { "Heilige Stange", "Stein Wand" } },
 	-- Glanzen Spies ignores DEF: it only replaces Stahl Horn against a high-DEF target
 	bayeri_spies_high_def = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseBayeriGlanzenSpies = 1 },
 		afterLoad = function()
@@ -561,7 +562,8 @@ SCENARIOS = {
 		end,
 		expect = { "Heilige Pferd" } },
 	-- both AoEs on and fully learned: the cheap ranged Stange must not starve the caster-centered Pferd
-	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
+	-- rAthena timing (no 1 s after-cast delay): Pferd scores higher, Stange fills its cooldown
+	bayeri_stange_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster, private = true,
 		set = { UseBayeriHeiligePferd = 1 },
 		expect = { "Heilige Stange", "Heilige Pferd" } },
 	bayeri_pferd = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
@@ -1010,9 +1012,28 @@ SCENARIOS = {
 				return result == 0
 			end,
 		} },
-	eira_s = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster,
+	eira_s = { homuntype = 48, skills = EIRA_SKILLS, mobs = cluster, private = true,
 		set = { UseEiraTwisterCutter = 1, UseEiraAbsoluteZephyr = 1 },
 		expect = { "Absolute Zephyr" } },
+	-- skill picking by SkillDamage score: Twister Cutter beats Eraser Cutter on a neutral target...
+	eira_pick_neutral = { homuntype = 48, skills = EIRA_SKILLS, mobs = single, private = true,
+		set = { UseEiraTwisterCutter = 1 },
+		expect = { "Twister Cutter" } },
+	-- ...but not on Earth 1, which takes 90% from Wind
+	eira_pick_earth = { homuntype = 48, skills = EIRA_SKILLS, mobs = single, private = true,
+		set = { UseEiraTwisterCutter = 1 },
+		afterLoad = function()
+			local info = {}
+			for i, v in ipairs(MobInfo[1002]) do info[i] = v end
+			info[2], info[3] = 2, 1
+			MobInfo[1002] = info
+		end,
+		expect = { "Eraser Cutter" }, forbid = { "Twister Cutter" } },
+	-- low SP: compared by damage per SP, so the cheap Eraser Cutter wins
+	eira_pick_low_sp = { homuntype = 48, skills = EIRA_SKILLS, mobs = single, private = true,
+		set = { UseEiraTwisterCutter = 1 },
+		afterLoad = function() SkillPickLowSPPercent = 101 end,
+		expect = { "Eraser Cutter" }, forbid = { "Twister Cutter" } },
 
 	-- a pack is worth her AoE: SP is saved for The One Fighter Rises instead of being spent on combo chains
 	eleanor_pack_aoe = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = cluster, ticks = 1800, minAttacks = 0,
@@ -1086,7 +1107,7 @@ SCENARIOS = {
 	eleanor_manual_style_recovery = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		tactics = { [0] = { [7] = 3 } },
 		maxRefused = 1,
-		set = { AutoComboMode = 2, AutoComboSpheres = 1, AutoMobCount = 1,
+		set = { AutoComboMode = 2, AutoComboSpheres = 1, AutoMobCount = 1, EleanorDoNotSwitchMode = 1,
 			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
 		afterLoad = function()
 			local realAI = AI
@@ -1112,18 +1133,40 @@ SCENARIOS = {
 				return refusedSonic and HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE
 			end,
 			["a second refused starter cannot toggle the inferred style back"] = function()
-				local previousMode, previousPending = EleanorMode, EleanorModeResyncPending
+				local previousMode, previousPending, previousTick = EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick
 				EleanorMode = FIGHTING_MODE
 				EleanorModeResyncPending = 0
 				local first = TryEleanorModeResync(MH_SONIC_CRAW)
 				local second = TryEleanorModeResync(MH_TINDER_BREAKER)
 				local passed = first and not second and EleanorMode == GRAPPLING_MODE
 					and EleanorModeResyncPending == 1
-				EleanorMode, EleanorModeResyncPending = previousMode, previousPending
+				EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick = previousMode, previousPending, previousTick
+				return passed
+			end,
+			["a later manual switch back can resync again after the retry window"] = function()
+				local previousMode, previousPending, previousTick = EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick
+				EleanorMode = GRAPPLING_MODE
+				EleanorModeResyncPending = 1
+				EleanorModeResyncTick = GetTick() - ELEANOR_RESYNC_RETRY_MS
+				local again = TryEleanorModeResync(MH_TINDER_BREAKER)
+				local passed = again and EleanorMode == FIGHTING_MODE
+				EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick = previousMode, previousPending, previousTick
 				return passed
 			end,
 			["an accepted grapple starter clears the resync lock"] = function()
 				return EleanorModeResyncPending == 0
+			end,
+		} },
+	-- Grappling without spheres while nothing hits her (the owner tanks): she can't start Tinder
+	-- Breaker and would never gain spheres, so she switches back to fighting style
+	eleanor_grapple_no_spheres = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		private = true, passive = true, startStyle = "grappling",
+		set = { AutoComboMode = 2, AutoComboSpheres = 3, AutoMobCount = 1,
+			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
+		expect = { "Style Change", "Sonic Claw" },
+		checks = {
+			["she ends in fighting style on both sides"] = function()
+				return HarnessServer.style == "fighting" and EleanorMode == FIGHTING_MODE
 			end,
 		} },
 	eleanor_aoe_single = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
@@ -1226,14 +1269,16 @@ SCENARIOS = {
 		set = { AutoSkillDelay = 0, AutoMobMode = 2, AutoMobCount = 1, CastTimeRatio = .80,
 			UseEiraXenoSlasher = 1, EiraXenoSlasherLevel = 10, UseEiraEraseCutter = 1,
 			UseEiraTwisterCutter = 1, EiraTwisterCutterLevel = 10 },
-		expect = { "Xeno Slasher" } },
+		-- one target: Xeno Slasher only ties Eraser Cutter, so the cheaper Eraser Cutter is kept
+		expect = { "Absolute Zephyr", "Twister Cutter", "Eraser Cutter" }, forbid = { "Xeno Slasher" } },
 	-- Eleanor on rAthena: Sonic Claw needs a sphere, which only normal attacks in fighting style give
 	eleanor_private = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single, private = true,
 		set = { AutoComboMode = 0 },
 		expect = { "Sonic Claw" } },
 	eleanor_manual_style = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = { {101,100} }, private = true,
 		tactics = { [0] = { [7] = 8 } },
-		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3 },
+		set = { UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0, AutoComboSpheres = 3,
+			EleanorDoNotSwitchMode = 1 },
 		afterLoad = function()
 			local realAI = AI
 			local requested = false

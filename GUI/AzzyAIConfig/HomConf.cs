@@ -1889,7 +1889,7 @@ namespace AzzyAIConfig
         bool _EleanorDoNotSwitchMode = false;
         [Category("AutoSkill Options"),
         Description(
-            "If this is true, the homun will never automatically use style change." +
+            "If this is true, the homun will never automatically use style change: she keeps the style you chose, even in grappling style without spheres while nothing hits her." +
             "                                                              "
             ),
         DefaultValue(false)]

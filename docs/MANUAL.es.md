@@ -130,8 +130,17 @@ Puede no seleccionarse por:
 - SP insuficiente o la reserva configurada.
 - Cooldown, alcance o elemento del objetivo.
 - Requisitos de área o tácticas del monstruo.
-- Otra habilidad disponible con mayor prioridad.
+- Otra habilidad disponible con mejor puntuación (ver abajo).
 - Un lanzamiento, combo o pausa temporal en curso.
+
+Eira, Bayeri y Sera comparan sus habilidades de ataque en lugar de seguir una
+lista fija: cada ataque disponible se puntúa por su multiplicador de daño, el
+elemento del objetivo (de `MobInfo.lua`), cuántos monstruos alcanza, la DEF del
+objetivo en las habilidades que no la ignoran y su tiempo de lanzamiento. Por
+debajo del 40% de SP la puntuación usa daño por SP, así que ganan las habilidades
+más baratas. Por ejemplo, Eira usa Absolute Zephyr o Twister Cutter contra
+monstruos débiles al Viento y Eraser Cutter contra monstruos de Viento. Las
+demás habilidades mantienen el orden habitual.
 
 `AutoMobMode` controla ataques automáticos de área. `AutoMobCount` define la
 cantidad necesaria; **1 puede hacer que las habilidades de área compitan incluso
@@ -150,20 +159,21 @@ de la IA pueden diferir; importa el valor del archivo instalado.
 | Homúnculo | Qué revisar |
 |---|---|
 | Eira | Activa los ataques deseados, como Twister Cutter o Absolute Zephyr. Light of Regenerate es opcional y está desactivada por defecto: exige lealtad, reduce intimidad al lanzarse y sacrifica a Eira para resucitar al dueño. |
-| Bayeri | **Glanzen Spies** usa un objetivo; **Heilige Pferd** está centrada en Bayeri. El preset de Bayeri activa Pferd y Spies y elige según la DEF del objetivo (de `MobInfo.lua`): Spies solo por encima de DEF 320, si no Stahl Horn; con exactamente dos monstruos, Stange/Pferd solo desde DEF 110. |
+| Bayeri | **Glanzen Spies** usa un objetivo; **Heilige Pferd** está centrada en Bayeri. El preset de Bayeri activa Pferd y Spies; Spies sustituye a Stahl Horn solo cuando puntúa más contra el objetivo (sobre todo con DEF alta); con exactamente dos monstruos, Stange/Pferd solo desde DEF 110. |
 | Sera | Toxin of Mandara y Needle Stinger tienen lanzamientos que pueden interrumpirse. Mantén el objetivo en alcance y revisa las pausas por fallos. Pain Killer y Summon Legion tienen sus propios ajustes. |
 | Dieter | Activa ataques y buffs por separado. La resistencia o inmunidad al fuego puede impedir seleccionar habilidades de fuego. |
-| Eleanor | Sonic Claw y la cadena de lucha exigen estilo de lucha; Tinder Breaker/CBC/EQC exigen agarre. Importan esferas, SP y tiempos del combo. The One Fighter Rises y Blazing And Furious son habilidades de área: siguen `AutoMobMode`/`AutoMobCount` en lugar de usarse contra un solo objetivo, salvo The One Fighter Rises contra un objetivo aislado con DEF 300 o más. Con 3+ monstruos omite las cadenas de Sonic Claw, y Blazing And Furious solo se usa con 6+ esferas. |
+| Eleanor | Sonic Claw y la cadena de lucha exigen estilo de lucha; Tinder Breaker/CBC/EQC exigen agarre. Importan esferas, SP y tiempos del combo. The One Fighter Rises y Blazing And Furious son habilidades de área: siguen `AutoMobMode`/`AutoMobCount` en lugar de usarse contra un solo objetivo, salvo The One Fighter Rises contra un objetivo aislado con DEF 220 o más. Con 3+ monstruos omite las cadenas de Sonic Claw, y Blazing And Furious solo se usa con 6+ esferas. |
 | Vanilmirth | **Caprice** (heredada también por los Homunculus S basados en Vanilmirth) se controla con `UseVanilCaprice` (activada por defecto). Chaotic Blessing sigue `UseAutoHeal`. Self Destruct nunca se usa automáticamente. |
 Son consejos de configuración, no un ranking ni una build óptima. Las reglas
 del servidor pueden variar, incluso el alcance y el tipo de objetivo.
 
-El preset incluido usa `AutoMobCount` 2 y deja desactivadas **Twister Cutter**
-(Eira) y **Needle Stinger** (Sera) (los presets por tipo en `Types/` activan la
-Spies de Bayeri y la Blazing And Furious de Eleanor), porque la IA las prefiere a habilidades más baratas que
-rindieron al menos igual en pruebas sin conexión, y activa **Blast Forge**
-(Dieter). Estas elecciones vienen de una simulación, no de un servidor oficial:
-activa cualquiera si lo prefieres. Todas las habilidades de ataque de Dieter son de área, así que con
+El preset incluido usa `AutoMobCount` 2. El preset de Eira activa **Twister Cutter**
+y **Absolute Zephyr**; la IA las usa cuando puntúan más
+que Eraser Cutter o Xeno Slasher. El preset de Sera activa **Needle Stinger** (misma regla frente a
+Needle of Paralyze) y `AutoMobCount` 1; los presets por tipo también
+activan Spies de Bayeri y Blazing And Furious de Eleanor, y **Blast Forge** (Dieter)
+está activada. Las comparaciones sin conexión son simulaciones, no mediciones en un
+servidor oficial. Todas las habilidades de ataque de Dieter son de área, así que con
 `AutoMobCount` 2 no ataca a un solo monstruo con ellas: pon `AutoMobCount` en 1 si
 luchas sobre todo contra un monstruo a la vez con Dieter (Bayeri y Sera pierden
 daño contra monstruos aislados). Los detalles están en las
@@ -186,9 +196,14 @@ Para un experimento ofensivo solo con Sonic:
 3. Desactiva Tinder Breaker, CBC, EQC, Blazing And Furious y The One Fighter Rises.
 4. Pon a Eleanor en **estilo de lucha** y recarga la IA después de guardar.
 
-Los ataques normales y buffs habilitados siguen activos. El seguimiento de
-cambios manuales de estilo depende de lo que informa el cliente.
-Si juego e IA discrepan después de un cambio manual de estilo, recarga y prueba
+Los ataques normales y buffs habilitados siguen activos. La IA no puede leer el
+estilo de Eleanor: tras un cambio manual de estilo detecta cuándo se rechaza un
+iniciador de combo (Sonic Claw o Tinder Breaker) y sigue el nuevo estilo; otro
+iniciador rechazado en menos de 5 segundos se trata como falta de esferas. En
+estilo de agarre solo gana esferas al recibir golpes, así que, sin esferas para
+Tinder Breaker y sin recibir golpes durante 5 segundos, vuelve al estilo de lucha;
+usa `EleanorDoNotSwitchMode = 1` para mantener el estilo elegido.
+Si juego e IA siguen discrepando, recarga y prueba
 otra vez; los iconos de esferas no siempre son un conteo exacto en tiempo real.
 
 `SphereTrackInterval` es un ajuste avanzado de estimación (predeterminado
