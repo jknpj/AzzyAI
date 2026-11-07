@@ -312,5 +312,34 @@ ServerSkillOverrides[SERVER_PRIVATE]={
 	-- rAthena: 12-20s ash duration (LATAM 8-40s)
 	[MH_VOLCANIC_ASH]={info={[8]={12000,14000,16000,18000,20000}}},
 	-- rAthena: enemy-targeted, range 2, splash centered on the target
-	[MH_TOXIN_OF_MANDARA]={info={[2]={2,2,2,2,2,2,2,2,2,2},[7]=1},aoe={{3,3,3,5,5,5,7,7,7,9},0}},
+	[MH_TOXIN_OF_MANDARA]={info={[2]={2,2,2,2,2,2,2,2,2,2},[7]=1,[6]={0,0,0,0,0,0,0,0,0,0}},aoe={{3,3,3,5,5,5,7,7,7,9},0}},
+	-- rAthena: no after-cast delay on the new Homunculus S attacks (LATAM data keeps 1s)
+	[MH_NEEDLE_STINGER]={info={[6]={0,0,0,0,0,0,0,0,0,0}}},
+	[MH_TWISTER_CUTTER]={info={[6]={0,0,0,0,0,0,0,0,0,0}}},
+	[MH_ABSOLUTE_ZEPHYR]={info={[6]={0,0,0,0,0,0,0,0,0,0}}},
+	[MH_GLANZEN_SPIES]={info={[6]={0,0,0,0,0,0,0,0,0,0}}},
+	[MH_HEILIGE_PFERD]={info={[6]={0,0,0,0,0,0,0,0,0,0}}},
 }
+
+-- Damage weights used to pick between attack skills (PickBetterSkill in AzzyUtil). Instead of a fixed
+-- skill-type order, each usable skill is scored by its damage ratio x element (SkillElement in MobInfo)
+-- x monsters hit x DEF, per cast time (or per SP when SP is low). Skills without an entry keep the
+-- type order (SkillTypePriority).
+-- {flat, perLevel, divisor, defApplies}: ratio % = flat + perLevel * skill level * base level / divisor
+-- (rAthena calculateSkillRatio, without the stat bonus). defApplies = 1 when the target's DEF reduces it.
+-- Ground skills that tick (Poison Mist, Lava Slide, Blast Forge) and Eleanor's sphere skills are left out.
+SkillDamageBaseLevel = 250
+SkillDamage={}
+SkillDamage[MH_ERASER_CUTTER]={-100,450,100,0}
+SkillDamage[MH_XENO_SLASHER]={-100,450,100,0}
+SkillDamage[MH_TWISTER_CUTTER]={-100,480,100,0}
+SkillDamage[MH_ABSOLUTE_ZEPHYR]={900,450,100,0}
+SkillDamage[MH_NEEDLE_OF_PARALYZE]={-100,450,100,0}
+SkillDamage[MH_NEEDLE_STINGER]={100,500,100,0}
+SkillDamage[MH_TOXIN_OF_MANDARA]={200,450,100,0}
+SkillDamage[MH_STAHL_HORN]={900,300,150,1}
+SkillDamage[MH_HEILIGE_STANGE]={1400,250,150,0}
+SkillDamage[MH_GLANZEN_SPIES]={200,450,100,0}
+SkillDamage[MH_HEILIGE_PFERD]={1100,350,100,0}
+-- Below this % of max SP, skills are compared by damage per SP instead of damage per second
+SkillPickLowSPPercent = 40

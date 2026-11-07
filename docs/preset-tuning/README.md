@@ -12,28 +12,28 @@ Previous: that commit's `H_Config.lua` alone. Current: `USER_AI/H_Config.lua` pl
 
 | monsters | DPS before | DPS after | change | damage/SP before | damage/SP after | casts before (180 s) | casts after (180 s) |
 |---|---|---|---|---|---|---|---|
-| 1 | 122,526 | 122,526 | +0% | 1,438 | 2,670 | Xeno Slasher 118 | Eraser Cutter 118 |
-| 2 | 244,117 | 244,117 | +0% | 2,864 | 2,864 | Xeno Slasher 118 | Xeno Slasher 118 |
-| 3 | 365,708 | 365,708 | +0% | 4,291 | 4,291 | Xeno Slasher 118 | Xeno Slasher 118 |
-| 5 | 608,891 | 608,891 | +0% | 7,145 | 7,145 | Xeno Slasher 118 | Xeno Slasher 118 |
+| 1 | 126,909 | 126,909 | +0% | 1,599 | 1,599 | Twister Cutter 67; Eraser Cutter 51 | Twister Cutter 67; Eraser Cutter 51 |
+| 2 | 244,117 | 250,482 | +3% | 2,864 | 2,656 | Xeno Slasher 118 | Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4 |
+| 3 | 365,708 | 373,183 | +2% | 4,291 | 3,957 | Xeno Slasher 118 | Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4 |
+| 5 | 608,891 | 618,585 | +2% | 7,145 | 6,559 | Xeno Slasher 118 | Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4 |
 
 ### Bayeri (before and after)
 
 | monsters | DPS before | DPS after | change | damage/SP before | damage/SP after | casts before (180 s) | casts after (180 s) |
 |---|---|---|---|---|---|---|---|
-| 1 | 162,736 | 162,736 | +0% | 1,474 | 1,474 | Stahl Horn 281 | Stahl Horn 281 |
-| 2 | 162,736 | 162,736 | +0% | 1,474 | 1,474 | Stahl Horn 281 | Stahl Horn 281 |
-| 3 | 170,915 | 188,322 | +10% | 2,587 | 2,473 | Heilige Stange 111 | Heilige Pferd 71 |
-| 5 | 284,251 | 317,478 | +12% | 4,302 | 4,114 | Heilige Stange 111 | Heilige Pferd 72 |
+| 1 | 184,809 | 184,809 | +0% | 1,670 | 1,670 | Glanzen Spies 111; Stahl Horn 110 | Glanzen Spies 111; Stahl Horn 110 |
+| 2 | 184,809 | 184,809 | +0% | 1,670 | 1,670 | Glanzen Spies 111; Stahl Horn 110 | Glanzen Spies 111; Stahl Horn 110 |
+| 3 | 191,998 | 226,169 | +18% | 2,256 | 2,392 | Heilige Stange 73; Glanzen Spies 73 | Heilige Stange 61; Heilige Pferd 36; Glanzen Spies 34 |
+| 5 | 284,251 | 390,505 | +37% | 4,302 | 4,237 | Heilige Stange 111 | Heilige Stange 70; Heilige Pferd 48 |
 
 ### Sera (before and after)
 
 | monsters | DPS before | DPS after | change | damage/SP before | damage/SP after | casts before (180 s) | casts after (180 s) |
 |---|---|---|---|---|---|---|---|
-| 1 | 141,170 | 167,256 | +18% | 1,967 | 1,800 | Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11 | Needle Of Paralyze 169 |
-| 2 | 237,934 | 245,323 | +3% | 3,315 | 3,602 | Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11 | Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10 |
-| 3 | 334,698 | 344,240 | +3% | 4,664 | 5,054 | Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11 | Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10 |
-| 5 | 528,225 | 542,074 | +3% | 7,360 | 7,958 | Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11 | Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10 |
+| 1 | 219,256 | 219,256 | +0% | 1,944 | 1,944 | Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11 | Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11 |
+| 2 | 318,949 | 318,949 | +0% | 2,823 | 2,823 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 |
+| 3 | 419,754 | 419,754 | +0% | 3,715 | 3,715 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 |
+| 5 | 621,387 | 621,387 | +0% | 5,500 | 5,500 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 |
 
 ### Dieter (before and after)
 
@@ -48,8 +48,8 @@ Previous: that commit's `H_Config.lua` alone. Current: `USER_AI/H_Config.lua` pl
 
 | monsters | DPS before | DPS after | change | damage/SP before | damage/SP after | casts before (180 s) | casts after (180 s) |
 |---|---|---|---|---|---|---|---|
-| 1 | 80,199 | 99,800 | +24% | 2,020 | 2,464 | The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
-| 2 | 139,502 | 118,183 | -15% | 3,514 | 2,916 | The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10 | Sonic Claw 37; The One Fighter Rises 28; Silvervein Rush 20; Midnight Frenzy 8; Blazing And Furious 3 |
+| 1 | 80,199 | 100,393 | +25% | 2,020 | 2,479 | The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
+| 2 | 139,502 | 120,869 | -13% | 3,514 | 2,994 | The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10 | Sonic Claw 36; The One Fighter Rises 28; Silvervein Rush 19; Midnight Frenzy 9; Blazing And Furious 3 |
 | 3 | 212,779 | 213,518 | +0% | 5,345 | 5,271 | The One Fighter Rises 35; Blazing And Furious 12 | The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1 |
 | 5 | 345,750 | 345,750 | +0% | 8,692 | 8,692 | The One Fighter Rises 34; Blazing And Furious 13 | The One Fighter Rises 34; Blazing And Furious 13 |
 
@@ -61,41 +61,41 @@ Previous: that commit's `H_Config.lua` alone. Current: `USER_AI/H_Config.lua` pl
 
 | monsters | SP/s | variant | overrides | DPS | vs preset | damage/SP | refused | casts (180 s) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 60 | current preset | `(none)` | 122,526 | 0% | 2,670 | 0 | Eraser Cutter 118 |
-| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 122,526 | +0% | 1,438 | 0 | Xeno Slasher 118 |
-| 1 | 60 | Twister Cutter on | `UseEiraTwisterCutter=1` | 83,372 | -32% | 1,251 | 0 | Twister Cutter 75 |
-| 1 | 60 | Twister Cutter on, AutoMobCount 1 | `UseEiraTwisterCutter=1,AutoMobCount=1` | 122,526 | +0% | 1,438 | 0 | Xeno Slasher 118 |
-| 1 | 30 | current preset | `(none)` | 122,526 | 0% | 2,670 | 0 | Eraser Cutter 118 |
-| 1 | 30 | Twister Cutter on | `UseEiraTwisterCutter=1` | 83,102 | -32% | 1,285 | 0 | Twister Cutter 71; Eraser Cutter 4 |
-| 3 | 60 | current preset | `(none)` | 365,708 | 0% | 4,291 | 0 | Xeno Slasher 118 |
-| 3 | 60 | AutoMobCount 3 | `AutoMobCount=3` | 365,708 | +0% | 4,291 | 0 | Xeno Slasher 118 |
+| 1 | 60 | current preset | `(none)` | 126,909 | 0% | 1,599 | 0 | Twister Cutter 67; Eraser Cutter 51 |
+| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 130,893 | +3% | 1,620 | 0 | Eraser Cutter 65; Absolute Zephyr 35; Twister Cutter 22 |
+| 1 | 60 | Twister Cutter on | `UseEiraTwisterCutter=1` | 126,909 | +0% | 1,599 | 0 | Twister Cutter 67; Eraser Cutter 51 |
+| 1 | 60 | Twister Cutter on, AutoMobCount 1 | `UseEiraTwisterCutter=1,AutoMobCount=1` | 130,893 | +3% | 1,620 | 0 | Eraser Cutter 65; Absolute Zephyr 35; Twister Cutter 22 |
+| 1 | 30 | current preset | `(none)` | 124,423 | 0% | 2,060 | 0 | Eraser Cutter 89; Twister Cutter 29 |
+| 1 | 30 | Twister Cutter on | `UseEiraTwisterCutter=1` | 124,423 | +0% | 2,060 | 0 | Eraser Cutter 89; Twister Cutter 29 |
+| 3 | 60 | current preset | `(none)` | 373,183 | 0% | 3,957 | 0 | Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4 |
+| 3 | 60 | AutoMobCount 3 | `AutoMobCount=3` | 373,183 | +0% | 3,957 | 0 | Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4 |
 
 ### Bayeri (one option at a time)
 
 | monsters | SP/s | variant | overrides | DPS | vs preset | damage/SP | refused | casts (180 s) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 60 | current preset | `(none)` | 162,736 | 0% | 1,474 | 0 | Stahl Horn 281 |
-| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 162,736 | +0% | 1,474 | 0 | Stahl Horn 281 |
-| 1 | 60 | Glanzen Spies off | `UseBayeriGlanzenSpies=0` | 162,736 | +0% | 1,474 | 0 | Stahl Horn 281 |
-| 1 | 60 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 162,736 | +0% | 1,474 | 0 | Stahl Horn 281 |
-| 2 | 80 | current preset | `(none)` | 169,034 | 0% | 1,474 | 0 | Stahl Horn 292 |
-| 2 | 80 | AutoMobCount 3 | `AutoMobCount=3` | 169,034 | +0% | 1,474 | 0 | Stahl Horn 292 |
-| 2 | 80 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 169,034 | +0% | 1,474 | 0 | Stahl Horn 292 |
-| 3 | 80 | current preset | `(none)` | 188,322 | 0% | 2,473 | 1 | Heilige Pferd 71 |
-| 3 | 80 | AutoMobCount 3 | `AutoMobCount=3` | 188,322 | +0% | 2,473 | 1 | Heilige Pferd 71 |
-| 3 | 80 | AutoMobCount 4 | `AutoMobCount=4` | 168,451 | -11% | 1,468 | 0 | Stahl Horn 291 |
-| 3 | 80 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 170,915 | -9% | 2,587 | 0 | Heilige Stange 111 |
+| 1 | 60 | current preset | `(none)` | 184,809 | 0% | 1,670 | 0 | Glanzen Spies 111; Stahl Horn 110 |
+| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 184,809 | +0% | 1,670 | 0 | Glanzen Spies 111; Stahl Horn 110 |
+| 1 | 60 | Glanzen Spies off | `UseBayeriGlanzenSpies=0` | 162,736 | -12% | 1,474 | 0 | Stahl Horn 281 |
+| 1 | 60 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 184,809 | +0% | 1,670 | 0 | Glanzen Spies 111; Stahl Horn 110 |
+| 2 | 80 | current preset | `(none)` | 187,548 | 0% | 1,671 | 0 | Glanzen Spies 113; Stahl Horn 111 |
+| 2 | 80 | AutoMobCount 3 | `AutoMobCount=3` | 187,548 | +0% | 1,671 | 0 | Glanzen Spies 113; Stahl Horn 111 |
+| 2 | 80 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 187,548 | +0% | 1,671 | 0 | Glanzen Spies 113; Stahl Horn 111 |
+| 3 | 80 | current preset | `(none)` | 259,129 | 0% | 2,345 | 0 | Heilige Pferd 59; Glanzen Spies 48; Heilige Stange 33 |
+| 3 | 80 | AutoMobCount 3 | `AutoMobCount=3` | 259,129 | +0% | 2,345 | 0 | Heilige Pferd 59; Glanzen Spies 48; Heilige Stange 33 |
+| 3 | 80 | AutoMobCount 4 | `AutoMobCount=4` | 187,539 | -28% | 1,671 | 0 | Glanzen Spies 113; Stahl Horn 111 |
+| 3 | 80 | Heilige Pferd off | `UseBayeriHeiligePferd=0` | 191,998 | -26% | 2,256 | 0 | Heilige Stange 73; Glanzen Spies 73 |
 
 ### Sera (one option at a time)
 
 | monsters | SP/s | variant | overrides | DPS | vs preset | damage/SP | refused | casts (180 s) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 60 | current preset | `(none)` | 167,256 | 0% | 1,800 | 0 | Needle Of Paralyze 169 |
-| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 146,405 | -12% | 2,149 | 0 | Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10 |
-| 1 | 60 | Needle Stinger on | `UseSeraNeedleStinger=1` | 125,958 | -25% | 1,334 | 0 | Needle Stinger 113 |
-| 3 | 60 | current preset | `(none)` | 344,240 | 0% | 5,054 | 0 | Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10 |
-| 3 | 60 | Needle Stinger on | `UseSeraNeedleStinger=1` | 334,698 | -3% | 4,664 | 0 | Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11 |
-| 3 | 60 | Toxin of Mandara off | `UseSeraToxinOfMandara=0` | 285,808 | -17% | 3,057 | 0 | Needle Of Paralyze 158; Poison Mist 11 |
+| 1 | 60 | current preset | `(none)` | 219,256 | 0% | 1,944 | 0 | Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11 |
+| 1 | 60 | AutoMobCount 1 | `AutoMobCount=1` | 219,256 | +0% | 1,944 | 0 | Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11 |
+| 1 | 60 | Needle Stinger on | `UseSeraNeedleStinger=1` | 219,256 | +0% | 1,944 | 0 | Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11 |
+| 3 | 60 | current preset | `(none)` | 419,754 | 0% | 3,715 | 0 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 |
+| 3 | 60 | Needle Stinger on | `UseSeraNeedleStinger=1` | 419,754 | +0% | 3,715 | 0 | Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11 |
+| 3 | 60 | Toxin of Mandara off | `UseSeraToxinOfMandara=0` | 305,883 | -27% | 2,717 | 0 | Needle Of Paralyze 136; Needle Stinger 38; Poison Mist 11 |
 
 ### Dieter (one option at a time)
 
@@ -119,17 +119,17 @@ Previous: that commit's `H_Config.lua` alone. Current: `USER_AI/H_Config.lua` pl
 
 | monsters | SP/s | variant | overrides | DPS | vs preset | damage/SP | refused | casts (180 s) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 12 | current preset | `(none)` | 74,645 | 0% | 2,436 | 26 | Sonic Claw 87; Silvervein Rush 26; Midnight Frenzy 25 |
-| 1 | 12 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 74,645 | +0% | 2,436 | 26 | Sonic Claw 87; Silvervein Rush 26; Midnight Frenzy 25 |
-| 1 | 22 | current preset | `(none)` | 99,800 | 0% | 2,464 | 31 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
-| 1 | 22 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 99,800 | +0% | 2,464 | 31 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
-| 1 | 22 | AutoMobCount 1 | `AutoMobCount=1` | 76,593 | -23% | 1,890 | 12 | Sonic Claw 37; The One Fighter Rises 28; Silvervein Rush 20; Midnight Frenzy 8; Blazing And Furious 3 |
-| 1 | 22 | The One Fighter Rises off | `UseEleanorTheOneFighterRises=0` | 99,800 | +0% | 2,464 | 31 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
-| 1 | 22 | AutoComboSpheres 3 | `AutoComboSpheres=3` | 98,675 | -1% | 2,453 | 29 | Sonic Claw 105; Silvervein Rush 47; Midnight Frenzy 31 |
-| 1 | 22 | AutoComboSpheres 6 | `AutoComboSpheres=6` | 99,924 | +0% | 2,486 | 29 | Sonic Claw 104; Silvervein Rush 48; Midnight Frenzy 31 |
+| 1 | 12 | current preset | `(none)` | 75,052 | 0% | 2,465 | 26 | Sonic Claw 85; Midnight Frenzy 26; Silvervein Rush 26 |
+| 1 | 12 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 75,052 | +0% | 2,465 | 26 | Sonic Claw 85; Midnight Frenzy 26; Silvervein Rush 26 |
+| 1 | 22 | current preset | `(none)` | 100,393 | 0% | 2,479 | 32 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
+| 1 | 22 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 100,393 | +0% | 2,479 | 32 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
+| 1 | 22 | AutoMobCount 1 | `AutoMobCount=1` | 78,128 | -22% | 1,935 | 12 | Sonic Claw 36; The One Fighter Rises 28; Silvervein Rush 19; Midnight Frenzy 9; Blazing And Furious 3 |
+| 1 | 22 | The One Fighter Rises off | `UseEleanorTheOneFighterRises=0` | 100,393 | +0% | 2,479 | 32 | Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35 |
+| 1 | 22 | AutoComboSpheres 3 | `AutoComboSpheres=3` | 100,358 | -0% | 2,495 | 31 | Sonic Claw 99; Silvervein Rush 50; Midnight Frenzy 34 |
+| 1 | 22 | AutoComboSpheres 6 | `AutoComboSpheres=6` | 101,508 | +1% | 2,525 | 31 | Sonic Claw 98; Silvervein Rush 51; Midnight Frenzy 34 |
 | 3 | 22 | current preset | `(none)` | 213,518 | 0% | 5,271 | 0 | The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1 |
 | 3 | 22 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 199,288 | -7% | 4,979 | 0 | The One Fighter Rises 46; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1 |
-| 3 | 22 | The One Fighter Rises off | `UseEleanorTheOneFighterRises=0` | 102,626 | -52% | 2,540 | 31 | Sonic Claw 101; Silvervein Rush 40; Midnight Frenzy 21; Blazing And Furious 6 |
+| 3 | 22 | The One Fighter Rises off | `UseEleanorTheOneFighterRises=0` | 111,733 | -48% | 2,766 | 29 | Sonic Claw 97; Silvervein Rush 39; Midnight Frenzy 22; Blazing And Furious 7 |
 | 3 | 22 | AutoComboSpheres 3 | `AutoComboSpheres=3` | 213,518 | +0% | 5,271 | 0 | The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1 |
 | 3 | 40 | current preset | `(none)` | 300,606 | 0% | 5,171 | 0 | The One Fighter Rises 54; Blazing And Furious 14; Silvervein Rush 1; Sonic Claw 1 |
 | 3 | 40 | Blazing And Furious off | `UseEleanorBlazingAndFurious=0` | 283,592 | -6% | 4,912 | 0 | The One Fighter Rises 67; Silvervein Rush 1; Sonic Claw 1 |

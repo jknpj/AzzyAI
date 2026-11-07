@@ -128,8 +128,16 @@ has learned. A skill can remain unused because of:
 - Insufficient SP or your SP reserve.
 - Cooldown, range or the target's element.
 - Area-skill requirements or monster tactics.
-- Another usable skill having higher priority.
+- Another usable skill scoring higher (see below).
 - A pending cast, combo or temporary failure pause.
+
+Eira, Bayeri and Sera compare their attack skills instead of following a fixed
+list: each usable attack is scored by its damage ratio, the target's element
+(from `MobInfo.lua`), how many monsters it hits, the target's DEF for skills that
+don't ignore it, and its cast time. Below 40% SP the score uses damage per SP, so
+cheaper skills win. For example, Eira uses Absolute Zephyr or Twister Cutter
+against monsters weak to Wind and Eraser Cutter against Wind monsters. Other
+skills keep the usual order.
 
 `AutoMobMode` controls automatic area attacks. `AutoMobCount` sets the required
 monster amount; a value of **1 can make area skills compete on a single target**.
@@ -147,20 +155,21 @@ differ; the installed file's value is what matters.
 | Homunculus | What to check |
 |---|---|
 | Eira | Enable the attacks you want, such as Twister Cutter or Absolute Zephyr. Light of Regenerate is optional and disabled by default: it requires Loyal intimacy, reduces intimacy on cast, and sacrifices Eira for the owner's resurrection. |
-| Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. The Bayeri preset enables Pferd and Spies and picks by the target's DEF (from `MobInfo.lua`): Spies only above about DEF 320, Stahl Horn otherwise; with exactly two monsters Stange/Pferd are used only from DEF 110. |
+| Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. The Bayeri preset enables Pferd and Spies; Spies replaces Stahl Horn only when it scores higher for the target (mostly high DEF); with exactly two monsters Stange/Pferd are used only from DEF 110. |
 | Sera | Toxin of Mandara and Needle Stinger have casts that may be interrupted. Keep the target in range and check the failure-pause options below. Pain Killer and Summon Legion have their own switches. |
 | Dieter | Enable the desired attacks/buffs individually. Fire resistance or immunity can prevent fire skills from being selected. |
-| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target, except The One Fighter Rises against a lone target with DEF 300 or more. With 3+ monsters she skips Sonic Claw chains, and Blazing And Furious is only cast with 6+ spheres. |
+| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target, except The One Fighter Rises against a lone target with DEF 220 or more. With 3+ monsters she skips Sonic Claw chains, and Blazing And Furious is only cast with 6+ spheres. |
 | Vanilmirth | **Caprice** (also inherited by Vanilmirth-based Homunculus S) is controlled by `UseVanilCaprice` (on by default). Chaotic Blessing follows `UseAutoHeal`. Self Destruct is never used automatically. |
 These are configuration tips, not a ranking or an optimal build. Server rules
 may differ, including skill ranges and targeting.
 
-The bundled preset sets `AutoMobCount` to 2 and leaves **Twister Cutter** (Eira),
-and **Needle Stinger** (Sera) off (the per-type presets in `Types/` turn on Bayeri's
-Spies and Eleanor's Blazing And Furious), because the AI prefers them to cheaper skills that did at least as
-well in offline tests, and turns **Blast Forge** (Dieter) on. These choices come
-from a simulation, not from an official server: enable any of them if you prefer
-it. Dieter's attacks are all area skills, so with `AutoMobCount` 2 he does not attack
+The bundled preset sets `AutoMobCount` to 2. Eira's type preset enables **Twister Cutter**
+and **Absolute Zephyr**; the AI uses them when they score higher
+than Eraser Cutter or Xeno Slasher. Sera's preset enables **Needle Stinger** (same rule against
+Needle of Paralyze) and `AutoMobCount` 1; the type presets also enable Bayeri's Spies
+and Eleanor's Blazing And Furious, and **Blast Forge** (Dieter) is on. Offline comparisons
+are simulations, not measurements on an official server. Dieter's attacks are all area
+skills, so with `AutoMobCount` 2 he does not attack
 a single monster with them: set `AutoMobCount` to 1 if you mostly fight one monster
 at a time as Dieter (Bayeri and Sera then lose damage against single monsters).
 Details are in the [technical notes](RELEASE_NOTES.md#default-preset-tuning) and the
@@ -182,9 +191,14 @@ For a Sonic-only offensive experiment:
 3. Disable Tinder Breaker, CBC, EQC, Blazing And Furious and The One Fighter Rises.
 4. Put Eleanor in **fighting style** and reload the AI after saving.
 
-Normal attacks and enabled buffs remain active. Manual style tracking depends
-on what the client reports. If the game and AI disagree after a manual style
-change, reload and test again; do not assume the
+Normal attacks and enabled buffs remain active. The AI cannot read Eleanor's
+style: after a manual style change it notices when a combo starter (Sonic Claw
+or Tinder Breaker) is refused and follows the new style; another refused starter
+within 5 seconds is treated as missing spheres. In grappling style she only gains
+spheres when hit, so without the spheres for Tinder Breaker and with nothing
+hitting her for 5 seconds she switches back to fighting style; set
+`EleanorDoNotSwitchMode = 1` to keep the style you chose. If the game and AI
+still disagree, reload and test again; do not assume the
 visible sphere icons are an exact real-time count.
 
 `SphereTrackInterval` is an advanced estimate setting (default **800 ms**),

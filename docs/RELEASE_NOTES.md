@@ -161,22 +161,28 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
   +26% against 3 and +39% against 5, unchanged against one. These are simulated figures.
 - Bayeri: `Types/Bayeri.lua` enables Heilige Pferd with `AutoMobCount = 2` (+10-12% DPS
   against packs, never cast on a lone target). Glanzen Spies ignores DEF but is Holy and
-  slower, so it replaced Stahl Horn and lost up to 40% DPS; it is now only chosen when the
-  target's DEF (new in `MobInfo.lua`: DEF and MDEF after the attack range) makes it pay off
-  (about DEF 320 for a neutral target, +9% at 400, +26% at 567). With exactly two monsters
+  slower, so it replaced Stahl Horn and lost up to 40% DPS; it is now only chosen when its
+  score beats Stahl Horn's for the target (see "Skill choice by score" below), which takes the
+  target's DEF (new in `MobInfo.lua`: DEF and MDEF after the attack range) into account. With exactly two monsters
   his DEF-ignoring area skills (Heilige Stange and Pferd) are only cast when their DEF is
   110 or more; below that Stahl Horn is better (+27% at DEF 0), and with 3 or more
   monsters the area skills always win (+16% to +69%). `homun_bench.py` has `--def` and
   `--mdef` for these measurements. Eleanor's dance is no longer blocked by a combo that cannot
   be cast, and her preset enables The One Fighter Rises with `AutoMobCount = 2`.
 - Eleanor: The One Fighter Rises ignores DEF, her Sonic Claw combos do not. A lone target
-  with DEF 300 or more now gets The One Fighter Rises (+13% at DEF 400, worse below DEF 230),
+  with DEF 220 or more now gets The One Fighter Rises (+21% at DEF 500, +51% at DEF 1000, worse below DEF 210),
   and with 3 or more monsters she no longer starts Sonic Claw chains while The One Fighter
   Rises is learned (+19% to +32%). Simulated figures.
 - Eleanor: Blazing and Furious hits once per sphere (about 1/7 of a The One Fighter Rises hit
   each) and costs the same SP, so it lost 8-41% DPS when cast with the 1-2 spheres the other
   skills leave. It is now only cast with 6 or more spheres (`ELEANOR_BLAZING_MIN_SPHERES`) and
   the Eleanor preset enables it: +9% to +15% DPS against packs at DEF 0, up to +29% at DEF 400.
+- Eleanor style changes made by hand: after one resync, the AI waited for a successful combo
+  starter before it would resync again, so switching back by hand left it on the wrong style.
+  It now allows another resync after 5 seconds. In grappling style without the spheres for
+  Tinder Breaker and with nothing hitting her (the owner tanking), she used no skills at all;
+  after 5 seconds without a hit she now switches back to fighting style
+  (`EleanorDoNotSwitchMode = 1` keeps the chosen style).
 - Amistr Castling: Castle Route no longer repeats the cast at the same route point,
   and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
   (cooldown, SP above cost, skill learned).
@@ -438,23 +444,23 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 
 ### Default preset tuning
 
-`USER_AI/H_Config.lua` was tuned with `python tools/harness/homun_bench.py <homunculus> [--mobs N] [--spregen SP/s] "<overrides>" ...`, which runs the `hbench_*` scenarios (180 s against a zero-defense Neutral dummy, or a pack of up to five) on top of the shipped preset and prints expected DPS, damage per SP and the casts of each configuration. The AI does not pick skills by damage or SP: it follows its skill-class priority, so the preset can only turn skills on or off and set the area threshold. **Read the numbers as a comparison between configurations, not as the DPS you will see in game.** The simulation uses hypothetical homunculus stats (`fixtures/homun_stats.lua`, level 275) and rAthena's skill data, and the real DPS depends on the server: the RO LATAM homunculi are much stronger than rAthena's, so absolute values, SP pools and SP regeneration differ, and a configuration that wins here can lose there when SP or sphere counts change the balance. Each homunculus has its own settings: `USER_AI/H_Config.lua` is the shared base and `USER_AI/Types/<Name>.lua` overrides only what differs. The table is the previous preset (`H_Config.lua` alone) against those current individual settings, with no overrides, expected DPS over 180 s and the change against the previous preset, at 60 SP/s (Eleanor: 22 SP/s). `python tools/harness/preset_report.py --old-ref 0cc1f35` regenerates it (and `docs/preset-tuning/`) in place:
+`USER_AI/H_Config.lua` was tuned with `python tools/harness/homun_bench.py <homunculus> [--mobs N] [--spregen SP/s] "<overrides>" ...`, which runs the `hbench_*` scenarios (180 s against a zero-defense Neutral dummy, or a pack of up to five) on top of the shipped preset and prints expected DPS, damage per SP and the casts of each configuration. For Eira, Bayeri and Sera the AI scores its enabled attacks (see "Skill choice by score" below); other skills follow the skill-class priority, so the preset turns skills on or off and sets the area threshold. **Read the numbers as a comparison between configurations, not as the DPS you will see in game.** The simulation uses hypothetical homunculus stats (`fixtures/homun_stats.lua`, level 275) and rAthena's skill data, and the real DPS depends on the server: the RO LATAM homunculi are much stronger than rAthena's, so absolute values, SP pools and SP regeneration differ, and a configuration that wins here can lose there when SP or sphere counts change the balance. Each homunculus has its own settings: `USER_AI/H_Config.lua` is the shared base and `USER_AI/Types/<Name>.lua` overrides only what differs. The table is the previous preset (`H_Config.lua` alone) against those current individual settings, with no overrides, expected DPS over 180 s and the change against the previous preset, at 60 SP/s (Eleanor: 22 SP/s). `python tools/harness/preset_report.py --old-ref 0cc1f35` regenerates it (and `docs/preset-tuning/`) in place:
 
 <!-- preset-table:start -->
 
 | Homunculus | 1 monster | 2 | 3 | 5 | Individual settings (`Types/<Name>.lua`) |
 |---|---|---|---|---|---|
-| Eira | 122,526 (+0%) | 244,117 (+0%) | 365,708 (+0%) | 608,891 (+0%) | none |
-| Bayeri | 162,736 (+0%) | 162,736 (+0%) | 188,322 (+10%) | 317,478 (+12%) | `UseBayeriHeiligePferd` 1, `AutoMobCount` 2, `UseBayeriGlanzenSpies` 1 |
-| Sera | 167,256 (+18%) | 245,323 (+3%) | 344,240 (+3%) | 542,074 (+3%) | none |
+| Eira | 126,909 (+0%) | 250,482 (+3%) | 373,183 (+2%) | 618,585 (+2%) | `UseEiraTwisterCutter` 1, `UseEiraAbsoluteZephyr` 1 |
+| Bayeri | 184,809 (+0%) | 184,809 (+0%) | 226,169 (+18%) | 390,505 (+37%) | `UseBayeriHeiligePferd` 1, `AutoMobCount` 2, `UseBayeriGlanzenSpies` 1 |
+| Sera | 219,256 (+0%) | 318,949 (+0%) | 419,754 (+0%) | 621,387 (+0%) | `UseSeraNeedleStinger` 1, `AutoMobCount` 1 |
 | Dieter | 45,841 (+464%) | 90,616 (+522%) | 135,390 (+552%) | 225,190 (+569%) | `AutoMobCount` 1, `UseDieterAshAsAttack` 0 |
-| Eleanor | 99,800 (+24%) | 118,183 (-15%) | 213,518 (+0%) | 345,750 (+0%) | `UseEleanorTheOneFighterRises` 1, `UseEleanorBlazingAndFurious` 1, `AutoMobCount` 2 |
+| Eleanor | 100,393 (+25%) | 120,869 (-13%) | 213,518 (+0%) | 345,750 (+0%) | `UseEleanorTheOneFighterRises` 1, `UseEleanorBlazingAndFurious` 1, `AutoMobCount` 2 |
 
 <!-- preset-table:end -->
 
 - **`AutoMobCount` 1 → 2 in the shared preset.** At 1 an area skill outranks the single-target ones even against one monster. Eira's DPS is the same but Xeno Slasher (130 SP) is replaced by Eraser Cutter (70 SP), so damage per SP goes from 1,438 to 2,670; Sera against one monster gains 14% (146,405 → 167,256 DPS). Bayeri no longer changes either way: his DEF-ignoring area skills are only cast against a target with enough DEF, so he casts Stahl Horn at 1 and 2 monsters with either value. The area skill is used when the monsters around the target number at least `AutoMobCount`.
 - **One shared value would hurt Dieter against a single monster, so he has his own.** Every Dieter attack is an area skill, so with `AutoMobCount` 2 he casts nothing offensive against one monster (2,192 DPS). `Types/Dieter.lua` sets `AutoMobCount = 1`: 45,841 DPS against one monster and 90,616 against two, against 8,135 and 14,577 with the previous preset (his old figures of 23,000 and 54,786 no longer reproduce after the AI changes). See [the option table](preset-tuning/README.md#dieter-one-option-at-a-time) for the rows.
-- **Twister Cutter and Needle Stinger off.** When enabled the AI prefers them to the cheaper skill: Twister Cutter replaces Eraser Cutter (122,526 → 83,372 DPS against one monster, −32%) and Needle Stinger replaces Needle of Paralyze (167,256 → 125,958, −25%). Glanzen Spies is now on in `Types/Bayeri.lua`: the AI only casts it instead of Stahl Horn against high-DEF targets, so against the zero-DEF dummy it changes nothing.
+- **Skill choice by score.** Eira, Bayeri and Sera no longer cast a newer attack just because it is enabled. Each attack has its damage data in `SkillDamage` (`H_SkillList.lua`: rAthena's ratio at base level 250 and whether DEF applies), and among the ready skills the AI picks the highest score: ratio × element against the target × monsters hit × DEF reduction, divided by the cast time; below `SkillPickLowSPPercent` (40%) SP it divides by the SP cost instead. On private servers the 1 s after-cast delay of the newer attacks is gone (rAthena has none), and their cooldown now starts after the observed cast, so they are not retried too early. Previously, forcing the newer skill lost DPS: Twister Cutter instead of Eraser Cutter 83,372 against 122,526 DPS on one monster, Absolute Zephyr instead of Xeno Slasher 250,881 against 365,708 on three. With the score the presets enable them: Eira 126,909 on one monster and 373,183 on three, Sera with Needle Stinger and `AutoMobCount` 1 219,256 on one monster (167,256 before). Glanzen Spies is on in `Types/Bayeri.lua` and replaces Stahl Horn only where it scores higher. With the official server type the 1 s delay stays, so Xeno Slasher, Heilige Stange and Needle of Paralyze usually win.
 - **Blast Forge on** is most of Dieter's damage: turning it off costs 82-85% (90,616 → 14,577 DPS against two monsters), since it has its own cooldown next to Lava Slide. Its ground unit is priced as hitting every monster in the area on every tick, so a monster that walks out of the area earns less. Magma Flow is priced as one splash hit per cast and its in-game effect, a buff that triggers on attacks, is not modelled, so its rows (turning it off looks like +4% against three monsters) are not reliable.
 - **Eleanor.** `Types/Eleanor.lua` keeps Blazing And Furious on: the AI only casts it with 6 or more spheres (`ELEANOR_BLAZING_MIN_SPHERES` in `AzzyUtil.lua`), so against one monster it is never cast (identical rows with it off) and against packs it adds 5-7% (213,518 against 199,288 DPS at 22 SP/s against three, 345,750 against 328,535 against five, 300,606 against 283,592 at 40 SP/s against three). The One Fighter Rises is what makes packs worth it: turning it off loses 52% against three monsters and changes nothing against one. `AutoComboSpheres` of 3 or 6 instead of the current 1 is within 1% against one monster and no different against three. Open: against two monsters the current settings are 15% below the previous preset (118,183 against 139,502 DPS); the casts differ (Sonic Claw 37, The One Fighter Rises 28, Blazing And Furious 3, against 14, 28 and 13 before). `AutoMobCount` is not the cause (1 and 2 give identical rows with two monsters). The previous preset also had `AutoComboSpheres` 10 where the current one has 1, which is the likely cause and has not been tested. The 22 SP/s regeneration is the one input measured on a single server.
 

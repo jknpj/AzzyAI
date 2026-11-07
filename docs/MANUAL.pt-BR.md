@@ -130,8 +130,17 @@ Uma habilidade pode não ser escolhida por:
 - Falta de SP ou reserva configurada.
 - Cooldown, alcance ou elemento do alvo.
 - Requisitos de área ou táticas do monstro.
-- Outra habilidade disponível com prioridade maior.
+- Outra habilidade disponível com pontuação maior (veja abaixo).
 - Cast, combo ou pausa temporária ainda em andamento.
+
+Eira, Bayeri e Sera comparam suas habilidades de ataque em vez de seguir uma
+lista fixa: cada ataque disponível recebe uma pontuação pelo multiplicador de
+dano, o elemento do alvo (de `MobInfo.lua`), quantos monstros atinge, a DEF do
+alvo nas habilidades que não a ignoram e o tempo de conjuração. Abaixo de 40% de
+SP a pontuação usa dano por SP, então as habilidades mais baratas ganham. Por
+exemplo, a Eira usa Absolute Zephyr ou Twister Cutter contra monstros fracos a
+Vento e Eraser Cutter contra monstros de Vento. As demais habilidades mantêm a
+ordem habitual.
 
 `AutoMobMode` controla habilidades automáticas em área. `AutoMobCount` define
 a quantidade necessária; **1 pode fazer habilidades de área competirem mesmo
@@ -150,20 +159,21 @@ valor do arquivo instalado.
 | Homúnculo | O que conferir |
 |---|---|
 | Eira | Ative os ataques desejados, como Twister Cutter ou Absolute Zephyr. Light of Regenerate é opcional e desligada por padrão: exige lealdade, reduz intimidade ao conjurar e sacrifica Eira para ressuscitar o dono. |
-| Bayeri | **Glanzen Spies** usa um alvo; **Heilige Pferd** é centrada no Bayeri. O preset do Bayeri liga Pferd e Spies e escolhe pela DEF do alvo (de `MobInfo.lua`): Spies só acima de DEF 320, senão Stahl Horn; com exatamente dois monstros, Stange/Pferd só a partir de DEF 110. |
+| Bayeri | **Glanzen Spies** usa um alvo; **Heilige Pferd** é centrada no Bayeri. O preset do Bayeri liga Pferd e Spies; Spies substitui Stahl Horn só quando pontua mais contra o alvo (principalmente com DEF alta); com exatamente dois monstros, Stange/Pferd só a partir de DEF 110. |
 | Sera | Toxin of Mandara e Needle Stinger têm casts que podem ser interrompidos. Mantenha o alvo no alcance e confira as pausas de falha abaixo. Pain Killer e Summon Legion têm opções próprias. |
 | Dieter | Ative ataques e buffs separadamente. Resistência ou imunidade ao fogo pode impedir a escolha de habilidades de fogo. |
-| Eleanor | Sonic Claw e a sequência de luta exigem estilo de luta; Tinder Breaker/CBC/EQC exigem agarrar. Esferas, SP e tempo do combo importam. The One Fighter Rises e Blazing And Furious são habilidades em área: seguem `AutoMobMode`/`AutoMobCount` em vez de serem usadas contra um único alvo, exceto The One Fighter Rises contra um alvo isolado com DEF 300 ou mais. Com 3+ monstros ela pula as cadeias de Sonic Claw, e Blazing And Furious só é usada com 6+ esferas. |
+| Eleanor | Sonic Claw e a sequência de luta exigem estilo de luta; Tinder Breaker/CBC/EQC exigem agarrar. Esferas, SP e tempo do combo importam. The One Fighter Rises e Blazing And Furious são habilidades em área: seguem `AutoMobMode`/`AutoMobCount` em vez de serem usadas contra um único alvo, exceto The One Fighter Rises contra um alvo isolado com DEF 220 ou mais. Com 3+ monstros ela pula as cadeias de Sonic Claw, e Blazing And Furious só é usada com 6+ esferas. |
 | Vanilmirth | **Caprice** (herdada também pelos Homunculus S baseados em Vanilmirth) é controlada por `UseVanilCaprice` (ligada por padrão). Chaotic Blessing segue `UseAutoHeal`. Self Destruct nunca é usada automaticamente. |
 São dicas de configuração, não um ranking ou uma build ideal. As regras do
 servidor podem variar, inclusive alcance e forma de mirar habilidades.
 
-O preset incluído usa `AutoMobCount` 2 e deixa desligadas **Twister Cutter**
-(Eira) e **Needle Stinger** (Sera) (os presets por tipo em `Types/` ligam a
-Spies do Bayeri e a Blazing And Furious da Eleanor), porque a IA as prefere a habilidades mais baratas que se
-saíram pelo menos igual em testes offline, e liga **Blast Forge** (Dieter). Essas
-escolhas vêm de uma simulação, não de um servidor oficial: ative qualquer uma se
-preferir. Todas as habilidades de ataque do Dieter são de área, então com
+O preset incluído usa `AutoMobCount` 2. O preset da Eira liga **Twister Cutter**
+e **Absolute Zephyr**; a IA as usa quando pontuam mais que
+Eraser Cutter ou Xeno Slasher. O preset da Sera liga **Needle Stinger** (mesma regra contra
+Needle of Paralyze) e `AutoMobCount` 1; os presets por tipo também ligam
+Spies do Bayeri e Blazing And Furious da Eleanor, e **Blast Forge** (Dieter) está
+ligada. As comparações offline são simulações, não medições em um servidor oficial.
+Todas as habilidades de ataque do Dieter são de área, então com
 `AutoMobCount` 2 ele não ataca um único monstro com elas: coloque `AutoMobCount`
 em 1 se você enfrenta principalmente um monstro por vez com o Dieter (Bayeri e
 Sera perdem dano contra monstros isolados). Os detalhes estão nas
@@ -186,9 +196,14 @@ Para um experimento ofensivo só com Sonic:
 3. Desligue Tinder Breaker, CBC, EQC, Blazing And Furious e The One Fighter Rises.
 4. Coloque Eleanor em **estilo de luta** e recarregue a IA após salvar.
 
-Ataques normais e buffs habilitados continuam ativos. O acompanhamento de
-trocas manuais de estilo depende das informações fornecidas pelo cliente.
-Se jogo e IA discordarem após uma troca manual de estilo, recarregue e teste
+Ataques normais e buffs habilitados continuam ativos. A IA não consegue ler o
+estilo da Eleanor: após uma troca manual de estilo ela percebe quando um
+iniciador de combo (Sonic Claw ou Tinder Breaker) é recusado e passa a seguir o
+novo estilo; outra recusa de iniciador em menos de 5 segundos é tratada como
+falta de esferas. No estilo de agarrar ela só ganha esferas ao ser atingida, então,
+sem esferas para Tinder Breaker e sem levar golpes por 5 segundos, ela volta ao
+estilo de luta; use `EleanorDoNotSwitchMode = 1` para manter o estilo escolhido.
+Se jogo e IA ainda discordarem, recarregue e teste
 novamente; os ícones de esferas não são necessariamente uma contagem exata
 em tempo real.
 

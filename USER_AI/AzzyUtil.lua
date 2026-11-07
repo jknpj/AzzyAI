@@ -3076,6 +3076,72 @@ function SkillTypeOutranks(newtype,curtype)
 	return newp > curp
 end
 
+-- Expected value of casting an attack skill with a SkillDamage entry on target (nil without one):
+-- ratio x monsters hit (tactics weight x element rate, as AoE counts) x DEF reduction, divided by
+-- the time the AI spends on the cast, or by its SP cost when perSP is true.
+function SkillPickScore(skill, level, target, perSP)
+	local d = SkillDamage and SkillDamage[skill]
+	if d == nil or level == nil or level <= 0 then
+		return nil
+	end
+	local ratio = math.max(1, d[1] + d[2] * level * SkillDamageBaseLevel / d[3])
+	local hits = AoEMobWeight(skill, target)
+	if GetSkillAoESize(skill, level) ~= nil then
+		local mobmode = 0
+		if AutoMobMode == 2 then
+			mobmode = 1
+		end
+		hits = math.max(hits, GetMobCount(skill, level, target, mobmode))
+	end
+	local defrate = 1
+	if d[4] == 1 and UseMobInfo ~= 0 then
+		local info = GetMobInfo(target)
+		if info ~= nil and info[7] ~= nil then
+			-- Renewal hard DEF: damage x (4000 + DEF) / (4000 + DEF x 10)
+			defrate = (4000 + info[7]) / (4000 + 10 * info[7])
+		end
+	end
+	local cost
+	if perSP then
+		cost = GetSkillInfo(skill, 3, level)
+	else
+		cost = (AutoSkillDelay or 0) + GetSkillInfo(skill, 4, level)
+			+ GetSkillInfo(skill, 5, level) * (CastTimeRatio or 1) + GetSkillInfo(skill, 6, level)
+	end
+	return ratio * hits * defrate / math.max(cost, 1)
+end
+
+-- True when SP is low enough that skills should be compared by damage per SP
+function SkillPickBySP()
+	local maxsp = GetV(V_MAXSP, MyID)
+	return maxsp > 0 and GetV(V_SP, MyID) * 100 < maxsp * (SkillPickLowSPPercent or 0)
+end
+
+-- Whether candidate newc ({type, skill, level}) should replace the current pick cur, both cast at
+-- their level capped to levelcap. Damage skills with SkillDamage entries are compared by
+-- SkillPickScore; anything else falls back to the skill-type order.
+function PickBetterSkill(newc, cur, target, levelcap)
+	local function isDamageType(t)
+		return t ~= -1 and SkillTypePriority[t] ~= nil
+	end
+	if not isDamageType(newc[1]) or not isDamageType(cur[1]) then
+		return SkillTypeOutranks(newc[1], cur[1])
+	end
+	local function castLevel(c)
+		if IsMobSkillType(c[1]) and AoEFixedLevel == 1 then
+			return c[3]
+		end
+		return math.min(c[3], levelcap)
+	end
+	local perSP = SkillPickBySP()
+	local newscore = SkillPickScore(newc[2], castLevel(newc), target, perSP)
+	local curscore = SkillPickScore(cur[2], castLevel(cur), target, perSP)
+	if newscore == nil or curscore == nil then
+		return SkillTypeOutranks(newc[1], cur[1])
+	end
+	return newscore > curscore
+end
+
 function IsMobSkillType(skilltype)
 	return skilltype==MOB_ATK or skilltype==CLASS_NEW_MOB
 end
@@ -3931,6 +3997,12 @@ function SkillCastResult(skill, level, success)
 	if level > info.cap or info.exact or level ~= info.cap or level <= info.ok then
 		return
 	end
+	-- Without enough SP the server refuses any level: that says nothing about the learned one
+	local cost = GetSkillInfo(skill, 3, level)
+	if cost ~= nil and GetV(V_SP, MyID) < cost then
+		logappend("AAI_SKILLFAIL", FormatSkill(skill, level).." failed with SP below its cost ("..GetV(V_SP, MyID).."/"..cost.."): level kept")
+		return
+	end
 	info.rejects = info.rejects + 1
 	if info.rejects >= SKILL_REJECTS_TO_STEP_DOWN then
 		TraceAI("Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1))
@@ -4223,16 +4295,15 @@ function PickReadySkill(htype,candidates)
 	return 0,0
 end
 
--- Glanzen Spies ignores DEF but is Holy and slower: on a neutral 0 DEF target it deals about 60% of
--- Stahl Horn's damage (homun_bench.py). Stahl Horn loses (4000+DEF)/(4000+10*DEF) of it to DEF, so
--- Spies only pays off against high DEF (about 320 for a neutral target; the element moves that).
--- Without monster data it stays the user's choice.
-BAYERI_SPIES_VS_STAHL = 0.6
+-- Bayeri: Heilige Stange/Pferd ignore DEF but only beat Stahl Horn on a pair of monsters when their
+-- DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win. Glanzen Spies vs Stahl Horn is
+-- left to SkillPickScore (SkillDamage), which reproduces the benchmark's break-even.
 BAYERI_PAIR_MIN_DEF = 110
 BAYERI_PACK_SKILL_FULL_COUNT = 3
 -- Eleanor: The One Fighter Rises ignores DEF while her Sonic Claw combos do not. On a lone target it
--- breaks even near DEF 230 and wins from there (homun_bench.py: +13% at DEF 400, -19% at DEF 0).
-ELEANOR_LONE_TOFR_MIN_DEF = 300
+-- breaks even near DEF 210 and wins from there (homun_bench.py: +3% at DEF 250, +21% at DEF 500,
+-- +51% at DEF 1000, -17% at DEF 0).
+ELEANOR_LONE_TOFR_MIN_DEF = 220
 -- With a pack her Sonic Claw chains only keep SP under the AoE's price: skipping them is +19..32%
 ELEANOR_PACK_NO_SONIC_COUNT = 3
 -- Blazing And Furious hits once per sphere for about 1/7 of The One Fighter Rises per hit and costs the
@@ -4262,16 +4333,6 @@ function EleanorPackSkipsSonicClaw(target)
 	return GetMobCount(MH_THE_ONE_FIGHTER_RISES, lv, target, mobmode) >= ELEANOR_PACK_NO_SONIC_COUNT
 end
 
-function SpiesBeatsStahlHorn(target)
-	local info = GetMobInfo(target)
-	if info == nil or info[7] == nil then
-		return true
-	end
-	local def = info[7]
-	local stahl = (4000 + def) / (4000 + 10 * def)
-	return BAYERI_SPIES_VS_STAHL * SkillElementRate(MH_GLANZEN_SPIES, target) / 100 > stahl
-end
-
 function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then
 		return 0,0
@@ -4280,9 +4341,6 @@ function GetNewSAtkSkill(myid)
 	if htype==EIRA then
 		return PickReadySkill(htype,{{UseEiraTwisterCutter,MH_TWISTER_CUTTER,EiraTwisterCutterLevel}})
 	elseif htype==BAYERI then
-		if not SpiesBeatsStahlHorn(MyEnemy) then
-			return 0,0
-		end
 		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
 	elseif htype==SERA then
 		return PickReadySkill(htype,{{UseSeraNeedleStinger,MH_NEEDLE_STINGER,SeraNeedleStingerLevel}})

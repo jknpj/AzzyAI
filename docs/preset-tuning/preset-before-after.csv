@@ -1,21 +1,21 @@
 ﻿homunculus,monsters,sp_regen_per_s,dps_before (0cc1f35),dps_after,dps_change_pct,damage_per_sp_before,damage_per_sp_after,casts_before,casts_after
-eira,1,60,122526,122526,+0,1438,2670,Xeno Slasher 118,Eraser Cutter 118
-eira,2,60,244117,244117,+0,2864,2864,Xeno Slasher 118,Xeno Slasher 118
-eira,3,60,365708,365708,+0,4291,4291,Xeno Slasher 118,Xeno Slasher 118
-eira,5,60,608891,608891,+0,7145,7145,Xeno Slasher 118,Xeno Slasher 118
-bayeri,1,60,162736,162736,+0,1474,1474,Stahl Horn 281,Stahl Horn 281
-bayeri,2,60,162736,162736,+0,1474,1474,Stahl Horn 281,Stahl Horn 281
-bayeri,3,60,170915,188322,+10,2587,2473,Heilige Stange 111,Heilige Pferd 71
-bayeri,5,60,284251,317478,+12,4302,4114,Heilige Stange 111,Heilige Pferd 72
-sera,1,60,141170,167256,+18,1967,1800,Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11,Needle Of Paralyze 169
-sera,2,60,237934,245323,+3,3315,3602,Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11,Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10
-sera,3,60,334698,344240,+3,4664,5054,Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11,Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10
-sera,5,60,528225,542074,+3,7360,7958,Toxin Of Mandara 53; Needle Stinger 39; Poison Mist 11,Toxin Of Mandara 59; Needle Of Paralyze 47; Poison Mist 10
+eira,1,60,126909,126909,+0,1599,1599,Twister Cutter 67; Eraser Cutter 51,Twister Cutter 67; Eraser Cutter 51
+eira,2,60,244117,250482,+3,2864,2656,Xeno Slasher 118,Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4
+eira,3,60,365708,373183,+2,4291,3957,Xeno Slasher 118,Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4
+eira,5,60,608891,618585,+2,7145,6559,Xeno Slasher 118,Xeno Slasher 90; Absolute Zephyr 27; Eraser Cutter 4
+bayeri,1,60,184809,184809,+0,1670,1670,Glanzen Spies 111; Stahl Horn 110,Glanzen Spies 111; Stahl Horn 110
+bayeri,2,60,184809,184809,+0,1670,1670,Glanzen Spies 111; Stahl Horn 110,Glanzen Spies 111; Stahl Horn 110
+bayeri,3,60,191998,226169,+18,2256,2392,Heilige Stange 73; Glanzen Spies 73,Heilige Stange 61; Heilige Pferd 36; Glanzen Spies 34
+bayeri,5,60,284251,390505,+37,4302,4237,Heilige Stange 111,Heilige Stange 70; Heilige Pferd 48
+sera,1,60,219256,219256,+0,1944,1944,Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11,Needle Of Paralyze 111; Needle Stinger 36; Toxin Of Mandara 26; Poison Mist 11
+sera,2,60,318949,318949,+0,2823,2823,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11
+sera,3,60,419754,419754,+0,3715,3715,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11
+sera,5,60,621387,621387,+0,5500,5500,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11,Needle Of Paralyze 79; Toxin Of Mandara 57; Needle Stinger 35; Poison Mist 11
 dieter,1,60,8135,45841,+464,1246,1520,Lava Slide 10; Magma Flow 2,Blast Forge 37; Lava Slide 10; Magma Flow 2
 dieter,2,60,14577,90616,+522,2233,3004,Lava Slide 10; Magma Flow 2,Blast Forge 37; Lava Slide 10; Magma Flow 2
 dieter,3,60,20768,135390,+552,3182,4488,Lava Slide 10; Magma Flow 2,Blast Forge 37; Lava Slide 10; Magma Flow 2
 dieter,5,60,33651,225190,+569,5155,7465,Lava Slide 10; Magma Flow 2,Blast Forge 37; Lava Slide 10; Magma Flow 2
-eleanor,1,22,80199,99800,+24,2020,2464,The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10,Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35
-eleanor,2,22,139502,118183,-15,3514,2916,The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10,Sonic Claw 37; The One Fighter Rises 28; Silvervein Rush 20; Midnight Frenzy 8; Blazing And Furious 3
+eleanor,1,22,80199,100393,+25,2020,2479,The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10,Sonic Claw 100; Silvervein Rush 49; Midnight Frenzy 35
+eleanor,2,22,139502,120869,-13,3514,2994,The One Fighter Rises 28; Sonic Claw 14; Blazing And Furious 13; Silvervein Rush 10,Sonic Claw 36; The One Fighter Rises 28; Silvervein Rush 19; Midnight Frenzy 9; Blazing And Furious 3
 eleanor,3,22,212779,213518,+0,5345,5271,The One Fighter Rises 35; Blazing And Furious 12,The One Fighter Rises 36; Blazing And Furious 11; Midnight Frenzy 1; Silvervein Rush 1; Sonic Claw 1
 eleanor,5,22,345750,345750,+0,8692,8692,The One Fighter Rises 34; Blazing And Furious 13,The One Fighter Rises 34; Blazing And Furious 13
