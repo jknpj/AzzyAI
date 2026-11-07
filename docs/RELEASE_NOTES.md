@@ -49,6 +49,18 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Fixed Eleanor's refusal-driven style/failsafe loop. A refused Sonic Claw or
+  Tinder Breaker no longer flips the tracked style. A bounded, same-target probe
+  can recover a manual style change only after confirmed starter use. Failed
+  probes retain the known style and cannot immediately retry. Style Change and
+  starters no longer use an AI-call pause alone as proof of an unseen cast.
+  Normal attack dancing and Eleanor combo dancing are unchanged.
+  Initialization and detected resurrection prefer Fighting with Sonic Claw
+  enabled (including both styles), or Grappling with only Tinder Breaker.
+  The no-switch option remains authoritative. Detected death discards pending
+  casts, targets, combo windows and sphere estimates, persisting a death marker
+  across reloads. A pause alone is not treated as death/resurrection.
+
 - Removed experimental post-skill dancing and its 16 GUI controls. Local rAthena
   A/B tests showed longer median cast intervals with it enabled: Stahl Horn
   719 -> 859 ms and Eraser Cutter 1438 -> 1594 ms. Angriffs Modus also delayed

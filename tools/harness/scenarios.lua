@@ -1132,29 +1132,133 @@ SCENARIOS = {
 				end
 				return refusedSonic and HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE
 			end,
-			["a second refused starter cannot toggle the inferred style back"] = function()
+			["refused starters never change the tracked style"] = function()
 				local previousMode, previousPending, previousTick = EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick
+				local previousSkill, previousEnemy = EleanorModeResyncSkill, EleanorModeResyncEnemy
 				EleanorMode = FIGHTING_MODE
 				EleanorModeResyncPending = 0
+				EleanorModeResyncTick = 0
 				local first = TryEleanorModeResync(MH_SONIC_CRAW)
 				local second = TryEleanorModeResync(MH_TINDER_BREAKER)
-				local passed = first and not second and EleanorMode == GRAPPLING_MODE
-					and EleanorModeResyncPending == 1
+				local passed = first and not second and EleanorMode == FIGHTING_MODE
+					and EleanorModeResyncPending == 0
 				EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick = previousMode, previousPending, previousTick
+				EleanorModeResyncSkill, EleanorModeResyncEnemy = previousSkill, previousEnemy
 				return passed
 			end,
 			["a later manual switch back can resync again after the retry window"] = function()
 				local previousMode, previousPending, previousTick = EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick
+				local previousSkill, previousEnemy = EleanorModeResyncSkill, EleanorModeResyncEnemy
 				EleanorMode = GRAPPLING_MODE
-				EleanorModeResyncPending = 1
+				EleanorModeResyncPending = 0
 				EleanorModeResyncTick = GetTick() - ELEANOR_RESYNC_RETRY_MS
 				local again = TryEleanorModeResync(MH_TINDER_BREAKER)
-				local passed = again and EleanorMode == FIGHTING_MODE
+				local passed = again and EleanorMode == GRAPPLING_MODE and EleanorModeResyncSkill == MH_SONIC_CRAW
 				EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick = previousMode, previousPending, previousTick
+				EleanorModeResyncSkill, EleanorModeResyncEnemy = previousSkill, previousEnemy
 				return passed
 			end,
 			["an accepted grapple starter clears the resync lock"] = function()
 				return EleanorModeResyncPending == 0
+			end,
+			["style probes cancel on target changes and cannot retry immediately"] = function()
+				local names = { "EleanorMode", "EleanorModeResyncPending", "EleanorModeResyncTick",
+					"EleanorModeResyncSkill", "EleanorModeResyncEnemy", "CastSkillEnemy" }
+				local saved = {}
+				for _, name in ipairs(names) do saved[name] = _G[name] end
+				EleanorMode, EleanorModeResyncPending, EleanorModeResyncTick = FIGHTING_MODE, 0, 0
+				CastSkillEnemy = MyEnemy + 1
+				local queued = TryEleanorModeResync(MH_SONIC_CRAW)
+				local skill = GetEleanorStyleProbe()
+				local retried = TryEleanorModeResync(MH_SONIC_CRAW)
+				local passed = queued and skill == 0 and EleanorModeResyncPending == 0
+					and not retried and EleanorMode == FIGHTING_MODE
+				for _, name in ipairs(names) do _G[name] = saved[name] end
+				return passed
+			end,
+		} },
+	eleanor_refused_starters_keep_style = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		private = true, passive = true, maxRefused = 100,
+		set = { AutoComboMode = 2, AutoComboSpheres = 1, AutoMobCount = 1,
+			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
+		afterLoad = function()
+			local realSkillObject = SkillObject
+			SkillObject = function(id, level, skill, target)
+				if skill == MH_SONIC_CRAW or skill == MH_TINDER_BREAKER then
+					HarnessServer.spheres = 0
+				end
+				return realSkillObject(id, level, skill, target)
+			end
+		end,
+		forbid = { "Style Change", "Continuous Brandishing Combo", "Eternal Quickening Combo" },
+		checks = {
+			["missing real spheres cannot produce a style/failsafe loop"] = function()
+				local refused = 0
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.refused then refused = refused + 1 end
+				end
+				return refused >= 2 and EleanorMode == FIGHTING_MODE and HarnessServer.style == "fighting"
+			end,
+		} },
+	eleanor_resurrection = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		private = true, passive = true,
+		set = { AutoComboMode = 2, AutoComboSpheres = 3,
+			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
+		afterLoad = function()
+			local realAI, realGetV = AI, GetV
+			local died, revived = false, false
+			AI = function(id)
+				if DoneInit ~= 0 and GetTick() >= 5000 and not died then
+					died = true
+					CastSkill, CastSkillLevel, CastSkillMode = MH_STYLE_CHANGE, 1, 8
+					ComboSCTimeout, ComboSVTimeout = GetTick() + 2000, GetTick() + 2000
+					MySpheres, EleanorMode = 10, GRAPPLING_MODE
+					GetV = function(v, actor)
+						if actor == id and v == V_HP then return 0 end
+						return realGetV(v, actor)
+					end
+					realAI(id)
+					GetV = realGetV
+					assert(EleanorWasDead == 1 and CastSkill == 0 and MySpheres == 0
+						and ComboSCTimeout == 0 and ComboSVTimeout == 0, "death kept stale combat state")
+					return
+				end
+				if died and not revived then
+					revived = true
+					HarnessServer.style, HarnessServer.spheres = "fighting", 0
+				end
+				return realAI(id)
+			end
+		end,
+		expect = { "Sonic Claw" },
+		forbid = { "Style Change", "Tinder Breaker" },
+		checks = {
+			["revival rebuilds spheres without stale style/cast/combos"] = function()
+				return EleanorWasDead == 0 and EleanorMode == FIGHTING_MODE
+					and HarnessServer.style == "fighting"
+			end,
+			["configured starters choose a deterministic preferred style"] = function()
+				local sonic, tinder = UseEleanorSonicClaw, UseEleanorTinderBreaker
+				UseEleanorSonicClaw, UseEleanorTinderBreaker = 1, 1
+				local both = GetEleanorPreferredStyle() == FIGHTING_MODE
+				UseEleanorTinderBreaker = 0
+				local fighting = GetEleanorPreferredStyle() == FIGHTING_MODE
+				UseEleanorSonicClaw, UseEleanorTinderBreaker = 0, 1
+				local grappling = GetEleanorPreferredStyle() == GRAPPLING_MODE
+				UseEleanorTinderBreaker = 0
+				local disabled = GetEleanorPreferredStyle() == nil
+				UseEleanorSonicClaw, UseEleanorTinderBreaker = sonic, tinder
+				return both and fighting and grappling and disabled
+			end,
+		} },
+	eleanor_grapple_only_startup = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		private = true, passive = true,
+		set = { AutoComboMode = 2, UseEleanorSonicClaw = 0, UseEleanorTinderBreaker = 1,
+			UseEleanorBlazingAndFurious = 0, UseEleanorTheOneFighterRises = 0 },
+		expect = { "Style Change" }, forbid = { "Sonic Claw" },
+		checks = {
+			["grapple-only setup starts and stays in grappling"] = function()
+				return EleanorMode == GRAPPLING_MODE and HarnessServer.style == "grappling"
 			end,
 		} },
 	-- Grappling without spheres while nothing hits her (the owner tanks): she can't start Tinder

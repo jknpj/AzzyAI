@@ -2394,6 +2394,11 @@ end
 
 function GetSAtkSkill(myid)
 	if MyHomunType == ELEANOR and CastSkill ~= 0 then return 0,0 end
+	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
+		local probe, level = GetEleanorStyleProbe()
+		if probe == MH_SONIC_CRAW then return probe, level end
+		if EleanorModeResyncPending == 1 then return 0,0 end
+	end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
@@ -2456,6 +2461,7 @@ end
 
 function GetComboSkill(myid)
 	if CastSkill ~= 0 then return 0,0 end
+	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then return 0,0 end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
@@ -2492,6 +2498,11 @@ end
 
 function GetGrappleSkill(myid)
 	if CastSkill ~= 0 then return 0,0 end
+	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
+		local probe, level = GetEleanorStyleProbe()
+		if probe == MH_TINDER_BREAKER then return probe, level end
+		if EleanorModeResyncPending == 1 then return 0,0 end
+	end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
