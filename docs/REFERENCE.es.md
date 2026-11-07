@@ -361,6 +361,20 @@ con un motivo.
 | `SphereTrackInterval`, `SphereTrackFactor`, `EleanorComboGap`, `EleanorComboDance`, `EleanorDoNotSwitchMode` | 800, 2, 500, 1, 0 | Estimación de esferas y ritmo de combos de Eleanor. Véase el [manual](MANUAL.es.md#eleanor-combos-o-solo-sonic-claw). |
 | `OldHomunType` | 2 | Para un Homúnculo S, el tipo anterior: 1 Lif, 2 Amistr, 3 Filir, 4 Vanilmirth. Se detecta automáticamente cuando es posible; la opción es solo un respaldo. |
 
+Eleanor no deduce un cambio de estilo por el rechazo de una habilidad inicial:
+la falta de esferas, el alcance o el timing también pueden causar rechazos.
+La recuperación puede probar una habilidad inicial habilitada del otro estilo
+contra el mismo objetivo, como máximo una vez cada cinco segundos. Solo el uso
+confirmado actualiza el estilo. Style Change también exige confirmación; una
+pausa en las llamadas de la AI no basta. El baile de combos no cambia.
+Al iniciar la AI y al detectar una resurrección, Sonic Claw habilitada prefiere
+Fighting, incluso con ambas habilidades iniciales habilitadas; solo Tinder
+Breaker prefiere Grappling. `EleanorDoNotSwitchMode=1` impide ese cambio
+automático. La muerte detectada limpia casts, objetivos, combos y esferas
+estimadas; la resurrección reconstruye las esferas. El marcador de muerte
+sobrevive a la recarga de la AI. Si el cliente nunca informa la muerte, una
+pausa por sí sola no permite identificar la resurrección.
+
 <a id="4-tactics"></a>
 ## 4. Tácticas
 

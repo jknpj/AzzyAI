@@ -10,10 +10,71 @@ MainVersion="2.0"
 ApplyServerType()
 
 local nextEleanorSphereAttack = 0
+local eleanorPreferredStylePending = false
 
--- A refused style starter means the style was changed outside the AI (by hand). Right after a
--- resync, a refusal of the other starter more likely means missing spheres, so another flip waits
--- this long (the player may also have switched back).
+function GetEleanorPreferredStyle()
+	if UseEleanorSonicClaw == 1 then return FIGHTING_MODE end
+	if UseEleanorTinderBreaker == 1 then return GRAPPLING_MODE end
+	return nil
+end
+
+function ResetEleanorAfterDeath()
+	MySpheres = 0
+	ComboSCTimeout, ComboSVTimeout, ComboFollowAt = 0, 0, 0
+	CastSkill, CastSkillLevel, CastSkillMode, CastSkillState, CastSkillTime = 0, 0, 0, 0, 0
+	MySkill, MySkillLevel = 0, 0
+	MyEnemy, CommandedEnemy = 0, 0
+	MyState = IDLE_ST
+	MyAttackStanceX, MyAttackStanceY = 0, 0
+	EleanorModeResyncPending, EleanorModeResyncSkill, EleanorModeResyncEnemy = 0, 0, 0
+	EleanorModeResyncTick = 0
+	AutoSkillCastTimeout, AutoSkillTimeout = 0, 0
+	nextEleanorSphereAttack = 0
+end
+
+function HandleEleanorLifeState()
+	if MyHomunType ~= ELEANOR then return false end
+	local dead = GetV(V_HP, MyID) <= 0 or GetV(V_MOTION, MyID) == MOTION_DEAD
+	if dead then
+		if EleanorWasDead ~= 1 then
+			ResetEleanorAfterDeath()
+			EleanorWasDead = 1
+			logappend("AAI_SKILLFAIL", "Eleanor died; cleared pending casts, combos and sphere estimate")
+			UpdateTimeoutFile()
+		end
+		return true
+	end
+	if EleanorWasDead == 1 then
+		ResetEleanorAfterDeath()
+		EleanorWasDead = 0
+		-- Resurrection starts in fighting style on rAthena; later starter confirmation can resync.
+		EleanorMode = FIGHTING_MODE
+		EleanorModeChangedTick, EleanorLastHitTick = GetTick(), GetTick()
+		MyLastSP = GetV(V_SP, MyID)
+		MyStart = GetTick()
+		eleanorPreferredStylePending = true
+		logappend("AAI_SKILLFAIL", "Eleanor revived; rebuilding spheres and applying configured preferred style")
+		UpdateTimeoutFile()
+	end
+	return false
+end
+
+function ApplyEleanorPreferredStyle()
+	if not eleanorPreferredStylePending or MyHomunType ~= ELEANOR then return false end
+	local preferred = GetEleanorPreferredStyle()
+	if preferred == nil or EleanorDoNotSwitchMode == 1 or EleanorMode == preferred then
+		eleanorPreferredStylePending = false
+		return false
+	end
+	if CastSkill ~= 0 or GetTick() < AutoSkillCastTimeout then return true end
+	if GetCastableSkillLevel(MH_STYLE_CHANGE, 1) <= 0
+		or GetV(V_SP, MyID) <= GetSkillInfo(MH_STYLE_CHANGE, 3, 1) then return false end
+	eleanorPreferredStylePending = false
+	logappend("AAI_SKILLFAIL", "Eleanor applying configured preferred style "..preferred)
+	return DoSkill(MH_STYLE_CHANGE, 1, MyID, 8) ~= 0
+end
+
+-- A refused starter is ambiguous; probe the other style without changing the tracked mode.
 ELEANOR_RESYNC_RETRY_MS = 5000
 -- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
 -- for this long, go back to fighting style to build them by attacking
@@ -23,26 +84,47 @@ function TryEleanorModeResync(skill)
 	if MyHomunType ~= ELEANOR then
 		return false
 	end
-	if EleanorModeResyncPending == 1 and GetTick() < EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS then
+	if EleanorModeResyncPending == 1 and skill == EleanorModeResyncSkill then
+		EleanorModeResyncPending = 0
 		return false
 	end
-	local inferredMode
+	if EleanorModeResyncTick > 0 and GetTick() < EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS then
+		return false
+	end
+	local probeSkill
 	if skill == MH_SONIC_CRAW and EleanorMode == FIGHTING_MODE then
-		inferredMode = GRAPPLING_MODE
+		probeSkill = MH_TINDER_BREAKER
 	elseif skill == MH_TINDER_BREAKER and EleanorMode == GRAPPLING_MODE then
-		inferredMode = FIGHTING_MODE
+		probeSkill = MH_SONIC_CRAW
 	end
-	if inferredMode == nil then
+	if probeSkill == nil or CastSkillEnemy == nil or CastSkillEnemy == 0
+		or (probeSkill == MH_SONIC_CRAW and UseEleanorSonicClaw ~= 1)
+		or (probeSkill == MH_TINDER_BREAKER and UseEleanorTinderBreaker ~= 1) then
 		return false
 	end
-	EleanorMode = inferredMode
 	EleanorModeResyncPending = 1
 	EleanorModeResyncTick = GetTick()
-	EleanorModeChangedTick = GetTick()
-	TraceAI("Eleanor style starter was refused; resyncing tracked style to "..inferredMode)
-	logappend("AAI_SKILLFAIL", "Eleanor style starter "..FormatSkill(skill, 1).." was refused; resyncing tracked style to "..inferredMode)
-	UpdateTimeoutFile()
+	EleanorModeResyncSkill = probeSkill
+	EleanorModeResyncEnemy = CastSkillEnemy
+	logappend("AAI_SKILLFAIL", "Eleanor starter refused; keeping style "..EleanorMode.." until "..FormatSkill(probeSkill, 1).." confirms another style")
 	return true
+end
+
+function GetEleanorStyleProbe()
+	if MyHomunType ~= ELEANOR or EleanorModeResyncPending ~= 1 then return 0, 0 end
+	if MyEnemy == 0 or MyEnemy ~= EleanorModeResyncEnemy
+		or GetTick() >= EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS
+		or GetV(V_MOTION, MyEnemy) == MOTION_DEAD then
+		EleanorModeResyncPending = 0
+		return 0, 0
+	end
+	local skill = EleanorModeResyncSkill
+	local enabled = skill == MH_SONIC_CRAW and UseEleanorSonicClaw or UseEleanorTinderBreaker
+	local wanted = skill == MH_SONIC_CRAW and EleanorSonicClawLevel or EleanorTinderBreakerLevel
+	local level = GetCastableSkillLevel(skill, wanted or 5)
+	if enabled ~= 1 or level <= 0 or MySpheres < math.max(SkillSphereCost[skill] or 0, AutoComboSpheres)
+		or not IsSkillReady(skill) then return 0, 0 end
+	return skill, level
 end
 
 -- True when Eleanor sits in grappling style unable to start Tinder Breaker and nothing hits her
@@ -167,6 +249,7 @@ function doInit(myid)
 	AdjustCapriceLevel()
 	UpdateTimeoutFile()
 	DoneInit=1
+	eleanorPreferredStylePending = MyHomunType == ELEANOR
 end
 function AdjustCapriceLevel()
 	local msp=GetV(V_MAXSP,MyID)
@@ -2762,6 +2845,7 @@ function UpdateTimeoutFile()
 			return TimeoutConv(value)
 		end
 		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..conv(SOffensiveTimeout,4).."\nSDefensiveTimeout="..conv(SDefensiveTimeout,5).."\nSOwnerBuffTimeout="..conv(SOwnerBuffTimeout,6).."\nSOwner2ndBuffTimeout="..conv(SOwner2ndBuffTimeout,6).."\nGuardTimeout="..conv(GuardTimeout,1).."\nQuickenTimeout="..conv(QuickenTimeout,2).."\nOffensiveOwnerTimeout="..conv(OffensiveOwnerTimeout,11).."\nDefensiveOwnerTimeout="..conv(DefensiveOwnerTimeout,12).."\nOtherOwnerTimeout="..conv(OtherOwnerTimeout,13).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
+		OutFile:write("\nEleanorWasDead="..(EleanorWasDead or 0))
 		local tick=GetTick()
 		for skill,cooldown in pairs(AutoSkillCooldown) do
 			if cooldown > tick then
@@ -3351,6 +3435,7 @@ function AI(myid)
 	if DoneInit== 0 then
 		doInit(myid)
 	end
+	if HandleEleanorLifeState() then return end
 	if AggressiveRelogTracking==1 then
 		local OutFile
 		if IsHomun(MyID)==1 then
@@ -3717,6 +3802,8 @@ function AI(myid)
 	if CastSkill~=0 then
 		local castskillold = CastSkill
 		local castskilloldlvl = CastSkillLevel -- remember these for the SP watcher down below. 
+		local needsExplicitConfirmation = MyHomunType == ELEANOR
+			and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER or CastSkill == MH_STYLE_CHANGE)
 		local skillcastingtime = GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel)*CastTimeRatio
 		logappend("AAI_SKILLFAIL", "Skillfail Watcher active: "..FormatSkill(CastSkill,CastSkillLevel).."mode"..CastSkillMode.."delay "..LastAIDelay.." motion "..GetV(V_MOTION,MyID))
 		-- the client doesn't call AI() while casting, so the first call after a pause is when the cast
@@ -3730,8 +3817,6 @@ function AI(myid)
 			end
 		end
 		if GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel) == 0 then 
-			local needsExplicitConfirmation = MyHomunType == ELEANOR
-				and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER)
 			if LastAIDelay > 500 and not needsExplicitConfirmation then
 				--Skill cast successfully
 				TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
@@ -3782,7 +3867,7 @@ function AI(myid)
 					end
 				end
 			else -- CastSkillState is 0, so the skill hasn't started casting, but just in case it slipped by:
-				if (CastInterruptUnconfirmed ~= 1 or not IsOffensiveCastSkill(CastSkill)) and LastAIDelay > 220
+				if not needsExplicitConfirmation and (CastInterruptUnconfirmed ~= 1 or not IsOffensiveCastSkill(CastSkill)) and LastAIDelay > 220
 					and GetTick() >= CastSkillTime + skillcastingtime then
 					clearcastskill = 1
 				elseif GetTick() - CastSkillTime > math.max(1000, skillcastingtime) then
@@ -3855,6 +3940,13 @@ function AI(myid)
 			EleanorModeChangedTick=GetTick()
 			UpdateTimeoutFile()
 		elseif MyHomunType == ELEANOR and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER) then
+			local confirmedMode = CastSkill == MH_SONIC_CRAW and FIGHTING_MODE or GRAPPLING_MODE
+			if EleanorMode ~= confirmedMode then
+				EleanorMode = confirmedMode
+				EleanorModeChangedTick = GetTick()
+				logappend("AAI_SKILLFAIL", "Eleanor style confirmed by "..FormatSkill(CastSkill, CastSkillLevel)..": "..confirmedMode)
+				UpdateTimeoutFile()
+			end
 			EleanorModeResyncPending=0
 		end
 		SkillCastResult(CastSkill,CastSkillLevel,true)
@@ -3975,6 +4067,7 @@ function AI(myid)
 	if (GetTick() < (MyStart + SpawnDelay)) then
 		return
 	end
+	if ApplyEleanorPreferredStyle() then return end
 	if GetHomunBaseType(MyID)==AMISTR and UseCastleDefend ==1 then
 		if CanCastle() then
 			local mytargetweight =0
