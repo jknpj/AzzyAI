@@ -213,10 +213,10 @@ homunculi there is one, because higher levels have longer cooldowns.
 | `UseOffensiveBuff` | 3 | Flitting, Mental Charge, Weapon Quicken, Bloodlust |
 | `UseDefensiveBuff` | 3 | Amistr Bulwark, Accelerated Flight, Guard, Parrying, Urgent Escape |
 | `UseAutoSight`, `UseAutoMag` | 1, 0 (built-in) | **Mercenary only:** Sight (level 2 archer), Magnificat (level 4 archer) |
-| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 1, 1 | The Dieter skill of that name (`DieterPyroclasticLevel`, default 10) |
-| `UseDieterTempering` | 1 | **New.** Dieter's Tempering |
+| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 3, 3 | The Dieter skill of that name (`DieterPyroclasticLevel`, default 10) |
+| `UseDieterTempering` | 3 | **New.** Dieter's Tempering |
 | `UseEiraOveredBoost` | 0 | Eira's Overed Boost |
-| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 1, 1 | Bayeri's Golden Ferse, Angriff Modus and Goldene Tone |
+| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Bayeri's Golden Ferse, Angriff Modus and Goldene Tone |
 | `UseProvokeOwner` | 0 | Provoke (mercenary) or Pain Killer (Sera) on you |
 | `ProvokeOwnerMobbed` | 3 | Not used on you with fewer monsters than this on you, unless you are below 90% HP (the Weight tactic counts) |
 | `UseSeraPainkiller` | 3 | Sera's Pain Killer |

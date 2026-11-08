@@ -279,10 +279,10 @@ Los homúnculos básicos sí la tienen, porque los niveles altos tienen recargas
 | `UseOffensiveBuff` | 3 | Flitting, Mental Charge, Weapon Quicken, Bloodlust |
 | `UseDefensiveBuff` | 3 | Amistr Bulwark, Accelerated Flight, Guard, Parrying, Urgent Escape |
 | `UseAutoSight`, `UseAutoMag` | 1, 0 (interno) | **Solo mercenario:** Sight (arquero nivel 2), Magnificat (arquero nivel 4) |
-| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 1, 1 | La habilidad de Dieter con ese nombre (`DieterPyroclasticLevel`, predeterminado 10) |
-| `UseDieterTempering` | 1 | **Nuevo.** Tempering de Dieter |
+| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 3, 3 | La habilidad de Dieter con ese nombre (`DieterPyroclasticLevel`, predeterminado 10) |
+| `UseDieterTempering` | 3 | **Nuevo.** Tempering de Dieter |
 | `UseEiraOveredBoost` | 0 | Overed Boost de Eira |
-| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 1, 1 | Golden Ferse, Angriff Modus y Goldene Tone de Bayeri |
+| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Golden Ferse, Angriff Modus y Goldene Tone de Bayeri |
 | `UseProvokeOwner` | 0 | Provoke (mercenario) o Pain Killer (Sera) en ti |
 | `ProvokeOwnerMobbed` | 3 | No se usa en ti con menos monstruos que esto atacándote, salvo por debajo del 90% de HP (cuenta la táctica Weight) |
 | `UseSeraPainkiller` | 3 | Pain Killer de Sera |

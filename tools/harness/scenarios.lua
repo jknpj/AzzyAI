@@ -663,6 +663,24 @@ SCENARIOS = {
 				return HarnessTemperingFailures > 0 and pyro == 1 and SOwnerBuffTimeout > GetTick()
 			end,
 		} },
+	-- regression: GetTick() resets with Windows, so yesterday's saved buff expiry looked hours away
+	dieter_stale_buff_timers = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
+		private = true, minAttacks = 20,
+		set = { UseDieterPyroclastic = 3, UseDieterTempering = 3 },
+		afterLoad = function()
+			local realDofile = dofile
+			dofile = function(path)
+				local ok, result = pcall(realDofile, path)
+				if path:find("Timeouts.lua", 1, true) then
+					SOwnerBuffTimeout = GetTick() + 2600000
+					SOwner2ndBuffTimeout = GetTick() + 2600000
+				elseif not ok then
+					error(result, 0)
+				end
+				return result
+			end
+		end,
+		expect = { "Pyroclastic", "Tempering" } },
 	-- regression: Blast Forge has range 1, which the old learned-skill check read as "not learned"
 	dieter_forge = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
 		set = { UseDieterBlastForge = 1 }, expect = { "Blast Forge" } },

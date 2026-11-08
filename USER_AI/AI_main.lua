@@ -283,6 +283,27 @@ function loadtimeouts()
 			AutoSkillCooldown[skill]=0
 		end
 	end
+	local maxDuration=0
+	for _,info in pairs(SkillInfo) do
+		if type(info[8])=="table" then
+			for _,duration in pairs(info[8]) do
+				if type(duration)=="number" and duration > maxDuration then
+					maxDuration=duration
+				end
+			end
+		elseif type(info[8])=="number" and info[8] > maxDuration then
+			maxDuration=info[8]
+		end
+	end
+	local latestValid=tick+maxDuration+60000
+	local timeoutNames={"MagTimeout","SOffensiveTimeout","SDefensiveTimeout","SOwnerBuffTimeout","SOwner2ndBuffTimeout","GuardTimeout","QuickenTimeout","OffensiveOwnerTimeout","DefensiveOwnerTimeout","OtherOwnerTimeout"}
+	for _,name in ipairs(timeoutNames) do
+		local timeout=_G[name]
+		if AggressiveRelogTracking~=1 and type(timeout)=="number" and timeout > latestValid then
+			logappend("AAI_SKILLFAIL","Discarding stale saved timer "..name.."="..timeout.." at tick "..tick)
+			_G[name]=0
+		end
+	end
 	if AggressiveRelogTracking==1 then
 		if IsHomun(MyID)==1 then
 			dofile(AggressiveRelogPath.."H_"..OwnerID.."Time.lua")

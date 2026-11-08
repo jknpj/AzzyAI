@@ -49,6 +49,12 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Saved buff timers that are impossibly far in the future are discarded on
+  load. Windows restarts reset the client tick, so an old Pyroclastic or
+  Tempering expiry could previously block those buffs for many minutes.
+- The shipped `H_Config.lua` now uses ASAP mode (3) for enabled Bayeri and
+  Dieter buffs, so Angriffs Modus, Goldene Tone, Magma Flow, Pyroclastic and
+  Tempering are also refreshed during combat.
 - Buff failure retries now reset only the affected owner-buff slot. Tempering
   and Pyroclastic share watcher mode 6; a refused Tempering previously also
   cleared the active Pyroclastic timer, causing repeated fire-weapon buffs.

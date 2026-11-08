@@ -59,11 +59,11 @@ LifEscapeLevel           = 0
 FilirFlitLevel           = 5
 FilirAccelLevel          = 5
 AmiBulwarkLevel          = 5
-UseBayeriAngriffModus    = 1
+UseBayeriAngriffModus    = 3
 UseBayeriGoldenPherze    = 0
-UseDieterMagmaFlow       = 1
+UseDieterMagmaFlow       = 3
 UseDieterGraniticArmor   = 0
-UseDieterPyroclastic     = 1
+UseDieterPyroclastic     = 3
 DieterPyroclasticLevel   = 10
 UseEiraOveredBoost       = 0
 HealSelfHP               = 50 
@@ -163,9 +163,9 @@ UseBayeriGlanzenSpies = 0
 BayeriGlanzenSpiesLevel = 10
 UseBayeriHeiligePferd = 0
 BayeriHeiligePferdLevel = 10
-UseBayeriGoldeneTone = 1
+UseBayeriGoldeneTone = 3
 BayeriGoldeneToneLevel = 10
-UseDieterTempering = 1
+UseDieterTempering = 3
 UseDieterBlastForge = 1
 
 -- New Eleanor Defaults
