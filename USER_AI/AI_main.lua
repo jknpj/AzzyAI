@@ -3364,8 +3364,12 @@ function FailSkillUse(mode)
 		elseif mode==5 then
 			SDefensiveTimeout=1
 		elseif mode==6 then
-			SOwnerBuffTimeout=1
-			SOwner2ndBuffTimeout=1
+			-- These buffs share a watcher mode, but a refusal must only retry its own slot.
+			if CastSkill == MH_TEMPERING or CastSkill == MH_LIGHT_OF_REGENE then
+				SOwner2ndBuffTimeout=1
+			else
+				SOwnerBuffTimeout=1
+			end
 		elseif mode==7 then
 			SightTimeout=1
 		elseif mode==9 then

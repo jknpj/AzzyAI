@@ -49,6 +49,11 @@ run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the co
 
 ## Changes since the original 1.56 (release 2.0.0)
 
+- Buff failure retries now reset only the affected owner-buff slot. Tempering
+  and Pyroclastic share watcher mode 6; a refused Tempering previously also
+  cleared the active Pyroclastic timer, causing repeated fire-weapon buffs.
+  Eira's Light of Regenerate likewise leaves Overed Boost's timer unchanged.
+
 - Fixed Eleanor's refusal-driven style/failsafe loop. A refused Sonic Claw or
   Tinder Breaker no longer flips the tracked style. A bounded, same-target probe
   can recover a manual style change only after confirmed starter use. Failed

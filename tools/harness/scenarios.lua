@@ -635,6 +635,34 @@ SCENARIOS = {
 				return GetSkillAoESize(MH_LAVA_SLIDE, 1) == 7 and GetSkillAoESize(MH_LAVA_SLIDE, 10) == 7
 			end,
 		} },
+	dieter_tempering_refusal = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
+		private = true, minAttacks = 20,
+		set = { UseDieterPyroclastic = 3, UseDieterTempering = 3 },
+		afterLoad = function()
+			local realSkillObject = SkillObject
+			local realFailSkillUse = FailSkillUse
+			HarnessTemperingFailures = 0
+			FailSkillUse = function(mode)
+				if CastSkill == MH_TEMPERING then
+					HarnessTemperingFailures = HarnessTemperingFailures + 1
+				end
+				return realFailSkillUse(mode)
+			end
+			SkillObject = function(id, level, skill, target)
+				if skill == MH_TEMPERING then return end
+				return realSkillObject(id, level, skill, target)
+			end
+		end,
+		expect = { "Pyroclastic", "Lava Slide" },
+		checks = {
+			["refused Tempering does not reset the active Pyroclastic buff"] = function()
+				local pyro = 0
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.skill == MH_PYROCLASTIC then pyro = pyro + 1 end
+				end
+				return HarnessTemperingFailures > 0 and pyro == 1 and SOwnerBuffTimeout > GetTick()
+			end,
+		} },
 	-- regression: Blast Forge has range 1, which the old learned-skill check read as "not learned"
 	dieter_forge = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
 		set = { UseDieterBlastForge = 1 }, expect = { "Blast Forge" } },
