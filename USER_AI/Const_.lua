@@ -6,7 +6,7 @@
 -- its MAJOR.MINOR ("2.0") with Version (AI.lua, AI_M.lua), MainVersion (AI_main.lua) and AUVersion
 -- (AzzyUtil.lua). Raise those three to the new MAJOR.MINOR when MAJOR or MINOR changes, never for a
 -- PATCH; run.py fails if one of them does not match.
-CVersion="2.0.0"
+CVersion="2.0.1"
 
 --[[
 function	TraceAI (string) end

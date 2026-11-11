@@ -4,7 +4,25 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.0.0**
+**Current release: 2.0.1**
+
+## 2.0.1
+
+Patch release: performance, a targeting fix and test coverage.
+
+- Performance: the IDLE target acquisition builds `FriendTargets` inside the actor loop (no
+  second walk over the actors), caches the target-priority context and the AoE cluster weights
+  per AI call, skips the tank list when no target has a tank tactic, and does not resolve the
+  cast tactic for ignored targets.
+- Performance: the actor loop hoists `IsHomun`/sight bounds out of the loop and the
+  resolved-tactic cache uses a flat key, allocating less per tick.
+- Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
+  as a friend target, as it did before the targeting consolidation.
+- Tests: the harness now covers `OnREST_ST` (owner sits/stands), the patrol command, the tank
+  tactic and the retainer friend-target case, with 108 scenarios.
+- Repository: branches are `main` (development) and `classic` (original AzzyAI); the browser
+  configuration is included in the release ZIP; the CI builds Lua 5.1 from source when the
+  Ubuntu mirrors are unreachable.
 
 ## 2.0.0
 
