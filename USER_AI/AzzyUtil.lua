@@ -104,21 +104,11 @@ As GetMobSkill() only returns the ID and other perameters for the pushback skill
 --### Tactics Functions ###
 --######################### 
 
+-- Resolved tactic values for the rest of the AI() call. Tactics only depend on the actor's class
+-- and on the monster database, both fixed within one tick; AI() empties the cache every tick.
+-- Flat key m * 32 + t (tactic indexes are 1..13): one table lookup and no nested table per actor
+-- on the cache-miss path.
 TactValueCache = {}
--- Stores a resolved tactic value for the rest of the AI() call. Tactics only depend on the actor's
--- class and on the monster database, both fixed within one tick; AI() empties the cache every tick.
-function CacheTactValue(m, t, v)
-	if TactValueCache == nil then
-		TactValueCache = {}
-	end
-	local cached = TactValueCache[m]
-	if cached == nil then
-		cached = {}
-		TactValueCache[m] = cached
-	end
-	cached[t] = v
-	return v
-end
 
 function 	GetTact(t,m)
 	local x
@@ -132,22 +122,24 @@ function 	GetTact(t,m)
 		logappend("AAI_ERROR","request for tactic type nil target:"..m)
 	end
 	-- resolved value already computed in this AI() call (TACT_CHASE depends on the clock, never cached)
-	if t ~= TACT_CHASE and TactValueCache ~= nil then
-		local cached = TactValueCache[m]
-		if cached ~= nil then
-			x = cached[t]
-			if x ~= nil then
-				return x
-			end
+	if t ~= nil and t ~= TACT_CHASE then
+		x = TactValueCache[m * 32 + t]
+		if x ~= nil then
+			return x
 		end
 	end
 	if (IsPlayer(m)==1) then
+		local v
 		if (PVPmode~=0) then
 			TraceAI("GetTact: Returning pvp tactic")
-			return CacheTactValue(m, t, GetPVPTact(t,m))
+			v = GetPVPTact(t,m)
 		else
-			return CacheTactValue(m, t, 0)
+			v = 0
 		end
+		if t ~= nil and t ~= TACT_CHASE then
+			TactValueCache[m * 32 + t] = v
+		end
+		return v
 	end
 	-- The tactic row only depends on the actor's class, which can't change within one AI() call.
 	-- AI() empties TactRowCache at the start of every tick.
@@ -204,7 +196,10 @@ function 	GetTact(t,m)
 				return DoNotChase
 			end
 		end
-		return CacheTactValue(m, t, x)
+		if t ~= TACT_CHASE then
+			TactValueCache[m * 32 + t] = x
+		end
+		return x
 	end
 end
 
