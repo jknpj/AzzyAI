@@ -528,6 +528,8 @@ local function loadAI()
 	if sc.afterLoad then sc.afterLoad() end
 end
 loadAI()
+-- Const_.lua turns developer traces off by default; --trace enables them for the run
+TraceAIEnabled = keepTraces and 1 or 0
 serverRules()
 HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
@@ -611,6 +613,7 @@ for tick = 1, TICKS do
 	-- the client reloads the AI on every map change/teleport; only files in data/ survive
 	if sc.reloadAt and tick == sc.reloadAt then
 		loadAI()
+		TraceAIEnabled = keepTraces and 1 or 0
 		if sc.afterReload then sc.afterReload(skillKnown) end
 	end
 	-- scenario hook: lets a test touch the world before the AI call (e.g. make the owner sit)

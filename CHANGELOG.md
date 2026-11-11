@@ -17,6 +17,9 @@ Patch release: performance, a targeting fix and test coverage.
 - Performance: the actor loop hoists `IsHomun`/sight bounds out of the loop, the
   resolved-tactic cache uses a flat key, and the per-tick tables are allocated fresh instead
   of cleared (cheaper in Lua 5.1).
+- Performance: developer `TraceAI` calls are off by default (`TraceAIEnabled = 0`), so their
+  arguments are not evaluated; set `TraceAIEnabled = 1` in `H_Extra.lua` (or use the harness
+  `--trace`) to get the traces back.
 - Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
   as a friend target, as it did before the targeting consolidation.
 - Tests: the harness now covers `OnREST_ST` (owner sits/stands), the patrol command, the tank

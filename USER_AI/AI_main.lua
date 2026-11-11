@@ -339,7 +339,7 @@ if (AssumeHomun==1) then
 		end
 	else
 		NeedToDoAutoFriend=1
-		TraceAI("Setting NeedToDoAutoFriend")
+		if TraceAIEnabled ~= 0 then TraceAI("Setting NeedToDoAutoFriend") end
 	end
 end
 --####################################
@@ -347,11 +347,11 @@ end
 --####################################
 
 function	OnMOVE_CMD (x,y)
-	TraceAI ("OnMOVE_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnMOVE_CMD") end
 	if GetDistanceAPR(OwnerID,x,y) > 15 or x==0 or y==0 then -- Bogus move command
 		local ox,oy=GetV(V_POSITION,OwnerID)
 		logappend("AAI_ERROR","move command to invalid location "..formatpos(x,y).." owner pos "..formatpos(ox,oy))
-		TraceAI("OnMOVE_CMD - Command disregarded; invalid location logged")
+		if TraceAIEnabled ~= 0 then TraceAI("OnMOVE_CMD - Command disregarded; invalid location logged") end
 		return
 	end
 	
@@ -371,7 +371,7 @@ function	OnMOVE_CMD (x,y)
 	Move (MyID,MyDestX,MyDestY)	
 	MyState = MOVE_CMD_ST
 	if (MirAIFriending==1) then --emulate MirAI's annoying friending process
-		TraceAI("Starting Friend Routine")
+		if TraceAIEnabled ~= 0 then TraceAI("Starting Friend Routine") end
 		local actors = GetActors()
 		for i,v in ipairs(actors) do
 			if (IsMonster(v)~=1 and v~=OwnerID and v~=MyID) then
@@ -382,14 +382,14 @@ function	OnMOVE_CMD (x,y)
 						MyFriends[v] = 1
 						UpdateFriends()
 						MyState=FRIEND_CIRCLE_ST
-						TraceAI("Friend Addition")
+						if TraceAIEnabled ~= 0 then TraceAI("Friend Addition") end
 						NewFriendX,NewFriendY=GetV(V_POSITION,v)
 						return
 					elseif (MyFriends[v]~=nil) then
 						MyFriends[v] = nil
 						UpdateFriends()
 						MyState=FRIEND_CROSS_ST
-						TraceAI("Friend Removal")
+						if TraceAIEnabled ~= 0 then TraceAI("Friend Removal") end
 						NewFriendX,NewFriendY=GetV(V_POSITION,v)
 						return
 					end
@@ -402,7 +402,7 @@ end
 
 function	OnSTOP_CMD ()
 
-	TraceAI ("OnSTOP_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnSTOP_CMD") end
 	logappend("AAI_ERROR","STOP_CMD sent! This should NEVER HAPPEN!")
 	if (GetV(V_MOTION,MyID) ~= MOTION_STAND) then
 		Move (MyID,GetV(V_POSITION,MyID))
@@ -419,7 +419,7 @@ end
 
 
 function	OnATTACK_OBJECT_CMD (id)
-	TraceAI ("OnATTACK_OBJECT_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnATTACK_OBJECT_CMD") end
 	ResetCounters()
 	MySkill = 0
 	MyEnemy = id
@@ -435,7 +435,7 @@ end
 
 function	OnATTACK_AREA_CMD (x,y)
 
-	TraceAI ("OnATTACK_AREA_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnATTACK_AREA_CMD") end
 	logappend("AAI_ERROR","ATTACK_AREA_CMD sent! This should NEVER HAPPEN!")
 	if (x ~= MyDestX or y ~= MyDestY or MOTION_MOVE ~= GetV(V_MOTION,MyID)) then
 		Move (MyID,x,y)	
@@ -451,7 +451,7 @@ end
 
 function	OnPATROL_CMD (x,y)
 
-	TraceAI ("OnPATROL_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnPATROL_CMD") end
 	logappend("AAI_ERROR","PATROL_CMD sent! This should NEVER HAPPEN!")
 	MyPatrolX , MyPatrolY = GetV (V_POSITION,MyID)
 	MyDestX = x
@@ -464,7 +464,7 @@ end
 
 function	OnHOLD_CMD ()
 
-	TraceAI ("OnHOLD_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnHOLD_CMD") end
 	logappend("AAI_ERROR","HOLD_CMD sent! This should NEVER HAPPEN!")
 	MyDestX = 0
 	MyDestY = 0
@@ -478,7 +478,7 @@ end
 
 function	OnSKILL_OBJECT_CMD (level,skill,id)
 
-	TraceAI ("OnSKILL_OBJECT_CMD"..skill.." "..id.." "..level)
+	if TraceAIEnabled ~= 0 then TraceAI ("OnSKILL_OBJECT_CMD"..skill.." "..id.." "..level) end
 	ResetCounters()
 	if skill==MH_PAIN_KILLER and IsPlayer(id)==1 and PainkillerFriends~=0 and id~=OwnerID then
 		MyPState = MyState
@@ -514,7 +514,7 @@ end
 
 function	OnSKILL_AREA_CMD (level,skill,x,y)
 	ResetCounters()
-	TraceAI ("OnSKILL_AREA_CMD")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnSKILL_AREA_CMD") end
 	targetx,targety=Closest(MyID,x,y,AttackRange(MyID,skill,level))
 	Move (MyID,targetx,targety)
 	MyDestX = x
@@ -537,7 +537,7 @@ function	OnFOLLOW_CMD ()
 		EnemyPosX = {0,0,0,0,0,0,0,0,0,0}
 		EnemyPosY = {0,0,0,0,0,0,0,0,0,0}
 		MySkill = 0
-		TraceAI ("OnFOLLOW_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("OnFOLLOW_CMD") end
 	else
 		if StickyStandby > 0 then
 			ShouldStandby=0
@@ -547,7 +547,7 @@ function	OnFOLLOW_CMD ()
 		EnemyPosX = {0,0,0,0,0,0,0,0,0,0}
 		EnemyPosY = {0,0,0,0,0,0,0,0,0,0}
 		MySkill = 0
-		TraceAI ("FOLLOW_CMD_ST --> IDLE_ST")
+		if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_CMD_ST --> IDLE_ST") end
 	end
 
 end
@@ -558,31 +558,31 @@ end
 function	ProcessCommand (msg)
 
 	if	(msg[1] == MOVE_CMD) then
-		TraceAI ("MOVE_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD") end
 		OnMOVE_CMD (msg[2],msg[3])
 	elseif	(msg[1] == STOP_CMD) then
-		TraceAI ("STOP_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("STOP_CMD") end
 		OnSTOP_CMD ()
 	elseif	(msg[1] == ATTACK_OBJECT_CMD) then
-		TraceAI ("ATTACK_OBJECT_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("ATTACK_OBJECT_CMD") end
 		OnATTACK_OBJECT_CMD (msg[2])
 	elseif	(msg[1] == ATTACK_AREA_CMD) then
-		TraceAI ("ATTACK_AREA_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("ATTACK_AREA_CMD") end
 		OnATTACK_AREA_CMD (msg[2],msg[3])
 	elseif	(msg[1] == PATROL_CMD) then
-		TraceAI ("PATROL_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("PATROL_CMD") end
 		OnPATROL_CMD (msg[2],msg[3])
 	elseif	(msg[1] == HOLD_CMD) then
-		TraceAI ("HOLD_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("HOLD_CMD") end
 		OnHOLD_CMD ()
 	elseif	(msg[1] == SKILL_OBJECT_CMD) then
-		TraceAI ("SKILL_OBJECT_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("SKILL_OBJECT_CMD") end
 		OnSKILL_OBJECT_CMD (msg[2],msg[3],msg[4],msg[5])
 	elseif	(msg[1] == SKILL_AREA_CMD) then
-		TraceAI ("SKILL_AREA_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("SKILL_AREA_CMD") end
 		OnSKILL_AREA_CMD (msg[2],msg[3],msg[4],msg[5])
 	elseif	(msg[1] == FOLLOW_CMD) then
-		TraceAI ("FOLLOW_CMD")
+		if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_CMD") end
 		OnFOLLOW_CMD ()
 	end
 end
@@ -627,7 +627,7 @@ function	OnIDLE_ST ()
 	--	OnMOVE_CMD_HOLD_ST()
 	--	return
 	--end
-	TraceAI ("OnIDLE_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnIDLE_ST") end
 	ResetCounters()
 	MySkill					= 0
 	MyDestX					= 0
@@ -647,7 +647,7 @@ function	OnIDLE_ST ()
 		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("IDLE_ST -> CHASE_ST : MYOWNER_ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -663,7 +663,7 @@ function	OnIDLE_ST ()
 		if object~=0 then
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("IDLE_ST -> CHASE_ST : ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> CHASE_ST : ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				return OnCHASE_ST()
 			end
@@ -674,7 +674,7 @@ function	OnIDLE_ST ()
 			if (object ~= 0) then
 				MyState = TANKCHASE_ST
 				MyEnemy = object
-				TraceAI ("IDLE_ST -> TANKCHASE_ST")
+				if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> TANKCHASE_ST") end
 				return
 			end
 		end
@@ -695,15 +695,15 @@ function	OnIDLE_ST ()
 	elseif (UseIdleWalk~=0 and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP)) then -- CHECK
 		if ( distance > GetMoveBounds() or distance == -1) then		-- MYOWNER_OUTSIGNT_IN
 			MyState = FOLLOW_ST
-			TraceAI ("IDLE_ST -> FOLLOW_ST")
+			if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> FOLLOW_ST") end
 			return
 		else 
-			TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk)
+			if TraceAIEnabled ~= 0 then TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk) end
 			MyState=IDLEWALK_ST
 		end
 	elseif (( distance > DiagonalDist(FollowStayBack+1) and not (ChaseSPPause==1 and GetV(V_SP,MyID) < ChaseSPPauseSP and GetTick() - math.max(LastMovedTime,LastSPTime) > (5000-ChaseSPPauseTime)))or distance == -1) then		-- MYOWNER_OUTSIGNT_IN
 		MyState = FOLLOW_ST
-		TraceAI ("IDLE_ST -> FOLLOW_ST")
+		if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> FOLLOW_ST") end
 		return OnFOLLOW_ST()
 	end	
 	if UseAutoHeal==3 then
@@ -713,14 +713,14 @@ function	OnIDLE_ST ()
 	end
 	DoAutoBuffs(-2)
 	if UseIdleWalk ~=0 and stayaway == nil and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP) then
-		TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk)
+		if TraceAIEnabled ~= 0 then TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk) end
 		MyState=IDLEWALK_ST
 	end
 end
 
 function	OnFOLLOW_ST ()
 
-	TraceAI ("OnFOLLOW_ST - follow try count: "..FollowTryCount.." ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10))
+	if TraceAIEnabled ~= 0 then TraceAI ("OnFOLLOW_ST - follow try count: "..FollowTryCount.." ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10)) end
 	local dist = GetDistanceFromOwner(MyID)
 	if dist > GetMoveBounds() then 
 		ReturnToMoveHold = 0
@@ -733,7 +733,7 @@ function	OnFOLLOW_ST ()
 		or (ReturnToMoveHold == 0 and GetStayAwayDistance() > 0 and GetDistanceAR(MyID,OwnerID) <= GetStayAwayDistance()+1)) then		--  DESTINATION_ARRIVED_IN 
 		FollowTryCount=0
 		MyState = IDLE_ST
-		TraceAI ("FOLLOW_ST -> IDLE_ST ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10))
+		if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_ST -> IDLE_ST ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10)) end
 		if (FastChangeCount < FastChangeLimit and FastChange_F2I==1) then
 			FastChangeCount = FastChangeCount+1
 			return OnIDLE_ST()
@@ -742,7 +742,7 @@ function	OnFOLLOW_ST ()
 		if (FollowTryCount > FollowTryPanic and GetV(V_MOTION,MyID)~=MOTION_MOVE) then
 			if FollowTryCount > 2*FollowTryPanic then
 				if FollowTryCount > 3*FollowTryPanic then 
-					TraceAI("FOLLOW_ST -> IDLE_ST - Can't follow even using panic'ed methods - Giving up")
+					if TraceAIEnabled ~= 0 then TraceAI("FOLLOW_ST -> IDLE_ST - Can't follow even using panic'ed methods - Giving up") end
 					MyState=IDLE_ST
 					if (FastChangeCount < FastChangeLimit and FastChange_F2I==1) then
 						FastChangeCount = FastChangeCount+1
@@ -752,9 +752,9 @@ function	OnFOLLOW_ST ()
 					if ReturnToMoveHold ==0 then
 						MoveToOwner(MyID)
 						FollowTryCount=FollowTryCount+1
-						TraceAI("Emergency follow - MoveToOwner() called")
+						if TraceAIEnabled ~= 0 then TraceAI("Emergency follow - MoveToOwner() called") end
 					else 
-						TraceAI("FOLLOW_ST -> IDLE_ST - Can't get to move sticky location even using panic'ed methods - Giving up")
+						if TraceAIEnabled ~= 0 then TraceAI("FOLLOW_ST -> IDLE_ST - Can't get to move sticky location even using panic'ed methods - Giving up") end
 						MyState=IDLE_ST
 						if (FastChangeCount < FastChangeLimit and FastChange_F2I==1) then
 							FastChangeCount = FastChangeCount+1
@@ -788,7 +788,7 @@ function	OnFOLLOW_ST ()
 							if MyPosX[v]==dx then
 								MoveToOwner(MyID)
 								FollowTryCount=FollowTryCount+1
-								TraceAI("Bounce loop detected, emergency measures taken")
+								if TraceAIEnabled ~= 0 then TraceAI("Bounce loop detected, emergency measures taken") end
 								break
 							end
 							if v==5 then
@@ -816,14 +816,14 @@ function	OnFOLLOW_ST ()
 				FollowTryCount=0
 			end
 		end
-		TraceAI ("FOLLOW_ST -> FOLLOW_ST ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10).."dest cell"..formatpos(MyDestX,MyDestY))
+		if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_ST -> FOLLOW_ST ownerpos: "..formatpos(GetV(V_POSITION,OwnerID)).."my pos history:"..formatmypos(10).."dest cell"..formatpos(MyDestX,MyDestY)) end
 		return
 	end
 end
 
 function OnCHASE_ST()
     MyAttackStanceX, MyAttackStanceY = 0, 0
-    TraceAI("OnCHASE_ST")
+    if TraceAIEnabled ~= 0 then TraceAI("OnCHASE_ST") end
     local aggro = GetAggroCount()
     if (aggro > UseBerserkMobbed and UseBerserkMobbed > 0) then
         BerserkMode = 1
@@ -837,7 +837,7 @@ function OnCHASE_ST()
     end
     if (IsNotKS(MyID, MyEnemy) == 0) then
         local reason = GetKSReason(MyID, MyEnemy)
-        TraceAI("CHASE_ST -> IDLE_ST : Enemy is taken "..reason)
+        if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Enemy is taken "..reason) end
         MyState = IDLE_ST
         MyEnemy = 0
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -855,7 +855,7 @@ function OnCHASE_ST()
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         MyDestX, MyDestY = 0, 0
-        TraceAI("CHASE_ST -> IDLE_ST : Enemy out of sight")
+        if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Enemy out of sight") end
         ChaseGiveUpCount = 0
 
         if (FastChangeCount < FastChangeLimit and FastChange_C2I == 1) then
@@ -869,7 +869,7 @@ function OnCHASE_ST()
         if ChaseGiveUpCount > ChaseGiveUp then
             Unreachable[MyEnemy] = 1
             if SelectEnemy(GetEnemyList(MyID, -2)) == MyEnemy then --Oh crap,
-                TraceAI("CHASE_ST -> FOLLOW_ST : Target "..MyEnemy.." marked unreachable but is also rescue target! Trying follow state in hopes of a clean line of attack from owner")
+                if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> FOLLOW_ST : Target "..MyEnemy.." marked unreachable but is also rescue target! Trying follow state in hopes of a clean line of attack from owner") end
                 MyState = FOLLOW_ST
                 MyEnemy = 0
                 EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -880,7 +880,7 @@ function OnCHASE_ST()
             elseif AllTargetUnreachable == 1 then
                 MyState = FOLLOW_ST
                 MyDestX, MyDestY = 0, 0
-                TraceAI("CHASE_ST -> FOLLOW_ST : All targets marked unreachable, and can't reach "..MyEnemy)
+                if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> FOLLOW_ST : All targets marked unreachable, and can't reach "..MyEnemy) end
                 ChaseGiveUpCount = 0
                 MyEnemy = 0
                 EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -889,7 +889,7 @@ function OnCHASE_ST()
             else
                 MyState = IDLE_ST
                 MyDestX, MyDestY = 0, 0
-                TraceAI("CHASE_ST -> IDLE_ST : Marking target "..MyEnemy.." unreachable")
+                if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Marking target "..MyEnemy.." unreachable") end
                 ChaseGiveUpCount = 0
                 MyEnemy = 0
                 EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -905,7 +905,7 @@ function OnCHASE_ST()
         ChaseGiveUpCount = ChaseGiveUpCount + 1
     elseif MyEnemies[3] == MyEnemy and GetDistanceAPR(MyEnemy, MyPosX[3], MyPosY[3]) <= GetDistanceAR(MyID, MyEnemy) then
         ChaseGiveUpCount = ChaseGiveUpCount + 1
-        TraceAI("CHASE_ST: We're not getting any closer - we were "..GetDistanceAPR(MyEnemy, MyPosX[3], MyPosY[3]).." cells away 2 cycles ago, now "..GetDistanceAR(MyID, MyEnemy).." Increment ChaseGiveUpCount")
+        if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST: We're not getting any closer - we were "..GetDistanceAPR(MyEnemy, MyPosX[3], MyPosY[3]).." cells away 2 cycles ago, now "..GetDistanceAR(MyID, MyEnemy).." Increment ChaseGiveUpCount") end
     end
     OnChaseStart()
     if OpportunisticTargeting == 1 and MySkill == 0 and SuperPassive ~= 1 and IsRescueTarget(MyEnemy) == 0 then
@@ -916,14 +916,14 @@ function OnCHASE_ST()
         end
         local object = SelectEnemy(GetEnemyList(MyID, aggro), MyEnemy)
         if object ~= 0 then
-            TraceAI("Opportunistic target change - dropping target "..MyEnemy.." for target "..object)
+            if TraceAIEnabled ~= 0 then TraceAI("Opportunistic target change - dropping target "..MyEnemy.." for target "..object) end
             MyEnemy = object
             EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         end
     elseif ((MySkill == MH_TINDER_BREAKER or MySkill == MH_EQC or MySkill == MH_CBC) and EleanorMode == FIGHTING_MODE) or ((MySkill == MH_SONIC_CRAW or MySkill == MH_SILVERVEIN_RUSH or MySkill == MH_MIDNIGHT_FRENZY) and EleanorMode == GRAPPLING_MODE) then
         if EleanorDoNotSwitchMode == 1 then
-            TraceAI("Was told to use "..FormatSkill(MySkill, MySkillLevel).." but am in wrong mode for it, and EleanorDoNotSwitchMode==1")
+            if TraceAIEnabled ~= 0 then TraceAI("Was told to use "..FormatSkill(MySkill, MySkillLevel).." but am in wrong mode for it, and EleanorDoNotSwitchMode==1") end
             logappend("AAI_ERROR", "Was told to use "..FormatSkill(MySkill, MySkillLevel).." but am in wrong mode for it, and EleanorDoNotSwitchMode==1")
         else
             if AutoSkillTimeout < GetTick() then
@@ -935,7 +935,7 @@ function OnCHASE_ST()
         MyState = ATTACK_ST
         AttackTimeout = GetTick() + AttackTimeLimit
         ChaseGiveUpCount = 0
-        TraceAI("CHASE_ST -> ATTACK_ST : ENEMY_INATTACKSIGHT_IN")
+        if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> ATTACK_ST : ENEMY_INATTACKSIGHT_IN") end
         if (FastChangeCount < FastChangeLimit and FastChange_C2A == 1) then
             FastChangeCount = FastChangeCount + 1
             return OnATTACK_ST()
@@ -951,7 +951,7 @@ function OnCHASE_ST()
         if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
             availsp = availsp - tact_sp
         end
-        TraceAI("Begin autoskill while chasing routine")
+        if TraceAIEnabled ~= 0 then TraceAI("Begin autoskill while chasing routine") end
         local skill_level
         if (tact_skill < 0) then -- Negative value of TACT_SKILL -> 1 cast of skill
             skill_level = tact_skill * -1 -- with level = to the absolute value of the
@@ -1014,13 +1014,13 @@ function OnCHASE_ST()
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
         if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
-            TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
+            if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
             -- Sonic Claw costs a sphere and works only in fighting style (CHASE switches style first)
             if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and IsSkillReady(fallbackSkill) then
                 if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
-                    TraceAI("Eleanor Fallback: Selecting Sonic Claw.")
+                    if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: Selecting Sonic Claw.") end
                     skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
                 end
             end
@@ -1029,7 +1029,7 @@ function OnCHASE_ST()
         -- #################################################################
 
         if skilltouse[2] ~= 0 then
-            TraceAI("Using skill while chasing:"..skilltouse[2])
+            if TraceAIEnabled ~= 0 then TraceAI("Using skill while chasing:"..skilltouse[2]) end
             local slvl = skilltouse[3]
             if skill_level ~= 11 and (AoEFixedLevel ~= 1 or not IsMobSkillType(skilltouse[1])) then
                 slvl = skill_level
@@ -1041,25 +1041,25 @@ function OnCHASE_ST()
             MySkillUsedCount = MySkillUsedCount + 1
         end
     else
-        TraceAI("Not in range, and can't use chase skill")
+        if TraceAIEnabled ~= 0 then TraceAI("Not in range, and can't use chase skill") end
     end
     if (GetTact(TACT_CHASE, MyEnemy) ~= 1) then
         local alt = 0
         if (ChaseGiveUpCount >= 4 and MyPosX[1] == MyPosX[3] and MyPosY[1] == MyPosY[3]) then
             alt = math.random(2)
-            TraceAI("Using alt movement"..alt)
+            if TraceAIEnabled ~= 0 then TraceAI("Using alt movement"..alt) end
         end
         local ex, ey = GetV(V_POSITION, MyEnemy)
-        TraceAI("State History: "..MyStates[1].." "..MyStates[2].." "..MyStates[3].." "..MyStates[4].." "..MyStates[5])
-        TraceAI("Pos History: "..formatpos(MyPosX[1], MyPosY[1]).." "..formatpos(MyPosX[2], MyPosY[2]).." "..formatpos(MyPosX[3], MyPosY[3]).." "..formatpos(MyPosX[4], MyPosY[4]).." "..formatpos(MyPosX[5], MyPosY[5]))
-        TraceAI("Enemy History: "..MyEnemies[1].." "..MyEnemies[2].." "..MyEnemies[3].." "..MyEnemies[4].." "..MyEnemies[5])
-        TraceAI("Enemy Pos History: "..formatpos(EnemyPosX[1], EnemyPosY[1]).." "..formatpos(EnemyPosX[2], EnemyPosY[2]).." "..formatpos(EnemyPosX[3], EnemyPosY[3]).." "..formatpos(EnemyPosX[4], EnemyPosY[4]).." "..formatpos(EnemyPosX[5], EnemyPosY[5]))
-        TraceAI("current enemy: "..MyEnemy.." "..formatpos(ex, ey))
+        if TraceAIEnabled ~= 0 then TraceAI("State History: "..MyStates[1].." "..MyStates[2].." "..MyStates[3].." "..MyStates[4].." "..MyStates[5]) end
+        if TraceAIEnabled ~= 0 then TraceAI("Pos History: "..formatpos(MyPosX[1], MyPosY[1]).." "..formatpos(MyPosX[2], MyPosY[2]).." "..formatpos(MyPosX[3], MyPosY[3]).." "..formatpos(MyPosX[4], MyPosY[4]).." "..formatpos(MyPosX[5], MyPosY[5])) end
+        if TraceAIEnabled ~= 0 then TraceAI("Enemy History: "..MyEnemies[1].." "..MyEnemies[2].." "..MyEnemies[3].." "..MyEnemies[4].." "..MyEnemies[5]) end
+        if TraceAIEnabled ~= 0 then TraceAI("Enemy Pos History: "..formatpos(EnemyPosX[1], EnemyPosY[1]).." "..formatpos(EnemyPosX[2], EnemyPosY[2]).." "..formatpos(EnemyPosX[3], EnemyPosY[3]).." "..formatpos(EnemyPosX[4], EnemyPosY[4]).." "..formatpos(EnemyPosX[5], EnemyPosY[5])) end
+        if TraceAIEnabled ~= 0 then TraceAI("current enemy: "..MyEnemy.." "..formatpos(ex, ey)) end
         local x, y = GetPos(MyID)
         if MyStates[1] == CHASE_ST and MyStates[2] == ATTACK_ST and MyStates[3] == CHASE_ST and MyEnemy == MyEnemies[2] and IsPlayer(MyEnemy) ~= 1 and EnemyPosX[3] == ex and EnemyPosY[3] == ey then
             x, y = AdjustOpp(x, y, ex, ey)
             Unreachable[MyEnemy] = 1
-            TraceAI("CHASE_ST: We transitioned to attack state vs this target 2 cycles ago, now we're chasing it again, and it hasn't moved! Trying to do AdjustOpp, and deprioritizing monster to prevent loop.")
+            if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST: We transitioned to attack state vs this target 2 cycles ago, now we're chasing it again, and it hasn't moved! Trying to do AdjustOpp, and deprioritizing monster to prevent loop.") end
         elseif EnemyPosX[3] ~= 0 and EnemyPosY[3] ~= 0 and (ex ~= EnemyPosX[3] or ey ~= EnemyPosY[3]) and MyEnemy == MyEnemies[3] and alt == 0 then
             local dx, dy = ex - EnemyPosX[3], ey - EnemyPosY[3]
             local r = AttackRange(MyID, MySkill, MySkillLevel)
@@ -1075,7 +1075,7 @@ function OnCHASE_ST()
                     EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                     EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                     MyDestX, MyDestY = 0, 0
-                    TraceAI("CHASE_ST -> IDLE_ST : Cannot attack this target, GetStandPoint() reports that all cells around it are occupied.")
+                    if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Cannot attack this target, GetStandPoint() reports that all cells around it are occupied.") end
                     ChaseGiveUpCount = 0
                     if (FastChangeCount < FastChangeLimit and FastChange_C2I == 1) then
                         FastChangeCount = FastChangeCount + 1
@@ -1090,7 +1090,7 @@ function OnCHASE_ST()
                         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                         MyDestX, MyDestY = 0, 0
-                        TraceAI("CHASE_ST -> IDLE_ST : Cannot attack this target, GetStandPoint() can't get an unoccupied cell")
+                        if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Cannot attack this target, GetStandPoint() can't get an unoccupied cell") end
                         ChaseGiveUpCount = 0
                         if (FastChangeCount < FastChangeLimit and FastChange_C2I == 1) then
                             FastChangeCount = FastChangeCount + 1
@@ -1105,9 +1105,9 @@ function OnCHASE_ST()
             if ((x ~= MyDestX or y ~= MyDestY) or GetV(V_MOTION, MyID) ~= MOTION_MOVE) then
                 MyDestX, MyDestY = x, y
                 Move(MyID, MyDestX, MyDestY)
-                TraceAI("CHASE_ST -> CHASE_ST : DESTCHANGED_IN "..MyDestX..","..MyDestY.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y))
+                if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> CHASE_ST : DESTCHANGED_IN "..MyDestX..","..MyDestY.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y)) end
             else
-                TraceAI("CHASE_ST -> CHASE_ST : Destination not changed "..MyDestX..","..MyDestY.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y))
+                if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> CHASE_ST : Destination not changed "..MyDestX..","..MyDestY.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y)) end
             end
         else --if ChaseGiveUpCount > 4 then
             MyState = IDLE_ST
@@ -1116,7 +1116,7 @@ function OnCHASE_ST()
             EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             MyDestX, MyDestY = 0, 0
-            TraceAI("CHASE_ST -> IDLE_ST : Following enemy would exceed move bounds."..x..","..y.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y))
+            if TraceAIEnabled ~= 0 then TraceAI("CHASE_ST -> IDLE_ST : Following enemy would exceed move bounds."..x..","..y.."mypos "..MyPosX[1]..","..MyPosY[1].."owner pos"..ox..","..oy.." enemypos "..ex..","..ey.." GetDistanceAPR="..GetDistanceAPR(OwnerID, x, y)) end
             ChaseGiveUpCount = 0
             if (FastChangeCount < FastChangeLimit and FastChange_C2I == 1) then
                 FastChangeCount = FastChangeCount + 1
@@ -1129,14 +1129,14 @@ end
 
 
 function OnATTACK_ST()
-    TraceAI("OnATTACK_ST MyEnemy: "..MyEnemy.." MyPos "..formatpos(GetPos(MyID)).." ("..GetV(V_MOTION, MyID)..") enemypos "..formatpos(GetPos(MyEnemy)).." ("..GetV(V_MOTION, MyEnemy)..") MyTarget: "..GetV(V_TARGET, MyID))
+    if TraceAIEnabled ~= 0 then TraceAI("OnATTACK_ST MyEnemy: "..MyEnemy.." MyPos "..formatpos(GetPos(MyID)).." ("..GetV(V_MOTION, MyID)..") enemypos "..formatpos(GetPos(MyEnemy)).." ("..GetV(V_MOTION, MyEnemy)..") MyTarget: "..GetV(V_TARGET, MyID)) end
     if (true == IsOutOfSight(MyID, MyEnemy)) then -- first thing's first, if enemy is gone drop it.
         MyState = IDLE_ST
         MyEnemy = 0
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         MySkillUsedCount = 0
-        TraceAI("ATTACK_ST -> IDLE_ST -- target gone")
+        if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST -> IDLE_ST -- target gone") end
         return OnIDLE_ST()
     end
     if (MOTION_DEAD == GetV(V_MOTION, MyEnemy)) then -- Enemy dead? Okay we're done here - drop it.
@@ -1145,7 +1145,7 @@ function OnATTACK_ST()
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         MySkillUsedCount = 0
-        TraceAI("ATTACK_ST -> IDLE_ST  Enemy dead")
+        if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST -> IDLE_ST  Enemy dead") end
         return OnIDLE_ST()
     end
     local mytarg = GetV(V_TARGET, MyID)
@@ -1156,11 +1156,11 @@ function OnATTACK_ST()
             local x, y = GetV(V_POSITION, MyID)
             if AttackGiveUpCount < 7 then
                 Move(MyID, tx, ty)
-                TraceAI("ATTACK_ST: We've been attacking for 5 cycles, but we still haven't attacked! Something is wrong - Moving to monster cell")
+                if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST: We've been attacking for 5 cycles, but we still haven't attacked! Something is wrong - Moving to monster cell") end
             elseif AttackGiveUpCount < AttackGiveUp then
                 local nx, ny = AdjustOpp(x, y, tx, ty)
                 Move(MyID, tx, ty)
-                TraceAI("ATTACK_ST: We've been attacking for 3 cycles, but we still haven't attacked! Something is wrong - Moving to adjust opposite")
+                if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST: We've been attacking for 3 cycles, but we still haven't attacked! Something is wrong - Moving to adjust opposite") end
             elseif AttackGiveUpCount > AttackGiveUp and MyEnemies[AttackGiveUp] == MyEnemy and MyStates[AttackGiveUp] == ATTACK_ST then
                 MyState = IDLE_ST
                 Unreachable[MyEnemy] = 1
@@ -1168,7 +1168,7 @@ function OnATTACK_ST()
                 EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 MySkillUsedCount = 0
-                TraceAI("ATTACK_ST -> IDLE_ST - We've been attacking for 5 cycles, tried moving around, and still haven't attacked it. Marking unreachable")
+                if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST -> IDLE_ST - We've been attacking for 5 cycles, tried moving around, and still haven't attacked it. Marking unreachable") end
                 return OnIDLE_ST()
             end
         end
@@ -1185,7 +1185,7 @@ function OnATTACK_ST()
             end
             if t == 1 then
                 AttackTimeout = GetTick() + AttackTimeLimit
-                TraceAI("AttackTimeout Reset - we're clearly attacking successfully")
+                if TraceAIEnabled ~= 0 then TraceAI("AttackTimeout Reset - we're clearly attacking successfully") end
             end
         end
     end
@@ -1196,7 +1196,7 @@ function OnATTACK_ST()
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         MySkillUsedCount = 0
-        TraceAI("ATTACK_ST -> FOLLOW_ST -- attack timeout reached, so we're probably posbugged. Dropping target and returning to owner in the hope that that sorts it out")
+        if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST -> FOLLOW_ST -- attack timeout reached, so we're probably posbugged. Dropping target and returning to owner in the hope that that sorts it out") end
         return OnFOLLOW_ST()
     end
 
@@ -1216,7 +1216,7 @@ function OnATTACK_ST()
     if (false == IsInAttackSight(MyID, MyEnemy, skill, level)) then -- Check if we can attack enemy, if not back to chase
         ResetCounters()
         MyState = CHASE_ST
-        TraceAI("ATTACK_ST -> CHASE_ST  : ENEMY_OUTATTACKSIGHT_IN MyEnemy: "..MyEnemy.." distance to "..GetDistanceA(MyID, MyEnemy))
+        if TraceAIEnabled ~= 0 then TraceAI("ATTACK_ST -> CHASE_ST  : ENEMY_OUTATTACKSIGHT_IN MyEnemy: "..MyEnemy.." distance to "..GetDistanceA(MyID, MyEnemy)) end
         if (FastChangeCount < FastChangeLimit and FastChange_A2C == 1) then
             FastChangeCount = FastChangeCount + 1
             return OnCHASE_ST()
@@ -1248,7 +1248,7 @@ function OnATTACK_ST()
                 skill_level = 11
             end
             local TargetedSkills = GetTargetedSkills(MyID)
-            TraceAI("Begin autoskill routine")
+            if TraceAIEnabled ~= 0 then TraceAI("Begin autoskill routine") end
             local availsp = GetV(V_SP, MyID)
             local eleanorSaveSP = false
             if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
@@ -1256,7 +1256,7 @@ function OnATTACK_ST()
             end
             for i, v in ipairs(TargetedSkills) do
                 local skilltype = v[1]
-                TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
+                if TraceAIEnabled ~= 0 then TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3]) end
                 if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
                         if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
@@ -1316,18 +1316,18 @@ function OnATTACK_ST()
             if skilltouse[2] == MH_SONIC_CRAW and (eleanorSaveSP or EleanorPackSkipsSonicClaw(MyEnemy)) then
                 skilltouse = {-1, 0, 0}
             end
-            TraceAI("skill selected "..skilltouse[2])
+            if TraceAIEnabled ~= 0 then TraceAI("skill selected "..skilltouse[2]) end
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
             if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
-                TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.")
+                if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
                 -- in ATTACK_ST nothing switches style, so only while already in fighting style
                 if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and EleanorMode == FIGHTING_MODE and IsSkillReady(fallbackSkill) then
                     if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
-                        TraceAI("Eleanor Fallback: Selecting Sonic Claw.")
+                        if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: Selecting Sonic Claw.") end
                         skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
                     end
                 end
@@ -1335,7 +1335,7 @@ function OnATTACK_ST()
             -- ### Eleanor Grapple Tactic Fallback - END ###
             -- #################################################################
             if skilltouse[2] == 0 and tact_skill ~= SKILL_NEVER and EleanorShouldLeaveGrappling(availsp) then
-                TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style")
+                if TraceAIEnabled ~= 0 then TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style") end
                 logappend("AAI_SKILLFAIL", "Eleanor: no spheres in grappling style and no hit taken; Style Change to fighting")
                 DoSkill(MH_STYLE_CHANGE, 1, MyID, 8)
             end
@@ -1359,7 +1359,7 @@ function OnATTACK_ST()
     -- Now we resolve it
     if (UseSkillOnly ~= 1) then
         Attack(MyID, MyEnemy)
-        TraceAI("Normal attack vs: "..MyEnemy)
+        if TraceAIEnabled ~= 0 then TraceAI("Normal attack vs: "..MyEnemy) end
         -- Some clients never expose our attack motion. Estimate from attack commands, but
         -- credit at most one attempt per interval, not one per AI call or dance command.
         if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE and GetTick() >= nextEleanorSphereAttack then
@@ -1370,7 +1370,7 @@ function OnATTACK_ST()
     end
 
     if (MySkill ~= 0) then
-        TraceAI("Skill Attack: "..MySkill.." target: "..MyEnemy.." level:"..MySkillLevel)
+        if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." target: "..MyEnemy.." level:"..MySkillLevel) end
         local SkillTarget = MyEnemy
         local SkillTargetX, SkillTargetY = nil, nil
         -- the target itself shrugs off this AoE's element (it got picked for the pack around it):
@@ -1379,31 +1379,31 @@ function OnATTACK_ST()
             and not SkillElementOK(MySkill, MyEnemy)
         if (MySkill == MA_SHARPSHOOTING and AoEMaximizeTargets == 1) then
             target, hitcount = GetBestFASTarget(MyID)
-            TraceAI(target.." - "..hitcount)
+            if TraceAIEnabled ~= 0 then TraceAI(target.." - "..hitcount) end
             if hitcount > 0 and target ~= -1 then
                 SkillTarget = target
             elseif hitcount == 0 then
                 MySkill = 0
             end
-            TraceAI("Skill Attack: "..MySkill.." (FAS) target: "..SkillTarget.." enemy: "..MyEnemy)
+            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (FAS) target: "..SkillTarget.." enemy: "..MyEnemy) end
         elseif (MySkill == ML_BRANDISH and AoEMaximizeTargets == 1) then
             target = GetBestBrandishTarget(MyID)
             if target ~= -1 then
                 SkillTarget = target
             end
-            TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
+            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy) end
         elseif (MySkill == MH_HEILIGE_STANGE or MySkill == MS_BOWLINGBASH or (MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 1 and not IsCasterCenteredAoE(MySkill))) and (AoEMaximizeTargets == 1 or elementAim) then
             target = GetBestAoETarget(MyID, MySkill, MySkillLevel)
             if target ~= -1 then
                 SkillTarget = target
             end
-            TraceAI("Skill Attack: "..MySkill.." (aoe target) target: "..SkillTarget.." enemy: "..MyEnemy)
+            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (aoe target) target: "..SkillTarget.." enemy: "..MyEnemy) end
         elseif ((MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 2 and MySkill ~= MH_VOLCANIC_ASH and (AoEMaximizeTargets == 1 or elementAim)) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1)) then
             targx, targy = GetBestAoECoord(MyID, MySkill, MySkillLevel)
             if targx ~= -1 then
                 SkillTargetX, SkillTargetY = targx, targy
             end
-            TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy)
+            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy) end
         end
         if MySkill ~= 0 then
             DoSkill(MySkill, MySkillLevel, SkillTarget, -1, SkillTargetX, SkillTargetY)
@@ -1446,7 +1446,7 @@ function	OnTANKCHASE_ST ()
 	else
 		skill,level,sp=nil,nil,nil
 	end
-	TraceAI ("OnTANKCHASE_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnTANKCHASE_ST") end
 	if (true == IsOutOfSight(MyID,MyEnemy) or (ChaseGiveUpCount > ChaseGiveUp and GetV(V_MOTION,MyID)~=MOTION_MOVE)) then	-- ENEMY_OUTSIGHT_IN
 		if (ChaseGiveUpCount>ChaseGiveUp) then
 			Unreachable[MyEnemy]=1
@@ -1457,7 +1457,7 @@ function	OnTANKCHASE_ST ()
 		EnemyPosX = {0,0,0,0,0,0,0,0,0,0}
 		EnemyPosY = {0,0,0,0,0,0,0,0,0,0}
 		MyDestX, MyDestY = 0,0
-		TraceAI ("TANKCHASE_ST -> IDLE_ST : ENEMY_OUTSIGHT_IN")
+		if TraceAIEnabled ~= 0 then TraceAI ("TANKCHASE_ST -> IDLE_ST : ENEMY_OUTSIGHT_IN") end
 		ChaseGiveUpCount=0
 		
 		return
@@ -1467,7 +1467,7 @@ function	OnTANKCHASE_ST ()
 		if(IsNotKS(MyID,MyEnemy)==1) then
 			MyState = TANK_ST
 			MySkillUsedCount=0
-			TraceAI ("TANKCHASE_ST -> TANK_ST : ENEMY_INATTACKSIGHT_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("TANKCHASE_ST -> TANK_ST : ENEMY_INATTACKSIGHT_IN") end
 			return OnTANK_ST()
 		else
 			MyState = IDLE_ST
@@ -1475,18 +1475,18 @@ function	OnTANKCHASE_ST ()
 			EnemyPosX = {0,0,0,0,0,0,0,0,0,0}
 			EnemyPosY = {0,0,0,0,0,0,0,0,0,0}
 			MyDestX, MyDestY = 0,0
-			TraceAI ("TANKCHASE_ST -> IDLE_ST : Enemy is taken")
+			if TraceAIEnabled ~= 0 then TraceAI ("TANKCHASE_ST -> IDLE_ST : Enemy is taken") end
 		end
 		
 		return
 	end
-	TraceAI("Tank chase: Can we skill while chasing?")
+	if TraceAIEnabled ~= 0 then TraceAI("Tank chase: Can we skill while chasing?") end
 	if UseSkillOnly == -1 and (GetTick() >= AutoSkillTimeout) then
 		local dist=GetDistanceA(MyID,MyEnemy)
 		local tact_debuff,tact_skill,tact_sp,tact_skillclass=GetTact(TACT_DEBUFF,MyEnemy),GetTact(TACT_SKILL,MyEnemy),GetTact(TACT_SP,MyEnemy),GetTact(TACT_SKILLCLASS,MyEnemy)
 		local skilltouse={-1,0,0}
 		local SkillList=GetTargetedSkills(MyID)
-		TraceAI("Begin autoskill while tank chasing routine")
+		if TraceAIEnabled ~= 0 then TraceAI("Begin autoskill while tank chasing routine") end
 		local skill_level
 		if (tact_skill < 0) then		-- Negative value of TACT_SKILL -> 1 cast of skill
 			skill_level=tact_skill*-1	-- with level = to the absolute value of the
@@ -1520,7 +1520,7 @@ function	OnTANKCHASE_ST ()
 			end
 		end
 		if skilltouse[2]~=0 then
-			TraceAI("Using skill while tank chasing:"..skilltouse[2])
+			if TraceAIEnabled ~= 0 then TraceAI("Using skill while tank chasing:"..skilltouse[2]) end
 			local slvl=skilltouse[3]
 			if skill_level~=11 then
 				slvl=skill_level
@@ -1532,7 +1532,7 @@ function	OnTANKCHASE_ST ()
 			MySkillUsedCount=MySkillUsedCount+1
 		end
 	else
-		TraceAI("Not in range, and can't use chase skill")
+		if TraceAIEnabled ~= 0 then TraceAI("Not in range, and can't use chase skill") end
 	end
 	ChaseGiveUpCount=ChaseGiveUpCount+1
 	MyDestX, MyDestY =  GetStandPoint(MyID,MyEnemy,MySkill,MySkillLevel,alt)
@@ -1543,12 +1543,12 @@ function	OnTANKCHASE_ST ()
 		EnemyPosX = {0,0,0,0,0,0,0,0,0,0}
 		EnemyPosY = {0,0,0,0,0,0,0,0,0,0}
 		MyDestX, MyDestY = 0,0
-		TraceAI ("TANKCHASE_ST -> IDLE_ST : target is surrounded so GetStandPoint can't find valid cell. Target dropped and deprioritized")
+		if TraceAIEnabled ~= 0 then TraceAI ("TANKCHASE_ST -> IDLE_ST : target is surrounded so GetStandPoint can't find valid cell. Target dropped and deprioritized") end
 		ChaseGiveUpCount=0
 	end
 	if (GetTact(TACT_CHASE,MyEnemy)~=1) then
 		Move (MyID,MyDestX,MyDestY)
-		TraceAI ("TANKCHASE_ST -> TANKCHASE_ST : DESTCHANGED_IN"..MyDestX.." "..MyDestY)
+		if TraceAIEnabled ~= 0 then TraceAI ("TANKCHASE_ST -> TANKCHASE_ST : DESTCHANGED_IN"..MyDestX.." "..MyDestY) end
 	end
 	return
 end 
@@ -1556,7 +1556,7 @@ end
 function OnTANK_ST()
 	if (GetV(V_MOTION,MyEnemy)==MOTION_DEAD or IsOutOfSight(MyID,MyEnemy)) then
 		MyState=IDLE_ST
-		TraceAI("TANK_ST->IDLE_ST - Target dead or out of sight")
+		if TraceAIEnabled ~= 0 then TraceAI("TANK_ST->IDLE_ST - Target dead or out of sight") end
 		return
 	end
 	if (GetV(V_TARGET,MyEnemy)~=MyID and (TankHitTimeout + 2500) < GetTick()) then
@@ -1565,12 +1565,12 @@ function OnTANK_ST()
 			TankHitTimeout = GetTick()
 		else
 			MyState=TANKCHASE_ST
-			TraceAI("TANK_ST->TANKCHASE_ST - Target out of range")
+			if TraceAIEnabled ~= 0 then TraceAI("TANK_ST->TANKCHASE_ST - Target out of range") end
 		end
 		return
 	end
 	if GetV(V_TARGET,MyEnemy)==MyID then
-		TraceAI("TANK_ST->IDLE_ST - Target is tanked successfully")
+		if TraceAIEnabled ~= 0 then TraceAI("TANK_ST->IDLE_ST - Target is tanked successfully") end
 		MyState=IDLE_ST
 	end
 end
@@ -1579,7 +1579,7 @@ end
 --- REST ROUTINE ---
 --------------------
 function	OnREST_ST ()
-	TraceAI("OnREST_ST")
+	if TraceAIEnabled ~= 0 then TraceAI("OnREST_ST") end
 	if (DoIdleTasks()==nil) then
 		return
 	end
@@ -1588,14 +1588,14 @@ function	OnREST_ST ()
 		if (object ~= 0) then		--Check for monsters attacking owner
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("REST_ST -> CHASE_ST : MYOWNER_ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("REST_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
 			return 
 		end
 		object = SelectEnemy(GetEnemyList(MyID,0))	
 		if (object ~= 0) then
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("REST_ST -> CHASE_ST : ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("REST_ST -> CHASE_ST : ATTACKED_IN") end
 			return
 		end
 	end
@@ -1606,17 +1606,17 @@ function	OnREST_ST ()
 	ox,oy=GetV(V_POSITION,OwnerID)
 	xoff=x-ox
 	yoff=y-oy
-	TraceAI(xoff.." "..ox.." "..x)
+	if TraceAIEnabled ~= 0 then TraceAI(xoff.." "..ox.." "..x) end
 	if (GetV(V_MOTION,OwnerID)~=MOTION_SIT) then
 		MyState=IDLE_ST
-		TraceAI("REST_ST -> IDLE_ST: Owner stood up")
+		if TraceAIEnabled ~= 0 then TraceAI("REST_ST -> IDLE_ST: Owner stood up") end
 	elseif (xoff~=RestXOff or yoff~=RestYOff) then
 		MyDestX=ox+RestXOff
 		MyDestY=oy+RestYOff
-		TraceAI("REST_ST -> REST_ST: moving from "..formatpos(x,y).." to "..formatpos(MyDestX,MyDestY))
+		if TraceAIEnabled ~= 0 then TraceAI("REST_ST -> REST_ST: moving from "..formatpos(x,y).." to "..formatpos(MyDestX,MyDestY)) end
 		Move(MyID,MyDestX,MyDestY)
 	else
-		TraceAI("REST_ST -> REST_ST: At rest station")
+		if TraceAIEnabled ~= 0 then TraceAI("REST_ST -> REST_ST: At rest station") end
 	end
 end
 
@@ -1626,14 +1626,14 @@ end
 function	OnFRIEND_CIRCLE_ST()
 	x,y = GetV(V_POSITION,MyID)
 	dist = GetDistance(x,y,NewFriendX,NewFriendY)
-	TraceAI("OnFRIEND_CIRCLE_ST"..x..","..y.." "..dist) 
+	if TraceAIEnabled ~= 0 then TraceAI("OnFRIEND_CIRCLE_ST"..x..","..y.." "..dist) end 
 	if FriendCircleIter == 0 then
 		if dist > 2 then
 			Move(MyID,NewFriendX,NewFriendY)
 			FriendCircleTimeout=FriendCircleTimeout+1
 			if FriendCircleTimeout > 16 then
 				MyState=IDLE_ST
-				TraceAI("Dropping circle attempt, timeout exceeded")
+				if TraceAIEnabled ~= 0 then TraceAI("Dropping circle attempt, timeout exceeded") end
 			end
 			return
 		else
@@ -1650,7 +1650,7 @@ function	OnFRIEND_CIRCLE_ST()
 		 	if FriendCircleTimeout>4 then
 		 		FriendCircleIter=2
 				FriendCircleTimeout=0
-		 		TraceAI("giving up on circle step 1")	
+		 		if TraceAIEnabled ~= 0 then TraceAI("giving up on circle step 1") end	
 		 	end
 		 	return
 		end
@@ -1665,7 +1665,7 @@ function	OnFRIEND_CIRCLE_ST()
 		 	if FriendCircleTimeout>4 then
 		 		FriendCircleIter=3
 				FriendCircleTimeout=0
-		 		TraceAI("giving up on circle step 2")	
+		 		if TraceAIEnabled ~= 0 then TraceAI("giving up on circle step 2") end	
 		 	end
 		 	return
 		end
@@ -1680,7 +1680,7 @@ function	OnFRIEND_CIRCLE_ST()
 			if FriendCircleTimeout>4 then
 				FriendCircleIter=4
 				FriendCircleTimeout=0
-				TraceAI("giving up on circle step 3")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on circle step 3") end	
 			end
 			return
 		end
@@ -1695,7 +1695,7 @@ function	OnFRIEND_CIRCLE_ST()
 			if FriendCircleTimeout>4 then
 				FriendCircleIter=5
 				FriendCircleTimeout=0
-				TraceAI("giving up on circle step 4")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on circle step 4") end	
 			end
 			return
 		end
@@ -1705,7 +1705,7 @@ function	OnFRIEND_CIRCLE_ST()
 			FriendCircleIter=0
 			FriendCircleTimeout=0
 			MyState=IDLE_ST
-			TraceAI("Circle completed")
+			if TraceAIEnabled ~= 0 then TraceAI("Circle completed") end
 			return
 		else 
 			Move(MyID,NewFriendX,NewFriendY-2)
@@ -1714,7 +1714,7 @@ function	OnFRIEND_CIRCLE_ST()
 				FriendCircleIter=0
 				FriendCircleTimeout=0
 				MyState=IDLE_ST
-				TraceAI("giving up on circle step 5")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on circle step 5") end	
 			end
 			return
 		end
@@ -1724,14 +1724,14 @@ end
 function	OnFRIEND_CROSS_ST()
 	x,y = GetV(V_POSITION,MyID)
 	dist = GetDistance(x,y,NewFriendX,NewFriendY)
-	TraceAI("OnFRIEND_CROSS_ST"..x..","..y.." "..dist) 
+	if TraceAIEnabled ~= 0 then TraceAI("OnFRIEND_CROSS_ST"..x..","..y.." "..dist) end 
 	if FriendCircleIter == 0 then
 		if dist > 2 then
 			Move(MyID,NewFriendX,NewFriendY)
 			FriendCircleTimeout=FriendCircleTimeout+1
 			if FriendCircleTimeout > 16 then
 				MyState=IDLE_ST
-				TraceAI("Dropping cross attempt, timeout exceeded")
+				if TraceAIEnabled ~= 0 then TraceAI("Dropping cross attempt, timeout exceeded") end
 			end
 			return
 		else
@@ -1748,7 +1748,7 @@ function	OnFRIEND_CROSS_ST()
 		 	if FriendCircleTimeout>4 then
 		 		FriendCircleIter=2
 				FriendCircleTimeout=0
-		 		TraceAI("giving up on cross step 1")	
+		 		if TraceAIEnabled ~= 0 then TraceAI("giving up on cross step 1") end	
 		 	end
 		 	return
 		end
@@ -1763,7 +1763,7 @@ function	OnFRIEND_CROSS_ST()
 		 	if FriendCircleTimeout>4 then
 		 		FriendCircleIter=3
 				FriendCircleTimeout=0
-		 		TraceAI("giving up on cross step 2")	
+		 		if TraceAIEnabled ~= 0 then TraceAI("giving up on cross step 2") end	
 		 	end
 		 	return
 		end
@@ -1778,7 +1778,7 @@ function	OnFRIEND_CROSS_ST()
 			if FriendCircleTimeout>4 then
 				FriendCircleIter=4
 				FriendCircleTimeout=0
-				TraceAI("giving up on cross step 3")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on cross step 3") end	
 			end
 			return
 		end
@@ -1793,7 +1793,7 @@ function	OnFRIEND_CROSS_ST()
 			if FriendCircleTimeout>4 then
 				FriendCircleIter=5
 				FriendCircleTimeout=0
-				TraceAI("giving up on cross step 4")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on cross step 4") end	
 			end
 			return
 		end
@@ -1803,7 +1803,7 @@ function	OnFRIEND_CROSS_ST()
 			FriendCircleIter=0
 			FriendCircleTimeout=0
 			MyState=IDLE_ST
-			TraceAI("Circle completed")
+			if TraceAIEnabled ~= 0 then TraceAI("Circle completed") end
 			return
 		else 
 			Move(MyID,NewFriendX-2,NewFriendY)
@@ -1812,7 +1812,7 @@ function	OnFRIEND_CROSS_ST()
 				FriendCircleIter=0
 				FriendCircleTimeout=0
 				MyState=IDLE_ST
-				TraceAI("giving up on cross step 5")	
+				if TraceAIEnabled ~= 0 then TraceAI("giving up on cross step 5") end	
 			end
 			return
 		end
@@ -1825,9 +1825,9 @@ end
 
 function	OnMOVE_CMD_ST ()
 
-	TraceAI ("OnMOVE_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnMOVE_CMD_ST") end
 	if GetDistanceAPR(OwnerID,MyMoveX,MyMoveY) > 15 then
-		TraceAI("OnMOVE_CMD_ST -> IDLE_ST: Attempt to move to location off screen")
+		if TraceAIEnabled ~= 0 then TraceAI("OnMOVE_CMD_ST -> IDLE_ST: Attempt to move to location off screen") end
 		logappend("AAI_ERROR","We were in MOVE_CMD_ST trying to move to "..formatpos(MyMoveX,MyMoveY).." while owner standing at "..formatpos(GetV(V_POSITION,OwnerID)))
 		MyState=IDLE_ST
 		return OnIDLE_ST()
@@ -1843,7 +1843,7 @@ function	OnMOVE_CMD_ST ()
 				ReturnToMoveHold = 0
 			end
 		end
-		TraceAI("OnMOVE_CMD_ST -> IDLE_ST: Arrived at Destination "..formatpos(x,y))
+		if TraceAIEnabled ~= 0 then TraceAI("OnMOVE_CMD_ST -> IDLE_ST: Arrived at Destination "..formatpos(x,y)) end
 		MyState=IDLE_ST
 		return OnIDLE_ST()
 	elseif GetV(V_MOTION,MyID) == MOTION_STAND or MyDestX~=MyMoveX or MyDestY~=MyMoveY then
@@ -1854,7 +1854,7 @@ end
 
 function	OnMOVE_CMD_HOLD_ST ()
 	
-	TraceAI ("OnMOVE_CMD_HOLD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnMOVE_CMD_HOLD_ST") end
 	MySkillUsedCount		= 0
 	ChaseGiveUpCount		= 0
 	AttackGiveUpCount		= 0
@@ -1870,7 +1870,7 @@ function	OnMOVE_CMD_HOLD_ST ()
 		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : MYOWNER_ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -1880,7 +1880,7 @@ function	OnMOVE_CMD_HOLD_ST ()
 		if (object ~= 0) then							-- ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -1894,7 +1894,7 @@ function	OnMOVE_CMD_HOLD_ST ()
 		if (object ~= 0) then
 			MyState = TANKCHASE_ST
 			MyEnemy = object
-			TraceAI ("MOVE_CMD_HOLD_ST -> TANKCHASE_ST")
+			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> TANKCHASE_ST") end
 			return
 		end
 	end
@@ -1937,7 +1937,7 @@ end
 
 function OnATTACK_AREA_CMD_ST ()
 
-	TraceAI ("OnATTACK_AREA_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnATTACK_AREA_CMD_ST") end
 
 	local	object = GetOwnerEnemy (MyID)
 	if (object == 0) then							
@@ -1962,7 +1962,7 @@ end
 
 function OnPATROL_CMD_ST ()
 
-	TraceAI ("OnPATROL_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnPATROL_CMD_ST") end
 
 	local	object = GetOwnerEnemy (MyID)
 	if (object == 0) then							
@@ -1972,7 +1972,7 @@ function OnPATROL_CMD_ST ()
 	if (object ~= 0) then							-- MYOWNER_ATTACKED_IN or ATTACKED_IN
 		MyState = CHASE_ST
 		MyEnemy = object
-		TraceAI ("PATROL_CMD_ST -> CHASE_ST : ATTACKED_IN")
+		if TraceAIEnabled ~= 0 then TraceAI ("PATROL_CMD_ST -> CHASE_ST : ATTACKED_IN") end
 		return
 	end
 
@@ -1995,7 +1995,7 @@ end
 
 function OnHOLD_CMD_ST () 
 
-	TraceAI ("OnHOLD_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnHOLD_CMD_ST") end
 	logappend("AAI_ERROR","We're in HOLD_CMD_ST - where did hold cmd come from?")
 	if (MyEnemy ~= 0) then
 		local d = GetDistanceA(MyEnemy,MyID)
@@ -2028,16 +2028,16 @@ end
 function OnSKILL_OBJECT_CMD_ST ()
 	if IsInAttackSight(MyID,MyEnemy,MySkill,MySkillLevel) then
 		DoSkill(MySkill,MySkillLevel,MyEnemy)
-		TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - skill used")
+		if TraceAIEnabled ~= 0 then TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - skill used") end
 		MyState=IDLE_ST
 		MyDestX,MyDestY,MyEnemy,MySkill,MySkillLevel=0,0,0,0,0
 		return
 	elseif IsOutOfSight(MyID,MyEnemy) then
-		TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - target off screen")
+		if TraceAIEnabled ~= 0 then TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - target off screen") end
 		MyState=IDLE_ST
 		MyDestX,MyDestY,MyEnemy,MySkill,MySkillLevel=0,0,0,0,0
 	elseif SkillObjectCMDTimeout>SkillObjectCMDLimit then
-		TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - Couldn't get into range to use skill "..MySkill.." on "..MyEnemy)
+		if TraceAIEnabled ~= 0 then TraceAI("SKILL_OBJECT_CMD_ST --> IDLE_ST - Couldn't get into range to use skill "..MySkill.." on "..MyEnemy) end
 		MyState=IDLE_ST
 		MyDestX,MyDestY,MyEnemy,MySkill,MySkillLevel=0,0,0,0,0
 		return OnIDLE_ST()
@@ -2062,7 +2062,7 @@ end
 
 function OnSKILL_AREA_CMD_ST ()
 
-	TraceAI ("OnSKILL_AREA_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnSKILL_AREA_CMD_ST") end
 
 	local x , y = GetV (V_POSITION,MyID)
 	if (GetDistance(x,y,MyDestX,MyDestY) <= AttackRange(MyID,MySkill,MySkillLevel)) then	-- DESTARRIVED_IN
@@ -2071,11 +2071,11 @@ function OnSKILL_AREA_CMD_ST ()
 		MySkill = 0
 	else
 		targetx,targety=Closest(MyID,MyDestX,MyDestY,AttackRange(MyID,MySkill,MySkillLevel))
-		TraceAI("Moving to "..formatpos(targetx,targety).." from "..formatpos(x,y))
+		if TraceAIEnabled ~= 0 then TraceAI("Moving to "..formatpos(targetx,targety).." from "..formatpos(x,y)) end
 		if GetDistanceAPR(OwnerID,targetx,targety) > GetMoveBounds() then
 			MyState = IDLE_ST
 			MySkill = 0
-			TraceAI("OnSKILL_AREA_CMD_ST -> IDLE_ST Target out of range")
+			if TraceAIEnabled ~= 0 then TraceAI("OnSKILL_AREA_CMD_ST -> IDLE_ST Target out of range") end
 		else
 			Move (MyID,targetx,targety)
 		end
@@ -2090,7 +2090,7 @@ end
 
 
 function OnFOLLOW_CMD_ST ()
-	TraceAI ("OnFOLLOW_CMD_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnFOLLOW_CMD_ST") end
 	local d = GetDistanceA (OwnerID,MyID)
 	if ( d > FollowStayBack) then
 		BetterMoveToOwner (MyID,FollowStayBack)
@@ -2101,7 +2101,7 @@ function OnFOLLOW_CMD_ST ()
 		local actors = GetActors()
 		for i,v in ipairs(actors) do
 			if (IsMonster(v)~=1 and GetV(V_MOTION,OwnerID)==MOTION_SIT) then
-				TraceAI("Friend list modification")
+				if TraceAIEnabled ~= 0 then TraceAI("Friend list modification") end
 				if (IsToRight(OwnerID,v)==1) then
 					if (MyFriends[v]==nil) then
 						MyFriends[v] = 1
@@ -2128,7 +2128,7 @@ function OnFOLLOW_CMD_ST ()
 		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("FOLLOW_CMD_ST -> CHASE_ST : MYOWNER_ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_CMD_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -2138,7 +2138,7 @@ function OnFOLLOW_CMD_ST ()
 		if (object ~= 0) then							-- ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("FOLLOW_CMD_ST -> CHASE_ST : ATTACKED_IN ")
+			if TraceAIEnabled ~= 0 then TraceAI ("FOLLOW_CMD_ST -> CHASE_ST : ATTACKED_IN ") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -2195,7 +2195,7 @@ function	GetEnemyList (myid,aggro)
 		oskill,olevel=GetAtkSkill(MyID)
 		mskill,mlevel=GetMinionSkill(MyID)
 	end
-	TraceAI("GetEnemyList with aggro "..aggro)
+	if TraceAIEnabled ~= 0 then TraceAI("GetEnemyList with aggro "..aggro) end
 	local aggrocount -- computed on first use; GetAggroCount() walks every target
 	for k,v in pairs(Targets) do
 		local tact = GetTact(TACT_BASIC,k)
@@ -2231,7 +2231,7 @@ function	GetEnemyList (myid,aggro)
 					end
 				elseif aggro~=2 then
 					if (GetAggroDist() >= GetDistanceA(owner,k)) then
-						TraceAI("Adding to target list: "..k)
+						if TraceAIEnabled ~= 0 then TraceAI("Adding to target list: "..k) end
 						local r={v[1],v[2],tact,casttact}
 						enemys[k] = r
 					end
@@ -2442,7 +2442,7 @@ function DoIdleTasks()
 	end
 	if (GetV(V_MOTION,OwnerID)==MOTION_SIT and MyState~=REST_ST and DoNotUseRest~=1) then
 		MyState=REST_ST
-		TraceAI("DoIdleTasks - Owner sitting, MyState -> REST_ST")
+		if TraceAIEnabled ~= 0 then TraceAI("DoIdleTasks - Owner sitting, MyState -> REST_ST") end
 		return
 	end
 	return 1
@@ -2457,7 +2457,7 @@ function DoAutoBuffs(buffmode)
 			return 1
 		end
 	end
-	TraceAI("DoAutoBuffs"..buffmode)
+	if TraceAIEnabled ~= 0 then TraceAI("DoAutoBuffs"..buffmode) end
 	if (UseProvokeOwner == buffmode and ProvokeOwnerTimeout ~=-1) then
 		if (GetTick() > ProvokeOwnerTimeout) then
 			local skill,level= GetProvokeSkill(MyID)
@@ -2475,17 +2475,17 @@ function DoAutoBuffs(buffmode)
 					MyPSkill = skill
 					MyPSkillLevel = level
 					MyPMode = 9
-					TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
+					if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level)) end
 					return OnPROVOKE_ST()
 				end
 			end
 		end
 	end
 	if OffensiveOwnerTimeout ~=-1 then
-		TraceAI("offensive owner ~= -1")
+		if TraceAIEnabled ~= 0 then TraceAI("offensive owner ~= -1") end
 		if (GetTick() > OffensiveOwnerTimeout) then
 			local skill,level,opt = GetOffensiveOwnerSkill(MyID)
-			TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode)
+			if TraceAIEnabled ~= 0 then TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode) end
 			if (skill <= 0) then
 				OffensiveOwnerTimeout = -1
 			elseif level==0 or opt~=buffmode then
@@ -2502,17 +2502,17 @@ function DoAutoBuffs(buffmode)
 					MyPSkill = skill
 					MyPSkillLevel = level
 					MyPMode = 11
-					TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
+					if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level)) end
 					return OnPROVOKE_ST()
 				end
 			end
 		end
 	end
 	if DefensiveOwnerTimeout ~=-1 then
-		TraceAI("defensive owner ~= -1")
+		if TraceAIEnabled ~= 0 then TraceAI("defensive owner ~= -1") end
 		if (GetTick() > DefensiveOwnerTimeout)  and (DefensiveBuffOwnerMobbed==0 or (DefensiveBuffOwnerMobbed <= GetAggroCount(OwnerID) and HPPercent(OwnerID) < DefensiveBuffOwnerHP)) then
 			local skill,level,opt = GetDefensiveOwnerSkill(MyID)
-			TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode)
+			if TraceAIEnabled ~= 0 then TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode) end
 			if (skill <= 0) then
 				DefensiveOwnerTimeout = -1
 			elseif level==0 or opt~=buffmode then
@@ -2529,17 +2529,17 @@ function DoAutoBuffs(buffmode)
 					MyPSkill = skill
 					MyPSkillLevel = level
 					MyPMode = 12
-					TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
+					if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level)) end
 					return OnPROVOKE_ST()
 				end
 			end
 		end
 	end
 	if OtherOwnerTimeout ~=-1 then
-		TraceAI("other owner ~= -1 "..GetTick().." "..OtherOwnerTimeout)
+		if TraceAIEnabled ~= 0 then TraceAI("other owner ~= -1 "..GetTick().." "..OtherOwnerTimeout) end
 		if (GetTick() > OtherOwnerTimeout) then
 			local skill,level,opt = GetOtherOwnerSkill(MyID)
-			TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode)
+			if TraceAIEnabled ~= 0 then TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode) end
 			if (skill <= 0) then
 				OtherOwnerTimeout = -1
 			elseif level==0 or opt~=buffmode then
@@ -2556,7 +2556,7 @@ function DoAutoBuffs(buffmode)
 					MyPSkill = skill
 					MyPSkillLevel = level
 					MyPMode = 13
-					TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
+					if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level)) end
 					return OnPROVOKE_ST()
 				end
 			end
@@ -2643,10 +2643,10 @@ function DoAutoBuffs(buffmode)
 		end
 	end
 	if SDefensiveTimeout ~=-1 then
-		TraceAI("sdefensive ~= -1")
+		if TraceAIEnabled ~= 0 then TraceAI("sdefensive ~= -1") end
 		if (GetTick() > SDefensiveTimeout) then
 			local skill,level,opt = GetSDefensiveSkill(MyID)
-			TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode)
+			if TraceAIEnabled ~= 0 then TraceAI("timeout ok "..opt.." "..FormatSkill(skill,level).." "..buffmode) end
 			if (skill <= 0) then
 				SDefensiveTimeout = -1
 			elseif level==0 or opt~=buffmode then
@@ -2725,7 +2725,7 @@ function DoAutoBuffs(buffmode)
 		end
 	end
 	if SightTimeout ~=-1 then
-		TraceAI("tick:"..GetTick().."SightTimeout"..SightTimeout)
+		if TraceAIEnabled ~= 0 then TraceAI("tick:"..GetTick().."SightTimeout"..SightTimeout) end
 		if (GetTick() > SightTimeout) then
 			local skill,level,opt = GetSightOrAoE(MyID)
 			if (skill <= 0) then
@@ -2745,7 +2745,7 @@ function DoAutoBuffs(buffmode)
 						MyPSkill = skill
 						MyPSkillLevel = level
 						MyPMode = 7
-						TraceAI(MyState.." --> PROVOKE_ST: Using AoE skill as buff"..MyPState.." "..MyState.." "..MyPEnemy.." "..MyPSkill.." "..MyPSkillLevel)
+						if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST: Using AoE skill as buff"..MyPState.." "..MyState.." "..MyPEnemy.." "..MyPSkill.." "..MyPSkillLevel) end
 					return OnPROVOKE_ST()
 				end				
 				else
@@ -2772,7 +2772,7 @@ function DoAutoBuffs(buffmode)
 			--logappend("AAI_PKF","No SP")
 			-- no SP
 		else
-			TraceAI("Painkiller Friends check")
+			if TraceAIEnabled ~= 0 then TraceAI("Painkiller Friends check") end
 			
 			--logappend("AAI_PKF","Painkiller friends check")
 			for k,v in pairs(Players) do
@@ -2787,7 +2787,7 @@ function DoAutoBuffs(buffmode)
 							MyPSkill = skill
 							MyPSkillLevel = level
 							MyPMode = k
-							TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level).." on friend "..k)
+							if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level).." on friend "..k) end
 							return OnPROVOKE_ST()
 						end
 					else 
@@ -2797,7 +2797,7 @@ function DoAutoBuffs(buffmode)
 						MyPSkill = skill
 						MyPSkillLevel = level
 						MyPMode = k
-						TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level))
+						if TraceAIEnabled ~= 0 then TraceAI(MyState.." --> PROVOKE_ST to use "..FormatSkill(skill,level)) end
 						return OnPROVOKE_ST()
 					end
 				end
@@ -2820,7 +2820,7 @@ function DoHealingTasks (myid)
 	if rhp < HealSelfHP then
 		if skill==HVAN_CHAOTIC then
 			if GetV(V_SP,myid) > GetSkillInfo(skill,3,level) then
-				TraceAI("Using self Healing skill "..FormatSkill(skill,level))
+				if TraceAIEnabled ~= 0 then TraceAI("Using self Healing skill "..FormatSkill(skill,level)) end
 				if ohp < HealOwnerHP and MyState==IDLE_ST then
 					DoSkill(skill,5,myid) 
 				else
@@ -2828,17 +2828,17 @@ function DoHealingTasks (myid)
 				end
 				return 1
 			else
-				TraceAI("Can't use self healing skill, no SP")
+				if TraceAIEnabled ~= 0 then TraceAI("Can't use self healing skill, no SP") end
 			end
 		end
 	end
 	if ohp < HealOwnerHP then
 		if GetV(V_SP,myid) > GetSkillInfo(skill,3,level) then
-			TraceAI("Using Healing skill "..FormatSkill(skill,level))
+			if TraceAIEnabled ~= 0 then TraceAI("Using Healing skill "..FormatSkill(skill,level)) end
 			DoSkill(skill,level,OwnerID)
 			return 1
 		else
-			TraceAI("Can't use healing skill, no SP")
+			if TraceAIEnabled ~= 0 then TraceAI("Can't use healing skill, no SP") end
 			return
 		end
 	end
@@ -2884,7 +2884,7 @@ function UpdateTimeoutFile()
 		end
 		OutFile:close()
 	else
-		TraceAI("Failed to update timeout file")
+		if TraceAIEnabled ~= 0 then TraceAI("Failed to update timeout file") end
 		logappend("AAI_ERROR","Failed to update timeout file for owner "..OwnerID)
 	end
 	return
@@ -2937,11 +2937,11 @@ function OnPROVOKE_ST()
 		DoSkill(MyPSkill,MyPSkillLevel,MyPEnemy,MyPMode)
 		UpdateTimeoutFile()
 		MyState=MyPState
-		TraceAI("PROVOKE_ST -> IDLE_ST - Buff/AoE okay"..MyState)
+		if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> IDLE_ST - Buff/AoE okay"..MyState) end
 		MyDestX,MyDestY,MyPEnemy,MyPSkill,MyPState,MyPSkillLevel,MyPMode=0,0,0,0,0,0,0
 		return
 	elseif SkillObjectCMDTimeout>SkillObjectCMDLimit then
-		TraceAI("PROVOKE_ST -> IDLE_ST Couldn't get into range to provoke/AoE owner")
+		if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> IDLE_ST Couldn't get into range to provoke/AoE owner") end
 		if (MyPMode==12) then
 			DefensiveOwnerTimeout=GetTick()+20000
 		elseif (MyPMode==9) then
@@ -2960,13 +2960,13 @@ function OnPROVOKE_ST()
 	elseif SkillObjectCMDTimeout>(SkillObjectCMDLimit/2) then --We're having trouble getting to the place we want to in order to use this buff, so let's just try to move right to target
 		range = AttackRange(MyID,MyPSkill,MyPSkillLevel)
 		if range > 2 and MyPEnemy==OwnerID then
-			TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving to owner from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty))
+			if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving to owner from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty)) end
 			MoveToOwner(MyID)
 		else
 			--local x,y=ClosestR(MyID,MyPEnemy,AttackRange(MyID,MyPSkill,MyPSkillLevel),math.random(2))
 			local x,y=GetStandPoint(MyID,MyPEnemy,MyPSkill,MyPSkillLevel,1)
 			if x==-1 then
-				TraceAI("PROVOKE_ST -> IDLE_ST target surrounded, no available cells!")
+				if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> IDLE_ST target surrounded, no available cells!") end
 				if MyPState~=PROVOKE_ST then
 					MyState=MyPState
 				else
@@ -2975,7 +2975,7 @@ function OnPROVOKE_ST()
 				SkillObjectCMDTimeout=0
 				MyDestX,MyDestY,MyPEnemy,MyPSkill,MyPState,MyPSkillLevel,MyPMode=0,0,0,0,0,0,0
 			else
-				TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving (alt=1) to "..formatpos(x,y).." from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty))
+				if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving (alt=1) to "..formatpos(x,y).." from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty)) end
 				Move(MyID,x,y)
 			end
 		end
@@ -2983,7 +2983,7 @@ function OnPROVOKE_ST()
 	else
 		local x,y=GetStandPoint(MyID,MyPEnemy,MyPSkill,MyPSkillLevel,0)
 		if x==-1 then
-			TraceAI("PROVOKE_ST -> IDLE_ST target surrounded, no available cells!")
+			if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> IDLE_ST target surrounded, no available cells!") end
 			if MyPState~=PROVOKE_ST then
 				MyState=MyPState
 			else
@@ -2992,7 +2992,7 @@ function OnPROVOKE_ST()
 			SkillObjectCMDTimeout=0
 			MyDestX,MyDestY,MyPEnemy,MyPSkill,MyPState,MyPSkillLevel,MyPMode=0,0,0,0,0,0,0
 		else
-			TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving to "..formatpos(x,y).." from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty))
+			if TraceAIEnabled ~= 0 then TraceAI("PROVOKE_ST -> PROVOKE_ST - Moving to "..formatpos(x,y).." from "..formatpos(MyPosX[1],MyPosY[1]).." targeting "..MyPEnemy.." at "..formatpos(tx,ty)) end
 			Move(MyID,x,y)
 		end
 		return
@@ -3000,12 +3000,12 @@ function OnPROVOKE_ST()
 end
 
 function	OnIDLEWALK_ST ()
-	TraceAI ("OnIDLEWALK_ST")
+	if TraceAIEnabled ~= 0 then TraceAI ("OnIDLEWALK_ST") end
 	ResetCounters()
 	MyEnemy					= 0
 	if SPPercent(MyID) < IdleWalkSP then
 		MyState=IDLE_ST
-		TraceAI ("IDLEWALK_ST -> IDLE_ST : SP is below IdleWalkSP - switching to idle mode to regen SP")
+		if TraceAIEnabled ~= 0 then TraceAI ("IDLEWALK_ST -> IDLE_ST : SP is below IdleWalkSP - switching to idle mode to regen SP") end
 		return OnIDLE_ST()
 	end
 	if (DoIdleTasks()==nil) then
@@ -3017,7 +3017,7 @@ function	OnIDLEWALK_ST ()
 		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("IDLEWALK_ST -> CHASE_ST : MYOWNER_ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("IDLEWALK_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				OnCHASE_ST()
 			end
@@ -3033,7 +3033,7 @@ function	OnIDLEWALK_ST ()
 		if object~=0 then
 			MyState = CHASE_ST
 			MyEnemy = object
-			TraceAI ("IDLEWALK_ST -> CHASE_ST : ATTACKED_IN")
+			if TraceAIEnabled ~= 0 then TraceAI ("IDLEWALK_ST -> CHASE_ST : ATTACKED_IN") end
 			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
 				return OnCHASE_ST()
 			end
@@ -3044,7 +3044,7 @@ function	OnIDLEWALK_ST ()
 			if (object ~= 0) then
 				MyState = TANKCHASE_ST
 				MyEnemy = object
-				TraceAI ("IDLEWALK_ST -> TANKCHASE_ST")
+				if TraceAIEnabled ~= 0 then TraceAI ("IDLEWALK_ST -> TANKCHASE_ST") end
 				return
 			end
 		end
@@ -3053,7 +3053,7 @@ function	OnIDLEWALK_ST ()
 	local distance = GetDistanceAR(MyID,OwnerID)
 	if ( distance > GetMoveBounds()) then		-- MYOWNER_OUTSIGNT_IN
 		MyState = FOLLOW_ST
-		TraceAI ("IDLEWALK_ST -> FOLLOW_ST: Way too far away from owner "..distance)
+		if TraceAIEnabled ~= 0 then TraceAI ("IDLEWALK_ST -> FOLLOW_ST: Way too far away from owner "..distance) end
 		return
 	end
 	if UseAutoHeal==3 then
@@ -3070,13 +3070,13 @@ function	OnIDLEWALK_ST ()
 		local isAmistr = GetHomunBaseType(MyID)==AMISTR
 		if isAmistr and UseCastleRoute==1 and (UseIdleWalk==5 or UseIdleWalk==6) and RelativeRoute==0 and GetDistanceP(x,y,ox,oy) > 2 and CanCastle() then
 			DoSkill(HAMI_CASTLE,5,MyID)
-			TraceAI("Castle Route: Casting castling on self")
+			if TraceAIEnabled ~= 0 then TraceAI("Castle Route: Casting castling on self") end
 			-- we land on the owner's cell: continue the route from here instead of walking back
 			-- to the point we just left and castling there again
 			MyDestX,MyDestY=GetIdleWalkDest(MyID)
 			return
 		elseif UseCastleRoute==1 and isAmistr and RelativeRoute==0 then
-			TraceAI("We're set to use castling route, but can't, UseIdleWalk="..UseIdleWalk.." distance: "..GetDistanceP(x,y,ox,oy))
+			if TraceAIEnabled ~= 0 then TraceAI("We're set to use castling route, but can't, UseIdleWalk="..UseIdleWalk.." distance: "..GetDistanceP(x,y,ox,oy)) end
 		end
 		MyDestX,MyDestY=GetIdleWalkDest(MyID)
 	elseif (GetDistanceAPR(MyID,MyDestX,MyDestY)>=1) and (IdleWalkTries > 6 or GetDistanceAPR(OwnerID,MyDestX,MyDestY) > GetMoveBounds()) then 
@@ -3085,14 +3085,14 @@ function	OnIDLEWALK_ST ()
 			MyDestX,MyDestY=Closest(MyID,MyDestX,MyDestY,1,1)
 		end
 		IdleWalkTries=0 
-		TraceAI("IDLEWALK_ST: New destination: "..MyDestX..","..MyDestY)
+		if TraceAIEnabled ~= 0 then TraceAI("IDLEWALK_ST: New destination: "..MyDestX..","..MyDestY) end
 		return Move(MyID,MyDestX,MyDestY)
 	elseif motion == MOTION_STAND then
 		if IdleWalkTries == 4 then
 			MyDestX,MyDestY=Closest(MyID,MyDestX,MyDestY,1,1)
-			TraceAI("IDLEWALK_ST: Having a bit of trouble - adjust dest to: "..MyDestX..","..MyDestY)
+			if TraceAIEnabled ~= 0 then TraceAI("IDLEWALK_ST: Having a bit of trouble - adjust dest to: "..MyDestX..","..MyDestY) end
 		end
-		TraceAI("IDLEWALK_ST: No move after "..IdleWalkTries.." trying again:"..MyDestX..","..MyDestY)
+		if TraceAIEnabled ~= 0 then TraceAI("IDLEWALK_ST: No move after "..IdleWalkTries.." trying again:"..MyDestX..","..MyDestY) end
 		IdleWalkTries=IdleWalkTries+1
 		return Move(MyID,MyDestX,MyDestY)
 	else
@@ -3105,7 +3105,7 @@ function GetIdleWalkDest(MyID)
 	local mx,my=GetV(V_POSITION,MyID)
 	local ox,oy=GetV(V_POSITION,OwnerID)
 	local xoff,yoff=mx-ox,my-oy
-	TraceAI("Idlewalk"..xoff..","..yoff)
+	if TraceAIEnabled ~= 0 then TraceAI("Idlewalk"..xoff..","..yoff) end
 	if UseIdleWalk==1 then --orbit
 		local stepsize = 30
 		if IdleWalkDistance > 4 then
@@ -3121,7 +3121,7 @@ function GetIdleWalkDest(MyID)
 		local angle=math.rad(step*stepsize)
 		local destx=math.ceil(math.sin(angle)*IdleWalkDistance)+ox
 		local desty=math.ceil(math.cos(angle)*IdleWalkDistance)+oy
-		TraceAI("Orbit Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my)
+		if TraceAIEnabled ~= 0 then TraceAI("Orbit Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my) end
 		return destx,desty	
 	elseif UseIdleWalk==2 then -- Cross
 		local temp=math.deg(math.atan2(xoff,yoff))+45
@@ -3129,7 +3129,7 @@ function GetIdleWalkDest(MyID)
 			temp=temp+360
 		end
 		local step = math.floor(temp/90)
-		TraceAI("Cross step "..step)
+		if TraceAIEnabled ~= 0 then TraceAI("Cross step "..step) end
 		if step == 0 then -- north goes to south
 			return ox,oy-IdleWalkDistance
 		elseif step == 1 then -- east goes to north
@@ -3157,14 +3157,14 @@ function GetIdleWalkDest(MyID)
 		elseif step > 2 and step < 6 then
 			desty=oy-IdleWalkDistance
 		end
-		TraceAI("Rectangle Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my.." temp: "..temp.." "..tempt.." step: "..step)
+		if TraceAIEnabled ~= 0 then TraceAI("Rectangle Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my.." temp: "..temp.." "..tempt.." step: "..step) end
 		return destx,desty
 	elseif UseIdleWalk==4 then -- Random
 		local step = math.random(0,359)
 		local angle=math.rad(step)
 		local destx=absceil(math.sin(angle)*IdleWalkDistance)+ox
 		local desty=absceil(math.cos(angle)*IdleWalkDistance)+oy
-		TraceAI("Random Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my) 
+		if TraceAIEnabled ~= 0 then TraceAI("Random Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my) end 
 		return destx,desty	
 	elseif UseIdleWalk==5 or UseIdleWalk==6 then -- Route walk
 		local routelen=1
@@ -3173,9 +3173,9 @@ function GetIdleWalkDest(MyID)
 		local posx,posy
 		if RelativeRoute==1 then
 			posx,posy=xoff,yoff
-			TraceAI("Relative route "..xoff..","..yoff)	
+			if TraceAIEnabled ~= 0 then TraceAI("Relative route "..xoff..","..yoff) end	
 		else
-			TraceAI("Absolute route "..mx..","..my)	
+			if TraceAIEnabled ~= 0 then TraceAI("Absolute route "..mx..","..my) end	
 			posx,posy=mx,my
 		end
 		
@@ -3184,13 +3184,13 @@ function GetIdleWalkDest(MyID)
 			if v[1]==posx and v[2]==posy then 
 				step=k
 				dist=0
-				TraceAI("Route Analysis: on route cell "..posx..","..posy.." route step: "..k.." "..v[1]..","..v[2].." current step "..step.."/"..dist)
+				if TraceAIEnabled ~= 0 then TraceAI("Route Analysis: on route cell "..posx..","..posy.." route step: "..k.." "..v[1]..","..v[2].." current step "..step.."/"..dist) end
 			else 
 				local distance=math.sqrt((v[1]-posx)^2+(v[2]-posy)^2)
 				if distance < dist then
 					dist=distance
 					step=k
-					TraceAI("Route Analysis: "..posx..","..posy.." route step: "..k.." "..v[1]..","..v[2].." distance "..distance.." current step "..step.."/"..dist)
+					if TraceAIEnabled ~= 0 then TraceAI("Route Analysis: "..posx..","..posy.." route step: "..k.." "..v[1]..","..v[2].." distance "..distance.." current step "..step.."/"..dist) end
 				end
 			end
 		end
@@ -3213,7 +3213,7 @@ function GetIdleWalkDest(MyID)
 		else
 			nextstep=step+1*RouteWalkDirection
 		end
-		TraceAI("Route Walk - nextstep "..nextstep.." from "..step)
+		if TraceAIEnabled ~= 0 then TraceAI("Route Walk - nextstep "..nextstep.." from "..step) end
 		local destx,desty
 		if RelativeRoute==1 then
 			destx,desty = ox+MyRoute[nextstep][1],oy+MyRoute[nextstep][2]
@@ -3221,7 +3221,7 @@ function GetIdleWalkDest(MyID)
 			destx,desty = MyRoute[nextstep][1],MyRoute[nextstep][2]
 		end
 		
-		TraceAI("Route Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my.." pos: "..posx..","..posy.." routelen: "..routelen.." "..dist.." step: "..step.." nextstep= "..nextstep)
+		if TraceAIEnabled ~= 0 then TraceAI("Route Dest: "..destx..","..desty.." owner: "..ox..","..oy.." mypos: "..mx..","..my.." pos: "..posx..","..posy.." routelen: "..routelen.." "..dist.." step: "..step.." nextstep= "..nextstep) end
 		return destx,desty
 	else
 		logappend("AAI_ERROR","Invalid UseIdleWalk made it all the way to GetIdleWalkDest()")
@@ -3241,9 +3241,9 @@ function DoAutoPushback(myid)
 			local tact= GetTact(TACT_PUSHBACK,v)
 			local target =GetV(V_TARGET,v)
 			if (tact==2 or (tact==1 and IsFriendOrSelf(target)==1))then				
-				TraceAI("Pushback: "..GetDistanceA(target,v))
+				if TraceAIEnabled ~= 0 then TraceAI("Pushback: "..GetDistanceA(target,v)) end
 				if (GetDistanceA(target,v) <= AutoPushbackThreshold and GetDistanceA(target,v)~=-1) then
-					TraceAI("Enemies close to me, using pushback")
+					if TraceAIEnabled ~= 0 then TraceAI("Enemies close to me, using pushback") end
 					local skill,level=GetPushbackSkill(MyID)
 					if (skill<=0) then
 						UseAutoPushback=0
@@ -3259,7 +3259,7 @@ function DoAutoPushback(myid)
 			local target =GetV(V_TARGET,v)
 			if (tact==2 or (tact==1 and IsFriendOrSelf(target)==1))then
 				if (GetDistanceA(target,v) <= AutoPushbackThreshold) then
-					TraceAI("Enemies close to me, using pushback")
+					if TraceAIEnabled ~= 0 then TraceAI("Enemies close to me, using pushback") end
 					local skill,level=GetPushbackSkill(MyID)
 					if (skill<=0) then
 						UseAutoPushback=0
@@ -3362,7 +3362,7 @@ function DoKiteAdjust(myid,enemy,minstep)
 			ydirection=-1
 		end
 	end
-	TraceAI("Kiteing in "..xdirection..","..ydirection.." direction")
+	if TraceAIEnabled ~= 0 then TraceAI("Kiteing in "..xdirection..","..ydirection.." direction") end
 	MyDestX=x+step*xdirection
 	MyDestY=y+step*ydirection
 	Move(myid,MyDestX,MyDestY)
@@ -3414,12 +3414,12 @@ function FailSkillUse(mode)
 		else
 			OnFailUnknownMode(mode)
 		end
-		TraceAI("Skill cast appears to have failed: Mode "..mode.." fail count "..SkillFailCount[mode].." will try again")
+		if TraceAIEnabled ~= 0 then TraceAI("Skill cast appears to have failed: Mode "..mode.." fail count "..SkillFailCount[mode].." will try again") end
 		logappend("AAI_SKILLFAIL","Skill cast appears to have failed: Mode "..mode.." fail count "..SkillFailCount[mode].." will try again")
 		SkillFailCount[mode]=SkillFailCount[mode]+1
 	else
 		if (mode~=nil and mode ~=0) then
-		TraceAI("Skill cast appears to have failed, but we're past the retry limit, so screw it: Mode "..mode.." fail count "..SkillFailCount[mode])
+		if TraceAIEnabled ~= 0 then TraceAI("Skill cast appears to have failed, but we're past the retry limit, so screw it: Mode "..mode.." fail count "..SkillFailCount[mode]) end
 		logappend("AAI_SKILLFAIL","Skill cast appears to have failed, but we're past the retry limit, so screw it: Mode "..mode.." fail count "..SkillFailCount[mode])
 		SkillFailCount[mode]=0
 	end
@@ -3443,11 +3443,11 @@ end
 function AI(myid)
 	MyID = myid
 	if LastAITime==GetTick() then --prevent AI from running twice in the same tick. 
-		TraceAI("double-AI() call detected, blocked")
+		if TraceAIEnabled ~= 0 then TraceAI("double-AI() call detected, blocked") end
 		return
 	else
 		if LastAITime + 400 < GetTick() and LastAITime > 10 then
-			TraceAI("Missed AI calls. Previous AI call was "..GetTick()-LastAITime.." ms ago")
+			if TraceAIEnabled ~= 0 then TraceAI("Missed AI calls. Previous AI call was "..GetTick()-LastAITime.." ms ago") end
 			logappend("AAI_SKILLFAIL", "Missed AI calls. Previous AI call was "..GetTick()-LastAITime.." ms ago")
 			EnemyPosX = {0,0,0,0,0,0,0,0,0,0} --When we miss AI calls, that means our predictive motion is probly screwed up
 			EnemyPosY = {0,0,0,0,0,0,0,0,0,0} --so flush this to prevent homun from getting confused by it, 
@@ -3485,7 +3485,7 @@ function AI(myid)
 			OutFile:write("LastAITime_ART="..LastAITime)
 			OutFile:close()
 		else
-			TraceAI("Failed to update time file for Aggressive Relog Tracking")
+			if TraceAIEnabled ~= 0 then TraceAI("Failed to update time file for Aggressive Relog Tracking") end
 			logappend("AAI_ERROR","Failed to update aggressive relog time tracking file for owner "..OwnerID)
 		end
 	end
@@ -3495,7 +3495,7 @@ function AI(myid)
 	-- Why is it here instead of at the start?
 	-- Because the client wont tell us our ID until AI() is called :-(
 	if (NeedToDoAutoFriend==1 and NewAutoFriend==1) then
-		TraceAI("Now it's time to do the autofriend")
+		if TraceAIEnabled ~= 0 then TraceAI("Now it's time to do the autofriend") end
 		local owner=OwnerID
 		local OutFile
 		if (IsHomun(myid)==1) then
@@ -3507,7 +3507,7 @@ function AI(myid)
 			OutFile:write (myid)
 			OutFile:close()
 		else
-			TraceAI("Failed to create autofriending file.")
+			if TraceAIEnabled ~= 0 then TraceAI("Failed to create autofriending file.") end
 			logappend("AAI_ERROR","Failed to create autofriending file for owner "..OwnerID)
 		end
 		NeedToDoAutoFriend=0
@@ -3578,7 +3578,7 @@ function AI(myid)
 	for k,v in pairs(Unreachable) do
 		if (IsOutOfSight(myid,k)==true or GetActorMotion(k)==MOTION_DEAD or (IsFriendOrSelf(GetActorTarget(k))==1) and GetActorMotion(k)~=MOTION_STAND) then
 			Unreachable[k]=nil
-			TraceAI("Marking as reachable"..k)
+			if TraceAIEnabled ~= 0 then TraceAI("Marking as reachable"..k) end
 		end
 	end
 	
@@ -3695,22 +3695,22 @@ function AI(myid)
 						if OldPlayers[v]~=1 or AggressiveAutofriend then
 							local newfriendhidfile=io.open(ConfigPath.."data/H_"..v..".txt","r")
 							local newfriendmidfile=io.open(ConfigPath.."data/M_"..v..".txt","r")
-							TraceAI("new friend on screen, checking H_ID"..v)
+							if TraceAIEnabled ~= 0 then TraceAI("new friend on screen, checking H_ID"..v) end
 							if newfriendhidfile~=nil then
-								TraceAI("h_id found"..v)
+								if TraceAIEnabled ~= 0 then TraceAI("h_id found"..v) end
 								local newfriendhid=newfriendhidfile:read("*line")
 								if newfriendhid~=nil then
-									TraceAI("h_id: "..newfriendhid)
+									if TraceAIEnabled ~= 0 then TraceAI("h_id: "..newfriendhid) end
 									MyFriends[newfriendhid+1-1]=RETAINER --crude type conversion
 								end
 								newfriendhidfile:close()
 							end
 							if newfriendmidfile ~= nil then
-								TraceAI("new friend on screen, checking M_ID" .. v)
+								if TraceAIEnabled ~= 0 then TraceAI("new friend on screen, checking M_ID" .. v) end
 								local newfriendmid = newfriendmidfile:read("*line")
-								TraceAI("m_id found" .. v)
+								if TraceAIEnabled ~= 0 then TraceAI("m_id found" .. v) end
 								if newfriendmid ~= nil then
-									TraceAI("m_id: " .. newfriendmid)
+									if TraceAIEnabled ~= 0 then TraceAI("m_id: " .. newfriendmid) end
 									MyFriends[newfriendmid + 1 - 1] = RETAINER
 								end
 								newfriendmidfile:close()
@@ -3767,7 +3767,7 @@ function AI(myid)
 			midoutfile:write(tMobID)
 			midoutfile:close()
 		else
-			TraceAI("Failed to update MobID - check permissions and/or AggressiveRelogPath.")
+			if TraceAIEnabled ~= 0 then TraceAI("Failed to update MobID - check permissions and/or AggressiveRelogPath.") end
 			logappend("AAI_ERROR","Failed to update aggressive relog time tracking file for owner "..OwnerID)
 		end
 	end
@@ -3792,20 +3792,20 @@ function AI(myid)
 		if SeraLegionCount==0 and GetTick() > AutoSkillTimeout and GetTick() < AutoSkillCooldown[MH_SUMMON_LEGION] then
 			--Why are we in cooldown when there are no bugs out? Cast must have failed, or something killed them. 
 			AutoSkillCooldown[MH_SUMMON_LEGION]=1
-			TraceAI("Sera Legion: Legion cooldown canceled, bugs not present")
+			if TraceAIEnabled ~= 0 then TraceAI("Sera Legion: Legion cooldown canceled, bugs not present") end
 		elseif SeraLegionBugged > 2 and ServerType ~= SERVER_PRIVATE then
 			-- on rAthena a recast with the bugs alive spawns nothing, so it is never worth it
 			AutoSkillCooldown[MH_SUMMON_LEGION]=1
-			TraceAI("Sera Legion: Legion cooldown canceled, bugs bugged")
+			if TraceAIEnabled ~= 0 then TraceAI("Sera Legion: Legion cooldown canceled, bugs bugged") end
 		end
 	end
 	if PVPmode==1 then
 		for k,v in pairs(Players) do
 			--logappend("AAI_PVP",k.." ("..GetV(V_HOMUNTYPE,k)..") Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k))
 			if IsHomun(MyID)==1 then
-				TraceAI("PVP: Player "..k.." ("..GetV(V_HOMUNTYPE,k)..") Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k))
+				if TraceAIEnabled ~= 0 then TraceAI("PVP: Player "..k.." ("..GetV(V_HOMUNTYPE,k)..") Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k)) end
 			else
-				TraceAI("PVP: Player "..k.."  Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k))
+				if TraceAIEnabled ~= 0 then TraceAI("PVP: Player "..k.."  Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k)) end
 			end
 			if IsMonster(k)==1 then
 				Targets[k] = {MotionClassLU[GetActorMotion(k)],GetTargetClass(GetActorTarget(k))}
@@ -3896,7 +3896,7 @@ function AI(myid)
 		if GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel) == 0 then 
 			if LastAIDelay > 500 and not needsExplicitConfirmation then
 				--Skill cast successfully
-				TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
+				if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay) end
 				logappend("AAI_SKILLFAIL","successful skill use detected - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 				clearcastskill=1
 				LastASAPTargBuffTime	=0
@@ -3904,7 +3904,7 @@ function AI(myid)
 				LastASAPTargBuffMode	=0
 			elseif GetTick() - CastSkillTime > 1000 then
 				--Musta failed, we tried to use an instant cast skill 1 second ago and still no sign of it and no sign of delay.
-				TraceAI("Delay watcher: no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
+				if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel)) end
 				logappend("AAI_SKILLFAIL", "no sign of instacast skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." SP "..GetV(V_SP,MyID).."/"..GetV(V_MAXSP,MyID).." needs "..GetSkillInfo(CastSkill,3,CastSkillLevel).." spheres "..(MySpheres or 0))
 				clearcastskill=2
 			end
@@ -3914,7 +3914,7 @@ function AI(myid)
 			elseif CastSkillState>0 then
 				if LastAIDelay > 220 and GetTick() >= CastSkillTime + skillcastingtime then
 					--Skill cast successfully
-					TraceAI("Delay watcher: Skill use successful detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
+					if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: Skill use successful detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay) end
 					logappend("AAI_SKILLFAIL","successful skill use detected by delay - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 					clearcastskill=1
 				else
@@ -3933,11 +3933,11 @@ function AI(myid)
 								and not IsOutOfSight(MyID, CastSkillEnemy)
 								and GetV(V_MOTION, CastSkillEnemy) ~= MOTION_DEAD
 								and IsInAttackSight(MyID, CastSkillEnemy, CastSkill, CastSkillLevel) == true
-							TraceAI("Delay watcher: Skill casting detected, but no delay - cast was broken: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." flinch: "..flinch.." expected cast completion: "..(skillcastingtime + CastSkillTime))
+							if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: Skill casting detected, but no delay - cast was broken: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." flinch: "..flinch.." expected cast completion: "..(skillcastingtime + CastSkillTime)) end
 							logappend("AAI_SKILLFAIL", "Skill casting detected, but no delay - cast was broken: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." flinch: "..flinch.." expected cast completion: "..(skillcastingtime + CastSkillTime))
 							clearcastskill=2
 						else
-							TraceAI("Delay watcher: Skill use successful - was seen casting, and no sign of interruption, no delay. mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
+							if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: Skill use successful - was seen casting, and no sign of interruption, no delay. mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay) end
 							logappend("AAI_SKILLFAIL","Skill use successful - was seen casting, and no sign of interruption, no delay. mode"..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 							clearcastskill=1
 						end
@@ -3948,7 +3948,7 @@ function AI(myid)
 					and GetTick() >= CastSkillTime + skillcastingtime then
 					clearcastskill = 1
 				elseif GetTick() - CastSkillTime > math.max(1000, skillcastingtime) then
-					TraceAI("Delay watcher: no sign of skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
+					if TraceAIEnabled ~= 0 then TraceAI("Delay watcher: no sign of skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel)) end
 					logappend("AAI_SKILLFAIL", "no sign of skill casting 1 second later - failed. mode: "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel))
 					clearcastskill=2
 				end
@@ -3961,7 +3961,7 @@ function AI(myid)
 		local spdrop = CastSkillSP ~= nil and CastSkillSP - sp or 0
 		if sp-MyLastSP == RegenTick[1] - castcost or MyLastSP - sp == castcost or (castcost > 0 and spdrop > 0 and spdrop >= castcost - regentol) then
 			--if IsHomun(myid)==0 then
-				TraceAI("SP watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
+				if TraceAIEnabled ~= 0 then TraceAI("SP watcher: Skill use successful - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay) end
 				logappend("AAI_SKILLFAIL","successful skill use detected by SP use - mode "..CastSkillMode.." skill "..FormatSkill(CastSkill,CastSkillLevel).." LastAIDelay "..LastAIDelay)
 				clearcastskill=1
 			--end
@@ -3994,7 +3994,7 @@ function AI(myid)
 				end
 				if tickcount==3 then
 					RegenTick[1]=sp-MyLastSP
-					TraceAI("Watcher: New SP Regen tick set: "..RegenTick[1])
+					if TraceAIEnabled ~= 0 then TraceAI("Watcher: New SP Regen tick set: "..RegenTick[1]) end
 					logappend("AAI_SKILLFAIL","New SP Regen tick set: "..RegenTick[1])
 					UpdateTimeoutFile()
 				end
@@ -4167,7 +4167,7 @@ function AI(myid)
 		local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
 		if wandlevel ~= nil and AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
 			DoSkill(MH_STEINWAND,wandlevel,MyID)
-			TraceAI("DamageDanger: Stein Wand")
+			if TraceAIEnabled ~= 0 then TraceAI("DamageDanger: Stein Wand") end
 			return
 		end
 	end
@@ -4175,7 +4175,7 @@ function AI(myid)
 	if (object~=0 and object ~= MyEnemy and MyState~=FOLLOW_ST) then
 		MyEnemy=object
 		MyState=CHASE_ST
-		TraceAI("RESCUE ACTIVATED - Targeting "..object)
+		if TraceAIEnabled ~= 0 then TraceAI("RESCUE ACTIVATED - Targeting "..object) end
 	end
 	-- New in 1.51 - specialized cast react tactics. 
 	for k,v in pairs(Targets) do
@@ -4210,7 +4210,7 @@ function AI(myid)
 					MySkillLevel=level
 					MyEnemy=k
 					MyState=SKILL_OBJECT_CMD_ST
-					TraceAI("CAST_REACT_(skill) being enabled against target"..k.." with tactic "..tactcast.." with "..FormatSkill(skill,level))
+					if TraceAIEnabled ~= 0 then TraceAI("CAST_REACT_(skill) being enabled against target"..k.." with tactic "..tactcast.." with "..FormatSkill(skill,level)) end
 					break
 				end
 			elseif tactcast == CAST_REACT_STIEN then
@@ -4218,7 +4218,7 @@ function AI(myid)
 					local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
 					if AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
 						DoSkill(MH_STEINWAND,wandlevel,MyID)
-						TraceAI("CAST_REACT_STIEN being enabled against target"..k.." with tactic "..tactcast)
+						if TraceAIEnabled ~= 0 then TraceAI("CAST_REACT_STIEN being enabled against target"..k.." with tactic "..tactcast) end
 					
 						return
 					end
@@ -4227,7 +4227,7 @@ function AI(myid)
 				if GetHomunBaseType(MyID)==AMISTR and v[2]==2 then
 					if CanCastle() then
 						DoSkill(HAMI_CASTLE,5,MyID)
-						TraceAI("CAST_REACT_CASTLE being enabled against target"..k.." with tactic "..tactcast)
+						if TraceAIEnabled ~= 0 then TraceAI("CAST_REACT_CASTLE being enabled against target"..k.." with tactic "..tactcast) end
 						return
 					end
 				end
@@ -4264,7 +4264,7 @@ function AI(myid)
 						threshold=KiteThresholdFor(v,threshold)
 						local kitedist=GetDistanceA(MyID,v)
 						if (threshold ~= nil and kitedist <= threshold) then
-							TraceAI("Enemies close to me, start kite routine. ")
+							if TraceAIEnabled ~= 0 then TraceAI("Enemies close to me, start kite routine. ") end
 							DoKiteAdjust(MyID,v,KiteByRange==1 and (threshold-kitedist+1) or nil)
 							kitecalled=1
 							break
@@ -4300,7 +4300,7 @@ function AI(myid)
 		end
 	end
  	if LagReductionCD > 0 then
- 		TraceAI("Skipping state functions due to aggressive lag reduction")
+ 		if TraceAIEnabled ~= 0 then TraceAI("Skipping state functions due to aggressive lag reduction") end
  	elseif (MyState == IDLE_ST) then
 		OnIDLE_ST ()
 	elseif (MyState == CHASE_ST) then					
@@ -4347,7 +4347,7 @@ function AI(myid)
 		OnFRIEND_CIRCLE_ST()
 	else
 		if NewState(MyState)==-1 then  
-			TraceAI("Invalid State: "..MyState.." -> IDLE_ST")
+			if TraceAIEnabled ~= 0 then TraceAI("Invalid State: "..MyState.." -> IDLE_ST") end
 			logappend("AAI_ERROR","MyState set to invalid state: "..MyState)
 			MyState=IDLE_ST
 		end

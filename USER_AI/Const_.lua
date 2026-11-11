@@ -8,6 +8,10 @@
 -- PATCH; run.py fails if one of them does not match.
 CVersion="2.0.1"
 
+-- Developer traces (the client's TraceAI). 0 = off: the arguments are not even evaluated,
+-- which is worth ~10% in combat. Set it to 1 (H_Extra.lua) to get the traces back.
+TraceAIEnabled = 0
+
 --[[
 function	TraceAI (string) end
 function	MoveToOwner (id) end

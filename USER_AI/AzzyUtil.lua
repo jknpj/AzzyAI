@@ -113,12 +113,12 @@ TactValueCache = {}
 function 	GetTact(t,m)
 	local x
 	if m==nil then
-		TraceAI("GetTact: Error - nil target")
+		if TraceAIEnabled ~= 0 then TraceAI("GetTact: Error - nil target") end
 		logappend("AAI_ERROR","GetTact: Error - nil target")
 		return 0
 	end
 	if t==nil then
-		TraceAI("GetTact: Error - nil tactic target:"..m)
+		if TraceAIEnabled ~= 0 then TraceAI("GetTact: Error - nil tactic target:"..m) end
 		logappend("AAI_ERROR","request for tactic type nil target:"..m)
 	end
 	-- resolved value already computed in this AI() call (TACT_CHASE depends on the clock, never cached)
@@ -131,7 +131,7 @@ function 	GetTact(t,m)
 	if (IsPlayer(m)==1) then
 		local v
 		if (PVPmode~=0) then
-			TraceAI("GetTact: Returning pvp tactic")
+			if TraceAIEnabled ~= 0 then TraceAI("GetTact: Returning pvp tactic") end
 			v = GetPVPTact(t,m)
 		else
 			v = 0
@@ -170,7 +170,7 @@ function 	GetTact(t,m)
 	end
 	if (temp[t]==nil) then
 		temp=GetMyTact(0)
-		TraceAI("GetTact: Undefined tactic "..t.." for actor: "..m.." using default instead")
+		if TraceAIEnabled ~= 0 then TraceAI("GetTact: Undefined tactic "..t.." for actor: "..m.." using default instead") end
 	end
 	x=temp[t]
 	if (x==nil) then
@@ -184,7 +184,7 @@ function 	GetTact(t,m)
 			--TraceAI("TactChase called"..GetV(V_SP,MyID).." "..ChaseSPPauseSP.." "..GetTick().." "..math.max(LastMovedTime,LastSPTime).." "..(5000-ChaseSPPauseTime))
 			if GetV(V_SP,MyID) < ChaseSPPauseSP and (GetTick() - math.max(LastMovedTime,LastSPTime)) > (5000-ChaseSPPauseTime) then 
 				if ((ChaseSPPause==1 and x~=CHASE_ALWAYS) or x==CHASE_CLEVER) then
-					TraceAI("Cleverchase activated: "..m.." ("..e..") ".." LastTick "..math.max(LastMovedTime,LastSPTime))
+					if TraceAIEnabled ~= 0 then TraceAI("Cleverchase activated: "..m.." ("..e..") ".." LastTick "..math.max(LastMovedTime,LastSPTime)) end
 					return 1
 				end
 			end
@@ -389,7 +389,7 @@ function	GetPVPTact(t,m)
 	local class
 	local e = ENEMY
 	if IsMonster(m)==0 then
-		TraceAI("pvp tact lookup on ally")
+		if TraceAIEnabled ~= 0 then TraceAI("pvp tact lookup on ally") end
 		e= ALLY
 	end
 	if (MyPVPTact[m]~=nil) then
@@ -413,11 +413,11 @@ function	GetPVPTact(t,m)
 		x=MyPVPTact[0][t]
 	end
 	if (x==nil) then
-		TraceAI("ERROR: Default PVP tactic "..t.." is undefined!")
+		if TraceAIEnabled ~= 0 then TraceAI("ERROR: Default PVP tactic "..t.." is undefined!") end
 		logappend("AAI_ERROR","Default PVP tactic "..t.." is undefined! Please correct your PVP tactics file")
 		return 0
 	else	
-	TraceAI("pvp TL on P "..m.."IsMonster "..IsMonster(m).." type "..e.." for tactic "..t.." returning "..x)
+	if TraceAIEnabled ~= 0 then TraceAI("pvp TL on P "..m.."IsMonster "..IsMonster(m).." type "..e.." for tactic "..t.." returning "..x) end
 		return x
 	end
 end
@@ -509,7 +509,7 @@ function DetectPrivateServer(id)
 		return
 	end
 	logappend("AAI_ERROR", "Monster ID "..id.." is from an rAthena/Hercules server: switching to ServerType = SERVER_PRIVATE. Set it in H_Config.lua to skip this check.")
-	TraceAI("Private server detected from monster ID "..id)
+	if TraceAIEnabled ~= 0 then TraceAI("Private server detected from monster ID "..id) end
 	ServerType = SERVER_PRIVATE
 	MagicNumber, MagicNumber2, MagicNumber3 = nil, nil, nil
 	ApplyServerType()
@@ -563,17 +563,17 @@ function IsRescueTarget(id)
 	if target==owner then
 		local hp = HPPercent(owner)
 		if RescueOwnerLowHP > hp then
-			TraceAI("RescueOwnerLowHP -> rescue owner from "..id)
+			if TraceAIEnabled ~= 0 then TraceAI("RescueOwnerLowHP -> rescue owner from "..id) end
 			return 1
 		elseif RescueOwnerLowHP < 0 and -1*RescueOwnerLowHP < hp then
-			TraceAI("RescueOwnerLowHP -> rescue of owner canceled "..id)
+			if TraceAIEnabled ~= 0 then TraceAI("RescueOwnerLowHP -> rescue of owner canceled "..id) end
 			return 0
 		end
 	end
 	if tactrescue==RESCUE_NEVER then
 		return 0
 	else	
-		TraceAI("tactrescue not never "..tactrescue.." id "..id)
+		if TraceAIEnabled ~= 0 then TraceAI("tactrescue not never "..tactrescue.." id "..id) end
 		if tactrescue==RESCUE_RETAINER then
 			if MyFriends[target]==2 then
 				return 1
@@ -680,7 +680,7 @@ function UpdateFriends()
 		end
 		FriendsFile:close()
 	else
-		TraceAI("Failed to open A_Friends.lua for writing!")
+		if TraceAIEnabled ~= 0 then TraceAI("Failed to open A_Friends.lua for writing!") end
 		logappend("AAI_ERROR","Failed to open A_Friends.lua for writing!")
 	end
 end
@@ -1078,7 +1078,7 @@ function GetFASOptions(myid)
 	local noption,eoption,soption,woption=0,0,0,0
 	local neoption,nwoption,seoption,swoption=0,0,0,0
 	for k,v in pairs(Monsters) do
-		TraceAI("FAS loop id: "..k)
+		if TraceAIEnabled ~= 0 then TraceAI("FAS loop id: "..k) end
 		if GetDistanceA(myid,k) < 15 then
 			local mx,my=GetV(V_POSITION,k)
 			local dx=math.abs(x-mx)
@@ -1109,19 +1109,19 @@ function GetFASOptions(myid)
 			end
 		end
 		if (noption~=0 and soption~=0 and eoption~=0 and woption~=0 and neoption~=0 and seoption~=0 and swoption~=0 and nwoption~=0) then
-			TraceAI("All Options Avail - break")
+			if TraceAIEnabled ~= 0 then TraceAI("All Options Avail - break") end
 			break
 		end
 	end
 	local result={[-1]={[-1]=swoption,[0]=woption,[1]=nwoption},[0]={[-1]=soption,[0]=0,[1]=noption},[1]={[-1]=seoption,[0]=eoption,[1]=neoption}}
-	TraceAI("Returning FAS Options: "..swoption.."-"..woption.."-"..nwoption.." "..soption.."--"..noption.." "..seoption.."-"..eoption.."-"..neoption)
+	if TraceAIEnabled ~= 0 then TraceAI("Returning FAS Options: "..swoption.."-"..woption.."-"..nwoption.." "..soption.."--"..noption.." "..seoption.."-"..eoption.."-"..neoption) end
 	return result
 end
 
 function GetFASTargetCount(myid,directionx,directiony,aggro)
 	local x,y=GetV(V_POSITION,myid)
 	local s=directionx+directiony
-	TraceAI("GFASTC: "..s)
+	if TraceAIEnabled ~= 0 then TraceAI("GFASTC: "..s) end
 	local count=0
 	local xmin,xmax,ymin,ymax,miny,maxy
 	if s==1 or s==-1 then -- straight
@@ -1251,7 +1251,7 @@ end
 function GetMerType(myid)
 	local merctype=GetV(V_MERTYPE,myid)
 	local classid=GetV(V_TYPE,myid)
-	TraceAI("Merc is homun?"..IsHomun(myid))
+	if TraceAIEnabled ~= 0 then TraceAI("Merc is homun?"..IsHomun(myid)) end
 	if (merctype~=1 and merctype~=nil) then
 		if type(merctype) == "number" and merctype > 30 then
 			logappend("AAI_ERROR","Invalid merctype reported"..merctype)
@@ -1267,34 +1267,34 @@ function GetMerType(myid)
 		if (mhp ~= nil and msp ~= nil and mhp > 250 and mhp < 333 and msp >= 200 and 250 >= msp ) then -- it's an archer 1
 			return ARCHER01
 		elseif (mhp == 7513 and msp == 201) then
-			TraceAI("Newly summoned Pengineer")
+			if TraceAIEnabled ~= 0 then TraceAI("Newly summoned Pengineer") end
 			return PENGINEER
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 4000 and 5000 >= mhp and msp >= 50 and msp < 65 ) then -- looks like a kitty!
-			TraceAI("Wild Rose")
+			if TraceAIEnabled ~= 0 then TraceAI("Wild Rose") end
 			return WILDROSE
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 7513 and 8500 >= mhp and msp >= 201 and msp < 250 ) then
-			TraceAI("Pengineer")
+			if TraceAIEnabled ~= 0 then TraceAI("Pengineer") end
 			return PENGINEER
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 7200 and 7512 >= mhp and msp >= 200 and msp < 250 ) then -- looks like a dopple!
-			TraceAI("Dopple Merc")
+			if TraceAIEnabled ~= 0 then TraceAI("Dopple Merc") end
 			return DOPPLEMERC
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 10000 and 13000 >= mhp and msp >= 220 and msp < 300 ) then -- looks like alice!
-			TraceAI("Alice")
+			if TraceAIEnabled ~= 0 then TraceAI("Alice") end
 			return ALICE
 		elseif	(mhp ~= nil and msp ~= nil and mhp >= 6100 and 7200 >= mhp and msp >= 180 and msp < 250 ) then -- looks like a mimic!
-			TraceAI("Mimic")
+			if TraceAIEnabled ~= 0 then TraceAI("Mimic") end
 			return MIMIC
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 7500 and 9500 >= mhp and msp >= 180 and msp < 220 ) then -- looks like a disguise!
-			TraceAI("Disguise")
+			if TraceAIEnabled ~= 0 then TraceAI("Disguise") end
 			return DISGUISE
 		elseif (mhp ~= nil and msp ~= nil and mhp >= 7000 and 8500 >= mhp and msp >= 250 and msp < 320 ) then -- looks like a male GM mercenary!
-			TraceAI("GM Mercenary")
+			if TraceAIEnabled ~= 0 then TraceAI("GM Mercenary") end
 			return GMMALE
 		elseif (mhp ~= nil and msp ~= nil and mhp > 12300 and 14500 >= mhp and msp >= 450 and msp < 600 ) then -- Nice stats, must be one of them overpowerd isis mercs
-			TraceAI("ISIS Mercenary")
+			if TraceAIEnabled ~= 0 then TraceAI("ISIS Mercenary") end
 			return ISIS
 		else
-			TraceAI("Unknown merc type. Contact the developer ASAP.")
+			if TraceAIEnabled ~= 0 then TraceAI("Unknown merc type. Contact the developer ASAP.") end
 			return UNKNOWNMER
 		end
 	end
@@ -1348,7 +1348,7 @@ function IsNotKS(myid,target)
 		return 1
 	end
 	if target==nil then
-		TraceAI("IsNotKS")
+		if TraceAIEnabled ~= 0 then TraceAI("IsNotKS") end
 	end
 	if (IsPlayer(target)==1) then
 		--TraceAI("PVP - not KS")
@@ -1388,7 +1388,7 @@ function GetKSReason(myid,target)
 		return "KS Protect bypassed"
 	end
 	if target==nil then
-		TraceAI("IsNotKS")
+		if TraceAIEnabled ~= 0 then TraceAI("IsNotKS") end
 	end
 	if (IsPlayer(target)==1) then
 		--TraceAI("PVP - not KS")
@@ -1532,11 +1532,11 @@ function Move(myid,x,y)
 			newx=ox+dx
 			newy=oy+dy
 			MyDestX,MyDestY=newx,newy
-			TraceAI("MOVE: Attempt to move more than 15 cells, destination + MyDest adjusted: "..x..","..y.." "..dis.." "..factor.."new: "..newx..","..newy)
+			if TraceAIEnabled ~= 0 then TraceAI("MOVE: Attempt to move more than 15 cells, destination + MyDest adjusted: "..x..","..y.." "..dis.." "..factor.."new: "..newx..","..newy) end
 		else
 			newx=ox+dx
 			newy=oy+dy
-			TraceAI("MOVE: Attempt to move more than 15 cells, destination adjusted: "..x..","..y.." "..dis.." "..factor.."new: "..newx..","..newy)
+			if TraceAIEnabled ~= 0 then TraceAI("MOVE: Attempt to move more than 15 cells, destination adjusted: "..x..","..y.." "..dis.." "..factor.."new: "..newx..","..newy) end
 		end
 	end
 	if (LagReduction and LagReduction ~=0) then
@@ -1566,7 +1566,7 @@ end
 OldAttack=Attack
 function Attack(myid,target)
 	if SuperPassive==1 then
-		TraceAI("Notice: Attack() called while in SuperPassive. MyEnemy "..MyEnemy.." MyState "..MyState)
+		if TraceAIEnabled ~= 0 then TraceAI("Notice: Attack() called while in SuperPassive. MyEnemy "..MyEnemy.." MyState "..MyState) end
 	end
 	if (LagReduction and LagReduction ~=0) then
 		modtwROAttackTarget=target
@@ -2002,13 +2002,13 @@ function AttackRange(myid,skill,level)
 	else
 		a = GetSkillInfo(skill,2,level)
 		if a==nil then
-			TraceAI("AttackRange() cannot get range for skill "..formatval(skill).." level "..formatval(level))
+			if TraceAIEnabled ~= 0 then TraceAI("AttackRange() cannot get range for skill "..formatval(skill).." level "..formatval(level)) end
 		end
 	end
 	if level == nil then
 		logappend("AAI_ERROR","AttackRange called with nil level, skill = "..skill.." "..MyState)
 	end
-	TraceAI("Attack Sight - skill:"..skill.."level: "..level.." Range:"..a) 
+	if TraceAIEnabled ~= 0 then TraceAI("Attack Sight - skill:"..skill.."level: "..level.." Range:"..a) end 
 	return a
 end
 
@@ -2086,7 +2086,7 @@ function AdjustStandPoint (x,y,tx,ty,r,alt)
 				if i > 7 then
 					logappend("AAI_CLOSEST","AdjustStandPoint() FAILED  logstring="..logstring)
 
-		TraceAI("AdjustStandPoint() FAILED logstring="..logstring)
+		if TraceAIEnabled ~= 0 then TraceAI("AdjustStandPoint() FAILED logstring="..logstring) end
 					return -1,-1
 				end
 			else
@@ -2705,7 +2705,7 @@ function GetMinionSkill(myid)
 		if MyHomunType==SERA and UseSeraCallLegion==1 then
 			skill=MH_SUMMON_LEGION
 			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
-			TraceAI("GetMinionSkill "..skill..level)
+			if TraceAIEnabled ~= 0 then TraceAI("GetMinionSkill "..skill..level) end
 			if AutoSkillCooldown[skill]~=nil then
 				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
 					level=0
@@ -3474,10 +3474,10 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	-- skill_check_condition_mercenary: sp <= cost fails); at exactly the cost the request
 	-- would only produce "Skill failed" until the next SP regen tick
 	if GetV(V_SP,MyID) <= GetSkillInfo(skill,3,level) then
-		TraceAI("DoSkill: "..FormatSkill(skill,level).." skipped, SP not above cost")
+		if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..FormatSkill(skill,level).." skipped, SP not above cost") end
 		return 0
 	end
-	TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target))
+	if TraceAIEnabled ~= 0 then TraceAI("doskill called skill:"..skill.."level:"..level.."target"..tostring(target)) end
 	-- SP before the request, so the skill watcher can spot the cost even if SP regen lands in between
 	local spBeforeCast = GetV(V_SP,MyID)
 	local targetmode=GetSkillInfo(skill,7)
@@ -3551,9 +3551,9 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	delay = delay + GetSkillInfo(skill,6,level)
 	AutoSkillTimeout=t+delay
 	if AutoSkillCooldown[skill]~=nil then
-		TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay.." cooldown: "..AutoSkillCooldown[skill]-GetTick())
+		if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay.." cooldown: "..AutoSkillCooldown[skill]-GetTick()) end
 	else
-		TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
+		if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay) end
 	end
 	-- spheres the server takes for this skill (SkillSphereCost only exists in the homunculus AI)
 	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
@@ -3597,7 +3597,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		ComboSVTimeout=0
 	end
 
-	TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
+	if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay) end
 	logappend("AAI_SKILLFAIL", "DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
 	-- the level actually requested (may be lower than asked, see GetCastableSkillLevel)
 	return level
@@ -3738,7 +3738,7 @@ end
 
 function logappend (filename,message)
 	if LogEnable[filename]==1 then
-		TraceAI("Logging "..filename.." - "..message)
+		if TraceAIEnabled ~= 0 then TraceAI("Logging "..filename.." - "..message) end
 		outfile = io.open("./"..filename..".log", "a")
 		outfile:seek("end")
 		if filename=="AAI_SKILLFAIL" then
@@ -4084,7 +4084,7 @@ function SkillCastResult(skill, level, success)
 	end
 	info.rejects = info.rejects + 1
 	if info.rejects >= SKILL_REJECTS_TO_STEP_DOWN then
-		TraceAI("Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1))
+		if TraceAIEnabled ~= 0 then TraceAI("Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1)) end
 		logappend("AAI_SKILLFAIL", "Server keeps refusing "..FormatSkill(skill, level)..", lowering to level "..(level - 1))
 		SetLearnedSkillCap(skill, info, level - 1)
 		if info.cap > 0 and AutoSkillCooldown[skill] ~= nil then
@@ -4154,7 +4154,7 @@ function GetDetectedHomunType(myid)
         end
         if learned then
             DetectedOldHomunType = probe[2]
-            TraceAI("Homunculus base type auto-detected as: " .. probe[3])
+            if TraceAIEnabled ~= 0 then TraceAI("Homunculus base type auto-detected as: " .. probe[3]) end
             logappend("AAI_SKILLFAIL", "Homunculus base type detected as " .. probe[3])
             return DetectedOldHomunType
         end
@@ -4162,7 +4162,7 @@ function GetDetectedHomunType(myid)
     logappend("AAI_SKILLFAIL", "Homunculus base type not detected, using OldHomunType " .. tostring(OldHomunType))
 
     NextHomunTypeProbe = now + 5000
-    TraceAI("Base type not detected yet. Using configured OldHomunType as failsafe.")
+    if TraceAIEnabled ~= 0 then TraceAI("Base type not detected yet. Using configured OldHomunType as failsafe.") end
     return ConfiguredHomunBase()
 end
 

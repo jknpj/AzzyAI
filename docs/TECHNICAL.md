@@ -360,3 +360,9 @@ the harness covers both cases at realistic client uptime.
 To use new skills, enable them and choose learned levels through a GUI or
 `H_Config.lua`. Startup linting and learned-level checks catch supported cases;
 they cannot diagnose every server refusal or configuration conflict.
+
+### Developer traces
+The client's `TraceAI` calls are developer diagnostics. They are **off by default**
+(`TraceAIEnabled = 0` in `Const_.lua`): the arguments are not even evaluated, which saves a few
+percent in combat. Set `TraceAIEnabled = 1` in `H_Extra.lua` to get them back; in the simulator,
+`python tools/harness/run.py --trace <scenario>` enables them for the run.
