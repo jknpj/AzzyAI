@@ -16,8 +16,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The Ubuntu archive is occasionally unreachable from runners ("Temporary failure
+      # resolving azure.archive.ubuntu.com"), so retry apt and fall back to building 5.1.5
+      # from source. Nothing here depends on a specific distro package.
       - name: Install Lua 5.1
-        run: sudo apt-get update && sudo apt-get install -y lua5.1
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          installed=0
+          for attempt in 1 2; do
+            if sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=15 \
+               && sudo apt-get install -y -o Acquire::Retries=3 lua5.1; then
+              installed=1
+              echo "lua5.1 installed from apt"
+              break
+            fi
+            echo "::warning::apt attempt $attempt failed"
+            sleep 10
+          done
+          if [ "$installed" -eq 0 ]; then
+            echo "::warning::apt could not install lua5.1, building Lua 5.1.5 from source"
+            # LuaDist mirrors the official 5.1.5 tree; it ships the unmodified luaconf.h
+            # as luaconf.h.orig for its own templating, so restore it before building.
+            curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors \
+              -o /tmp/lua-5.1.5.tar.gz \
+              https://github.com/LuaDist/lua/archive/refs/tags/5.1.5.tar.gz
+            tar -xzf /tmp/lua-5.1.5.tar.gz -C /tmp
+            cp /tmp/lua-5.1.5/src/luaconf.h.orig /tmp/lua-5.1.5/src/luaconf.h
+            make -C /tmp/lua-5.1.5 generic
+            sudo make -C /tmp/lua-5.1.5 install
+          fi
+          lua -v 2>&1 || lua5.1 -v
+          luac -v 2>&1 || luac5.1 -v
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
