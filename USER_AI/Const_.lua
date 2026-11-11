@@ -457,6 +457,7 @@ LastAITime			= 0
 MyState				= IDLE_ST
 MyPState			= 0
 MyEnemy				= 0
+CommandedEnemy		= 0
 MyPEnemy			= 0
 MyDestX				= 0
 MyDestY				= 0

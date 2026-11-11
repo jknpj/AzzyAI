@@ -212,7 +212,7 @@ function doInit(myid)
 	if LintUserOptions ~= 0 then
 		logstring = LintSkillOptions(myid, logstring)
 	end
-	OutFile=io.open(GetStartupLogPath(),"a")
+	local OutFile=io.open(GetStartupLogPath(),"a")
 	if OutFile == nil then
 		error("No write permissions for RO folder, please fix permissions on the RO folder in order to use AzzyAI.\n"..logstring)
 	else
@@ -320,18 +320,19 @@ end
 
 if (AssumeHomun==1) then
 	if (NewAutoFriend==0) then
-		ff = {}
-		Hactors = GetActors()
-		Howner  = GetV(V_OWNER,Hactors[1])
-		FX = 0
-		FY = 0
-		OX,OY = GetV(V_POSITION,Howner)
-		for i,v in ipairs(Hactors) do
-			if (v ~= Howner) then
-				if (IsMonster(v)==0) then
-					FX,FY = GetV(V_POSITION,v)
-					if (FX==OX and FY==OY and v<100000) then --is not a player
-						MyFriends[v]=2
+		local Hactors = GetActors()
+		-- the client may not expose any actor before the first AI() call
+		if Hactors ~= nil and Hactors[1] ~= nil then
+			local Howner = GetV(V_OWNER,Hactors[1])
+			local FX, FY = 0, 0
+			local OX,OY = GetV(V_POSITION,Howner)
+			for i,v in ipairs(Hactors) do
+				if (v ~= Howner) then
+					if (IsMonster(v)==0) then
+						FX,FY = GetV(V_POSITION,v)
+						if (FX==OX and FY==OY and v<100000) then --is not a player
+							MyFriends[v]=2
+						end
 					end
 				end
 			end
@@ -652,12 +653,13 @@ function	OnIDLE_ST ()
 			end
 			return 
 		end
+		local aggro
 		if (HPPercent(MyID) > AggroHP and (SPPercent(MyID) > AggroSP or AggroSP==0) and (ShouldStandby == 0 or StickyStandby ==0) ) then
 			aggro=1
 		else
 			aggro=0
 		end
-		object=SelectEnemy(GetEnemyList(MyID,aggro))
+		object = SelectEnemy(GetEnemyList(MyID,aggro))
 		if object~=0 then
 			MyState = CHASE_ST
 			MyEnemy = object
@@ -822,23 +824,16 @@ end
 function OnCHASE_ST()
     MyAttackStanceX, MyAttackStanceY = 0, 0
     TraceAI("OnCHASE_ST")
-    aggro = GetAggroCount()
+    local aggro = GetAggroCount()
     if (aggro > UseBerserkMobbed and UseBerserkMobbed > 0) then
         BerserkMode = 1
     end
     if DoAutoBuffs(-1) == 1 then
         DoAutoBuffs(2)
     end
+    local skill, level
     if (UseSkillOnly == 1 and MySkill ~= 0) then
         skill, level = GetAtkSkill(MyID)
-    else
-        skill = nil
-        level = nil
-    end
-    if true == IsOutOfSight(MyID, MyEnemy) then
-        value = "true "
-    else
-        value = "false"
     end
     if (IsNotKS(MyID, MyEnemy) == 0) then
         local reason = GetKSReason(MyID, MyEnemy)
@@ -919,7 +914,7 @@ function OnCHASE_ST()
         else
             aggro = 0
         end
-        object = SelectEnemy(GetEnemyList(MyID, aggro), MyEnemy)
+        local object = SelectEnemy(GetEnemyList(MyID, aggro), MyEnemy)
         if object ~= 0 then
             TraceAI("Opportunistic target change - dropping target "..MyEnemy.." for target "..object)
             MyEnemy = object
@@ -939,7 +934,6 @@ function OnCHASE_ST()
     if (true == IsInAttackSight(MyID, MyEnemy, skill, level)) then -- ENEMY_INATTACKSIGHT_IN
         MyState = ATTACK_ST
         AttackTimeout = GetTick() + AttackTimeLimit
-        ExChaseGiveUpCount = ChaseGiveUpCount
         ChaseGiveUpCount = 0
         TraceAI("CHASE_ST -> ATTACK_ST : ENEMY_INATTACKSIGHT_IN")
         if (FastChangeCount < FastChangeLimit and FastChange_C2A == 1) then
@@ -949,15 +943,16 @@ function OnCHASE_ST()
             return
         end
     elseif UseSkillOnly == -1 and (GetTick() >= AutoSkillTimeout) then
-        dist = GetDistanceA(MyID, MyEnemy)
+        local dist = GetDistanceA(MyID, MyEnemy)
         local tact_skill, tact_debuff, tact_sp, tact_skillclass = GetTact(TACT_SKILL, MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
-        skilltouse = {-1, 0, 0}
+        local skilltouse = {-1, 0, 0}
         local TargetedSkills = GetTargetedSkills(MyID)
         local availsp = GetV(V_SP, MyID)
         if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
             availsp = availsp - tact_sp
         end
         TraceAI("Begin autoskill while chasing routine")
+        local skill_level
         if (tact_skill < 0) then -- Negative value of TACT_SKILL -> 1 cast of skill
             skill_level = tact_skill * -1 -- with level = to the absolute value of the
             tact_skill = 1 -- value of TACT_SKILL.
@@ -965,7 +960,7 @@ function OnCHASE_ST()
             skill_level = 11
         end
         for i, v in ipairs(TargetedSkills) do
-            skilltype = v[1]
+            local skilltype = v[1]
             if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                 if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
                     if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
@@ -1054,19 +1049,20 @@ function OnCHASE_ST()
             alt = math.random(2)
             TraceAI("Using alt movement"..alt)
         end
-        ex, ey = GetV(V_POSITION, MyEnemy)
+        local ex, ey = GetV(V_POSITION, MyEnemy)
         TraceAI("State History: "..MyStates[1].." "..MyStates[2].." "..MyStates[3].." "..MyStates[4].." "..MyStates[5])
         TraceAI("Pos History: "..formatpos(MyPosX[1], MyPosY[1]).." "..formatpos(MyPosX[2], MyPosY[2]).." "..formatpos(MyPosX[3], MyPosY[3]).." "..formatpos(MyPosX[4], MyPosY[4]).." "..formatpos(MyPosX[5], MyPosY[5]))
         TraceAI("Enemy History: "..MyEnemies[1].." "..MyEnemies[2].." "..MyEnemies[3].." "..MyEnemies[4].." "..MyEnemies[5])
         TraceAI("Enemy Pos History: "..formatpos(EnemyPosX[1], EnemyPosY[1]).." "..formatpos(EnemyPosX[2], EnemyPosY[2]).." "..formatpos(EnemyPosX[3], EnemyPosY[3]).." "..formatpos(EnemyPosX[4], EnemyPosY[4]).." "..formatpos(EnemyPosX[5], EnemyPosY[5]))
         TraceAI("current enemy: "..MyEnemy.." "..formatpos(ex, ey))
+        local x, y = GetPos(MyID)
         if MyStates[1] == CHASE_ST and MyStates[2] == ATTACK_ST and MyStates[3] == CHASE_ST and MyEnemy == MyEnemies[2] and IsPlayer(MyEnemy) ~= 1 and EnemyPosX[3] == ex and EnemyPosY[3] == ey then
             x, y = AdjustOpp(x, y, ex, ey)
             Unreachable[MyEnemy] = 1
             TraceAI("CHASE_ST: We transitioned to attack state vs this target 2 cycles ago, now we're chasing it again, and it hasn't moved! Trying to do AdjustOpp, and deprioritizing monster to prevent loop.")
         elseif EnemyPosX[3] ~= 0 and EnemyPosY[3] ~= 0 and (ex ~= EnemyPosX[3] or ey ~= EnemyPosY[3]) and MyEnemy == MyEnemies[3] and alt == 0 then
-            dx, dy = ex - EnemyPosX[3], ey - EnemyPosY[3]
-            r = AttackRange(MyID, MySkill, MySkillLevel)
+            local dx, dy = ex - EnemyPosX[3], ey - EnemyPosY[3]
+            local r = AttackRange(MyID, MySkill, MySkillLevel)
             x, y = Closest(MyID, ex + dx, ey + dy, r, alt)
             x, y = AdjustStandPoint(x, y, ex, ey, r, alt)
         else
@@ -1104,7 +1100,7 @@ function OnCHASE_ST()
                 end
             end
         end
-        ox, oy = GetV(V_POSITION, OwnerID)
+        local ox, oy = GetV(V_POSITION, OwnerID)
         if GetDistanceAPR(OwnerID, x, y) < GetMoveBounds() or (CommandedFightStay == 1 and MyEnemy == CommandedEnemy) then
             if ((x ~= MyDestX or y ~= MyDestY) or GetV(V_MOTION, MyID) ~= MOTION_MOVE) then
                 MyDestX, MyDestY = x, y
@@ -1162,7 +1158,7 @@ function OnATTACK_ST()
                 Move(MyID, tx, ty)
                 TraceAI("ATTACK_ST: We've been attacking for 5 cycles, but we still haven't attacked! Something is wrong - Moving to monster cell")
             elseif AttackGiveUpCount < AttackGiveUp then
-                nx, ny = AdjustOpp(x, y, tx, ty)
+                local nx, ny = AdjustOpp(x, y, tx, ty)
                 Move(MyID, tx, ty)
                 TraceAI("ATTACK_ST: We've been attacking for 3 cycles, but we still haven't attacked! Something is wrong - Moving to adjust opposite")
             elseif AttackGiveUpCount > AttackGiveUp and MyEnemies[AttackGiveUp] == MyEnemy and MyStates[AttackGiveUp] == ATTACK_ST then
@@ -1227,7 +1223,7 @@ function OnATTACK_ST()
         end
     end
     if (MyAttackStanceX == 0) then
-        x, y = GetV(V_POSITION, MyID)
+        local x, y = GetV(V_POSITION, MyID)
         MyAttackStanceX, MyAttackStanceY = x, y
         logappend("AAI_DANCE", "Attack Stance set to "..MyDestX..","..MyDestY.." current pos: "..x..","..y)
     end
@@ -1241,7 +1237,7 @@ function OnATTACK_ST()
     local skill_level
 
     -- Begin skill selection routine
-    skilltouse = {-1, 0, 0}
+    local skilltouse = {-1, 0, 0}
     
     if (1 == 1) then --non paniced attack
         if (MySkill == 0 and UseAttackSkill == 1 and GetTick() >= AutoSkillTimeout) then
@@ -1259,7 +1255,7 @@ function OnATTACK_ST()
                 availsp = availsp - tact_sp
             end
             for i, v in ipairs(TargetedSkills) do
-                skilltype = v[1]
+                local skilltype = v[1]
                 TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
                 if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
@@ -1375,8 +1371,8 @@ function OnATTACK_ST()
 
     if (MySkill ~= 0) then
         TraceAI("Skill Attack: "..MySkill.." target: "..MyEnemy.." level:"..MySkillLevel)
-        SkillTarget = MyEnemy
-        SkillTargetX, SkillTargetY = nil, nil
+        local SkillTarget = MyEnemy
+        local SkillTargetX, SkillTargetY = nil, nil
         -- the target itself shrugs off this AoE's element (it got picked for the pack around it):
         -- aim where the monsters that do get hurt are, even with AoEMaximizeTargets off
         local elementAim = MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and not IsCasterCenteredAoE(MySkill)
@@ -1421,7 +1417,7 @@ function OnATTACK_ST()
         comboPending = lv > 0 and IsSkillReady(nextCombo, true) and GetV(V_SP,MyID) >= GetSkillInfo(nextCombo,3,lv)
     end
     if not comboPending and ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
-        nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
+        local nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
         if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
             logappend("AAI_DANCE", "Dance attack canceled, too close to move bounds "..GetDistanceAPR(OwnerID, nx, ny).." "..GetMoveBounds())
         else
@@ -1486,11 +1482,12 @@ function	OnTANKCHASE_ST ()
 	end
 	TraceAI("Tank chase: Can we skill while chasing?")
 	if UseSkillOnly == -1 and (GetTick() >= AutoSkillTimeout) then
-		dist=GetDistanceA(MyID,MyEnemy)
-		tact_debuff,tact_skill,tact_sp,tact_skillclass=GetTact(TACT_DEBUFF,MyEnemy),GetTact(TACT_SKILL,MyEnemy),GetTact(TACT_SP,MyEnemy),GetTact(TACT_SKILLCLASS,MyEnemy)
-		skilltouse={-1,0,0}
+		local dist=GetDistanceA(MyID,MyEnemy)
+		local tact_debuff,tact_skill,tact_sp,tact_skillclass=GetTact(TACT_DEBUFF,MyEnemy),GetTact(TACT_SKILL,MyEnemy),GetTact(TACT_SP,MyEnemy),GetTact(TACT_SKILLCLASS,MyEnemy)
+		local skilltouse={-1,0,0}
 		local SkillList=GetTargetedSkills(MyID)
 		TraceAI("Begin autoskill while tank chasing routine")
+		local skill_level
 		if (tact_skill < 0) then		-- Negative value of TACT_SKILL -> 1 cast of skill
 			skill_level=tact_skill*-1	-- with level = to the absolute value of the
 			tact_skill=1			-- value of TACT_SKILL.
@@ -1499,7 +1496,7 @@ function	OnTANKCHASE_ST ()
 		end
 		for i,v in ipairs(SkillList) do
 
-			skilltype=v[1]
+			local skilltype=v[1]
 			if v[2]~=0 and SkillElementOKFor(v[2],MyEnemy) then
 				--logappend("AAI_Chase","skilltype ".. skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill ".. tact_skill.." tact_skillclass ".. tact_skillclass.."v"..v[1].." "..v[2].." "..v[3])
 				if (GetV(V_SP,MyID) >= tact_sp+GetSkillInfo(v[2],3,math.min(v[3],skill_level)) and GetSkillInfo(v[2],2,math.min(v[3],skill_level)) >= dist) then 
@@ -2175,10 +2172,10 @@ function GetFriendTargets() -- returns list of targets of friends who are attack
 	local targets = {}
 	for i,v in ipairs (GetActors()) do
 		if (IsFriend(v) == 1) then
-			motion=GetV(V_MOTION,v)
-			target=GetV(V_TARGET,v)
+			local motion=GetV(V_MOTION,v)
+			local target=GetV(V_TARGET,v)
 			if (IsMonster(target)==1 and IsFriendOrSelf(target)==0) then
-				tact=GetTact(TACT_BASIC,target)
+				local tact=GetTact(TACT_BASIC,target)
 				if (FriendAttack[motion]==1 and tact > 0 and tact ~=9) then
 					targets[target]={MotionClassLU[GetV(V_MOTION,target)],GetTargetClass(target),GetTact(TACT_BASIC,target),GetTact(TACT_CAST,target)}
 					
@@ -2199,6 +2196,7 @@ end
 function	GetEnemyList (myid,aggro)
 	local owner  = OwnerID
 	local enemys = {}
+	local sskill,slevel,oskill,olevel,mskill,mlevel
 	if aggro==2 then
 		sskill,slevel=GetSAtkSkill(MyID)
 		oskill,olevel=GetAtkSkill(MyID)
@@ -2207,8 +2205,8 @@ function	GetEnemyList (myid,aggro)
 	TraceAI("GetEnemyList with aggro "..aggro)
 	local aggrocount -- computed on first use; GetAggroCount() walks every target
 	for k,v in pairs(Targets) do
-		tact = GetTact(TACT_BASIC,k)
-		casttact=GetTact(TACT_CAST,k)
+		local tact = GetTact(TACT_BASIC,k)
+		local casttact=GetTact(TACT_CAST,k)
 		if tact==TACT_TANKMOB then
 			if aggrocount==nil then
 				aggrocount=GetAggroCount()
@@ -2227,7 +2225,7 @@ function	GetEnemyList (myid,aggro)
 				if aggro == 0 or (aggro~=2 and v[2]>0) then 
 					if (GetMoveBounds() >= GetDistanceRect(owner,k)) then
 						--TraceAI("Adding to target list: "..k)
-						r={v[1],v[2],tact,casttact}
+						local r={v[1],v[2],tact,casttact}
 						enemys[k] = r
 					--else 
 					--	tempx,tempy=GetV(V_POSITION,owner)
@@ -2237,25 +2235,25 @@ function	GetEnemyList (myid,aggro)
 				elseif aggro~=2 then
 					if (GetAggroDist() >= GetDistanceA(owner,k)) then
 						TraceAI("Adding to target list: "..k)
-						r={v[1],v[2],tact,casttact}
+						local r={v[1],v[2],tact,casttact}
 						enemys[k] = r
 					end
 				else -- Sniping - so we need to check range on skill, instead of aggrodist
-					dist = GetDistanceA(MyID,k)
-					tact_skill_class=(GetTact(TACT_SKILLCLASS,k))
+					local dist = GetDistanceA(MyID,k)
+					local tact_skill_class=GetTact(TACT_SKILLCLASS,k)
 					if tact_skill_class==CLASS_MINION and mskill~=0 then
 						if dist <= GetSkillInfo(mskill,2,mlevel) then
-							r={v[1],v[2],tact,casttact}
+							local r={v[1],v[2],tact,casttact}
 							enemys[k] = r
 						end
 					elseif sskill~=0 and tact_skill_class~=CLASS_OLD then
 						if dist <= GetSkillInfo(sskill,2,slevel) then
-							r={v[1],v[2],tact,casttact}
+							local r={v[1],v[2],tact,casttact}
 							enemys[k] = r
 						end
 					elseif oskill~=0 and tact_skill_class~=CLASS_S then
 						if dist <= GetSkillInfo(oskill,2,olevel) then
-							r={v[1],v[2],tact,casttact}
+							local r={v[1],v[2],tact,casttact}
 							enemys[k] = r
 						end
 					end
@@ -2325,6 +2323,7 @@ function SelectEnemy(enemys,curenemy)
 	end
 	for k,v in pairs(enemys) do
 		local basepriority = v[3] -- basic tact
+		local aggro
 		if v[2]>0 and (v[1]==3 or v[4]>=CAST_REACT) then
 			aggro=1
 		else
@@ -2341,8 +2340,8 @@ function SelectEnemy(enemys,curenemy)
 		--else
 		--	aggro=0
 		--end
-		dis = GetDistanceA (MyID,k)
-		unreachable=Unreachable[k]
+		local dis = GetDistanceA (MyID,k)
+		local unreachable=Unreachable[k]
 		if unreachable == nil then
 			unreachable=0
 		end
@@ -2806,9 +2805,9 @@ function DoAutoBuffs(buffmode)
 end
 
 function DoHealingTasks (myid) 
-	rhp=HPPercent(myid)
-	ohp=HPPercent(OwnerID)
-	skill,level=GetHealingSkill(myid)
+	local rhp=HPPercent(myid)
+	local ohp=HPPercent(OwnerID)
+	local skill,level=GetHealingSkill(myid)
 	if skill<=0 then 
 		UseAutoHeal=0
 		return
@@ -2844,11 +2843,13 @@ end
 
 function UpdateTimeoutFile()
 	NextTimeoutFileWrite = GetTick() + TIMEOUT_FILE_MIN_INTERVAL
+	local ShouldStandbyx
 	if StickyStandby==2 then
 		ShouldStandbyx=ShouldStandby
 	else
 		ShouldStandbyx=0
 	end
+	local OutFile
 	if IsHomun(MyID)==1 then
 		OutFile=io.open(ConfigPath.."data/H_"..OwnerID.."Timeouts.lua","w")
 	else
@@ -3019,12 +3020,13 @@ function	OnIDLEWALK_ST ()
 			end
 			return 
 		end
+		local aggro
 		if (HPPercent(MyID) > AggroHP and (SPPercent(MyID) > AggroSP or AggroSP==0) and (ShouldStandby == 0 or StickyStandby ==0)) then
 			aggro=1
 		else
 			aggro=0
 		end
-		object=SelectEnemy(GetEnemyList(MyID,aggro))
+		object = SelectEnemy(GetEnemyList(MyID,aggro))
 		if object~=0 then
 			MyState = CHASE_ST
 			MyEnemy = object
@@ -3123,7 +3125,7 @@ function GetIdleWalkDest(MyID)
 		if temp < 0 then
 			temp=temp+360
 		end
-		step = math.floor(temp/90)
+		local step = math.floor(temp/90)
 		TraceAI("Cross step "..step)
 		if step == 0 then -- north goes to south
 			return ox,oy-IdleWalkDistance
@@ -3627,7 +3629,7 @@ function AI(myid)
 	Retainers={}
 	Targets={}
 	TakenCells={} --OccupiedCellDetection 
-	tMobID=""
+	local tMobID=""
 	TankMonsterCount=0
 	local seralegionCount=0
 	local seralegionActive=0
@@ -3717,7 +3719,7 @@ function AI(myid)
 					if (GetTact(TACT_BASIC,v)==TACT_TANK and GetActorTarget(v)==MyID) then
 						TankMonsterCount=TankMonsterCount+1
 					end
-					motionclass=MotionClassLU[GetActorMotion(v)]
+					local motionclass=MotionClassLU[GetActorMotion(v)]
 					if motionclass==nil then 
 						motionclass=3 
 					end --CHANGE
@@ -3796,8 +3798,8 @@ function AI(myid)
 		MobInfoCache = {}
 	end
 	if (NewAutoFriend==1 and AssumeHomun==1) then
-		friendedOK=0
-		retainercount=0
+		local friendedOK=0
+		local retainercount=0
 		for k,v in pairs(Retainers) do
 			if (k~=MyID) then
 				retainercount=retainercount+1
@@ -3810,13 +3812,14 @@ function AI(myid)
 		if (friendedOK==0 and GetTick() >= (NextAutoFriendRead or 0)) then
 			NextAutoFriendRead = GetTick() + 2000
 			local owner=OwnerID
+			local InFile
 			if (IsHomun(myid)==1) then
 				InFile=io.open(ConfigPath.."data/M_"..owner..".txt","r")
 			else
 				InFile=io.open(ConfigPath.."data/H_"..owner..".txt","r")
 			end
 			if InFile~=nil then
-				retainerid=InFile:read("*a")
+				local retainerid=InFile:read("*a")
 				InFile:close()
 				retainerid=tonumber(retainerid)
 				if (retainerid ~=nil) then
@@ -4124,7 +4127,7 @@ function AI(myid)
 			return
 		end
 	end
-	object = SelectEnemy(GetEnemyList(MyID,-2))
+	local object = SelectEnemy(GetEnemyList(MyID,-2))
 	if (object~=0 and object ~= MyEnemy and MyState~=FOLLOW_ST) then
 		MyEnemy=object
 		MyState=CHASE_ST

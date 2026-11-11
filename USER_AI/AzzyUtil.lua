@@ -1686,7 +1686,7 @@ end
 ActorPosCache = {}
 function GetPos(id)
 	if id == nil then
-		return GetV(V_POSITION, id)
+		return -1, -1
 	end
 	local p = ActorPosCache[id]
 	if p == nil then
@@ -1930,7 +1930,7 @@ function AttackRange(myid,skill,level)
 	end
 	local a     = 0
 	if (skill == 0) then
-		mertype=GetMerType(myid)
+		local mertype=GetMerType(myid)
 		if (mertype==nil) then
 			mertype=-1
 		end
@@ -2396,6 +2396,7 @@ end
 --#########################
 
 function GetSAtkSkill(myid)
+	local htype
 	if MyHomunType == ELEANOR and CastSkill ~= 0 then return 0,0 end
 	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
 		local probe, level = GetEleanorStyleProbe()
@@ -2463,6 +2464,7 @@ function GetSAtkSkill(myid)
 end
 
 function GetComboSkill(myid)
+	local htype
 	if CastSkill ~= 0 then return 0,0 end
 	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then return 0,0 end
 	local skill = 0
@@ -2500,6 +2502,7 @@ function GetComboSkill(myid)
 end
 
 function GetGrappleSkill(myid)
+	local htype
 	if CastSkill ~= 0 then return 0,0 end
 	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
 		local probe, level = GetEleanorStyleProbe()
@@ -2603,6 +2606,7 @@ end
 
 
 function GetDebuffSkill(myid)
+	local skill, level = 0, 0
 	if (IsHomun(myid)==1) then
 		if MyHomunType==EIRA and UseEiraSilentBreeze==1 and IsSkillReady(MH_SILENT_BREEZE) then
 			skill=MH_SILENT_BREEZE
@@ -2679,6 +2683,7 @@ function GetSacrificeSkill(myid)
 end
 
 function GetMobSkill(myid)
+	local htype
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
@@ -2772,6 +2777,7 @@ function	GetQuickenSkill(myid)
 end
 
 function	GetSOffensiveSkill(myid)
+	local htype
 	local level = 0
 	local skill = 0
 	local skillopt = 0
@@ -2803,6 +2809,7 @@ function	GetSOffensiveSkill(myid)
 end
 
 function	GetSDefensiveSkill(myid)
+	local htype
 	local level = 0
 	local skill = 0
 	local skillopt=0
@@ -2834,6 +2841,7 @@ function	GetSDefensiveSkill(myid)
 end
 
 function	GetSOwnerBuffSkill(myid)
+	local htype
 	local level = 0
 	local skill = 0
 	local skillopt = 0
@@ -2866,6 +2874,7 @@ function	GetSOwnerBuffSkill(myid)
 end
 
 function GetSightOrAoE(myid)
+	local htype
 	local level = 0
 	local skill = 0
 	local skillopt = 0
@@ -3376,7 +3385,7 @@ end
 --#######################
 
 function KiteOK(myid)
-	mertype=GetV(V_MERTYPE,myid)
+	local mertype=GetV(V_MERTYPE,myid)
 	if (mertype==nil) then
 		local homuntype=GetHomunBaseType(myid)
 		if ((homuntype==VANILMIRTH or homuntype==FILIR) and DoNotChase==1) then
@@ -3456,7 +3465,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	end
 	CastSkillEnemy = MyEnemy
 	local t=GetTick();
-	delay=AutoSkillDelay + GetSkillInfo(skill,4,level)+GetSkillInfo(skill,5,level)*CastTimeRatio
+	local delay=AutoSkillDelay + GetSkillInfo(skill,4,level)+GetSkillInfo(skill,5,level)*CastTimeRatio
 	AutoSkillCastTimeout=delay+t
 	if AutoSkillCooldown[skill]~=nil then
 		local reuse = GetSkillInfo(skill,9,level)
@@ -4271,6 +4280,7 @@ end
 
 -- New Functions
 function GetSOwner2ndBuffSkill(myid)
+	local htype
 	local level = 0
 	local skill = 0
 	local skillopt = 0
