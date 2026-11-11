@@ -154,7 +154,7 @@ function 	GetTact(t,m)
 	local temp = TactRowCache and TactRowCache[m]
 	local e = 0
 	if temp == nil then
-		if (IsHomun(MyID)==0) then 
+		if MyHomunType == nil then -- mercenary AI: class comes from MobID, not the client
 			if (MobID[m]==nil) then
 				e=GetClass(m)
 			else
@@ -906,6 +906,30 @@ function AoEClusterWeights(aoe, ids)
 		result[id] = math.floor(count + 1e-6)
 	end
 	return result
+end
+
+-- SelectEnemy can run two or three times per AI() call (owner/friend targets, the normal enemy
+-- list, the tank list) and used to rebuild the same priority context and cluster weights every
+-- time. Both only depend on the skills and on Targets, so they are cached for the rest of the
+-- tick; AI() resets them with the other per-tick caches.
+TargetPriorityCtx = nil
+TargetClusterWeightsCache = nil
+
+function GetTargetPriorityContext()
+	if TargetPriorityCtx == nil then
+		TargetPriorityCtx = TargetPriorityContext()
+	end
+	return TargetPriorityCtx
+end
+
+function GetTargetClusterWeights()
+	if TargetClusterWeightsCache == nil then
+		local ids = {}
+		for k in pairs(Targets) do ids[#ids + 1] = k end
+		TargetClusterWeightsCache = (TargetPriorityCtx and TargetPriorityCtx.aoe)
+			and AoEClusterWeights(TargetPriorityCtx.aoe, ids) or {}
+	end
+	return TargetClusterWeightsCache
 end
 
 -- Best cell to center a ground AoE on, within range of myid. Each monster within 20 cells of the

@@ -669,7 +669,7 @@ function	OnIDLE_ST ()
 			end
 			return	
 		end
-		if (aggro==1 and TankMonsterCount < TankMonsterLimit) then
+		if (aggro==1 and HasTankTargets and TankMonsterCount < TankMonsterLimit) then
 			object = SelectEnemy(GetEnemyList(MyID,-1))
 			if (object ~= 0) then
 				MyState = TANKCHASE_ST
@@ -1886,7 +1886,11 @@ function	OnMOVE_CMD_HOLD_ST ()
 			end
 			return
 		end
-		object = SelectEnemy(GetEnemyList(MyID,-1))
+		if HasTankTargets then
+			object = SelectEnemy(GetEnemyList(MyID,-1))
+		else
+			object = 0
+		end
 		if (object ~= 0) then
 			MyState = TANKCHASE_ST
 			MyEnemy = object
@@ -2168,22 +2172,11 @@ TargetClass
 2  = Friend/Owner
 ]]--]]
 
-function GetFriendTargets() -- returns list of targets of friends who are attacking
-	local targets = {}
-	for i,v in ipairs (GetActors()) do
-		if (IsFriend(v) == 1) then
-			local motion=GetV(V_MOTION,v)
-			local target=GetV(V_TARGET,v)
-			if (IsMonster(target)==1 and IsFriendOrSelf(target)==0) then
-				local tact=GetTact(TACT_BASIC,target)
-				if (FriendAttack[motion]==1 and tact > 0 and tact ~=9) then
-					targets[target]={MotionClassLU[GetV(V_MOTION,target)],GetTargetClass(target),GetTact(TACT_BASIC,target),GetTact(TACT_CAST,target)}
-					
-				end
-			end
-		end
-	end
-	return targets
+-- Targets of friends (the owner included) that are attacking a monster. Built once per AI() call
+-- from the actor list (see "Friend targets for this tick" in AI()), so this does not walk every
+-- actor again.
+function GetFriendTargets()
+	return FriendTargets
 end
 -- aggro arguments
 -- 2 = snipe
@@ -2271,6 +2264,9 @@ end
 -- enemys[n][4] = casttact
 
 function SelectEnemy(enemys,curenemy)
+	if curenemy == nil and next(enemys) == nil then
+		return 0
+	end
 	local min_priority=-1
 	local priority
 	local min_dis = 100
@@ -2287,11 +2283,14 @@ function SelectEnemy(enemys,curenemy)
 	local ctx, cluster
 	local min_top, min_fine = 0, 0
 	if smart then
-		ctx = TargetPriorityContext()
-		local ids = {}
-		for k in pairs(enemys) do ids[#ids+1] = k end
-		if curenemy ~= nil then ids[#ids+1] = curenemy end
-		cluster = ctx.aoe and AoEClusterWeights(ctx.aoe, ids) or {}
+		ctx = GetTargetPriorityContext()
+		cluster = ctx.aoe and GetTargetClusterWeights() or {}
+		-- the cluster table is shared by every SelectEnemy call in this tick; a curenemy outside
+		-- Targets (an opportunistic target being left) is not in it yet
+		if ctx.aoe ~= nil and curenemy ~= nil and cluster[curenemy] == nil then
+			local extra = AoEClusterWeights(ctx.aoe, {curenemy})
+			cluster[curenemy] = extra[curenemy]
+		end
 	end
 	local function topRank(id)
 		if smart and IsPlantMob(id) then
@@ -3036,7 +3035,7 @@ function	OnIDLEWALK_ST ()
 			end
 			return	
 		end
-		if (aggro==1 and TankMonsterCount < TankMonsterLimit) then
+		if (aggro==1 and HasTankTargets and TankMonsterCount < TankMonsterLimit) then
 			object = SelectEnemy(GetEnemyList(MyID,-1))
 			if (object ~= 0) then
 				MyState = TANKCHASE_ST
@@ -3461,6 +3460,8 @@ function AI(myid)
 	ClearTable(MobInfoCache)
 	ClearTable(ActorClassCache)
 	ClearTable(TactValueCache)
+	TargetPriorityCtx = nil
+	TargetClusterWeightsCache = nil
 	ActorPosCache = {}
 	ClearTable(ActorMotionCache)
 	ClearTable(ActorTargetCache)
@@ -3622,6 +3623,8 @@ function AI(myid)
 	end
 	-- Actor list preprocessing
 	local actors=GetActors()
+	local friendIds = {}
+	HasTankTargets = false
 	ClearTable(Actors)
 	OldPlayers=Players
 	Players={}
@@ -3668,11 +3671,17 @@ function AI(myid)
 						end
 					end
 				end
-				if ServerType ~= SERVER_PRIVATE then
+				-- DetectPrivateServer only acts on rAthena/Hercules ids (>= 110000000); checking the id
+				-- here avoids a call per actor per tick on official servers
+				if ServerType ~= SERVER_PRIVATE and v >= 110000000 then
 					DetectPrivateServer(v)
 				end
 				if (IsPlayer(v)==1) then
 					Players[v]=1
+					-- remembered for the FriendTargets build after this loop (owner + friends/retainers)
+					if v ~= MyID and (v == OwnerID or MyFriends[v] == FRIEND or MyFriends[v] == RETAINER) then
+						friendIds[#friendIds + 1] = v
+					end
 					if MyFriends[v]==FRIEND and OwnerID~=v then --Newly appeared on screen
 						if OldPlayers[v]~=1 or AggressiveAutofriend then
 							local newfriendhidfile=io.open(ConfigPath.."data/H_"..v..".txt","r")
@@ -3717,8 +3726,12 @@ function AI(myid)
 							IsActive[v]=1
 						end
 					end
-					if (GetTact(TACT_BASIC,v)==TACT_TANK and GetActorTarget(v)==MyID) then
-						TankMonsterCount=TankMonsterCount+1
+					local basicTact = GetTact(TACT_BASIC,v)
+					if basicTact==TACT_TANK or basicTact==TACT_TANKMOB then
+						HasTankTargets = true
+						if basicTact==TACT_TANK and GetActorTarget(v)==MyID then
+							TankMonsterCount=TankMonsterCount+1
+						end
 					end
 					local motionclass=MotionClassLU[GetActorMotion(v)]
 					if motionclass==nil then 
@@ -3798,7 +3811,27 @@ function AI(myid)
 		ClearTable(TactRowCache)
 		ClearTable(MobInfoCache)
 		ClearTable(TactValueCache)
+		TargetPriorityCtx = nil
+		TargetClusterWeightsCache = nil
 	end
+	-- Friend targets for this tick: built from the friends found in the actor loop above, after
+	-- the MobID refresh so mercenaries use the current class data. GetFriendTargets() just
+	-- returns this table, so the AI does not walk every actor a second time when idle/chasing.
+	ClearTable(FriendTargets)
+	for i = 1, #friendIds do
+		local fid = friendIds[i]
+		local fmotion = GetActorMotion(fid)
+		local ftarget = GetActorTarget(fid)
+		if ftarget ~= nil and IsMonster(ftarget) == 1 and IsFriendOrSelf(ftarget) == 0
+			and FriendAttack[fmotion] == 1 then
+			local tact = GetTact(TACT_BASIC, ftarget)
+			if tact > 0 and tact ~= 9 then
+				FriendTargets[ftarget] = {MotionClassLU[GetActorMotion(ftarget)], GetTargetClass(ftarget),
+					tact, GetTact(TACT_CAST, ftarget)}
+			end
+		end
+	end
+
 	if (NewAutoFriend==1 and AssumeHomun==1) then
 		local friendedOK=0
 		local retainercount=0

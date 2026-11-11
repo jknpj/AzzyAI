@@ -586,6 +586,8 @@ AllTargetUnreachable=0
 -- These need to be globals
 Actors				= {}
 Players				= {}
+FriendTargets		= {}	-- friend targets, rebuilt once per AI() call
+HasTankTargets		= false	-- any target with a tank tactic this tick
 Monsters			= {}
 Targets				= {}
 Summons				= {}
