@@ -1,11 +1,11 @@
 # AzzyAI: technical reference
 
-[User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md) | [Changelog](../Changelog.md)
+[User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md) | [Changelog](../CHANGELOG.md)
 
 This document keeps the technical material previously in the README. It is
 intended for maintainers and advanced users, not as the installation guide.
 Paths and commands below are relative to the repository root unless stated
-otherwise. The version history is in [Changelog.md](../Changelog.md).
+otherwise. The version history is in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Version
 
@@ -14,7 +14,7 @@ form (`MAJOR.MINOR.PATCH`). It is set once, as `CVersion` in `USER_AI/Const_.lua
 and shown on the `Release:` line of `AAIStartH.txt` and `AAIStartM.txt` (the startup
 reports), so a bug report can say exactly which version it is about. `python
 tools\harness\run.py` fails if that number and the "Current release" line at the
-top of [Changelog.md](../Changelog.md) differ.
+top of [CHANGELOG.md](../CHANGELOG.md) differ.
 
 | Part | Raise it when |
 |---|---|
@@ -24,7 +24,7 @@ top of [Changelog.md](../Changelog.md) differ.
 
 **2.0.0 is the first release of this series.** The original AzzyAI ended at 1.56, so
 the new series starts a major number higher. Everything in the 2.0.0 entry of
-[Changelog.md](../Changelog.md) is part of it.
+[CHANGELOG.md](../CHANGELOG.md) is part of it.
 
 **File check.** `AI.lua` and `AI_M.lua` read the `MAJOR.MINOR` out of `CVersion` and
 compare it with three more numbers, to detect files copied from different installations.
@@ -42,7 +42,7 @@ of its own.
 
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
 changed, the two numbers in `AssemblyInfo.cs` and the "Current release" line in
-`Changelog.md`, add the changes to `Changelog.md`, run the harness, rebuild the app
+`CHANGELOG.md`, add the changes to `CHANGELOG.md`, run the harness, rebuild the app
 (`tools\build-gui.cmd`), commit, and tag the commit
 `v<number>` (for example `v2.0.0`). The CI builds the ZIP for tags that start with `v`.
 

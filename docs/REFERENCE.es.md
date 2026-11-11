@@ -573,7 +573,7 @@ con `KOS`, `ENEMY`, `NEUTRAL`, `FRIEND` o `ALLY` y una entrada de táctica PVP p
 | Archivos de tácticas PVP | `H_PVP_Tactics.lua` | `H_PVP_Tact.lua`, `M_PVP_Tact.lua` |
 | Clases de habilidad de Eleanor | `CLASS_COMBO_1/2` | Más `CLASS_GRAPPLE`, `_1`, `_2`. |
 | Nuevas opciones | | `ServerType`, `AutoDetectServerType`, `TrustSkillProbe`, `LintUserOptions`, `UseMobInfo` y opciones de la base de datos de monstruos, `TargetPriority`, `KiteByRange`, `UseDamageDanger`, `CommandedFightStay`, `StayAwayDistance`, `StayAwayHold`, `CastInterrupt*`, opciones de habilidades de Homúnculo S, ajustes por homúnculo en `Types/<Name>.lua`. |
-| Historial de versiones | Changelog de 1.00 a 1.50. | No se repite aquí. Los cambios desde el original 1.56 están en las [changelog](../Changelog.md#200). |
+| Historial de versiones | Changelog de 1.00 a 1.50. | No se repite aquí. Los cambios desde el original 1.56 están en las [changelog](../CHANGELOG.md#200). |
 
 <a id="8-homunculus-scripting-primer"></a>
 ## 8. Introducción a los scripts de homúnculos

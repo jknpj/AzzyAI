@@ -487,7 +487,7 @@ a PVP tactic row.
 | PVP tactics files | `H_PVP_Tactics.lua` | `H_PVP_Tact.lua`, `M_PVP_Tact.lua` |
 | Eleanor skill classes | `CLASS_COMBO_1/2` | Plus `CLASS_GRAPPLE`, `_1`, `_2`. |
 | New options | | `ServerType`, `AutoDetectServerType`, `TrustSkillProbe`, `LintUserOptions`, `UseMobInfo` and the monster database options, `TargetPriority`, `KiteByRange`, `UseDamageDanger`, `CommandedFightStay`, `StayAwayDistance`, `StayAwayHold`, `CastInterrupt*`, the Homunculus S skill options, `Types/<Name>.lua` per-homunculus presets. |
-| Version history | 1.00 to 1.50 changelog. | Not repeated here. Changes since the original 1.56 are in the [changelog](../Changelog.md#200). |
+| Version history | 1.00 to 1.50 changelog. | Not repeated here. Changes since the original 1.56 are in the [changelog](../CHANGELOG.md#200). |
 
 <a id="8-homunculus-scripting-primer"></a>
 ## 8. Homunculus scripting primer

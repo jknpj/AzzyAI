@@ -31,7 +31,7 @@ on the inherited files, or on its modifications to them.** The inherited parts a
 - `DEFAULT/`
 - `GUI/` (the configuration application, apart from files that are new to this version)
 - `USER_AI/` (apart from the new files listed below)
-- `Changelog.md`, `docs/legacy-documentation.doc` and `USER_AI/Documentation.pdf`
+- `CHANGELOG.md`, `docs/legacy-documentation.doc` and `USER_AI/Documentation.pdf`
 - the fixture `tools/harness/fixtures/H_Config.lua`, which is a copy of the
   inherited `H_Config.lua` with test values
 
