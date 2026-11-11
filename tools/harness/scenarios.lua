@@ -1749,6 +1749,77 @@ SCENARIOS = {
 				["off: the isolated monster is closer so it wins"] = function() return expectPick(0, { 6, 3 }, 6) end,
 			}
 		end)() },
+
+	-- ------------------------------------------------------------------
+	-- Unit-style regressions for paths the timed scenarios above never take.
+	-- ------------------------------------------------------------------
+
+	-- Losing the target has to clear the per-target skill counter: it gates tactics with a
+	-- finite cast count (MyTact rows with -1/-3/-4, e.g. Orc Zombie, Zenorc).
+	skill_counter_reset = { homuntype = 2, skills = {}, mobs = single, passive = true,
+		minAttacks = 0, ticks = 3,
+		afterLoad = function()
+			local realAI = AI
+			local done = false
+			AI = function(id)
+				realAI(id)
+				if done then return end
+				done = true
+				local realIdle, realFollow = OnIDLE_ST, OnFOLLOW_ST
+				OnIDLE_ST, OnFOLLOW_ST = function() end, function() end
+				MyState, MyEnemy, MySkillUsedCount = ATTACK_ST, 0, 7
+				OnATTACK_ST() -- takes the "target gone" branch
+				OnIDLE_ST, OnFOLLOW_ST = realIdle, realFollow
+				PROBE_SKILL_COUNT = MySkillUsedCount
+			end
+		end,
+		checks = {
+			["losing the target resets MySkillUsedCount"] = function()
+				return PROBE_SKILL_COUNT == 0
+			end,
+		} },
+
+	-- GetBestBrandishTarget must return the actor id; Targets[id] is the {motion, class} row.
+	brandish_target_id = { homuntype = 2, skills = {}, mobs = { {102,100} }, passive = true,
+		minAttacks = 0, ticks = 3,
+		afterLoad = function()
+			local realAI = AI
+			local done = false
+			AI = function(id)
+				realAI(id)
+				if done then return end
+				done = true
+				PROBE_BRANDISH = GetBestBrandishTarget(MyID)
+			end
+		end,
+		checks = {
+			["GetBestBrandishTarget returns an actor id"] = function()
+				return type(PROBE_BRANDISH) == "number" and Targets[PROBE_BRANDISH] ~= nil
+			end,
+		} },
+
+	-- convpriority(): a react-low monster that is attacking us must rank like attack-low,
+	-- not below every other monster (SelectEnemy compares these numbers).
+	convpriority_values = { homuntype = 2, skills = {}, mobs = single, passive = true,
+		minAttacks = 0, ticks = 2,
+		checks = {
+			["react-low while attacked ranks like attack-low"] = function()
+				return convpriority(TACT_REACT_L, 1) == 2
+			end,
+			["react-low while ignored stays at the bottom"] = function()
+				return convpriority(TACT_REACT_L, 0) == 0
+			end,
+			["attack-low and attack-mid keep their order"] = function()
+				return convpriority(TACT_ATTACK_L, 1) == 1 and convpriority(TACT_ATTACK_M, 1) == 4
+			end,
+			["react-mid and react-high keep their values"] = function()
+				return convpriority(TACT_REACT_M, 1) == TACT_REACT_M
+					and convpriority(TACT_REACT_H, 1) == TACT_REACT_H
+			end,
+			["ignore stays at the bottom"] = function()
+				return convpriority(TACT_IGNORE, 1) == 0
+			end,
+		} },
 }
 
 -- Eleanor benchmark scenarios (not part of the default run: they last 180 simulated seconds).

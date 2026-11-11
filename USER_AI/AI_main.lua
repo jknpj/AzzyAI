@@ -1139,7 +1139,7 @@ function OnATTACK_ST()
         MyEnemy = 0
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        MySkillUseCount = 0
+        MySkillUsedCount = 0
         TraceAI("ATTACK_ST -> IDLE_ST -- target gone")
         return OnIDLE_ST()
     end
@@ -1148,7 +1148,7 @@ function OnATTACK_ST()
         MyEnemy = 0
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        MySkillUseCount = 0
+        MySkillUsedCount = 0
         TraceAI("ATTACK_ST -> IDLE_ST  Enemy dead")
         return OnIDLE_ST()
     end
@@ -1171,7 +1171,7 @@ function OnATTACK_ST()
                 MyEnemy = 0
                 EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-                MySkillUseCount = 0
+                MySkillUsedCount = 0
                 TraceAI("ATTACK_ST -> IDLE_ST - We've been attacking for 5 cycles, tried moving around, and still haven't attacked it. Marking unreachable")
                 return OnIDLE_ST()
             end
@@ -1199,7 +1199,7 @@ function OnATTACK_ST()
         MyEnemy = 0
         EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        MySkillUseCount = 0
+        MySkillUsedCount = 0
         TraceAI("ATTACK_ST -> FOLLOW_ST -- attack timeout reached, so we're probably posbugged. Dropping target and returning to owner in the hope that that sorts it out")
         return OnFOLLOW_ST()
     end
@@ -2394,7 +2394,7 @@ function convpriority(base,agr)
 		if agr==0 then 
 			priority=priority-2
 		end
-	elseif (priority==5 and aggro==1) then 
+	elseif (base==5 and agr==1) then 
 		return 2
 	elseif base==2 then
 		return 1

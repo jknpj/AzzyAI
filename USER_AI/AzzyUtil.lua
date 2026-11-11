@@ -687,6 +687,9 @@ function GetMobCount(skill,level,target,aggro)
 	local skillaoe=GetSkillAoESize(skill,level)
 	local x,y=GetPos(MyID)
 	if skillaoe==nil then
+		-- Legacy shapes for these two mercenary skills. They only run when SkillAOEInfo has no
+		-- entry for the skill; the shipped M_SkillList.lua defines both, so today the generic
+		-- branch below is what actually counts them (FAS as a 1x1 area).
 		if skill == ML_BRANDISH then
 			for k,v in pairs (Targets) do
 				if GetV(V_MOTION,k)~=MOTION_DEAD then
@@ -713,15 +716,15 @@ function GetMobCount(skill,level,target,aggro)
 				elseif mx<x then
 					mobcount=GetFASTargetCount(MyID,-1,0,aggro)
 				end
-			-- diagonals
+			-- diagonals (directions match GetFASDirection: east+south = 1,-1, west+north = -1,1)
 			elseif mx>x then
 				if my>y then
 					mobcount=GetFASTargetCount(MyID,1,1,aggro)
 				else
-					mobcount=GetFASTargetCount(MyID,-1,1,aggro)
+					mobcount=GetFASTargetCount(MyID,1,-1,aggro)
 				end
 			elseif my>y then
-				mobcount=GetFASTargetCount(MyID,1,-1,aggro)
+				mobcount=GetFASTargetCount(MyID,-1,1,aggro)
 			else
 				mobcount=GetFASTargetCount(MyID,-1,-1,aggro)
 			end
@@ -955,7 +958,7 @@ function GetBestBrandishTarget(myid)
 			end
 			if (mobs > maxmobs) then
 				maxmobs = mobs
-				besttarget = v
+				besttarget = k
 			end
 		end
 	end
