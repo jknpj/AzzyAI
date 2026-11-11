@@ -3460,16 +3460,16 @@ function AI(myid)
 	-- Values that can't change during one AI() call; read once instead of hundreds of GetV() calls per tick
 	OwnerID = GetV(V_OWNER,myid)
 	MyHomunType = GetV(V_HOMUNTYPE,myid)
-	ClearTable(TactRowCache)
-	ClearTable(MobInfoCache)
-	ClearTable(ActorClassCache)
-	ClearTable(TactValueCache)
+	TactRowCache={}
+	MobInfoCache={}
+	ActorClassCache={}
+	TactValueCache={}
 	TargetPriorityCtx = nil
 	TargetClusterWeightsCache = nil
 	ActorPosCache = {}
-	ClearTable(ActorMotionCache)
-	ClearTable(ActorTargetCache)
-	ClearTable(ActorHPCache)
+	ActorMotionCache={}
+	ActorTargetCache={}
+	ActorHPCache={}
 	if DoneInit== 0 then
 		doInit(myid)
 	end
@@ -3629,14 +3629,14 @@ function AI(myid)
 	local actors=GetActors()
 	local friendIds = {}
 	HasTankTargets = false
-	ClearTable(Actors)
+	Actors={}
 	OldPlayers=Players
 	Players={}
-	ClearTable(Monsters)
-	ClearTable(Summons)
-	ClearTable(Retainers)
-	ClearTable(Targets)
-	ClearTable(TakenCells) --OccupiedCellDetection 
+	Monsters={}
+	Summons={}
+	Retainers={}
+	Targets={}
+	TakenCells={} --OccupiedCellDetection 
 	local tMobID=""
 	TankMonsterCount=0
 	local seralegionCount=0
@@ -3817,9 +3817,9 @@ function AI(myid)
 	-- MobID/IsActive were just refreshed, so drop tactics resolved earlier in this tick. Only
 	-- mercenaries use them to find a monster's class; a homunculus reads it from the client.
 	if IsHomun(myid)==0 then
-		ClearTable(TactRowCache)
-		ClearTable(MobInfoCache)
-		ClearTable(TactValueCache)
+		TactRowCache={}
+		MobInfoCache={}
+		TactValueCache={}
 		TargetPriorityCtx = nil
 		TargetClusterWeightsCache = nil
 	end
