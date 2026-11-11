@@ -475,6 +475,17 @@ for i, m in ipairs(sc.mobs) do
 		motion = aggressive and MOTION_ATTACK or MOTION_STAND, atkrange = 1 })
 end
 
+-- Optional retainer (the owner's other homunculus/mercenary) attacking a monster: used to test
+-- that friend targets include retainers, not only players. The scenario marks it as RETAINER in
+-- MyFriends from its afterLoad hook.
+if sc.retainer then
+	local ret = sc.retainer
+	ent(ret.id or 3001, { monster = true, x = ret.x, y = ret.y, hp = 20000, maxhp = 20000,
+		homuntype = ret.homuntype or sc.homuntype, target = mobBase + (ret.target or 1),
+		-- 2 = MOTION_ATTACK; Const_.lua is not loaded yet when this world is built
+		motion = ret.motion or 2, atkrange = 1 })
+end
+
 -- Config overrides go in right after H_Config.lua, before AI_main.lua applies them,
 -- exactly as if the user had saved them in the config file.
 local realdofile = dofile

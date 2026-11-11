@@ -1820,6 +1820,23 @@ SCENARIOS = {
 				return convpriority(TACT_IGNORE, 1) == 0
 			end,
 		} },
+
+	-- A monster attacked by the owner's retainer (another homunculus/mercenary) must be reachable
+	-- as a friend target. The monster is REACT_L and passive, so the normal enemy list never
+	-- includes it: only the FriendTargets built from the actor loop can pick it.
+	friend_target_retainer = { homuntype = 2, skills = {}, mobs = { {120,100} }, passive = true,
+		minAttacks = 0, ticks = 80,
+		-- 5 = TACT_REACT_L (this file is parsed before Const_.lua defines the constants)
+		tactics = { [1002] = { [1] = 5 } },
+		retainer = { id = 3001, x = 118, y = 100, target = 1 },
+		afterLoad = function()
+			MyFriends[3001] = RETAINER
+		end,
+		checks = {
+			["a monster attacked by a retainer becomes the homunculus target"] = function()
+				return MyEnemy == 60001
+			end,
+		} },
 }
 
 -- Eleanor benchmark scenarios (not part of the default run: they last 180 simulated seconds).

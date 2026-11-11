@@ -3659,6 +3659,11 @@ function AI(myid)
 			-- same test as IsOutOfSight(myid,v), without fetching both positions again
 			if x ~= -1 and myx ~= -1 and math.max(math.abs(myx - x), math.abs(myy - y)) <= 20 then
 				Actors[v] = 1
+				-- remembered for the FriendTargets build after this loop; every actor counts here,
+				-- not only players, so a retainer homunculus/mercenary is included too
+				if v ~= MyID and (v == OwnerID or MyFriends[v] == FRIEND or MyFriends[v] == RETAINER) then
+					friendIds[#friendIds + 1] = v
+				end
 				--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." in sight")
 				if MyHomunType == SERA then
 					local actortype = GetActorClass(v)
@@ -3678,10 +3683,6 @@ function AI(myid)
 				end
 				if (IsPlayer(v)==1) then
 					Players[v]=1
-					-- remembered for the FriendTargets build after this loop (owner + friends/retainers)
-					if v ~= MyID and (v == OwnerID or MyFriends[v] == FRIEND or MyFriends[v] == RETAINER) then
-						friendIds[#friendIds + 1] = v
-					end
 					if MyFriends[v]==FRIEND and OwnerID~=v then --Newly appeared on screen
 						if OldPlayers[v]~=1 or AggressiveAutofriend then
 							local newfriendhidfile=io.open(ConfigPath.."data/H_"..v..".txt","r")
