@@ -53,12 +53,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>E54E6A53A4582E9E9781EF758FE5930528CC59AA</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>AzzyAIConfig_TemporaryKey.pfx</ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
     <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
@@ -190,7 +184,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="AzzyAIConfig_TemporaryKey.pfx" />
     <None Include="M_PVP_Tact.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

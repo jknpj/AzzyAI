@@ -3,3 +3,17 @@
 __pycache__/
 # third-party API data from tools/harness/divinepride_sync.py
 tools/harness/fixtures/divinepride_*.json
+
+# graphify knowledge graph (local output)
+graphify-out/
+# local working context, not part of the repository
+context.md
+
+# Visual Studio build output, artifacts and per-user files
+GUI/AzzyAIConfig/[Bb]in/
+GUI/AzzyAIConfig/[Oo]bj/
+GUI/AzzyAIConfig/publish/
+*.suo
+*.user
+*.pdb
+*.pfx
