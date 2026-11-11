@@ -3645,12 +3645,16 @@ function AI(myid)
 
 	local logActors = LogEnable["AAI_ACTORS"]==1
 	local myx, myy = x, y
+	-- hoisted out of the actor loop: the answer cannot change during one AI() call
+	local selfIsHomun = MyHomunType ~= nil
+	local myxmin, myxmax = myx - 20, myx + 20
+	local myymin, myymax = myy - 20, myy + 20
 	for i, v in ipairs(actors) do
 		local x, y = GetPos(v)
-		TakenCells[CellKey(x, y)] = 1
+		TakenCells[(x + 2048) * 4096 + (y + 2048)] = 1
 		-- AAIActors only remembers which actors were already logged, so skip it when logging is off
 		if logActors and AAIActors[v] ~= 1 then
-			if IsHomun(myid) == 1 then
+			if selfIsHomun then
 				logappend("AAI_ACTORS", "Actor " .. v .. " type " .. GetV(V_HOMUNTYPE, v) .. " at " .. x .. "," .. y .. " Is M=" .. IsMonster(v))
 			else
 				logappend("AAI_ACTORS", "Actor " .. v .. " mertype " .. GetV(V_MERTYPE, v) .. " at " .. x .. "," .. y .. " Is M=" .. IsMonster(v))
@@ -3661,7 +3665,7 @@ function AI(myid)
 			-- This is the eden group bathory, ignore it.
 		else
 			-- same test as IsOutOfSight(myid,v), without fetching both positions again
-			if x ~= -1 and myx ~= -1 and math.max(math.abs(myx - x), math.abs(myy - y)) <= 20 then
+			if x ~= -1 and myx ~= -1 and x >= myxmin and x <= myxmax and y >= myymin and y <= myymax then
 				Actors[v] = 1
 				-- remembered for the FriendTargets build after this loop; every actor counts here,
 				-- not only players, so a retainer homunculus/mercenary is included too
@@ -3717,14 +3721,14 @@ function AI(myid)
 				-- friend check it targets itself (always the closest) and never attacks anything
 				elseif IsMonster(v)==1 and IsFriendOrSelf(v)==0 then
 					--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." is a monster")
-					if LiveMobID == 1 and IsHomun(MyID)==1 then
+					if LiveMobID == 1 and selfIsHomun then
 						tMobID=tMobID.."MobID["..v.."]="..GetV(V_HOMUNTYPE,v).."\n"
 					end
 					Monsters[v]=1
 					if (IsSummonID(v)==1) then
 						Summons[v]=1
 					end
-					if (AutoDetectPlant==1 and IsActive[v]~=1 and IsHomun(myid)~=1) then
+					if (AutoDetectPlant==1 and IsActive[v]~=1 and not selfIsHomun) then
 						if (GetV(V_MOTION,v)==MOTION_STAND or GetV(V_MOTION,v)==MOTION_DAMAGE or GetV(V_MOTION,v)==MOTION_DEAD) then
 							IsActive[v]=0
 						else
@@ -3743,7 +3747,7 @@ function AI(myid)
 						motionclass=3 
 					end --CHANGE
 					--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." "..motionclass)
-					if (motionclass~=-1 and (IsActive[v]==1 or AutoDetectPlant~=1 or IsHomun(myid)==1)) then 
+					if (motionclass~=-1 and (IsActive[v]==1 or AutoDetectPlant~=1 or selfIsHomun)) then 
 						--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." target added")
 						Targets[v]={motionclass,GetTargetClass(GetActorTarget(v))}
 					end
