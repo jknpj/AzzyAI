@@ -2199,7 +2199,11 @@ function	GetEnemyList (myid,aggro)
 	local aggrocount -- computed on first use; GetAggroCount() walks every target
 	for k,v in pairs(Targets) do
 		local tact = GetTact(TACT_BASIC,k)
-		local casttact=GetTact(TACT_CAST,k)
+		-- ignored targets never reach a clause that reads casttact, so skip that lookup there
+		local casttact
+		if tact ~= TACT_IGNORE then
+			casttact=GetTact(TACT_CAST,k)
+		end
 		if tact==TACT_TANKMOB then
 			if aggrocount==nil then
 				aggrocount=GetAggroCount()
