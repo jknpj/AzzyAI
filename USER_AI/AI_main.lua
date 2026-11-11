@@ -3457,13 +3457,14 @@ function AI(myid)
 	-- Values that can't change during one AI() call; read once instead of hundreds of GetV() calls per tick
 	OwnerID = GetV(V_OWNER,myid)
 	MyHomunType = GetV(V_HOMUNTYPE,myid)
-	TactRowCache = {}
-	MobInfoCache = {}
-	ActorClassCache = {}
+	ClearTable(TactRowCache)
+	ClearTable(MobInfoCache)
+	ClearTable(ActorClassCache)
+	ClearTable(TactValueCache)
 	ActorPosCache = {}
-	ActorMotionCache = {}
-	ActorTargetCache = {}
-	ActorHPCache = {}
+	ClearTable(ActorMotionCache)
+	ClearTable(ActorTargetCache)
+	ClearTable(ActorHPCache)
 	if DoneInit== 0 then
 		doInit(myid)
 	end
@@ -3621,14 +3622,14 @@ function AI(myid)
 	end
 	-- Actor list preprocessing
 	local actors=GetActors()
-	Actors={}
+	ClearTable(Actors)
 	OldPlayers=Players
 	Players={}
-	Monsters={}
-	Summons={}
-	Retainers={}
-	Targets={}
-	TakenCells={} --OccupiedCellDetection 
+	ClearTable(Monsters)
+	ClearTable(Summons)
+	ClearTable(Retainers)
+	ClearTable(Targets)
+	ClearTable(TakenCells) --OccupiedCellDetection 
 	local tMobID=""
 	TankMonsterCount=0
 	local seralegionCount=0
@@ -3639,7 +3640,7 @@ function AI(myid)
 	local myx, myy = x, y
 	for i, v in ipairs(actors) do
 		local x, y = GetPos(v)
-		TakenCells[x .. "_" .. y] = 1
+		TakenCells[CellKey(x, y)] = 1
 		-- AAIActors only remembers which actors were already logged, so skip it when logging is off
 		if logActors and AAIActors[v] ~= 1 then
 			if IsHomun(myid) == 1 then
@@ -3794,8 +3795,9 @@ function AI(myid)
 	-- MobID/IsActive were just refreshed, so drop tactics resolved earlier in this tick. Only
 	-- mercenaries use them to find a monster's class; a homunculus reads it from the client.
 	if IsHomun(myid)==0 then
-		TactRowCache = {}
-		MobInfoCache = {}
+		ClearTable(TactRowCache)
+		ClearTable(MobInfoCache)
+		ClearTable(TactValueCache)
 	end
 	if (NewAutoFriend==1 and AssumeHomun==1) then
 		local friendedOK=0

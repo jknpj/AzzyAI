@@ -7,6 +7,17 @@
 AUVersion="2.0"
 -------------------------------
 
+-- Empties a per-tick table without allocating a new one (keeps GC pressure down).
+function ClearTable(t)
+	if t == nil then return end
+	for k in pairs(t) do t[k] = nil end
+end
+
+-- TakenCells is keyed by cell; coordinates fit well inside [-2048, 2047] on every map.
+function CellKey(x, y)
+	return (x + 2048) * 4096 + (y + 2048)
+end
+
 
 
 
@@ -93,6 +104,22 @@ As GetMobSkill() only returns the ID and other perameters for the pushback skill
 --### Tactics Functions ###
 --######################### 
 
+TactValueCache = {}
+-- Stores a resolved tactic value for the rest of the AI() call. Tactics only depend on the actor's
+-- class and on the monster database, both fixed within one tick; AI() empties the cache every tick.
+function CacheTactValue(m, t, v)
+	if TactValueCache == nil then
+		TactValueCache = {}
+	end
+	local cached = TactValueCache[m]
+	if cached == nil then
+		cached = {}
+		TactValueCache[m] = cached
+	end
+	cached[t] = v
+	return v
+end
+
 function 	GetTact(t,m)
 	local x
 	if m==nil then
@@ -104,12 +131,22 @@ function 	GetTact(t,m)
 		TraceAI("GetTact: Error - nil tactic target:"..m)
 		logappend("AAI_ERROR","request for tactic type nil target:"..m)
 	end
+	-- resolved value already computed in this AI() call (TACT_CHASE depends on the clock, never cached)
+	if t ~= TACT_CHASE and TactValueCache ~= nil then
+		local cached = TactValueCache[m]
+		if cached ~= nil then
+			x = cached[t]
+			if x ~= nil then
+				return x
+			end
+		end
+	end
 	if (IsPlayer(m)==1) then
 		if (PVPmode~=0) then
 			TraceAI("GetTact: Returning pvp tactic")
-			return GetPVPTact(t,m)
+			return CacheTactValue(m, t, GetPVPTact(t,m))
 		else
-			return 0
+			return CacheTactValue(m, t, 0)
 		end
 	end
 	-- The tactic row only depends on the actor's class, which can't change within one AI() call.
@@ -167,7 +204,7 @@ function 	GetTact(t,m)
 				return DoNotChase
 			end
 		end
-		return x
+		return CacheTactValue(m, t, x)
 	end
 end
 
@@ -1458,7 +1495,7 @@ function Move(myid,x,y)
 			dy=math.floor(factor*dy)
 		end
 		if _VERSION=="Lua 5.1" then 
-			while TakenCells[(x+dx).."_"..(y+dy)] do
+			while TakenCells[CellKey(x+dx, y+dy)] do
 				factor=factor-0.08
 				if math.random(2)==1 then
 					dx=math.ceil(factor*(x-ox))
@@ -2008,10 +2045,10 @@ function AdjustStandPoint (x,y,tx,ty,r,alt)
 		end
 		local i=0
 		
-		while (TakenCells[x.."_"..y] or GetDistanceAPR(OwnerID,x,y) > bounds) do
+		while (TakenCells[CellKey(x, y)] or GetDistanceAPR(OwnerID,x,y) > bounds) do
 			i=i+1
-			if (TakenCells[x.."_"..y]) then
-				logstring=logstring.."i="..i.."tc="..TakenCells[x.."_"..y].."d ".. GetDistanceAPR(OwnerID,x,y).." :"
+			if (TakenCells[CellKey(x, y)]) then
+				logstring=logstring.."i="..i.."tc="..TakenCells[CellKey(x, y)].."d ".. GetDistanceAPR(OwnerID,x,y).." :"
 			else 
 				logstring=logstring.."i="..i.."tc= nil d ".. GetDistanceAPR(OwnerID,x,y).." :"
 			end
