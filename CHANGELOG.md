@@ -14,8 +14,9 @@ Patch release: performance, a targeting fix and test coverage.
   second walk over the actors), caches the target-priority context and the AoE cluster weights
   per AI call, skips the tank list when no target has a tank tactic, and does not resolve the
   cast tactic for ignored targets.
-- Performance: the actor loop hoists `IsHomun`/sight bounds out of the loop and the
-  resolved-tactic cache uses a flat key, allocating less per tick.
+- Performance: the actor loop hoists `IsHomun`/sight bounds out of the loop, the
+  resolved-tactic cache uses a flat key, and the per-tick tables are allocated fresh instead
+  of cleared (cheaper in Lua 5.1).
 - Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
   as a friend target, as it did before the targeting consolidation.
 - Tests: the harness now covers `OnREST_ST` (owner sits/stands), the patrol command, the tank
