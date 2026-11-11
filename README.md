@@ -32,7 +32,7 @@ Follow your server's rules for custom AI.
 
 1. **Back up your game's `AI` folder** (copy it somewhere safe). Going back is
    just putting it back.
-2. [Download the ZIP](https://github.com/jknpj/AzzyAI/archive/refs/heads/LATAM-HG.zip)
+2. [Download the ZIP](https://github.com/jknpj/AzzyAI/releases/latest)
    and unzip it.
 3. Open the unzipped folder, then its `USER_AI` folder. Copy **everything inside**
    `USER_AI` into your game's `AI\USER_AI` folder. Do not create a `USER_AI`
@@ -50,6 +50,7 @@ Open the [web configuration](https://jknpj.github.io/AzzyAI-webgui/) in your
 browser, choose **AzzyAI** (not Classic), then **File > Open USER_AI folder** and pick your
 game's `AI\USER_AI` folder. Change what you want and click **Apply**. (Prefer a
 Windows app? Run [AzzyAIConfig.exe](USER_AI/AzzyAIConfig.exe) from that same folder.)
+The download also includes an offline copy of the page in `webgui/` (open `webgui/index.html`).
 Then reload the AI in the game.
 
 **Start with these:**

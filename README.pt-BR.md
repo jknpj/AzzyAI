@@ -33,7 +33,7 @@ fácil. Respeite as regras do seu servidor sobre IA personalizada.
 
 1. **Faça backup da pasta `AI` do jogo** (copie-a para um lugar seguro). Voltar é
    só colocá-la de volta.
-2. [Baixe o ZIP](https://github.com/jknpj/AzzyAI/archive/refs/heads/LATAM-HG.zip)
+2. [Baixe o ZIP](https://github.com/jknpj/AzzyAI/releases/latest)
    e descompacte.
 3. Abra a pasta descompactada e depois a pasta `USER_AI` dela. Copie **tudo o que
    está dentro** de `USER_AI` para a pasta `AI\USER_AI` do seu jogo. Não crie uma
@@ -52,7 +52,8 @@ Abra a [configuração no navegador](https://jknpj.github.io/AzzyAI-webgui/),
 escolha **AzzyAI** (não o Classic), depois **File > Open USER_AI folder** e selecione a pasta
 `AI\USER_AI` do seu jogo. Mude o que quiser e clique em **Apply**. (Prefere um
 aplicativo Windows? Execute o [AzzyAIConfig.exe](USER_AI/AzzyAIConfig.exe) dessa
-mesma pasta.) Depois, recarregue a IA no jogo.
+mesma pasta.) O download também inclui uma cópia offline em
+`webgui/` (abra `webgui/index.html`). Depois, recarregue a IA no jogo.
 
 **Comece por estas:**
 

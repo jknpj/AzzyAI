@@ -69,6 +69,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - uses: microsoft/setup-msbuild@v2
       - name: Build
         run: .\tools\gui.ps1 -Action Build -Configuration Release
@@ -81,6 +83,10 @@ jobs:
           Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
           Copy-Item docs "$pkgRoot\docs" -Recurse
           Copy-Item LICENSES "$pkgRoot\LICENSES" -Recurse
+          # browser configuration tool: static files, works from file:// or any host
+          Copy-Item webgui "$pkgRoot\webgui" -Recurse
+          Remove-Item "$pkgRoot\webgui\.git" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item "$pkgRoot\webgui\.github" -Recurse -Force -ErrorAction SilentlyContinue
           Copy-Item README.md, README.pt-BR.md, README.es.md, CHANGELOG.md, NOTICE.md, SECURITY.md, CONTRIBUTING.md $pkgRoot
           Compress-Archive -Path "$pkgRoot\*" -DestinationPath AzzyAI.zip
       - uses: actions/upload-artifact@v4
@@ -96,10 +102,22 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+      # use the matching "## <version>" section of CHANGELOG.md as the release body
+      - name: Extract release notes
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## $version" 'p && /^## / { exit } $0 == heading { p = 1; next } p' CHANGELOG.md | sed '/./,$!d' > release-body.md
+          if [ ! -s release-body.md ]; then
+            echo "CHANGELOG.md has no '$version' section" >&2
+            exit 1
+          fi
+          cat release-body.md
       - uses: actions/download-artifact@v4
         with:
           name: AzzyAI
       - uses: softprops/action-gh-release@v2
         with:
           files: AzzyAI.zip
-          generate_release_notes: true
+          body_path: release-body.md
