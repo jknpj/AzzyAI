@@ -230,6 +230,40 @@ python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 
 `--profile` reports time per `AI()` call, the hottest functions (sampled), `GetV` calls per tick by type, Lua heap after GC and global tables that keep growing (leak check). The `crowd_*` scenarios put 40 monsters on screen to stress the per-tick loops. Absolute times are relative to the mock, not the RO client.
 
+### Performance
+
+Per-tick time was compared by running the same harness against two copies of `USER_AI`,
+alternating them on the same machine and repeating the pairs (median reported). Absolute times are
+relative to the mock: the client's `GetV` is a native call, so the mock understates the cost of AI
+code that queries it. Gameplay is unchanged in every comparison below (same attacks and casts).
+
+Against the pre-2.0 AI (`classic`, CVersion 1.552), which is the state before the 2.0 rework:
+
+| Scenario | 1.552 | 2.0.1 | Change |
+|---|---|---|---|
+| `amistr_fresh`, 3000 ticks | ~0.404 ms | **~0.242 ms** | **-40%** |
+| `amistr_fresh_single`, 2000 ticks | ~0.236 ms | **~0.139 ms** | **-41%** |
+| `GetV` per `AI()` call (fresh / single) | 270 / 147 | **57 / 40** | **-79% / -73%** |
+
+The old AI queried `V_HOMUNTYPE` on every `IsHomun` check (122 of the 270 `GetV` calls in
+`amistr_fresh`), including once per actor in the actor loop. The current one remembers its own
+answer (`IsHomunSelf`), hoists it in the loop and reuses resolved tactics, which is where most of
+the reduction comes from.
+
+Against the 2.0.0 release (tag `v2.0.0`), which is the state before the 2.0.1 performance work:
+
+| Scenario | 2.0.0 | 2.0.1 | Change |
+|---|---|---|---|
+| `crowd_dieter`, 3000 ticks | 1.640 ms | **1.414 ms** | **-14%** |
+| `eleanor_pack_aoe`, 3000 ticks | 0.392 ms | **0.342 ms** | **-13%** |
+| Idle probe (20 ignored monsters, 400 ticks) | 0.248 ms | **0.149 ms** | **-40%** |
+| `GetV` per call (crowd / idle) | 220 / 43 | 219 / 42 | ~equal |
+
+The 2.0.1 gain comes from doing less work per call rather than making fewer API calls: resolved
+tactics cached per tick, `TACT_CAST` skipped for ignored targets, per-tick tables allocated instead
+of cleared, a trimmed actor loop and `TraceAI` arguments that are not built while the traces are off
+(see Developer traces below).
+
 ### Damage model
 
 On private-server scenarios the harness also prices every accepted cast and normal attack, so a change in what the AI casts can be compared by expected damage and DPS:
