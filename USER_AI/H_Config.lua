@@ -143,7 +143,7 @@ DoNotAttackMoving        = 0
 UseSmartBulwark          = 0
 
 -- New Homunculus S Skills
--- Chosen with the offline damage benchmark (tools/harness/homun_bench.py, see docs/RELEASE_NOTES.md):
+-- Chosen with the offline damage benchmark (tools/harness/homun_bench.py, see docs/TECHNICAL.md):
 -- the newer attacks are off here and enabled per homunculus in Types/<Name>.lua, where the AI uses
 -- them only when they score higher for the target (SkillDamage in H_SkillList.lua).
 -- Blazing And Furious (Eleanor) is left off. Blast Forge (Dieter) adds damage next to Lava Slide.

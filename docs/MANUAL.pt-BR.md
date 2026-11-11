@@ -2,7 +2,7 @@
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
-[Voltar ao README](../README.pt-BR.md) | [Notas técnicas em inglês](RELEASE_NOTES.md) | [Referência de comandos, opções e táticas](REFERENCE.pt-BR.md)
+[Voltar ao README](../README.pt-BR.md) | [Referência técnica em inglês](TECHNICAL.md) | [Referência de comandos, opções e táticas](REFERENCE.pt-BR.md)
 
 ## 1. Antes de começar
 
@@ -177,7 +177,7 @@ Todas as habilidades de ataque do Dieter são de área, então com
 `AutoMobCount` 2 ele não ataca um único monstro com elas: coloque `AutoMobCount`
 em 1 se você enfrenta principalmente um monstro por vez com o Dieter (Bayeri e
 Sera perdem dano contra monstros isolados). Os detalhes estão nas
-[notas técnicas](RELEASE_NOTES.md#default-preset-tuning) e nas
+[notas técnicas](TECHNICAL.md#default-preset-tuning) e nas
 [tabelas de comparação](preset-tuning/README.md).
 
 ### Eleanor: combos ou somente Sonic Claw
@@ -283,7 +283,7 @@ Isso afeta todos os monstros com o mesmo ID de tática, não só um boneco.
 `AAI_ERROR.log` pode mostrar erros e pausas temporárias de skills ofensivas.
 Se o arquivo inicial não atualizar, confira permissões e ativação da IA.
 Passos detalhados de diagnóstico estão nas
-[notas técnicas](RELEASE_NOTES.md#troubleshooting-automatic-attacks).
+[notas técnicas](TECHNICAL.md#troubleshooting-automatic-attacks).
 
 Ao relatar, inclua servidor/cliente, homúnculo/tipo original, skills ativadas,
 passos e trechos relevantes dos logs. Remova informações de conta, senhas e

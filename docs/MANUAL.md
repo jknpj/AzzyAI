@@ -2,7 +2,7 @@
 
 [English](MANUAL.md) | [Português (BR)](MANUAL.pt-BR.md) | [Español](MANUAL.es.md)
 
-[Back to README](../README.md) | [Technical release notes](RELEASE_NOTES.md) | [Reference: commands, options and tactics](REFERENCE.md)
+[Back to README](../README.md) | [Technical reference](TECHNICAL.md) | [Reference: commands, options and tactics](REFERENCE.md)
 
 ## 1. Before you begin
 
@@ -172,7 +172,7 @@ are simulations, not measurements on an official server. Dieter's attacks are al
 skills, so with `AutoMobCount` 2 he does not attack
 a single monster with them: set `AutoMobCount` to 1 if you mostly fight one monster
 at a time as Dieter (Bayeri and Sera then lose damage against single monsters).
-Details are in the [technical notes](RELEASE_NOTES.md#default-preset-tuning) and the
+Details are in the [technical notes](TECHNICAL.md#default-preset-tuning) and the
 [comparison tables](preset-tuning/README.md).
 
 ### Eleanor: combos or Sonic Claw only
@@ -276,7 +276,7 @@ all monsters sharing the same tactics ID, not just one dummy.
 `AAIStartH.txt` in the client folder records homunculus AI startup.
 `AAI_ERROR.log` can show errors and temporary offensive-skill pauses.
 If startup files do not update, check folder permissions and custom-AI activation.
-Detailed diagnostic steps are in the [technical notes](RELEASE_NOTES.md#troubleshooting-automatic-attacks).
+Detailed diagnostic steps are in the [technical notes](TECHNICAL.md#troubleshooting-automatic-attacks).
 
 For a report, include server/client, homunculus/base type, enabled skills,
 reproduction steps and relevant sanitized logs. Remove account details,

@@ -74,7 +74,7 @@ Do not edit these by hand. Regenerate them:
 The AI's release number lives in one place: `CVersion` in `USER_AI\Const_.lua`.
 Do not change it in a pull request unless asked: a maintainer raises it when a release
 is cut. How the number works, and what to raise, is in
-[docs\RELEASE_NOTES.md](docs/RELEASE_NOTES.md#version). Three other numbers (`Version`,
+[docs\TECHNICAL.md](docs/TECHNICAL.md#version). Three other numbers (`Version`,
 `MainVersion`, `AUVersion`, all `"2.0"` today) are a file check, and the Windows app has
 the same release number in `AssemblyInfo.cs`: leave them all alone unless a maintainer
 raises them with the release.

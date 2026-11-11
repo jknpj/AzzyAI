@@ -71,7 +71,7 @@ continuam em inglês.
 - **Achou um bug?** Use o [formulário de relato de bug](https://github.com/jknpj/AzzyAI/issues/new/choose) e informe homúnculo, servidor, habilidades ativadas, o que aconteceu e a linha `Release:` do `AAIStartH.txt`. **Nunca compartilhe senhas, credenciais ou arquivos privados.**
 - **Problema de segurança?** Não o publique: veja a [política de segurança](SECURITY.md) (em inglês).
 - **Quer ajudar?** [Como contribuir](CONTRIBUTING.md) (em inglês).
-- **Desenvolvedores:** [notas de versão e referência técnica](docs/RELEASE_NOTES.md) (em inglês).
+- **Desenvolvedores:** [referência técnica](docs/TECHNICAL.md) (em inglês).
 
 Baixe somente deste repositório e da página web indicada acima: um repositório
 com nome parecido ou um README copiado não torna um download oficial.

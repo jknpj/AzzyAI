@@ -1,22 +1,20 @@
-# AzzyAI: release notes and technical reference
+# AzzyAI: technical reference
 
-[User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md)
+[User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md) | [Changelog](../Changelog.md)
 
 This document keeps the technical material previously in the README. It is
 intended for maintainers and advanced users, not as the installation guide.
 Paths and commands below are relative to the repository root unless stated
-otherwise. The historical upstream changelog remains in [Changelog.md](../Changelog.md).
+otherwise. The version history is in [Changelog.md](../Changelog.md).
 
 ## Version
-
-**Current release: 2.0.0**
 
 The AI has its own release number, in [semantic versioning](https://semver.org/)
 form (`MAJOR.MINOR.PATCH`). It is set once, as `CVersion` in `USER_AI/Const_.lua`,
 and shown on the `Release:` line of `AAIStartH.txt` and `AAIStartM.txt` (the startup
 reports), so a bug report can say exactly which version it is about. `python
-tools\harness\run.py` fails if that number and the "Current release" line above
-differ.
+tools\harness\run.py` fails if that number and the "Current release" line at the
+top of [Changelog.md](../Changelog.md) differ.
 
 | Part | Raise it when |
 |---|---|
@@ -25,8 +23,8 @@ differ.
 | PATCH | Only fixes, data updates (`MobInfo.lua`, skill values) and documentation. |
 
 **2.0.0 is the first release of this series.** The original AzzyAI ended at 1.56, so
-the new series starts a major number higher. Everything under "Changes since the
-original 1.56" is part of it.
+the new series starts a major number higher. Everything in the 2.0.0 entry of
+[Changelog.md](../Changelog.md) is part of it.
 
 **File check.** `AI.lua` and `AI_M.lua` read the `MAJOR.MINOR` out of `CVersion` and
 compare it with three more numbers, to detect files copied from different installations.
@@ -43,230 +41,10 @@ release, **Help > About** shows it, and `run.py` checks it. The web page has no 
 of its own.
 
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
-changed, the two numbers in `AssemblyInfo.cs` and the line above, add the changes below,
-run the harness, rebuild the app (`tools\build-gui.cmd`), commit, and tag the commit
+changed, the two numbers in `AssemblyInfo.cs` and the "Current release" line in
+`Changelog.md`, add the changes to `Changelog.md`, run the harness, rebuild the app
+(`tools\build-gui.cmd`), commit, and tag the commit
 `v<number>` (for example `v2.0.0`). The CI builds the ZIP for tags that start with `v`.
-
-## Changes since the original 1.56 (release 2.0.0)
-
-- Saved buff timers that are impossibly far in the future are discarded on
-  load. Windows restarts reset the client tick, so an old Pyroclastic or
-  Tempering expiry could previously block those buffs for many minutes.
-- The shipped `H_Config.lua` now uses ASAP mode (3) for enabled Bayeri and
-  Dieter buffs, so Angriffs Modus, Goldene Tone, Magma Flow, Pyroclastic and
-  Tempering are also refreshed during combat.
-- Buff failure retries now reset only the affected owner-buff slot. Tempering
-  and Pyroclastic share watcher mode 6; a refused Tempering previously also
-  cleared the active Pyroclastic timer, causing repeated fire-weapon buffs.
-  Eira's Light of Regenerate likewise leaves Overed Boost's timer unchanged.
-
-- Fixed Eleanor's refusal-driven style/failsafe loop. A refused Sonic Claw or
-  Tinder Breaker no longer flips the tracked style. A bounded, same-target probe
-  can recover a manual style change only after confirmed starter use. Failed
-  probes retain the known style and cannot immediately retry. Style Change and
-  starters no longer use an AI-call pause alone as proof of an unseen cast.
-  Normal attack dancing and Eleanor combo dancing are unchanged.
-  Initialization and detected resurrection prefer Fighting with Sonic Claw
-  enabled (including both styles), or Grappling with only Tinder Breaker and
-  automatic combos enabled. AoE-only configurations with combos disabled
-  prefer Fighting, so normal attacks can build spheres for Blazing and Furious.
-  The no-switch option remains authoritative. Detected death discards pending
-  casts, targets, combo windows and sphere estimates, persisting a death marker
-  across reloads. A pause alone is not treated as death/resurrection.
-
-- Removed experimental post-skill dancing and its 16 GUI controls. Local rAthena
-  A/B tests showed longer median cast intervals with it enabled: Stahl Horn
-  719 -> 859 ms and Eraser Cutter 1438 -> 1594 ms. Angriffs Modus also delayed
-  the next skill by one AI update. These are cast-timing results, not total DPS
-  measurements or proof about every skill/server. Normal attack dancing and
-  `EleanorComboDance` between combo steps are unchanged.
-  Remove obsolete `SkillAnimationDance[skill]` assignments from custom
-  `H_Extra.lua` files before upgrading; the table no longer exists. Old flat
-  per-skill `*Dance` settings have no effect.
-
-- Attack-range checks and attack-state position diagnostics now reuse the existing
-  per-AI-call position cache instead of querying the same positions repeatedly.
-  The cache is reset on every AI call; range calculations and trace output are
-  unchanged. A targeted regression check covers the range boundary, invisible
-  targets, default skill arguments and position-query reuse. User-run validation:
-  `python tools\harness\run.py amistr_fresh` passed (1/1);
-  `python tools\harness\run.py --profile --ticks 3000 bayeri sera dieter eleanor`
-  passed (4/4), with identical attack counts, cast summaries and AI-call counts
-  before and after the change. Reported `GetV` calls per AI call fell from
-  70 to 59 for Bayeri, 72 to 63 for Sera, 67 to 59 for Dieter and 52 to 42
-  for Eleanor (approximately 12-19% fewer queries, using the harness's rounded
-  counts). This measures reduced API queries, not a proven speedup: average
-  profiled times increased in this run and maximum times reached 471-482 ms;
-  their cause has not been isolated. This does not change skill damage or cooldowns.
-
-- Fixed fallback option names in `Defaults.lua`: `AoEFixedLevel` and the
-  `UseBerserk*` / `Berserk_*` options now match the names read by the AI,
-  including a default for `Berserk_ComboAlways`. The initial `BerserkMode`
-  in `Const_.lua` now also uses the correct spelling. This prevents missing
-  options in older or trimmed configurations from leaving these values nil;
-  explicit configuration values still take precedence.
-- Clarified `LifEscapeLevel = 0`: it safely suppresses Urgent Escape without
-  attempting a level-zero cast. No Lif configuration was changed.
-
-- Official-server (LATAM) skill detection. The official client answers the
-  `V_SKILLATTACKRANGE_LEVEL` probe differently from rAthena: learned skills report
-  their table range (or +2 for range-1 melee skills), unlearned skills report
-  range + 1 or a flat 8, and some learned buffs report 1. `TrustSkillProbe`
-  (default `-1`) distrusts the probe on `SERVER_OFFICIAL` and trusts it on
-  `SERVER_PRIVATE`; `0`/`1` force either. Distrusted probes only prove
-  "not learned" for the filler answers, other skills are tried and never stepped
-  down on refusal. Base-type detection (Filir/Vanilmirth/Amistr/Lif) uses the
-  same check. `LogEnable["AAI_PROBE"]=1` dumps the raw answers per skill.
-- Eleanor combos on the official server: EleanorComboGap (default 500 ms) delays Silvervein Rush / Midnight Frenzy / CBC / EQC after the previous combo skill. EleanorComboDance (default 1) keeps the dance attack running between combo skills, which cancels part of the animation (~10% faster chains). AutoComboSpheres defaults to 1 (only decides when a chain starts; follow-ups ignore the sphere estimate) and SphereTrackFactor to 2. Follow-ups are no longer sent at a dead target.
-- CommandedFightStay (default 1, all homunculi): a monster you order the homunculus to attack is chased and fought until it dies or you give another order, even when you walk away. The move-bounds give-up, the leave-behind check and `AttackTimeLimit` no longer apply to that one target. Set 0 for the old behavior.
-- Dieter: with `AutoMobCount` 1 a lone monster is always enough for his area skills. Before, a target whose element took less than full damage (for example 0.9 from fire on Water) counted below 1 and he used only normal attacks.
-- Guard and Quicken buffs (`SkillRetryLimit` 1 and 2) retry once instead of four
-  times, since a refusal there is normally "buff still active".
-
-- Mercenary startup diagnostics now go to `AAIStartM.txt` and include the raw
-  and detected mercenary type, max HP/SP, mapped skills, and client-reported
-  ranges for known mercenary skills. This helps identify custom or newer hires;
-  it cannot reveal skills that are not in AzzyAI's skill catalog.
-- Mercenary detection now uses client class IDs for the standard 30 mercenary
-  grades and recognized monster mercenaries before falling back to legacy
-  HP/SP fingerprints. Added rAthena-listed profiles for Wander Man, Wicked
-  Nymph, Kasa-family hires, Salamander, Teddy Bear, Baphomet, Galapago and
-  Pope variants; unsupported hire classes remain unprofiled rather than being
-  misidentified from matching stats. rAthena data does not prove that a hire
-  is available on every server.
-- Sera's on-screen legion scan now reuses the per-tick actor class and motion
-  caches instead of repeating client API reads, and no longer builds an unused
-  debug string for the legion list.
-- Damage-aware self-defence (`UseDamageDanger`, default off; `DamageDangerDrop`
-  30, `DamageDangerHP` 60). The AI cannot read enemy buffs, but it samples its
-  own HP every tick; losing `DamageDangerDrop`% of max HP within 3 s while below
-  `DamageDangerHP`% makes the homunculus kite away (even with `KiteMonsters`
-  off) and Bayeri cast Stein Wand. Editable in `H_Config.lua` and the web GUI;
-  also in the desktop GUI (Kiting Options). Covered by the `damage_danger` harness check, not
-  yet verified in game.
-
-- Desktop GUI: new **Update** menu. "Update AI from git..." pulls a local clone
-  (`git pull --ff-only`) or downloads the `LATAM-HG` zip from GitHub and copies
-  `USER_AI` over the folder the GUI runs from. `H_Config.lua`, `M_Config.lua`,
-  the tactics, extra and avoid lists and (unless ticked) `Types\*.lua` are never
-  overwritten; replaced files go to `backup\update-<time>\`, and a newer
-  `AzzyAIConfig.exe` is staged as `.exe.new` and swapped on restart.
-  "Update monster/skill data from rAthena..." runs
-  `tools/harness/rathena_sync.py` in the clone (needs Python and network) and
-  copies the regenerated `MobInfo.lua` here. The clone path is remembered in
-  `AzzyAIConfig.update.txt`.
-
-- Sera: Summon Legion was never cast under the default tactics (the default
-  skill class is `CLASS_S`, and only the minion classes selected it); it now
-  fires for any class when `UseSeraCallLegion = 1`, and its recast waits for
-  the bugs' duration. The harness now models Poison Mist as per-tick magic
-  damage (`BF_MAGIC` in `skill.cpp`), which corrects the earlier note that it
-  deals no damage, and spawns the legion bugs. The bugs' own damage is not
-  modelled: the cast costs about 3-4% of the benchmark's damage (140 SP, 3 s
-  of casting), so five bugs only need a small DPS to pay for it.
-
-- Per-type presets: `USER_AI/Types/<Name>.lua` (Lif, Amistr, Filir, Vanilmirth,
-  Eira, Bayeri, Sera, Dieter, Eleanor) is loaded at init after `H_Config.lua`
-  and overrides only the keys it lists. `Dieter.lua` sets `AutoMobCount = 1`
-  (the global value of 2 left Dieter nearly idle against a single monster).
-  Deleting a type file disables its preset. Both GUIs have a "Settings for:"
-  selector that saves only differences to `Types/` and replaces the old
-  Homunculus S / Base homunculus filters (it also limits the listed skill settings).
-- Dieter: Lava Slide and Poison Mist allow a single active instance on the
-  server, so the AI now waits for the skill's duration (not just its reuse
-  time) before recasting; the earlier recasts were refused. New option
-  `UseDieterAshAsAttack` casts Volcanic Ash as an attack skill without the
-  debuff tactic (enabled in `Types/Dieter.lua`; needs `UseDieterVolcanicAsh`).
-- Preset tuning from the DPS benchmark (`tools/harness/homun_bench.py`, 1 to 5
-  monsters, several SP regeneration rates): Eira, Bayeri and Sera already had the
-  best or tied settings. `Types/Dieter.lua` now sets `UseDieterAshAsAttack = 0`
-  (Ash as an attack cost about 33% of Dieter's DPS; set it to 1 to cast it between
-  Lava Slides). Eleanor no longer starts a Sonic Claw chain while a pack is worth
-  The One Fighter Rises and SP is short for it: about +11% DPS against 2 monsters,
-  +26% against 3 and +39% against 5, unchanged against one. These are simulated figures.
-- Bayeri: `Types/Bayeri.lua` enables Heilige Pferd with `AutoMobCount = 2` (+10-12% DPS
-  against packs, never cast on a lone target). Glanzen Spies ignores DEF but is Holy and
-  slower, so it replaced Stahl Horn and lost up to 40% DPS; it is now only chosen when its
-  score beats Stahl Horn's for the target (see "Skill choice by score" below), which takes the
-  target's DEF (new in `MobInfo.lua`: DEF and MDEF after the attack range) into account. With exactly two monsters
-  his DEF-ignoring area skills (Heilige Stange and Pferd) are only cast when their DEF is
-  110 or more; below that Stahl Horn is better (+27% at DEF 0), and with 3 or more
-  monsters the area skills always win (+16% to +69%). `homun_bench.py` has `--def` and
-  `--mdef` for these measurements. Eleanor's dance is no longer blocked by a combo that cannot
-  be cast, and her preset enables The One Fighter Rises with `AutoMobCount = 2`.
-- Eleanor: The One Fighter Rises ignores DEF, her Sonic Claw combos do not. A lone target
-  with DEF 220 or more now gets The One Fighter Rises (+21% at DEF 500, +51% at DEF 1000, worse below DEF 210),
-  and with 3 or more monsters she no longer starts Sonic Claw chains while The One Fighter
-  Rises is learned (+19% to +32%). Simulated figures.
-- Eleanor: Blazing and Furious hits once per sphere (about 1/7 of a The One Fighter Rises hit
-  each) and costs the same SP, so it lost 8-41% DPS when cast with the 1-2 spheres the other
-  skills leave. It is now only cast with 6 or more spheres (`ELEANOR_BLAZING_MIN_SPHERES`) and
-  the Eleanor preset enables it: +9% to +15% DPS against packs at DEF 0, up to +29% at DEF 400.
-- Eleanor style changes made by hand: after one resync, the AI waited for a successful combo
-  starter before it would resync again, so switching back by hand left it on the wrong style.
-  It now allows another resync after 5 seconds. In grappling style without the spheres for
-  Tinder Breaker and with nothing hitting her (the owner tanking), she used no skills at all;
-  after 5 seconds without a hit she now switches back to fighting style
-  (`EleanorDoNotSwitchMode = 1` keeps the chosen style).
-- Amistr Castling: Castle Route no longer repeats the cast at the same route point,
-  and Castle Defend, the route and `CAST_REACT_CASTLE` share one readiness check
-  (cooldown, SP above cost, skill learned).
-- Instance clearing with an ungeared owner: `StayAwayDistance` keeps the
-  homunculus that many cells from the owner (clamped to the move bounds);
-  `StayAwayHold` parks it at one spot and returns after fights. `AttackMVPs`
-  always attacks MVPs (overriding react tactics and `BossAggro`), and
-  `AttackOnlyMVPs` 1/2 makes other monsters react-only/ignored. The MVP options
-  need `UseMobInfo`. A user hold command (`ReturnToMoveHold`) wins over stay-away.
-- Eleanor: throttled sphere estimation for clients that hide attack animations,
-  combo starter thresholds, confirmed follow-up sequencing and dance suppression
-  during chains. Manual Style Change tracking is limited to casts the AI sees;
-  a player's direct client command may bypass it.
-- Eleanor: Blazing And Furious and The One Fighter Rises are treated as AoE mob
-  skills, so `AutoMobCount` can prevent them from being spent on a lone target.
-- Vanilmirth-based Homunculus S can enable or disable inherited Caprice with
-  `UseVanilCaprice`, which defaults to enabled.
-- Base type resolution (`GetHomunBaseType`) no longer treats an unknown type as
-  Vanilmirth. Regular homunculi use a lookup table; a Homunculus S probes its
-  inherited skills, retrying every 5 s until one is found instead of caching
-  the `OldHomunType` fallback forever. Unknown types match no base skill.
-- Both configuration GUIs expose `SphereTrackInterval` and allow zero extra
-  `AutoSkillDelay`, without changing server cooldowns.
-- Automatic actions pause during pending casts. Offensive cast backoff defaults
-  to three confirmed interruptions and a 5000 ms per-skill pause.
-  `CastInterruptUnconfirmed` is an opt-in for ambiguous failures.
-- Desktop GUI: C# Release executable distributed in `USER_AI`; settings import,
-  save, validation and revert are covered by smoke tests.
-- Maintenance pass (unreleased):
-  - Removed the "Reset to Defaults" command (Edit menu and Ctrl+D) from both GUIs. Revert
-    still reloads the files, and the per-option restore in the property grid and web GUI
-    remains. `HomConf.SetDefaults()`/`MerConf.SetDefaults()` are now unused.
-  - Performance: motion, target and HP of other actors are read once per AI tick
-    (`GetActorMotion`, `GetActorTarget`, `HPPercent` caches), and distance helpers use the
-    per-tick position cache. In the 40-monster scenario `GetV` calls per tick dropped
-    from 460 to 209. Eleanor's sphere estimate saves `data\H_<owner>Timeouts.lua` at most
-    once per second instead of once per counted attack. `AI.lua` no longer loads
-    `MobInfo.lua` and `Defaults.lua` twice.
-  - Fixes: `formatmypos` compared against an undefined variable (trace output only). Desktop
-    GUI tactics: removing a tactic discarded later edits (Hom/Mer); removing the first or a
-    middle PVP tactic removed the wrong one or threw; importing a tactics file appended
-    duplicates instead of replacing the list; weights were saved with the current culture
-    (`0,5` on pt-BR/es), names containing commas were truncated, `TACT_TANKMOB` was not
-    recognised, the tactic ID box threw on empty input, and exporting to a new file failed
-    because `File.CreateText` handles were never closed.
-  - Harness: `HARNESS_PROFILE=1` with `HARNESS_PROFILE_SITES=1` also lists the source lines that call `GetV` most;
-    `HARNESS_GLOBALS=1` reports globals read while undefined and globals created during AI
-    ticks. The desktop GUI smoke test covers tactics import, removal and round-trip.
-
-### Validation and limitations
-
-The latest local validation covered 62 offline scenarios, desktop GUI smoke
-tests and web configuration round-trips. Local rAthena testing confirmed
-successful Sera casts and Bayeri switching to Heilige Stange during Pferd's
-backoff. This is not certification for every official client or server.
-
-Test-specific 200 ms sphere intervals and zero extra delay are not universal
-recommendations. Offline timing does not establish live-server DPS or prove an
-optimal build.
 
 ## Project and compatibility background
 

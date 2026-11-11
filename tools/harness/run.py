@@ -54,7 +54,7 @@ def check_syntax(luac):
 
 
 def check_version():
-    """CVersion (USER_AI/Const_.lua) is the release number: docs/RELEASE_NOTES.md and the Windows app's
+    """CVersion (USER_AI/Const_.lua) is the release number: Changelog.md and the Windows app's
     AssemblyInfo.cs must say the same, and the three file-check numbers (AI.lua and AI_M.lua Version,
     AI_main.lua MainVersion, AzzyUtil.lua AUVersion) must be its MAJOR.MINOR, e.g. 2.0.0 -> "2.0"."""
     def read(name, pattern):
@@ -76,10 +76,10 @@ def check_version():
         if not m or m.group(1) != release:
             print(f'VERSION ERROR: GUI AssemblyInfo.cs {attr} is {m.group(1) if m else "missing"}, release is {release}')
             ok = False
-    with open(os.path.join(REPO, "docs", "RELEASE_NOTES.md"), encoding="utf-8") as f:
+    with open(os.path.join(REPO, "Changelog.md"), encoding="utf-8") as f:
         notes = re.search(r"Current release:\s*\**(\d+\.\d+\.\d+)", f.read())
     if not notes or notes.group(1) != release:
-        print(f"VERSION ERROR: Const_.lua says {release}, docs/RELEASE_NOTES.md says "
+        print(f"VERSION ERROR: Const_.lua says {release}, Changelog.md says "
               f"{notes.group(1) if notes else 'no \"Current release\" line'}")
         ok = False
     expected = f"{major}.{minor}"

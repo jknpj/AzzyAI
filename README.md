@@ -69,7 +69,7 @@ in English.
 - **Found a bug?** Use the [bug report form](https://github.com/jknpj/AzzyAI/issues/new/choose) and say the homunculus, server, enabled skills, what happened and the `Release:` line of `AAIStartH.txt`. **Never share passwords, account credentials or private files.**
 - **Security problem?** Do not post it publicly: see the [security policy](SECURITY.md).
 - **Want to help?** [How to contribute](CONTRIBUTING.md).
-- **Developers:** [release notes and technical reference](docs/RELEASE_NOTES.md).
+- **Developers:** [technical reference](docs/TECHNICAL.md).
 
 Download only from this repository, and the web page linked above: a similar
 repository name or a copied README does not make a download official.
