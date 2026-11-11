@@ -613,6 +613,8 @@ for tick = 1, TICKS do
 		loadAI()
 		if sc.afterReload then sc.afterReload(skillKnown) end
 	end
+	-- scenario hook: lets a test touch the world before the AI call (e.g. make the owner sit)
+	if sc.onTick then sc.onTick(world, now, OWNER, HOMUN) end
 	local h = world[HOMUN]
 	if not h.busyUntil or now >= h.busyUntil then
 		local t0 = profile and os.clock()

@@ -1821,6 +1821,65 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- Owner sits down: the AI must rest at RestXOff/RestYOff from the owner and leave REST_ST
+	-- when the owner stands up.
+	rest_owner_sits = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 70,
+		onTick = function(world, now, owner)
+			restTick = (restTick or 0) + 1
+			if restTick == 10 then world[owner].motion = MOTION_SIT end
+			if restTick == 40 then world[owner].motion = MOTION_STAND end
+		end,
+		afterLoad = function()
+			restTick = 0
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				if restTick >= 12 and restTick <= 38 and MyState == REST_ST then SAW_REST = true end
+				if restTick >= 45 and MyState ~= REST_ST then LEFT_REST = true end
+			end
+		end,
+		checks = {
+			["owner sitting puts the homunculus in REST_ST"] = function() return SAW_REST == true end,
+			["owner standing leaves REST_ST"] = function() return LEFT_REST == true end,
+		} },
+
+	-- Patrol command: sets the state and destination, and the homunculus walks towards it.
+	patrol_command = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 30,
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnPATROL_CMD(110, 100)
+					PATROL_STATE, PATROL_DEST, PATROL_FROM = MyState, MyDestX, MyPatrolX
+				elseif GetV(V_POSITION, MyID) ~= 101 then
+					MOVED_TO_PATROL = true
+				end
+			end
+		end,
+		checks = {
+			["patrol command sets PATROL_CMD_ST and the destination"] = function()
+				return PATROL_STATE == PATROL_CMD_ST and PATROL_DEST == 110 and PATROL_FROM == 101
+			end,
+			["the homunculus moves towards the patrol point"] = function() return MOVED_TO_PATROL == true end,
+		} },
+
+	-- Tank tactic: a passive monster marked TACT_TANK must be picked by the tank list (normal
+	-- targeting excludes -1). The owner is not attacked, so only the tank path can engage it.
+	tank_tactic = { homuntype = 2, skills = {}, mobs = { {110,100} }, passive = true,
+		minAttacks = 0, ticks = 40,
+		-- -1 = TACT_TANK (this file is parsed before Const_.lua defines the constants)
+		tactics = { [1002] = { [1] = -1 } },
+		checks = {
+			["a passive monster with a tank tactic is engaged"] = function()
+				return MyEnemy == 60001 and (MyState == TANKCHASE_ST or MyState == TANK_ST)
+			end,
+		} },
+
 	-- A monster attacked by the owner's retainer (another homunculus/mercenary) must be reachable
 	-- as a friend target. The monster is REACT_L and passive, so the normal enemy list never
 	-- includes it: only the FriendTargets built from the actor loop can pick it.
