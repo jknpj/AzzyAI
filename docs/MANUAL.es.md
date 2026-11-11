@@ -17,7 +17,7 @@ opciones se mantienen en inglés para coincidir con las herramientas.
 ## 2. Instalar y activar
 
 1. Cierra las ventanas de configuración y respalda toda la carpeta `AI` del juego.
-2. Descarga un paquete de release, cuando esté disponible, o la rama **LATAM-HG**.
+2. Descarga un paquete de release, cuando esté disponible, o la rama **main**.
 3. Coloca el contenido de `USER_AI` del proyecto en `AI\USER_AI` del juego.
    El resultado debe contener `AI\USER_AI\AI.lua`, sin otra carpeta anidada.
 4. Escribe `/hoai` hasta seleccionar la IA personalizada del homúnculo.
@@ -70,7 +70,7 @@ Las etiquetas de la aplicación Windows están en inglés.
 **Menú Update (solo en la aplicación Windows):**
 
 - **Update AI from git...** hace `git pull --ff-only` en tu clon local o descarga
-  la rama `LATAM-HG` de GitHub (sin necesitar git) y copia su `USER_AI` sobre la
+  la rama `main` de GitHub (sin necesitar git) y copia su `USER_AI` sobre la
   carpeta donde se ejecuta la GUI. Tus ajustes, tactics, extra y listas de avoid
   se conservan; con *Also overwrite the homunculus presets* marcado, también se
   reemplazan los `Types\*.lua`. Lo reemplazado se copia a `backup\update-<hora>\`.

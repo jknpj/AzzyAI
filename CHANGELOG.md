@@ -107,7 +107,7 @@ First release of this series; changes since the original 1.56.
   yet verified in game.
 
 - Desktop GUI: new **Update** menu. "Update AI from git..." pulls a local clone
-  (`git pull --ff-only`) or downloads the `LATAM-HG` zip from GitHub and copies
+  (`git pull --ff-only`) or downloads the `main` zip from GitHub and copies
   `USER_AI` over the folder the GUI runs from. `H_Config.lua`, `M_Config.lua`,
   the tactics, extra and avoid lists and (unless ticked) `Types\*.lua` are never
   overwritten; replaced files go to `backup\update-<time>\`, and a newer

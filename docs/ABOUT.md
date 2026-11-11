@@ -30,7 +30,7 @@ them. The [user manual](MANUAL.md#6-notes-for-each-homunculus-s) has notes for e
 
 ## Compared with the original AzzyAI
 
-The original AzzyAI (the `master` branch) is still a good AI. This version keeps what it
+The original AzzyAI (the `classic` branch) is still a good AI. This version keeps what it
 does and adds the following. This is what you would notice in game:
 
 | | Original AzzyAI | This version |

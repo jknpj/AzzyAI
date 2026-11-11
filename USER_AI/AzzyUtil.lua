@@ -435,7 +435,7 @@ function StartupDiagnostics()
 	end
 	table.sort(logs)
 	return "\nRelease: "..tostring(CVersion)
-		.."\nBuild: LATAM-HG (self-target fix, targeting log)"
+		.."\nBuild: main (self-target fix, targeting log)"
 		.."\nServerType: "..tostring(ServerType).." (auto-detect "..tostring(AutoDetectServerType)..")"
 		.."\nLogs enabled: "..(#logs > 0 and table.concat(logs, ", ") or "none")
 		.."\nMonster database (MobInfo.lua): "..(MobInfo ~= nil and "loaded" or "missing")

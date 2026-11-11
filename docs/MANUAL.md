@@ -16,7 +16,7 @@ English so they match the options shown in the tools.
 ## 2. Install and activate
 
 1. Close configuration windows and back up the game's entire `AI` folder.
-2. Download a release package when available, or the **LATAM-HG** branch.
+2. Download a release package when available, or the **main** branch.
 3. Put the project's `USER_AI` contents in the game's `AI\USER_AI`.
    The final path should contain `AI\USER_AI\AI.lua`, not another nested folder.
 4. Type `/hoai` in game until custom homunculus AI is selected.
@@ -69,7 +69,7 @@ The desktop labels are in English.
 **Update menu (Windows application only):**
 
 - **Update AI from git...** pulls your local git clone (`git pull --ff-only`) or
-  downloads the `LATAM-HG` branch from GitHub (no git needed) and copies its
+  downloads the `main` branch from GitHub (no git needed) and copies its
   `USER_AI` over the folder the GUI runs from. Your settings, tactics, extra and
   avoid lists are kept; with *Also overwrite the homunculus presets* ticked,
   `Types\*.lua` are replaced too. Replaced files are copied to

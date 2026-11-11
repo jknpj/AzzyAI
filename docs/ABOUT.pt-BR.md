@@ -30,7 +30,7 @@ aprendido. O [manual do usuário](MANUAL.pt-BR.md#6-dicas-por-homúnculo-s) tem 
 
 ## Comparação com o AzzyAI original
 
-O AzzyAI original (a branch `master`) continua sendo uma boa IA. Esta versão mantém o
+O AzzyAI original (a branch `classic`) continua sendo uma boa IA. Esta versão mantém o
 que ele faz e acrescenta o que está abaixo. É o que você notaria no jogo:
 
 | | AzzyAI original | Esta versão |

@@ -24,7 +24,7 @@ namespace AzzyAIConfig
     public static class UpdateTools
     {
         public const string DefaultRepoUrl = "https://github.com/jknpj/AzzyAI";
-        public const string DefaultBranch = "LATAM-HG";
+        public const string DefaultBranch = "main";
         public const string ExeName = "AzzyAIConfig.exe";
 
         // Files the user edits (settings, tactics, lists): never overwritten, only created when missing

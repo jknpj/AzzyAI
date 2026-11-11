@@ -28,7 +28,7 @@ Preencha as três últimas linhas:
 Você está me ajudando a configurar o AzzyAI, uma IA de homúnculo para Ragnarok Online
 (uma continuação comunitária do AzzyAI original).
 Leia primeiro os arquivos anexados e este manual:
-https://github.com/jknpj/AzzyAI/blob/LATAM-HG/docs/MANUAL.pt-BR.md
+https://github.com/jknpj/AzzyAI/blob/main/docs/MANUAL.pt-BR.md
 (se não conseguir abrir o link, avise e eu colo o trecho relevante).
 
 Regras para a sua resposta:

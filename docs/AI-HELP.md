@@ -27,7 +27,7 @@ Fill in the last three lines:
 You are helping me configure AzzyAI, a Ragnarok Online homunculus AI (a community
 continuation of the original AzzyAI).
 Read the attached files and this manual first:
-https://github.com/jknpj/AzzyAI/blob/LATAM-HG/docs/MANUAL.md
+https://github.com/jknpj/AzzyAI/blob/main/docs/MANUAL.md
 (if you cannot open the link, tell me and I will paste the relevant part).
 
 Rules for your answer:

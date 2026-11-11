@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/jknpj/AzzyAI/security/advisories/new
     about: Do not post vulnerabilities, passwords or account files in a public issue.
   - name: Read the user manual
-    url: https://github.com/jknpj/AzzyAI/blob/LATAM-HG/docs/MANUAL.md
+    url: https://github.com/jknpj/AzzyAI/blob/main/docs/MANUAL.md
     about: Installation, settings, each homunculus and troubleshooting.

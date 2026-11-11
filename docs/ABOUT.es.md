@@ -30,7 +30,7 @@ aprendido. El [manual del usuario](MANUAL.es.md#6-consejos-por-homúnculo-s) tie
 
 ## Comparación con el AzzyAI original
 
-El AzzyAI original (la rama `master`) sigue siendo una buena IA. Esta versión conserva lo
+El AzzyAI original (la rama `classic`) sigue siendo una buena IA. Esta versión conserva lo
 que hace y añade lo siguiente. Esto es lo que notarías en el juego:
 
 | | AzzyAI original | Esta versión |

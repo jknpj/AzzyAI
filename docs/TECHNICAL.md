@@ -342,7 +342,7 @@ The targeting log records a snapshot every 5 seconds, with up to 20 actors:
 native monster detection, player classification, target-list membership, tactics,
 kill-steal checks, distance, and passive/standby/HP/SP settings.
 If no log is created, open `AAIStartH.txt` (rewritten on every AI load). Its last lines show
-the `Release`, the `Build`, the `ServerType` and `Logs enabled`. No `Release:` or `Build: LATAM-HG` line means the client
+the `Release`, the `Build`, the `ServerType` and `Logs enabled`. No `Release:` or `Build: main` line means the client
 is still running older `USER_AI` files; `AAI_TARGETING` missing from `Logs enabled` means the
 `H_Extra.lua` line is still commented out (`--`). If the file isn't updated at all, check the
 custom-AI selection (`/hoai`) and folder write permissions (clients under `Program Files` may

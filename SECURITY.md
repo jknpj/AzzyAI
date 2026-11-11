@@ -7,12 +7,12 @@ issues.
 
 ## Supported versions
 
-Only the latest commit of the **LATAM-HG** branch and the latest
+Only the latest commit of the **main** branch and the latest
 [release](https://github.com/jknpj/AzzyAI/releases). Older versions are not patched.
 
 ## Get AzzyAI only from official sources
 
-- This repository, [jknpj/AzzyAI](https://github.com/jknpj/AzzyAI), branch **LATAM-HG**, and its Releases.
+- This repository, [jknpj/AzzyAI](https://github.com/jknpj/AzzyAI), branch **main**, and its Releases.
 - The web configuration at <https://jknpj.github.io/AzzyAI-webgui/>.
 
 A repository with a similar name, or a copied README, does not make a download
