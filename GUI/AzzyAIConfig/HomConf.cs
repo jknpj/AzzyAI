@@ -2508,7 +2508,7 @@ namespace AzzyAIConfig
             }
         }
 
-        int _MobileMoveBounds = 5;
+        int _MobileMoveBounds = 14;
         [Category("Walk/Follow Options"),
         Description(
 
@@ -2516,10 +2516,10 @@ namespace AzzyAIConfig
             "to get before dropping all targets and moving back to the owner. This " +
             "value is used while the owner IS moving (see also StationaryMoveBounds) " +
             "To control aggro range of homun, use the AggroDist options, not MoveBounds. " +
-            "This should probably be lower than StationaryMoveBounds to help keep homun " +
-            "from being left behind."
+            "It matches StationaryMoveBounds by default; lower it if the homunculus " +
+            "gets left behind while you walk."
             ),
-        DefaultValue(5)]
+        DefaultValue(14)]
         public int MobileMoveBounds
         {
             get { return _MobileMoveBounds; }

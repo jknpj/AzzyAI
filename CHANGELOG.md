@@ -22,6 +22,11 @@ Patch release: performance, targeting and command fixes, removal of options that
   `--trace`) to get the traces back.
 - Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
   as a friend target, as it did before the targeting consolidation.
+- Change: `MobileMoveBounds` now defaults to 14, the same as `StationaryMoveBounds` (it was 9, and
+  the Windows app defaulted to 5). The homunculus and the mercenary now chase as far while you walk
+  as when you stand still, instead of dropping a chase when it falls 9 cells behind; lower it in
+  `H_Config.lua`/`M_Config.lua` if the unit gets left behind while you run. Both GUIs and the
+  reference document the new default.
 - Fix: the mercenary Berserk options never took effect. The shipped `M_Config.lua` and both GUIs
   wrote `UseBerzerkAttack`, `UseBerzerkSkill`, `UseBerzerkMobbed`, `Berzerk_SkillAlways`,
   `Berzerk_Dance` and `Berzerk_IgnoreMinSP`; the AI reads the `Berserk_*` spelling. The configs,

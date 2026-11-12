@@ -155,7 +155,7 @@ StayAwayHold =0	-- 1 = park at one spot and return to it after fights instead of
 StationaryAggroDist 	=12
 MobileAggroDist			=7
 StationaryMoveBounds    =14
-MobileMoveBounds		=9
+MobileMoveBounds		=14 -- same as stationary: chase as far while walking; lower it if it gets left behind
 DoNotUseRest =0
 RestXOff		=0
 RestYOff		=-2	
