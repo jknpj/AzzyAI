@@ -2246,6 +2246,55 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- FOLLOW_CMD_ST friending (StandbyFriending): while the owner sits, a player one cell to the
+	-- right joins MyFriends (FRIEND_CIRCLE_ST) and one to the left leaves it (FRIEND_CROSS_ST).
+	-- The command state is set before the first tick, so idle targeting never runs.
+	follow_friending = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 140, set = { UseIdleWalk = 0, StandbyFriending = 1, FollowStayBack = 2 },
+		player = { id = 3003, x = 101, y = 100 },
+		afterLoad = function()
+			OnFOLLOW_CMD()
+			local realAI = AI
+			local followAgain = false
+			AI = function(id)
+				realAI(id)
+				if MyFriends[3003] == 1 then FRIEND_ADDED = true end
+				if MyState == FRIEND_CIRCLE_ST then FRIEND_CIRCLE = true end
+				if FRIEND_ADDED and MyFriends[3003] == nil then FRIEND_REMOVED = true end
+				if MyState == FRIEND_CROSS_ST then FRIEND_CROSS = true end
+				-- the circle walk ends in IDLE_ST; follow again so the removal can be scanned
+				if GetTick() >= 6400 and not followAgain then
+					followAgain = true
+					OnFOLLOW_CMD()
+				end
+			end
+		end,
+		onTick = function(world, now, owner)
+			-- the homunculus got out of the way first (OnMOVE_CMD in the first tick)
+			if now == 2000 then world[owner].motion = MOTION_SIT end
+			if now == 6400 then world[3003].x, world[3003].y = 99, 100 end
+		end,
+		checks = {
+			["a player to the right of the sitting owner is friended"] = function()
+				return FRIEND_ADDED == true and FRIEND_CIRCLE == true
+			end,
+			["a player to the left is removed from the friend list"] = function()
+				return FRIEND_REMOVED == true and FRIEND_CROSS == true
+			end,
+		} },
+
+	-- Spear mercenary: AttackRange() reports 2 for LANCER01..10, so it must attack from two cells
+	-- without closing to one, and use its spear skill from there.
+	mercenary_lancer = { merc = { mertype = 11 }, skills = { "ML_PIERCE:1" }, mobs = { {105,100} },
+		minAttacks = 1, ticks = 60, expect = { "Pierce" },
+		checks = {
+			["the spear type reports attack range 2"] = function() return AttackRange(MyID, 0, nil) == 2 end,
+			["it attacks from two cells"] = function()
+				local h, m = HarnessMob(2001), HarnessMob(60001)
+				return (m.hitsTaken or 0) > 0 and math.abs(h.x - m.x) == 2
+			end,
+		} },
+
 	-- Mercenaries run a separate AI state (AI_M.lua, M_Config.lua, M_Tactics.lua) that had no
 	-- behavioral coverage at all: at least chase and hit a monster attacking the owner.
 	mercenary_attacks = { merc = { mertype = 21 }, skills = { "MS_BASH:1", "MER_DECAGI:1" },

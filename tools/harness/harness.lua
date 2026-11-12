@@ -172,6 +172,9 @@ end
 function Attack(id, target)
 	local e, t = world[id], world[target]
 	if not e then return end
+	-- the client makes the requested target our current target, which is how the AI checks that the
+	-- attack was accepted (V_TARGET on itself)
+	e.target = target
 	-- only attacks on real monsters count; anything else (self, owner, players) is a bug
 	if t and t.monster then
 		e.attacks = (e.attacks or 0) + 1
@@ -469,8 +472,11 @@ end
 -- Monster IDs must be outside the summon ID range of the selected server type
 local mobBase = (sc.private or sc.privateIds) and 110000000 or 60000
 ent(OWNER, { x = 100, y = 100, hp = 10000, maxhp = 10000, sp = 500, maxsp = 500, class = 4060 })
+-- spear mercenaries (LANCER01..10) attack from 2 cells, like AttackRange() reports
+local mercType = sc.merc and (sc.merc.mertype or 21)
 ent(HOMUN, { x = 101, y = 100, hp = 20000, maxhp = 20000, sp = sc.sp or 800, maxsp = sc.sp or 800,
-	homuntype = sc.homuntype, mertype = sc.merc and (sc.merc.mertype or 21) or nil, atkrange = 1 })
+	homuntype = sc.homuntype, mertype = mercType,
+	atkrange = mercType and mercType > 10 and mercType < 21 and 2 or 1 })
 for i, m in ipairs(sc.mobs) do
 	-- { x, y } attacks the owner (or stands still with sc.passive); { x, y, mobId } behaves
 	-- like that rAthena monster: plants stand still, passive monsters only fight back
