@@ -430,6 +430,9 @@ STRING_FRIENDNAMES[KOS]="KOS"
 -----------------------------
 -- state
 -----------------------------
+-- Command/state numbers inherited from the client's stock AI through MirAI (the same 0..12
+-- block); 100+ are AzzyAI's own. STOP_CMD_ST and ATTACK_OBJECT_CMD_ST were already dead there
+-- (defined and dispatched, never set), which is why their handlers were removed in 2.0.1.
 IDLE_ST					= 0
 FOLLOW_ST				= 1
 CHASE_ST				= 2
@@ -438,8 +441,8 @@ MOVE_CMD_ST				= 4
 STOP_CMD_ST				= 5 -- legacy: never entered (OnSTOP_CMD returns to IDLE_ST); constant kept for plugins
 ATTACK_OBJECT_CMD_ST			= 6 -- legacy: OnATTACK_OBJECT_CMD goes to CHASE_ST; constant kept for plugins
 ATTACK_AREA_CMD_ST			= 7
-PATROL_CMD_ST				= 8 -- Not used
-HOLD_CMD_ST				= 9 -- Not used
+PATROL_CMD_ST				= 8
+HOLD_CMD_ST				= 9
 SKILL_OBJECT_CMD_ST			= 10
 SKILL_AREA_CMD_ST			= 11
 FOLLOW_CMD_ST				= 12
