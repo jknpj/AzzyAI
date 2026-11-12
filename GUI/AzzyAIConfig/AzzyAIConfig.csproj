@@ -149,7 +149,6 @@
     <Compile Include="H_Tactics.cs" />
     <Compile Include="PvpTact.cs" />
     <Compile Include="Tact.cs" />
-    <Compile Include="Defaults.cs" />
     <Compile Include="M_Config.cs" />
     <Compile Include="H_Config.cs" />
     <Compile Include="Program.cs" />
