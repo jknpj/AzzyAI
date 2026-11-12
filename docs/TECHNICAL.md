@@ -137,6 +137,9 @@ calls alone is not completion evidence for a cast never observed starting.
 To build the app without PowerShell, run `tools\build-gui.cmd`: it builds the Release
 x86 executable and copies it to `USER_AI\AzzyAIConfig.exe`, the copy that is committed and
 that players run. The PowerShell commands below do the same build and also run and test the app.
+The CI does this too: on a push to `main` a follow-up job commits the freshly built
+`USER_AI/AzzyAIConfig.exe` when it differs, so a C# change never leaves the committed copy
+behind (it commits with `[skip ci]`, and a byte-identical build is not committed).
 
 The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
 Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
@@ -340,7 +343,9 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 - `node --check` on the web GUI (checked out from the `webgui` submodule);
 - build of the .NET 4.0 config GUI, packaging `USER_AI` + `AzzyAIConfig.exe`,
   the three READMEs, manuals, technical notes and historical changelog as the
-  `AzzyAI` artifact.
+  `AzzyAI` artifact;
+- on pushes to `main`, a follow-up job commits that build back to
+  `USER_AI/AzzyAIConfig.exe` when it changed (short `build:` commit, `[skip ci]`).
 
 Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release.
 

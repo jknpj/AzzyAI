@@ -74,6 +74,12 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - name: Build
         run: .\tools\gui.ps1 -Action Build -Configuration Release
+      # the commit job below needs only the binary, not the whole ZIP
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AzzyAIConfig.exe
+          path: .artifacts/gui/Release/AzzyAIConfig.exe
+          if-no-files-found: error
       - name: Package
         run: |
           $pkgRoot = "$env:RUNNER_TEMP\pkg"
@@ -93,6 +99,46 @@ jobs:
         with:
           name: AzzyAI
           path: AzzyAI.zip
+
+  commit-gui:
+    name: Refresh the committed GUI
+    # only real pushes to main: PRs and tags build but do not write back
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [gui]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: commit-gui-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AzzyAIConfig.exe
+          path: .artifacts/gui
+      - name: Commit USER_AI/AzzyAIConfig.exe when the build differs
+        run: |
+          set -euo pipefail
+          built=.artifacts/gui/AzzyAIConfig.exe
+          test -f "$built" || { echo "::error::the GUI artifact is missing"; exit 1; }
+          cp "$built" USER_AI/AzzyAIConfig.exe
+          if git diff --quiet -- USER_AI/AzzyAIConfig.exe; then
+            echo "USER_AI/AzzyAIConfig.exe already matches the build"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add USER_AI/AzzyAIConfig.exe
+          # [skip ci] stops this commit from starting another run; the diff check above stops it
+          # from looping even if that marker is ever ignored
+          git commit -q -m "build: refresh the committed GUI from CI [skip ci]"
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash origin main
+          done
+          echo "::error::could not push the refreshed GUI (branch protection?)"
+          exit 1
 
   release:
     name: GitHub release
