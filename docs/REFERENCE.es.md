@@ -66,8 +66,9 @@ en el cliente, así que comprueba los tuyos.
 
 Con `CommandedFightStay` activado (predeterminado), persigue y combate a un monstruo al que
 ordenaste atacar hasta que muera o des otra orden, aunque te alejes. El abandono por límites de
-movimiento y `AttackTimeLimit` no se aplican a ese objetivo. Usa 0 para recuperar el
-comportamiento anterior.
+movimiento y `AttackTimeLimit` no se aplican a ese objetivo, y el límite de 14 celdas de
+distancia contigo se ignora para él, así que puedes mandarlo a pelear mientras te quedas atrás.
+Usa 0 para recuperar el comportamiento anterior.
 
 `AllowSBR44` (predeterminado 0) hace que la IA bloquee el uso manual de SBR44, para proteger
 contra clics accidentales. No puede hacer lo mismo con Self Destruct.

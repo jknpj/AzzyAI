@@ -64,8 +64,9 @@ então confira os seus.
 
 Com `CommandedFightStay` ativado (padrão), um monstro que você mandou atacar é perseguido e
 combatido até morrer ou você dar outra ordem, mesmo que você se afaste. A desistência por
-limites de movimento e `AttackTimeLimit` não se aplicam a esse alvo. Use 0 para restaurar o
-comportamento antigo.
+limites de movimento e `AttackTimeLimit` não se aplicam a esse alvo, e o limite de 14 células de
+distância de você é ignorado para ele, então você pode mandá-lo lutar enquanto fica recuado.
+Use 0 para restaurar o comportamento antigo.
 
 `AllowSBR44` (padrão 0) faz a IA bloquear o uso manual de SBR44, para proteger contra cliques
 acidentais. Ela não consegue fazer o mesmo com Self Destruct.

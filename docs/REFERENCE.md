@@ -63,7 +63,9 @@ client, so check yours.
 
 With `CommandedFightStay` on (default), a monster you ordered it to attack is chased and fought
 until it dies or you give another order, even if you walk away. The move-bounds give-up and
-`AttackTimeLimit` do not apply to that target. Set it to 0 to go back to the old behavior.
+`AttackTimeLimit` do not apply to that target, and the 14-cell limit on how far the homunculus may
+walk from you is lifted for it, so you can send it to fight while you stay back. Set it to 0 to go
+back to the old behavior.
 
 `AllowSBR44` (default 0) makes the AI block a manual cast of SBR44, to protect against misclicks.
 It cannot do the same for Self Destruct.

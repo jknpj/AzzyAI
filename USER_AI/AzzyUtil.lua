@@ -1493,7 +1493,11 @@ function Move(myid,x,y)
 	local dis = GetDistance(ox,oy,x,y)
 	local dis2owner=GetDistanceAPR(OwnerID,x,y)
 	local newx,newy=x,y
-	if dis2owner > 14 then 
+	-- hard limit: never walk more than 14 cells from the owner. A mindlessly explicit order to
+	-- fight a monster (CommandedFightStay) is the exception: the owner may be weak and want the
+	-- homunculus to fight away from him.
+	local commanded = (CommandedFightStay == 1 and MyEnemy ~= 0 and MyEnemy == CommandedEnemy)
+	if dis2owner > 14 and not commanded then 
 		logappend("AAI_ERROR","Attempt to move to location "..x..","..y.." which is "..dis2owner.." cells from owner, call disregarded")
 		return 
 	elseif dis > 15  then
@@ -2035,7 +2039,9 @@ end
 
 
 
-function GetStandPoint(myid,target,skill,level,alt)
+-- free: the caller explicitly wants this target reached (a commanded fight), so AdjustStandPoint
+-- may pick a cell outside the owner's move bounds
+function GetStandPoint(myid,target,skill,level,alt,free)
 	local r=AttackRange(myid,skill,level)
 	if GetDistanceA(myid,target) <= r then
 		logappend("AAI_ERROR","GetStandPoint called while within range")
@@ -2049,10 +2055,10 @@ function GetStandPoint(myid,target,skill,level,alt)
 	if skill==0 or skill==nil or (tx==x and ty==y) or (tx < 1 or ty < 1) or math.floor(GetDistanceAP(target,x,y)) > r then -- Use normal closest call, since V_POSITION_APPLY_SKILLATTACKRANGE doesn't work for non-skills, or has given us clearly bogus standpoint for skill.
 		x,y=Closest(myid,tx,ty,r,alt)
 	end
-	return AdjustStandPoint(x,y,tx,ty,r,alt)
+	return AdjustStandPoint(x,y,tx,ty,r,alt,free)
 end
 
-function AdjustStandPoint (x,y,tx,ty,r,alt)
+function AdjustStandPoint (x,y,tx,ty,r,alt,free)
 	if _VERSION=="Lua 5.1" then
 		-- Now we need to make sure x and y are not on occupied cells, because of the changes to the client
 		local bounds=GetMoveBounds()
@@ -2064,7 +2070,9 @@ function AdjustStandPoint (x,y,tx,ty,r,alt)
 		end
 		local i=0
 		
-		while (TakenCells[CellKey(x, y)] or GetDistanceAPR(OwnerID,x,y) > bounds) do
+		-- a commanded fight ignores the move bounds: the owner may be weak and want the homunculus
+		-- to fight away from him (CommandedFightStay)
+		while (TakenCells[CellKey(x, y)] or (not free and GetDistanceAPR(OwnerID,x,y) > bounds)) do
 			i=i+1
 			if (TakenCells[CellKey(x, y)]) then
 				logstring=logstring.."i="..i.."tc="..TakenCells[CellKey(x, y)].."d ".. GetDistanceAPR(OwnerID,x,y).." :"

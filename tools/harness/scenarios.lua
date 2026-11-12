@@ -2278,6 +2278,51 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- The same order on a monster that is already far outside the move bounds. The stand-point
+	-- calculation used to veto it ("Cannot attack this target"), so the command was useless: the
+	-- owner can be weak and send the homunculus to fight away from him.
+	commanded_fight_far = { homuntype = 2, skills = {}, mobs = { {119,100} }, passive = true,
+		minAttacks = 1, ticks = 90, set = { CommandedFightStay = 1 },
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_OBJECT_CMD(60001)
+				end
+			end
+		end,
+		checks = {
+			["the ordered monster far outside the bounds is reached and attacked"] = function()
+				local h, o = HarnessMob(2001), HarnessMob(2000001)
+				return (HarnessMob(60001).hitsTaken or 0) > 0 and MyEnemy == 60001
+					and math.abs(o.x - h.x) > 14
+			end,
+		} },
+
+	-- With CommandedFightStay = 0 the far order is refused, as before.
+	commanded_fight_far_giveup = { homuntype = 2, skills = {}, mobs = { {119,100} }, passive = true,
+		minAttacks = 0, ticks = 60, set = { CommandedFightStay = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_OBJECT_CMD(60001)
+				end
+			end
+		end,
+		checks = {
+			["without the option the far order is dropped"] = function()
+				local h = HarnessMob(2001)
+				return (HarnessMob(60001).hitsTaken or 0) == 0 and math.abs(h.x - 101) <= 2
+			end,
+		} },
+
 	-- Same fight with CommandedFightStay = 0: when the owner gets out of the move bounds the
 	-- fight is dropped and the homunculus follows the owner again.
 	commanded_fight_giveup = { homuntype = 2, skills = {}, mobs = { {103,100} }, passive = true,

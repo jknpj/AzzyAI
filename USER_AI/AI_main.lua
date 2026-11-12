@@ -823,6 +823,9 @@ function	OnFOLLOW_ST ()
 end
 
 function OnCHASE_ST()
+    -- an explicitly ordered monster (CommandedFightStay) may be chased outside the owner's move
+    -- bounds: the owner can be weak and want the homunculus to fight away from him
+    local free = (CommandedFightStay == 1 and MyEnemy ~= 0 and MyEnemy == CommandedEnemy) and true or false
     MyAttackStanceX, MyAttackStanceY = 0, 0
     if TraceAIEnabled ~= 0 then TraceAI("OnCHASE_ST") end
     local aggro = GetAggroCount()
@@ -1065,9 +1068,9 @@ function OnCHASE_ST()
             local dx, dy = ex - EnemyPosX[3], ey - EnemyPosY[3]
             local r = AttackRange(MyID, MySkill, MySkillLevel)
             x, y = Closest(MyID, ex + dx, ey + dy, r, alt)
-            x, y = AdjustStandPoint(x, y, ex, ey, r, alt)
+            x, y = AdjustStandPoint(x, y, ex, ey, r, alt, free)
         else
-            x, y = GetStandPoint(MyID, MyEnemy, MySkill, MySkillLevel, alt)
+            x, y = GetStandPoint(MyID, MyEnemy, MySkill, MySkillLevel, alt, free)
             if x == -1 or y == -1 then
                 if AttackRange(MyID, MySkill, MySkillLevel) < 2 or alt > 0 then
                     MyState = IDLE_ST
@@ -1083,7 +1086,7 @@ function OnCHASE_ST()
                         return OnIDLE_ST()
                     end
                 else
-                    x, y = GetStandPoint(MyID, MyEnemy, MySkill, MySkillLevel, 1)
+                    x, y = GetStandPoint(MyID, MyEnemy, MySkill, MySkillLevel, 1, free)
                     if x == -1 or y == -1 then
                         MyState = IDLE_ST
                         Unreachable[MyEnemy] = 1
