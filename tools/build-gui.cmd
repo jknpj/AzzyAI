@@ -13,7 +13,7 @@ for /f "usebackq delims=" %%i in (`"%VSWHERE%" -latest -products * -requires Mic
 if not defined MSBUILD goto :novs
 
 echo MSBuild: %MSBUILD%
-"%MSBUILD%" "%ROOT%\GUI\AzzyAIConfig\AzzyAIConfig.csproj" /restore /nologo /verbosity:minimal /p:Configuration=Release /p:Platform=x86
+"%MSBUILD%" "%ROOT%\GUI\AzzyAIConfig\AzzyAIConfig.csproj" /restore /nologo /verbosity:minimal /p:Configuration=Release /p:Platform=x86 /p:Deterministic=true
 if errorlevel 1 goto :fail
 
 set "BUILT=%ROOT%\.artifacts\gui\Release\AzzyAIConfig.exe"

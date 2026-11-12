@@ -23,7 +23,7 @@ if (!$msbuild) {
 $msbuild = @($msbuild)[0]
 
 & $msbuild $project /restore /nologo /verbosity:minimal `
-    "/p:Configuration=$Configuration" /p:Platform=x86
+    "/p:Configuration=$Configuration" /p:Platform=x86 /p:Deterministic=true
 if ($LASTEXITCODE -ne 0) {
     throw "GUI build failed (exit code $LASTEXITCODE)."
 }
