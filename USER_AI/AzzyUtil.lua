@@ -110,6 +110,28 @@ As GetMobSkill() only returns the ID and other perameters for the pushback skill
 -- on the cache-miss path.
 TactValueCache = {}
 
+-- AutoSkillLimit: how many offensive skills may be used on one target, on top of the tactic.
+-- The count is per target and survives the chase/attack state changes (MySkillUsedCount is reset
+-- with the state, so it cannot be the one used here). 0 = no cap.
+SkillUsedOnTarget, SkillOnTarget = 0, nil
+
+function CapSkillTactic(tact_skill, target)
+	if target ~= nil and target ~= SkillOnTarget then
+		SkillOnTarget, SkillUsedOnTarget = target, 0
+	end
+	if AutoSkillLimit ~= nil and AutoSkillLimit > 0 and SkillUsedOnTarget >= AutoSkillLimit then
+		return 0 -- SKILL_NEVER: this target has spent its skills
+	end
+	return tact_skill
+end
+
+function NoteSkillUsed(target)
+	if target ~= nil and target ~= SkillOnTarget then
+		SkillOnTarget, SkillUsedOnTarget = target, 0
+	end
+	SkillUsedOnTarget = SkillUsedOnTarget + 1
+end
+
 function 	GetTact(t,m)
 	local x
 	if m==nil then

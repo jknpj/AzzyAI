@@ -8,12 +8,11 @@ OpportunisticTargeting  =0
 DoNotChase				=0
 UseDanceAttack			=0
 SuperPassive			=0
-PVPMode					=0
-AttackLastHPSP			=80
+PVPmode					=0
 UseIdleWalk				=1
 IdleWalkDistance		=3
 RelativeRoute			=0
-AutoDetectPlants		=1
+AutoDetectPlant		=1
 FleeHP					=0
 
 -- Attack skill options
@@ -21,7 +20,6 @@ AttackSkillReserveSP  = 0
 AutoMobMode			=1 
 AutoMobCount		=5
 AutoComboMode		=1
-AutoComboSkill		=0
 AutoComboSpheres	=10
 UseAutoPushback		=0
 AutoPushbackThreshold	=2
@@ -73,14 +71,14 @@ StickyStandby            = 1
 SpawnDelay               = 1000
 AutoSkillDelay		= 400
 AttackTimeLimit		= 10000
---Berzerk Settings:
+--Berserk Settings:
 
-UseBerzerkMobbed         = 0 
-UseBerzerkSkill          = 0 
-UseBerzerkAttack         = 0 
-Berzerk_SkillAlways      = 0 
-Berzerk_Dance            = 0
-Berzerk_IgnoreMinSP      = 0 
+UseBerserkMobbed         = 0 
+UseBerserkSkill          = 0 
+UseBerserkAttack         = 0 
+Berserk_SkillAlways      = 0 
+Berserk_Dance            = 0
+Berserk_IgnoreMinSP      = 0 
 
 
 --Misc settings:

@@ -220,7 +220,7 @@ homunculi there is one, because higher levels have longer cooldowns.
 | `UseEiraOveredBoost` | 0 | Eira's Overed Boost |
 | `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Bayeri's Golden Ferse, Angriff Modus and Goldene Tone |
 | `UseProvokeOwner` | 0 | Provoke (mercenary) or Pain Killer (Sera) on you |
-| `ProvokeOwnerMobbed` | 3 | Not used on you with fewer monsters than this on you, unless you are below 90% HP (the Weight tactic counts) |
+| `DefensiveBuffOwnerMobbed` | 0 | Not used on you with fewer monsters than this on you, unless you are below 90% HP (the Weight tactic counts) |
 | `UseSeraPainkiller` | 3 | Sera's Pain Killer |
 | `UseSacrificeOwner` | 0 (built-in) | **Mercenary only:** Sacrifice on you. Works within 10 levels of the player and is unreliable because of game bugs. |
 | `UseSmartBulwark` | 0 | Amistr: cast Bulwark only if at least 120 SP remain, so Bloodlust is possible later. Ignored below 160 max SP or without Bloodlust. |

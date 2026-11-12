@@ -285,7 +285,7 @@ Los homúnculos básicos sí la tienen, porque los niveles altos tienen recargas
 | `UseEiraOveredBoost` | 0 | Overed Boost de Eira |
 | `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Golden Ferse, Angriff Modus y Goldene Tone de Bayeri |
 | `UseProvokeOwner` | 0 | Provoke (mercenario) o Pain Killer (Sera) en ti |
-| `ProvokeOwnerMobbed` | 3 | No se usa en ti con menos monstruos que esto atacándote, salvo por debajo del 90% de HP (cuenta la táctica Weight) |
+| `DefensiveBuffOwnerMobbed` | 0 | No se usa en ti con menos monstruos que esto atacándote, salvo por debajo del 90% de HP (cuenta la táctica Weight) |
 | `UseSeraPainkiller` | 3 | Pain Killer de Sera |
 | `UseSacrificeOwner` | 0 (interno) | **Solo mercenario:** Sacrifice en ti. Funciona con una diferencia de hasta 10 niveles del jugador y no es fiable debido a errores del juego. |
 | `UseSmartBulwark` | 0 | Amistr: solo usa Bulwark si quedan al menos 120 SP, para permitir Bloodlust después. Se ignora por debajo de 160 SP máximo o sin Bloodlust. |

@@ -94,25 +94,33 @@ def check_version():
     return ok
 
 
-# Options that live in Defaults.lua without a reader on purpose. Keep this empty unless an option
-# really must exist for a plugin or for the config files only.
+# Options that exist without a reader on purpose. Keep this empty unless an option really must
+# exist for a plugin or for the config files only.
 UNUSED_OK = set()
+
+# the shipped configuration files: every option they list has to be read by the AI
+CONFIG_FILES = ("Defaults.lua", "H_Config.lua", "M_Config.lua")
 
 
 def check_options():
-    """Every option in USER_AI/Defaults.lua must be read by some USER_AI file: a default nothing
-    reads is a switch the player can change with no effect at all (MoveStickyFight was one)."""
-    def read(path):
-        with open(path, encoding="utf-8", errors="replace") as f:
+    """Every option in the shipped configs must be read by some USER_AI file. A name nothing reads
+    is a switch the player can change with no effect: KiteParanoid, MoveStickyFight and the
+    Berzerk_* mis-spellings of the mercenary options were all like that. The config files and
+    Const_.lua are definitions, not readers, so they are left out of the search."""
+    def read(name):
+        with open(os.path.join(USER_AI, name), encoding="utf-8", errors="replace") as f:
             return f.read()
-    names = sorted(set(re.findall(r"^\s*([A-Za-z_]\w*)\s*=", read(os.path.join(USER_AI, "Defaults.lua")), re.M)))
-    blob = "\n".join(read(os.path.join(USER_AI, n)) for n in sorted(os.listdir(USER_AI))
-                     if n.endswith(".lua") and n != "Defaults.lua")
-    unused = [n for n in names
+    defined = {}
+    for cfg in CONFIG_FILES:
+        for name in re.findall(r"^\s*([A-Za-z_]\w*)\s*=", read(cfg), re.M):
+            defined.setdefault(name, []).append(cfg)
+    blob = "\n".join(read(n) for n in sorted(os.listdir(USER_AI))
+                     if n.endswith(".lua") and n not in CONFIG_FILES and n != "Const_.lua")
+    unused = [n for n in sorted(defined)
               if n not in UNUSED_OK and not re.search(r"\b%s\b" % re.escape(n), blob)]
     for name in unused:
-        print(f"OPTION ERROR: {name} is in Defaults.lua but nothing in USER_AI reads it")
-    print(f"options: {len(names)} in Defaults.lua, {len(unused)} unread")
+        print(f"OPTION ERROR: {name} is in {'/'.join(defined[name])} but nothing in USER_AI reads it")
+    print(f"options: {len(defined)} in {'/'.join(CONFIG_FILES)}, {len(unused)} unread")
     return not unused
 
 

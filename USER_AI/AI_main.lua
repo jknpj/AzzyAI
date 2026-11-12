@@ -187,6 +187,22 @@ end
 
 function doInit(myid)
 	local logstring="Checking config..."
+	-- 1.x configs spelled the mercenary berserk options with a z (Berzerk_*). They never worked;
+	-- accept both so an existing M_Config.lua starts behaving instead of silently doing nothing.
+	local legacy = {
+		{ "UseBerserkMobbed", UseBerserkMobbed, UseBerzerkMobbed },
+		{ "UseBerserkSkill", UseBerserkSkill, UseBerzerkSkill },
+		{ "UseBerserkAttack", UseBerserkAttack, UseBerzerkAttack },
+		{ "Berserk_SkillAlways", Berserk_SkillAlways, Berzerk_SkillAlways },
+		{ "Berserk_Dance", Berserk_Dance, Berzerk_Dance },
+		{ "Berserk_IgnoreMinSP", Berserk_IgnoreMinSP, Berzerk_IgnoreMinSP },
+	}
+	for _, e in ipairs(legacy) do
+		if e[2] == nil and e[3] ~= nil then
+			_G[e[1]] = e[3]
+			logstring = logstring .. "\n" .. e[1] .. " read from the legacy Berzerk_* name"
+		end
+	end
 	logstring=logstring..ApplyTypeConfig(myid)
 	if IsHomun(myid) == 0 then -- if the stupid devs made GetV(V_MERTYPE,id) work i wouldnt need this!
 		MercType=GetMerType(myid)
@@ -947,7 +963,7 @@ function OnCHASE_ST()
         end
     elseif UseSkillOnly == -1 and (GetTick() >= AutoSkillTimeout) then
         local dist = GetDistanceA(MyID, MyEnemy)
-        local tact_skill, tact_debuff, tact_sp, tact_skillclass = GetTact(TACT_SKILL, MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
+        local tact_skill, tact_debuff, tact_sp, tact_skillclass = CapSkillTactic(GetTact(TACT_SKILL, MyEnemy), MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
         local skilltouse = {-1, 0, 0}
         local TargetedSkills = GetTargetedSkills(MyID)
         local availsp = GetV(V_SP, MyID)
@@ -1042,6 +1058,7 @@ function OnCHASE_ST()
                 ChaseDebuffUsed = 1
             end
             MySkillUsedCount = MySkillUsedCount + 1
+            NoteSkillUsed(MyEnemy)
         end
     else
         if TraceAIEnabled ~= 0 then TraceAI("Not in range, and can't use chase skill") end
@@ -1236,7 +1253,7 @@ function OnATTACK_ST()
         end
     end
     OnAttackStart()
-    local tact_skill, tact_debuff, tact_sp, tact_skillclass = GetTact(TACT_SKILL, MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
+    local tact_skill, tact_debuff, tact_sp, tact_skillclass = CapSkillTactic(GetTact(TACT_SKILL, MyEnemy), MyEnemy), GetTact(TACT_DEBUFF, MyEnemy), GetTact(TACT_SP, MyEnemy), GetTact(TACT_SKILLCLASS, MyEnemy)
     local skill_level
 
     -- Begin skill selection routine
@@ -1355,6 +1372,7 @@ function OnATTACK_ST()
                 AttackDebuffUsed = AttackDebuffUsed + 1
             else
                 MySkillUsedCount = MySkillUsedCount + 1
+                NoteSkillUsed(MyEnemy)
             end
         end
     end
@@ -1486,7 +1504,7 @@ function	OnTANKCHASE_ST ()
 	if TraceAIEnabled ~= 0 then TraceAI("Tank chase: Can we skill while chasing?") end
 	if UseSkillOnly == -1 and (GetTick() >= AutoSkillTimeout) then
 		local dist=GetDistanceA(MyID,MyEnemy)
-		local tact_debuff,tact_skill,tact_sp,tact_skillclass=GetTact(TACT_DEBUFF,MyEnemy),GetTact(TACT_SKILL,MyEnemy),GetTact(TACT_SP,MyEnemy),GetTact(TACT_SKILLCLASS,MyEnemy)
+		local tact_debuff,tact_skill,tact_sp,tact_skillclass=GetTact(TACT_DEBUFF,MyEnemy),CapSkillTactic(GetTact(TACT_SKILL,MyEnemy),MyEnemy),GetTact(TACT_SP,MyEnemy),GetTact(TACT_SKILLCLASS,MyEnemy)
 		local skilltouse={-1,0,0}
 		local SkillList=GetTargetedSkills(MyID)
 		if TraceAIEnabled ~= 0 then TraceAI("Begin autoskill while tank chasing routine") end

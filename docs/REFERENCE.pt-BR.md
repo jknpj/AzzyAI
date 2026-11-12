@@ -225,7 +225,7 @@ básicos têm essa opção, pois níveis mais altos têm recargas maiores.
 | `UseEiraOveredBoost` | 0 | Overed Boost de Eira |
 | `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Golden Ferse, Angriff Modus e Goldene Tone de Bayeri |
 | `UseProvokeOwner` | 0 | Provoke (mercenário) ou Pain Killer (Sera) em você |
-| `ProvokeOwnerMobbed` | 3 | Não usa em você com menos monstros que isso atacando você, exceto abaixo de 90% de HP (a tática Weight conta) |
+| `DefensiveBuffOwnerMobbed` | 0 | Não usa em você com menos monstros que isso atacando você, exceto abaixo de 90% de HP (a tática Weight conta) |
 | `UseSeraPainkiller` | 3 | Pain Killer de Sera |
 | `UseSacrificeOwner` | 0 (interno) | **Só mercenário:** Sacrifice em você. Funciona com diferença de até 10 níveis do jogador e não é confiável devido a bugs do jogo. |
 | `UseSmartBulwark` | 0 | Amistr: só usa Bulwark se restarem pelo menos 120 SP, para permitir Bloodlust depois. Ignorado abaixo de 160 SP máximo ou sem Bloodlust. |

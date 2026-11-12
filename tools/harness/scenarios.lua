@@ -2502,6 +2502,28 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- AutoSkillLimit: a global cap on the offensive skills used on one target (the tactic still
+	-- applies on top). The mercenary keeps normal-attacking but stops spending SP on skills.
+	mercenary_skill_limit = { merc = { mertype = 21 }, skills = { "MS_BASH:1" }, mobs = single,
+		minAttacks = 1, ticks = 80, set = { AutoSkillLimit = 1 },
+		checks = {
+			["one skill on the target, then normal attacks"] = function()
+				local n = 0
+				for _, c in ipairs(HarnessCasts) do if c.name == "Bash" then n = n + 1 end end
+				return n == 1
+			end,
+		} },
+
+	mercenary_skill_unlimited = { merc = { mertype = 21 }, skills = { "MS_BASH:1" }, mobs = single,
+		minAttacks = 1, ticks = 80, expect = { "Bash" },
+		checks = {
+			["with the default (0) the skill is repeated"] = function()
+				local n = 0
+				for _, c in ipairs(HarnessCasts) do if c.name == "Bash" then n = n + 1 end end
+				return n > 1
+			end,
+		} },
+
 	-- Mercenaries run a separate AI state (AI_M.lua, M_Config.lua, M_Tactics.lua) that had no
 	-- behavioral coverage at all: at least chase and hit a monster attacking the owner.
 	mercenary_attacks = { merc = { mertype = 21 }, skills = { "MS_BASH:1", "MER_DECAGI:1" },

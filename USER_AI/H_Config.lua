@@ -53,7 +53,6 @@ DieterLavaSlideLevel     = 10
 UseDefensiveBuff         = 3
 UseOffensiveBuff         = 3 
 UseProvokeOwner          = 0
-ProvokeOwnerMobbed       = 3
 LifEscapeLevel           = 0
 FilirFlitLevel           = 5
 FilirAccelLevel          = 5

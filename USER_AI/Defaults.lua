@@ -185,6 +185,8 @@ StickyStandby            = 1
 --Advanced Timing settings 
 SpawnDelay               = 1000
 AutoSkillDelay		= 400
+-- Most times an offensive skill is used on one target (0 = no limit); the tactic can lower it
+AutoSkillLimit		= 0
 ChaseGiveUp              = 6
 AttackGiveUp		=10 
 FollowTryPanic		=3 

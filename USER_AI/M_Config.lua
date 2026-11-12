@@ -13,7 +13,6 @@ UseIdleWalk              = 0
 IdleWalkSP               = 80
 IdleWalkDistance         = 4
 RelativeRoute            = 1
-AutoDetectPlants		=1
 FleeHP                   = 0
 
 -- Attack skill options
@@ -79,14 +78,14 @@ StickyStandby            = 1
 SpawnDelay               = 1000
 AutoSkillDelay           = 400
 AttackTimeLimit          = 10000
---Berzerk Settings:
+--Berserk Settings:
 
-UseBerzerkMobbed         = 0 
-UseBerzerkSkill          = 0 
-UseBerzerkAttack         = 0 
-Berzerk_SkillAlways      = 0 
-Berzerk_Dance            = 0
-Berzerk_IgnoreMinSP      = 0 
+UseBerserkMobbed         = 0 
+UseBerserkSkill          = 0 
+UseBerserkAttack         = 0 
+Berserk_SkillAlways      = 0 
+Berserk_Dance            = 0
+Berserk_IgnoreMinSP      = 0 
 
 
 --Misc settings:
@@ -113,7 +112,6 @@ Berserk_SkillAlways      = 0
 Berserk_Dance            = 0
 Berserk_IgnoreMinSP      = 0
 PVPmode                  = 0
-ProvokeOwnerMobbed       = 0
 LastSavedDate            = "Default Configuration 1.56"
 LagReduction             = 0
 LiveMobID                = 0
