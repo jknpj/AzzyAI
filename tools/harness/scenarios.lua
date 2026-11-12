@@ -1796,6 +1796,54 @@ SCENARIOS = {
 	-- Unit-style regressions for paths the timed scenarios above never take.
 	-- ------------------------------------------------------------------
 
+	-- TargetPriority=1 ranks targets by the AoE cluster they would be in. The cluster table is
+	-- built from Targets, but SelectEnemy also gets an opportunistic "current enemy" that may have
+	-- left the list (the monster being left for a better one). It must still get its weight
+	-- computed on demand instead of being ranked as cluster 0.
+	target_priority_outside_targets = { homuntype = 51, skills = DIETER_SKILLS, minAttacks = 0,
+		set = { LavaSlideMode = 0 },
+		mobs = { {104,102,1672}, {105,102,1672}, {104,103,1672}, {99,100,1672} },
+		checks = {
+			["a current enemy outside Targets gets its cluster weight on demand"] = function()
+				TargetPriority = 1
+				AutoSkillCooldown[MH_LAVA_SLIDE] = 0
+				TactRowCache, MobInfoCache, ActorClassCache, ActorPosCache = {}, {}, {}, {}
+				TargetPriorityCtx, TargetClusterWeightsCache = nil, nil
+				local home = HarnessMob(MyID)
+				home.x, home.y = 101, 100
+				Targets = {}
+				local ids = {}
+				for _, m in ipairs(HarnessMonsters()) do
+					Targets[m.id] = { 3, 0 }
+					ids[#ids + 1] = m.id
+				end
+				table.sort(ids)
+				-- the pack and the isolated monster are Targets; the opportunistic one is not
+				local rogue = ids[1]
+				for _, id in ipairs(ids) do
+					if HarnessMob(id).x == 104 and HarnessMob(id).y == 102 then rogue = id end
+				end
+				Targets[rogue] = nil
+				local ctx = GetTargetPriorityContext()
+				if ctx.aoe == nil then error("the scenario has no area skill context", 0) end
+				local cluster = GetTargetClusterWeights()
+				if cluster[rogue] ~= nil then error("the rogue target is in the cluster table already", 0) end
+				local enemys = {}
+				for _, id in ipairs(ids) do
+					if id ~= rogue then enemys[id] = { 3, 0, TACT_ATTACK_L, 0 } end
+				end
+				SelectEnemy(enemys, rogue)
+				local now = GetTargetClusterWeights()[rogue]
+				local want = AoEClusterWeights(ctx.aoe, { rogue })[rogue]
+				if now == nil then error("still no cluster weight for the rogue target", 0) end
+				if now ~= want then
+					error(("cluster weight %d, expected %d"):format(now, want), 0)
+				end
+				if now < 2 then error(("cluster weight %d, expected the pack"):format(now), 0) end
+				return true
+			end,
+		} },
+
 	-- Losing the target has to clear the per-target skill counter: it gates tactics with a
 	-- finite cast count (MyTact rows with -1/-3/-4, e.g. Orc Zombie, Zenorc).
 	skill_counter_reset = { homuntype = 2, skills = {}, mobs = single, passive = true,

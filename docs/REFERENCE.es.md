@@ -80,6 +80,10 @@ Un jugador añadido como amigo es defendido como si fuera el dueño, hasta que l
 Añadir el mercenario o el homúnculo de otro jugador solo dura hasta que vuelva a conectarse,
 se teletransporte o lo invoque de nuevo, porque su ID cambia.
 
+Un amigo a más de ~20 celdas (fuera de pantalla) no se defiende: el cliente no informa de
+actores tan lejos, así que la IA no ve qué le está atacando. El mismo límite vale para los
+monstruos que puede perseguir.
+
 **Método de caminar** (`MirAIFriending` = 1, predeterminado):
 
 1. Ordena al homúnculo caminar hasta la celda **justo al norte o al sur** del jugador.

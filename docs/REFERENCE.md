@@ -76,6 +76,10 @@ A friended player is defended as if they were the owner, until you unfriend them
 another player's mercenary or homunculus only lasts until they relog, teleport or summon it,
 because its ID changes.
 
+A friend more than about 20 cells away (off screen) is not defended: the client does not report
+actors that far away, so the AI cannot see what is attacking them. The same limit applies to the
+monsters it can chase.
+
 **Walk method** (`MirAIFriending` = 1, the default):
 
 1. Command the homunculus to walk to the cell **one north or south** of the player.
