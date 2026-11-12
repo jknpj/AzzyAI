@@ -2509,6 +2509,42 @@ SCENARIOS = {
 		set = { UseOffensiveBuff = 1, UseDefensiveBuff = 0 },
 		expect = { "Weapon Quicken" } },
 
+	-- Mercenary defensive buff: LANCER05 has Guard (Autoguard); with UseDefensiveBuff = 1 (Idle)
+	-- it must cast it on itself.
+	mercenary_guard = { merc = { mertype = 15 }, skills = { "ML_AUTOGUARD:3" }, mobs = {},
+		passive = true, minAttacks = 0, ticks = 40,
+		set = { UseDefensiveBuff = 1, UseOffensiveBuff = 0 },
+		expect = { "Guard" } },
+
+	-- Mercenary Provoke on the owner: SWORDMAN02 has it; UseProvokeOwner = 1 (Idle) makes the AI
+	-- walk into range (the owner is adjacent) and cast it on the owner, not on itself.
+	mercenary_provoke = { merc = { mertype = 22 }, skills = { "MER_PROVOKE:5" }, mobs = {},
+		passive = true, minAttacks = 0, ticks = 40,
+		set = { UseProvokeOwner = 1, UseOffensiveBuff = 0, UseDefensiveBuff = 0 },
+		expect = { "Provoke" },
+		checks = {
+			["Provoke is cast on the owner"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.name == "Provoke" and c.ok and c.a == 2000001 then return true end
+				end
+				return false
+			end,
+		} },
+
+	-- Mercenary Sacrifice: LANCER03 has it; UseSacrificeOwner = 1 casts it on the owner.
+	mercenary_sacrifice = { merc = { mertype = 13 }, skills = { "ML_DEVOTION:1" }, mobs = {},
+		passive = true, minAttacks = 0, ticks = 40,
+		set = { UseSacrificeOwner = 1, UseOffensiveBuff = 0, UseDefensiveBuff = 0 },
+		expect = { "Sacrifice" },
+		checks = {
+			["Sacrifice is cast on the owner"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.name == "Sacrifice" and c.ok and c.a == 2000001 then return true end
+				end
+				return false
+			end,
+		} },
+
 	-- AutoSkillLimit: a global cap on the offensive skills used on one target (the tactic still
 	-- applies on top). The mercenary keeps normal-attacking but stops spending SP on skills.
 	mercenary_skill_limit = { merc = { mertype = 21 }, skills = { "MS_BASH:1" }, mobs = single,
