@@ -13,6 +13,10 @@
 --   dropTactics monster classes whose H_Tactics.lua row is removed (tests the defaults for unknown monsters)
 --   tactics    { [monster class] = { [tactic index] = value } } replaces those entries of the default row
 --   afterLoad  function run after every AI load, to patch the AI's tables or wrap its functions
+--   onTick     function(world, now, OWNER, HOMUN) run before every AI() call
+--   reloadAt   tick that simulates a map change: the client reloads every AI file
+--   afterReload function(skillKnown) run right after that reload
+--   retainer   { id, x, y, target, homuntype } the owner's other homunculus/mercenary in the world
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -1894,6 +1898,124 @@ SCENARIOS = {
 		checks = {
 			["a monster attacked by a retainer becomes the homunculus target"] = function()
 				return MyEnemy == 60001
+			end,
+		} },
+
+	-- Legacy HOLD command (OnHOLD_CMD -> HOLD_CMD_ST): the homunculus stands its ground and hits
+	-- an attacker that is already inside its attack range.
+	hold_command = { homuntype = 2, skills = {}, mobs = { {102,100} },
+		minAttacks = 1, ticks = 60,
+		afterLoad = function()
+			OnHOLD_CMD()
+			HOLD_STATE, HOLD_DESTX, HOLD_DESTY = MyState, MyDestX, MyDestY
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				local x, y = GetV(V_POSITION, MyID)
+				if MyState ~= HOLD_CMD_ST then HOLD_LEFT = true end
+				if x ~= 101 or y ~= 100 then HOLD_MOVED = true end
+			end
+		end,
+		checks = {
+			["the hold command sets HOLD_CMD_ST and clears the destination"] = function()
+				return HOLD_STATE == HOLD_CMD_ST and HOLD_DESTX == 0 and HOLD_DESTY == 0
+			end,
+			["the homunculus never leaves HOLD_CMD_ST"] = function() return HOLD_LEFT ~= true end,
+			["an attacker in reach is attacked"] = function() return (HarnessMob(60001).hitsTaken or 0) > 0 end,
+		} },
+
+	-- HOLD has no chase: an attacker out of reach is dropped instead of followed. The AI is put in
+	-- HOLD_CMD_ST before the first tick, so the idle targeting never runs.
+	hold_command_range = { homuntype = 2, skills = {}, mobs = { {103,100} },
+		minAttacks = 0, ticks = 60,
+		afterLoad = function()
+			OnHOLD_CMD()
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				if MyState ~= HOLD_CMD_ST then HOLD_LEFT = true end
+			end
+		end,
+		checks = {
+			["an attacker out of reach is neither chased nor attacked"] = function()
+				local h = HarnessMob(2001)
+				return HOLD_LEFT ~= true and (h.attacks or 0) == 0 and h.x == 101 and h.y == 100
+			end,
+		} },
+
+	-- Legacy ground-skill command (OnSKILL_AREA_CMD -> SKILL_AREA_CMD_ST): out of range of the
+	-- commanded cell the homunculus walks into range first, then casts there and returns to IDLE.
+	skill_area_command = { homuntype = 51, skills = DIETER_SKILLS, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 40, expect = { "Lava Slide" },
+		afterLoad = function()
+			OnSKILL_AREA_CMD(5, MH_LAVA_SLIDE, 112, 100)
+			SKILLAREA_STATE, SKILLAREA_DESTX, SKILLAREA_DESTY = MyState, MyDestX, MyDestY
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				local x = GetV(V_POSITION, MyID)
+				if x > (SKILLAREA_MAX_X or 0) then SKILLAREA_MAX_X = x end
+				-- the command state is left as soon as the skill is cast (IDLE_ST and its idle
+				-- walk/buff follow-ups are the normal behavior again)
+				if MyState ~= SKILL_AREA_CMD_ST then SKILLAREA_LEFT = true end
+			end
+		end,
+		checks = {
+			["the area command sets SKILL_AREA_CMD_ST and the ground cell"] = function()
+				return SKILLAREA_STATE == SKILL_AREA_CMD_ST and SKILLAREA_DESTX == 112 and SKILLAREA_DESTY == 100
+			end,
+			["the homunculus walks towards the cell before casting"] = function()
+				return (SKILLAREA_MAX_X or 0) >= 104
+			end,
+			["the skill is cast on the commanded cell"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.ok and c.kind == "gnd" and c.name == "Lava Slide" and c.a == 112 and c.b == 100 then
+						return true
+					end
+				end
+				return false
+			end,
+			["the command state ends with no pending skill"] = function()
+				return SKILLAREA_LEFT == true and MyState ~= SKILL_AREA_CMD_ST and MySkill == 0
+			end,
+		} },
+
+	-- Map change: the client reloads every AI file and the party reappears somewhere else. The
+	-- reloaded AI must start from a fresh state, apply the per-type preset again and fight the
+	-- monsters of the new map without a single cast the server refuses.
+	reload_map_change = { homuntype = 51, skills = DIETER_SKILLS, mobs = { {103,100} },
+		minAttacks = 2, ticks = 400, reloadAt = 150,
+		afterReload = function()
+			RELOAD_TICK, RELOAD_ATTACKS = GetTick(), HarnessMob(2001).attacks or 0
+			-- doInit() only runs inside the next AI() call, so this is the raw state of the freshly
+			-- loaded files
+			RELOAD_STATE = MyState
+			-- the client warps the party; the monster stands where the new map spawns it
+			local owner, homun, mob = HarnessMob(2000001), HarnessMob(2001), HarnessMob(60001)
+			owner.x, owner.y = 140, 140
+			homun.x, homun.y = 141, 140
+			mob.x, mob.y = 143, 140
+		end,
+		onTick = function(world, now)
+			if RELOAD_TICK and now > RELOAD_TICK then
+				if MyState == CHASE_ST or MyState == ATTACK_ST then ENGAGED_AFTER_RELOAD = true end
+				if TypeConfigApplied == "Dieter" then TYPE_AFTER_RELOAD = true end
+			end
+		end,
+		checks = {
+			["the AI is reloaded after it has been fighting"] = function() return (RELOAD_ATTACKS or 0) > 0 end,
+			["the reloaded AI starts from a fresh IDLE_ST"] = function() return RELOAD_STATE == IDLE_ST end,
+			["the per-type preset is applied again after the reload"] = function()
+				return TYPE_AFTER_RELOAD == true and AutoMobCount == 1
+			end,
+			["the homunculus engages the monsters of the new map"] = function()
+				return ENGAGED_AFTER_RELOAD == true and MyEnemy == 60001
+			end,
+			["it keeps attacking after the map change"] = function()
+				return (HarnessMob(2001).attacks or 0) > (RELOAD_ATTACKS or 0) + 2
+			end,
+			["no cast is refused after the map change"] = function()
+				return HarnessRefusedSince(RELOAD_TICK) == 0
 			end,
 		} },
 }
