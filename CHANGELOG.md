@@ -31,7 +31,7 @@ Patch release: performance, a targeting fix and test coverage.
 - Tests: the harness covers the legacy command states (`OnMOVE_CMD`, `OnSTOP_CMD`,
   `OnATTACK_AREA_CMD`, `OnHOLD_CMD`, `OnFOLLOW_CMD`, `OnSKILL_AREA_CMD`, `OnSKILL_OBJECT_CMD`,
   `OnATTACK_OBJECT_CMD`), `OnREST_ST`, the patrol command, the tank tactic, the retainer and
-  map-change reloads, and a mercenary run, with 124 scenarios.
+  map-change reloads, the sticky move and a mercenary run, with 126 scenarios.
 - Repository: branches are `main` (development) and `classic` (original AzzyAI); the browser
   configuration is included in the release ZIP; the CI builds Lua 5.1 from source when the
   Ubuntu mirrors are unreachable.

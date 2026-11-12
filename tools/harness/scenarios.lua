@@ -2246,6 +2246,66 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- CommandedFightStay: an ordered monster is fought until it dies even when the owner walks
+	-- away. The owner leaves during the fight, so the AI() "too far from the owner" guard would
+	-- pull the homunculus into FOLLOW_ST; the option exempts MyEnemy == CommandedEnemy.
+	commanded_fight_stay = { homuntype = 2, skills = {}, mobs = { {103,100} }, passive = true,
+		minAttacks = 1, ticks = 140, set = { CommandedFightStay = 1 },
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_OBJECT_CMD(60001)
+				end
+			end
+		end,
+		onTick = function(world, now, owner, homun)
+			if now == 3000 then COMMANDED_ATTACKS = world[homun].attacks or 0 end
+			-- the owner walks away while the ordered fight goes on
+			if now > 3000 and now <= 7000 then world[owner].x = world[owner].x + 1 end
+		end,
+		checks = {
+			["it was fighting the ordered monster before the owner left"] = function()
+				return (COMMANDED_ATTACKS or 0) > 0
+			end,
+			["it keeps fighting with the owner far away"] = function()
+				local h, o = HarnessMob(2001), HarnessMob(2000001)
+				return (h.attacks or 0) > COMMANDED_ATTACKS + 4 and math.abs(o.x - h.x) > 14
+					and MyEnemy == 60001
+			end,
+		} },
+
+	-- Same fight with CommandedFightStay = 0: when the owner gets out of the move bounds the
+	-- fight is dropped and the homunculus follows the owner again.
+	commanded_fight_giveup = { homuntype = 2, skills = {}, mobs = { {103,100} }, passive = true,
+		minAttacks = 1, ticks = 140, set = { CommandedFightStay = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_OBJECT_CMD(60001)
+				end
+			end
+		end,
+		onTick = function(world, now, owner, homun)
+			if now == 3000 then COMMANDED_ATTACKS = world[homun].attacks or 0 end
+			if now == 5000 then COMMANDED_ATTACKS_LATE = world[homun].attacks or 0 end
+			if now > 3000 and now <= 7000 then world[owner].x = world[owner].x + 1 end
+		end,
+		checks = {
+			["it fought while the owner was close"] = function() return (COMMANDED_ATTACKS or 0) > 0 end,
+			["the fight is dropped and it follows the owner"] = function()
+				local h, o = HarnessMob(2001), HarnessMob(2000001)
+				return (h.attacks or 0) == COMMANDED_ATTACKS_LATE and math.abs(o.x - h.x) <= 4
+			end,
+		} },
+
 	-- MoveSticky: the move command pins the homunculus around the cell where it arrived. With
 	-- MoveStickyFight = 0 it stays out of the fight even with a monster attacking the owner next
 	-- to it, and no idle walk drags it back to the owner.
