@@ -8,7 +8,7 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## 2.0.1
 
-Patch release: performance, a targeting fix and test coverage.
+Patch release: performance, targeting and command fixes, removal of options that did nothing, and test coverage.
 
 - Performance: the IDLE target acquisition builds `FriendTargets` inside the actor loop (no
   second walk over the actors), caches the target-priority context and the AoE cluster weights
