@@ -1855,21 +1855,6 @@ function	OnMOVE_CMD_ST ()
 	end
 end
 
-function OnSTOP_CMD_ST ()
-
-
-end
-
-
-
-
-function OnATTACK_OBJECT_CMD_ST ()
-
-	
-
-end
-
-
 -- Legacy helpers from the stock AI, still used by the PATROL/HOLD/ATTACK_AREA command states.
 function GetOwnerEnemy(myid)
 	for i,v in ipairs(GetActors()) do
@@ -4267,10 +4252,6 @@ function AI(myid)
 		OnFOLLOW_ST ()
 	elseif (MyState == MOVE_CMD_ST) then
 		OnMOVE_CMD_ST ()
-	elseif (MyState == STOP_CMD_ST) then
-		OnSTOP_CMD_ST ()
-	elseif (MyState == ATTACK_OBJECT_CMD_ST) then
-		OnATTACK_OBJECT_CMD_ST ()
 	elseif (MyState == ATTACK_AREA_CMD_ST) then
 		OnATTACK_AREA_CMD_ST ()
 	elseif (MyState == PATROL_CMD_ST) then
