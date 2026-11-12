@@ -30,6 +30,9 @@ Patch release: performance, targeting and command fixes, removal of options that
 - Fix: `AutoSkillLimit` is implemented. It was documented and shipped in `H_Config.lua`/
   `M_Config.lua` but no code read it: it now caps how many offensive skills are used on one
   target (0 = no limit, the default). The count is per target and survives chase/attack changes.
+- Repository: removed `Defaults.cs` from the Windows app (564 lines). Nothing referenced it: the
+  GUI reads its own `HomConf`/`MerConf` properties, and the file only kept the parser (and the
+  dead entries) of options the AI had dropped.
 - Repository: dead keys removed from the shipped configs and the web GUI template
   (`AttackLastHPSP`, `AutoComboSkill`, a duplicate `AutoDetectPlants`, the old
   `ProvokeOwnerMobbed` name that became `DefensiveBuffOwnerMobbed`, and the `PVPMode` typo that
