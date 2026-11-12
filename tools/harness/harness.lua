@@ -119,10 +119,14 @@ function GetV(v, id, extra, extra2)
 	local e = world[id]
 	if v == V_OWNER then return OWNER end
 	if not e then
-		if v == V_POSITION then return -1, -1 end
+		if v == V_POSITION or v == V_POSITION_APPLY_SKILLATTACKRANGE then return -1, -1 end
 		return 0
 	end
 	if v == V_POSITION then return e.x, e.y end
+	-- the client's estimated cast position for a skill (only asked for by GetStandPoint); the
+	-- harness answers the target's own cell, which is what the AI falls back to when the estimate
+	-- is unusable
+	if v == V_POSITION_APPLY_SKILLATTACKRANGE then return e.x, e.y end
 	if v == V_TYPE then return e.class or 0 end
 	if v == V_MOTION then return e.dead and MOTION_DEAD or (e.motion or MOTION_STAND) end
 	if v == V_ATTACKRANGE then return e.atkrange or 1 end
@@ -136,7 +140,11 @@ function GetV(v, id, extra, extra2)
 		if skillKnown[extra] and (extra2 or 1) <= skillKnown[extra] then return rangeOf(extra, extra2) end
 		return 1
 	end
-	if v == V_HOMUNTYPE then return e.homuntype or e.class end
+	-- a mercenary (mertype set) has no homunculus type; monsters and players report their class
+	if v == V_HOMUNTYPE then
+		if e.mertype then return nil end
+		return e.homuntype or e.class
+	end
 	if v == V_HP then return e.hp end
 	if v == V_SP then return e.sp end
 	if v == V_MAXHP then return e.maxhp end
@@ -462,7 +470,7 @@ end
 local mobBase = (sc.private or sc.privateIds) and 110000000 or 60000
 ent(OWNER, { x = 100, y = 100, hp = 10000, maxhp = 10000, sp = 500, maxsp = 500, class = 4060 })
 ent(HOMUN, { x = 101, y = 100, hp = 20000, maxhp = 20000, sp = sc.sp or 800, maxsp = sc.sp or 800,
-	homuntype = sc.homuntype, atkrange = 1 })
+	homuntype = sc.homuntype, mertype = sc.merc and (sc.merc.mertype or 21) or nil, atkrange = 1 })
 for i, m in ipairs(sc.mobs) do
 	-- { x, y } attacks the owner (or stands still with sc.passive); { x, y, mobId } behaves
 	-- like that rAthena monster: plants stand still, passive monsters only fight back
@@ -470,9 +478,10 @@ for i, m in ipairs(sc.mobs) do
 	assert(not m[3] or mob or not haveRathena, "monster " .. tostring(m[3]) .. " not in fixtures/rathena.lua")
 	local aggressive = not sc.passive
 	if mob then aggressive = aggressive and AGGRESSIVE_AI[mob.ai] == true and not IMMOBILE_AI[mob.ai] end
+	-- 2 = MOTION_ATTACK, 0 = MOTION_STAND: Const_.lua is not loaded yet when this world is built
 	ent(mobBase + i, { monster = true, x = m[1], y = m[2], hp = 99999, maxhp = 99999, sp = 0, maxsp = 0,
 		class = m[3] or 1002, ra = mob, dmgOver = m[4], target = aggressive and OWNER or 0,
-		motion = aggressive and MOTION_ATTACK or MOTION_STAND, atkrange = 1 })
+		motion = aggressive and 2 or 0, atkrange = 1 })
 end
 
 -- Optional retainer (the owner's other homunculus/mercenary) attacking a monster: used to test
@@ -484,6 +493,14 @@ if sc.retainer then
 		homuntype = ret.homuntype or sc.homuntype, target = mobBase + (ret.target or 1),
 		-- 2 = MOTION_ATTACK; Const_.lua is not loaded yet when this world is built
 		motion = ret.motion or 2, atkrange = 1 })
+end
+
+-- Optional player actor (not a monster): a friend, another player, anything the AI sees as
+-- IsMonster() == 0. Used by the SKILL_OBJECT_CMD test, which only takes the command-state path
+-- for non-monsters.
+if sc.player then
+	ent(sc.player.id or 3002, { x = sc.player.x, y = sc.player.y, hp = sc.player.hp or 10000,
+		maxhp = sc.player.hp or 10000, sp = 100, maxsp = 100, class = sc.player.class or 4060, atkrange = 1 })
 end
 
 -- Config overrides go in right after H_Config.lua, before AI_main.lua applies them,
@@ -498,7 +515,7 @@ local function loadAI()
 	for k, v in pairs(cleanG) do _G[k] = v end
 	dofile = function(path)
 		local r = realdofile(path)
-		if path:find("H_Config.lua", 1, true) then
+		if path:find("Config%.lua") then
 			if sc.private then ServerType = SERVER_PRIVATE end
 			TrustSkillProbe = 1 -- the simulated client answers the learned-level probe honestly
 			EleanorComboGap = 0 -- and the simulated server accepts follow-ups immediately
@@ -506,7 +523,8 @@ local function loadAI()
 		end
 		return r
 	end
-	local ok, e = pcall(realdofile, "./AI/USER_AI/AI.lua")
+	local mainFile = sc.merc and "./AI/USER_AI/AI_M.lua" or "./AI/USER_AI/AI.lua"
+	local ok, e = pcall(realdofile, mainFile)
 	dofile = realdofile
 	if not ok then error(e, 0) end
 	-- scenario overrides stay on top of the per-type preset applied by doInit

@@ -1,5 +1,6 @@
 -- Test scenarios for harness.lua. Each one runs the real AI for ~30 s of game time.
 --   homuntype  homunculus S type (EIRA=48, BAYERI=49, SERA=50, DIETER=51, ELEANOR=52)
+--   merc       { mertype = N } run AI_M.lua instead of AI.lua for a mercenary (21 = SWORDMAN01)
 --   skills     skills the homunculus has learned
 --   mobs       monster positions (owner stands at 100,100, all monsters attack the owner);
 --              { x, y, mobId } behaves like that rAthena monster (fixtures/rathena.lua RA_MOB):
@@ -17,6 +18,7 @@
 --   reloadAt   tick that simulates a map change: the client reloads every AI file
 --   afterReload function(skillKnown) run right after that reload
 --   retainer   { id, x, y, target, homuntype } the owner's other homunculus/mercenary in the world
+--   player     { id, x, y } an actor IsMonster() reports as a player (SKILL_OBJECT_CMD target)
 --   set        config overrides applied on top of fixtures/H_Config.lua
 --   expect     skills that must be cast at least once
 --   forbid     skills that must never be cast
@@ -2017,6 +2019,243 @@ SCENARIOS = {
 			["no cast is refused after the map change"] = function()
 				return HarnessRefusedSince(RELOAD_TICK) == 0
 			end,
+		} },
+
+	-- Legacy MOVE command (OnMOVE_CMD -> MOVE_CMD_ST): walks to the ordered cell, goes back to
+	-- IDLE_ST on arrival, and a bogus destination (off the owner's screen) is disregarded without
+	-- touching the state or the current order.
+	move_command = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 60, set = { UseIdleWalk = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local phase = 1
+			AI = function(id)
+				realAI(id)
+				local x, y = GetV(V_POSITION, MyID)
+				if phase == 1 then
+					OnMOVE_CMD(106, 100)
+					MOVE_STATE = MyState
+					phase = 2
+				elseif phase == 2 and x >= 106 and MyState ~= MOVE_CMD_ST then
+					MOVE_ARRIVED_STATE = MyState
+					MOVE_ARRIVED_X = x
+					local stateBefore, orderBefore = MyState, MyMoveX
+					-- 30 cells from the owner: the client would never accept this
+					OnMOVE_CMD(130, 100)
+					MOVE_BAD_SAME = MyState == stateBefore and MyMoveX == orderBefore
+					phase = 3
+				end
+			end
+		end,
+		checks = {
+			["the move command sets MOVE_CMD_ST"] = function() return MOVE_STATE == MOVE_CMD_ST end,
+			["the homunculus walks to the ordered cell and leaves MOVE_CMD_ST"] = function()
+				return MOVE_ARRIVED_X == 106 and MOVE_ARRIVED_STATE ~= MOVE_CMD_ST
+			end,
+			["a destination outside the owner's screen is disregarded"] = function()
+				return MOVE_BAD_SAME == true and HarnessMob(2001).x < 110
+			end,
+		} },
+
+	-- Legacy STOP command (OnSTOP_CMD): drops the chase and the pending skill and goes back to
+	-- IDLE_ST, so the next tick targets again from scratch.
+	stop_command = { homuntype = 2, skills = {}, mobs = { {106,100} },
+		minAttacks = 0, ticks = 40,
+		afterLoad = function()
+			local realAI = AI
+			local n = 0
+			AI = function(id)
+				realAI(id)
+				n = n + 1
+				if n == 25 then
+					STOP_BEFORE_STATE, STOP_BEFORE_ENEMY = MyState, MyEnemy
+					OnSTOP_CMD()
+					STOP_STATE, STOP_ENEMY = MyState, MyEnemy
+					STOP_DESTX, STOP_DESTY, STOP_SKILL = MyDestX, MyDestY, MySkill
+				end
+			end
+		end,
+		checks = {
+			["the homunculus was chasing before the stop"] = function()
+				return (STOP_BEFORE_STATE == CHASE_ST or STOP_BEFORE_STATE == ATTACK_ST)
+					and STOP_BEFORE_ENEMY == 60001
+			end,
+			["the stop command returns to IDLE_ST and clears the order"] = function()
+				return STOP_STATE == IDLE_ST and STOP_ENEMY == 0 and STOP_DESTX == 0 and STOP_DESTY == 0
+					and STOP_SKILL == 0
+			end,
+		} },
+
+	-- Legacy ATTACK_AREA command (OnATTACK_AREA_CMD -> ATTACK_AREA_CMD_ST): an enemy of the owner
+	-- inside the area becomes the target, so the area order turns into a chase.
+	attack_area_command = { homuntype = 2, skills = {}, mobs = { {103,100} },
+		minAttacks = 1, ticks = 60,
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_AREA_CMD(108, 105)
+					AREA_STATE, AREA_DESTX = MyState, MyDestX
+					AREA_ENEMY = MyEnemy
+				end
+			end
+		end,
+		checks = {
+			["the area command sets ATTACK_AREA_CMD_ST with no target yet"] = function()
+				return AREA_STATE == ATTACK_AREA_CMD_ST and AREA_DESTX == 108 and AREA_ENEMY == 0
+			end,
+			["an enemy of the owner inside the area is chased"] = function()
+				return MyEnemy == 60001 and (MyState == CHASE_ST or MyState == ATTACK_ST)
+			end,
+		} },
+
+	-- Same command with nothing to fight: the homunculus walks to the area and then goes back to
+	-- IDLE_ST (the arrival branch).
+	attack_area_arrival = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 60, set = { UseIdleWalk = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				local x, y = GetV(V_POSITION, MyID)
+				if not issued then
+					issued = true
+					OnATTACK_AREA_CMD(104, 100)
+					AREA_SEEN = MyState == ATTACK_AREA_CMD_ST
+				elseif x == 104 and y == 100 and MyState == IDLE_ST then
+					AREA_ARRIVED_STATE = MyState
+					AREA_ARRIVED_X = x
+				end
+			end
+		end,
+		checks = {
+			["the area command is entered and then left at the destination"] = function()
+				return AREA_SEEN == true and AREA_ARRIVED_X == 104 and AREA_ARRIVED_STATE == IDLE_ST
+			end,
+		} },
+
+	-- Legacy FOLLOW command (OnFOLLOW_CMD): the first call follows the owner at FollowStayBack,
+	-- a second call while following goes back to IDLE_ST and the homunculus stops following.
+	follow_command = { homuntype = 2, skills = {}, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 120,
+		set = { FollowStayBack = 2, UseIdleWalk = 0 },
+		afterLoad = function()
+			local realAI = AI
+			local n = 0
+			AI = function(id)
+				realAI(id)
+				n = n + 1
+				if n == 1 then
+					OnFOLLOW_CMD()
+					FOLLOW_STATE = MyState
+				elseif n == 40 then
+					FOLLOW_TOGGLE_STATE = MyState
+					OnFOLLOW_CMD()
+					FOLLOW_OFF_STATE = MyState
+				end
+				if MyState == FOLLOW_CMD_ST and FOLLOW_OFF_STATE ~= nil then FOLLOW_REENTERED = true end
+			end
+		end,
+		onTick = function(world, now, owner, homun)
+			-- the owner walks away while the homunculus follows, then keeps walking after the toggle
+			if now > 2000 and now <= 3400 then world[owner].x = world[owner].x + 1 end
+			if now > 5000 and now <= 7300 then world[owner].x = world[owner].x + 1 end
+			local gap = math.abs(world[owner].x - world[homun].x)
+			if FOLLOW_OFF_STATE == nil then
+				if gap > (FOLLOW_MAX_GAP or 0) then FOLLOW_MAX_GAP = gap; FOLLOW_MAX_GAP_AT = now end
+			elseif gap > (IDLE_MAX_GAP or 0) then
+				IDLE_MAX_GAP = gap
+			end
+		end,
+		checks = {
+			["the follow command sets FOLLOW_CMD_ST"] = function() return FOLLOW_STATE == FOLLOW_CMD_ST end,
+			["the homunculus follows the walking owner"] = function()
+				return FOLLOW_TOGGLE_STATE == FOLLOW_CMD_ST and HarnessMob(2001).x >= 108
+			end,
+			["while following it stays within FollowStayBack"] = function()
+				return (FOLLOW_MAX_GAP or 99) <= 3
+			end,
+			["a second follow command goes back to IDLE_ST"] = function()
+				return FOLLOW_OFF_STATE == IDLE_ST and FOLLOW_REENTERED ~= true
+			end,
+			["only the idle distance rule applies again after the toggle"] = function()
+				return (IDLE_MAX_GAP or 0) >= 4
+			end,
+		} },
+
+	-- SKILL_OBJECT_CMD on a player: not a monster, so the command uses SKILL_OBJECT_CMD_ST, walks
+	-- into the skill range and casts on that actor.
+	skill_object_command = { homuntype = 49, skills = BAYERI_SKILLS, mobs = {}, passive = true,
+		minAttacks = 0, ticks = 40, expect = { "Glanzen Spies" },
+		player = { id = 3002, x = 106, y = 100 },
+		afterLoad = function()
+			OnSKILL_OBJECT_CMD(10, MH_GLANZEN_SPIES, 3002)
+			SO_STATE, SO_TARGET, SO_SKILL = MyState, MyEnemy, MySkill
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				if MyState ~= SKILL_OBJECT_CMD_ST then SO_LEFT = true end
+				local x = GetV(V_POSITION, MyID)
+				if x > (SO_MAX_X or 0) then SO_MAX_X = x end
+			end
+		end,
+		checks = {
+			["the command state targets the player with the skill"] = function()
+				return SO_STATE == SKILL_OBJECT_CMD_ST and SO_TARGET == 3002 and SO_SKILL == MH_GLANZEN_SPIES
+			end,
+			["the homunculus walks into range before casting"] = function() return (SO_MAX_X or 0) >= 103 end,
+			["the skill is cast on the player"] = function()
+				for _, c in ipairs(HarnessCasts) do
+					if c.ok and c.kind == "obj" and c.name == "Glanzen Spies" and c.a == 3002 then
+						return true
+					end
+				end
+				return false
+			end,
+			["the command state ends"] = function() return SO_LEFT == true and MyState ~= SKILL_OBJECT_CMD_ST end,
+		} },
+
+	-- ATTACK_OBJECT_CMD: an explicit order to fight a monster the idle targeting would leave alone
+	-- (passive, not attacking the owner). It also sets CommandedEnemy and bypasses KS protection.
+	attack_object_command = { homuntype = 2, skills = {}, mobs = { {106,100} }, passive = true,
+		minAttacks = 1, ticks = 60,
+		afterLoad = function()
+			local realAI = AI
+			local issued = false
+			AI = function(id)
+				realAI(id)
+				if not issued then
+					issued = true
+					OnATTACK_OBJECT_CMD(60001)
+					OBJ_STATE, OBJ_ENEMY = MyState, MyEnemy
+					OBJ_COMMANDED, OBJ_BYPASS = CommandedEnemy, BypassKSProtect
+				end
+			end
+		end,
+		checks = {
+			["the ordered monster becomes the target"] = function()
+				return OBJ_STATE == CHASE_ST and OBJ_ENEMY == 60001 and OBJ_COMMANDED == 60001
+					and OBJ_BYPASS == 1
+			end,
+			["the homunculus reaches and attacks it"] = function()
+				return (HarnessMob(60001).hitsTaken or 0) > 0
+			end,
+		} },
+
+	-- Mercenaries run a separate AI state (AI_M.lua, M_Config.lua, M_Tactics.lua) that had no
+	-- behavioral coverage at all: at least chase and hit a monster attacking the owner.
+	mercenary_attacks = { merc = { mertype = 21 }, skills = { "MS_BASH:1", "MER_DECAGI:1" },
+		mobs = single, minAttacks = 1, ticks = 60, expect = { "Bash" },
+		checks = {
+			["the mercenary type is detected at init"] = function() return MercType == SWORDMAN01 end,
+			["the mercenary chases and attacks the owner's attacker"] = function()
+				return (HarnessMob(60001).hitsTaken or 0) > 0 and MyEnemy == 60001
+			end,
+			["it is not mistaken for a homunculus"] = function() return IsHomun(MyID) == 0 end,
 		} },
 }
 
