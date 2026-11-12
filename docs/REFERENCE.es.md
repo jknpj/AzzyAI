@@ -145,7 +145,7 @@ cerca de ti.
 |---|---|---|
 | `FollowStayBack` | 2 | Celdas que se queda detrás de ti al seguirte. |
 | `StationaryMoveBounds`, `MobileMoveBounds` | 14, 9 | Hasta qué distancia de ti puede ir para reaccionar (estando tú quieto / en movimiento). Más allá, abandona todo y vuelve. Mantén ambos en **14 o menos**. |
-| `MoveSticky` | 0 | 1 = tras una orden de movimiento, se queda allí hasta recibir otra orden de movimiento. |
+| `MoveSticky` | 0 | 1 = tras una orden de movimiento, se queda en torno al destino hasta recibir otra orden de movimiento, incluso volviendo a él después de una pelea. |
 | `MoveStickyFight` | 0 | 1 = aun estando fijada así, sigue luchando normalmente. |
 | `StayAwayDistance` | 0 | **Nuevo.** Mantiene aproximadamente esta distancia de ti mientras está inactiva (limitada por los límites de movimiento). 0 = desactivado. Útil en instancias donde el homúnculo retiene a los monstruos. |
 | `StayAwayHold` | 0 | **Nuevo.** 1 = se queda en un punto y vuelve a él tras las peleas, en vez de seguirte. |

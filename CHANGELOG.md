@@ -54,7 +54,7 @@ Patch release: performance, targeting and command fixes, removal of options that
 - Tests: the harness covers the legacy command states (`OnMOVE_CMD`, `OnSTOP_CMD`,
   `OnATTACK_AREA_CMD`, `OnHOLD_CMD`, `OnFOLLOW_CMD`, `OnSKILL_AREA_CMD`, `OnSKILL_OBJECT_CMD`,
   `OnATTACK_OBJECT_CMD`), `OnREST_ST`, the patrol command, the tank tactic, the retainer and
-  map-change reloads, the sticky move, ordered fights (including a target far from the owner), kiting and a mercenary run, with 132 scenarios. The harness also fails when an option in `Defaults.lua`, `H_Config.lua` or `M_Config.lua` has no reader, which is how the options above were found.
+  map-change reloads, the sticky move, ordered fights (including a target far from the owner), kiting, mercenary attacks/skills/buffs and ordered fights far from the owner, with 133 scenarios. The harness also fails when an option in `Defaults.lua`, `H_Config.lua` or `M_Config.lua` has no reader, which is how the options above were found.
 - Repository: branches are `main` (development) and `classic` (original AzzyAI); the browser
   configuration is included in the release ZIP; the CI builds Lua 5.1 from source when the
   Ubuntu mirrors are unreachable.

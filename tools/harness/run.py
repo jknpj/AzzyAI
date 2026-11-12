@@ -143,6 +143,11 @@ def run_scenario(lua, name, ticks, env):
         # points at another one (the benchmarks compare against the shipped USER_AI/H_Config.lua)
         shutil.copy(env.get("HARNESS_CONFIG") or os.path.join(HERE, "fixtures", "H_Config.lua"),
                     os.path.join(dst, "H_Config.lua"))
+        # mercenary scenarios use a fixed M_Config too, so a change to the shipped preset does not
+        # silently change what they test (HARNESS_MCONFIG points at another one)
+        merc = env.get("HARNESS_MCONFIG") or os.path.join(HERE, "fixtures", "M_Config.lua")
+        if os.path.exists(merc):
+            shutil.copy(merc, os.path.join(dst, "M_Config.lua"))
         r = subprocess.run([lua, os.path.join(HERE, "harness.lua"), name, str(ticks)],
                            cwd=tmp, capture_output=True, text=True, env=env, timeout=300)
         sys.stdout.write(r.stdout)

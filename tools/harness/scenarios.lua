@@ -2502,6 +2502,13 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- Mercenary buffs (the path had no coverage): an ARCHER03 has Weapon Quicken, so with
+	-- UseOffensiveBuff = 1 (Idle) it must cast it on itself while idling.
+	mercenary_quicken = { merc = { mertype = 3 }, skills = { "MER_QUICKEN:1" }, mobs = {},
+		passive = true, minAttacks = 0, ticks = 40,
+		set = { UseOffensiveBuff = 1, UseDefensiveBuff = 0 },
+		expect = { "Weapon Quicken" } },
+
 	-- AutoSkillLimit: a global cap on the offensive skills used on one target (the tactic still
 	-- applies on top). The mercenary keeps normal-attacking but stops spending SP on skills.
 	mercenary_skill_limit = { merc = { mertype = 21 }, skills = { "MS_BASH:1" }, mobs = single,

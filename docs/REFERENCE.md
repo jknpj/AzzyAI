@@ -137,7 +137,7 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 |---|---|---|
 | `FollowStayBack` | 2 | Cells it stays behind you when following. |
 | `StationaryMoveBounds`, `MobileMoveBounds` | 14, 9 | How far from you it may go to react (you standing / moving). Past this it drops everything and returns. Keep both at **14 or less**. |
-| `MoveSticky` | 0 | 1 = after a move command, stay there until told to move again. |
+| `MoveSticky` | 0 | 1 = after a move command, stay around that cell until told to move again, including walking back to it after a fight. |
 | `MoveStickyFight` | 0 | 1 = in that sticky state it still fights normally. |
 | `StayAwayDistance` | 0 | **New.** Keep about this many cells from you while idle (limited by the move bounds). 0 = off. Useful in instances where the homunculus tanks. |
 | `StayAwayHold` | 0 | **New.** 1 = park at one spot and return to it after fights instead of following you. |

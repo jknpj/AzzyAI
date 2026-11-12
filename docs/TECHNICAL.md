@@ -198,7 +198,7 @@ required; C# Dev Kit is not required. WinForms visual designer support
 requires full Visual Studio with .NET desktop development, not VS Code or
 Build Tools. This setup does not add a designer.
 
-The AI can't run outside the RO client, so `tools/harness/` contains an offline simulator: it mocks the client API (`GetV`, `GetActors`, `SkillObject`, ...), loads the real `USER_AI` files with a fixed config (`tools/harness/fixtures/H_Config.lua`) and runs scenarios (`tools/harness/scenarios.lua`) for every homunculus S, checking that:
+The AI can't run outside the RO client, so `tools/harness/` contains an offline simulator: it mocks the client API (`GetV`, `GetActors`, `SkillObject`, ...), loads the real `USER_AI` files with a fixed config (`tools/harness/fixtures/H_Config.lua`, and `fixtures/M_Config.lua` for the mercenary scenarios) and runs scenarios (`tools/harness/scenarios.lua`) for every homunculus S and for a mercenary, checking that:
 
 - expected skills are cast and forbidden ones aren't;
 - no skill is cast without enough SP or before its cooldown;
@@ -222,11 +222,19 @@ python tools/harness/rathena_sync.py --fixture-only  # only fixtures/rathena.lua
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
 ```
-python tools/harness/run.py              # syntax check of all .lua + all scenarios
+python tools/harness/run.py              # static checks (below) + all scenarios
 python tools/harness/run.py dieter sera  # only some scenarios
 python tools/harness/run.py --verbose --trace bayeri
 python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
+
+Before the scenarios, `run.py` runs the static checks and fails the run when one of them breaks:
+syntax of every `.lua` file; the release number against `CHANGELOG.md` and the GUI's
+`AssemblyInfo.cs`; and **every option in `Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
+read by some AI file** (`options: N in ..., M unread`). That last one exists because an option
+nothing reads is a switch the player can change with no effect at all, which happened several
+times (the `Berzerk_*` mis-spelling of the mercenary options, `KiteParanoid`, `MoveStickyFight`).
+`--skip-syntax` skips these three checks for the benchmark runs.
 
 `--profile` reports time per `AI()` call, the hottest functions (sampled), `GetV` calls per tick by type, Lua heap after GC and global tables that keep growing (leak check). The `crowd_*` scenarios put 40 monsters on screen to stress the per-tick loops. Absolute times are relative to the mock, not the RO client.
 
