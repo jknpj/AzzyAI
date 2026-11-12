@@ -2246,6 +2246,72 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- MoveSticky: the move command pins the homunculus around the cell where it arrived. With
+	-- MoveStickyFight = 0 it stays out of the fight even with a monster attacking the owner next
+	-- to it, and no idle walk drags it back to the owner.
+	move_sticky_hold = { homuntype = 2, skills = {}, mobs = { {112,100} },
+		minAttacks = 0, ticks = 100,
+		set = { MoveSticky = 1, MoveStickyFight = 0, UseIdleWalk = 4 },
+		afterLoad = function()
+			local realAI = AI
+			local moved = false
+			AI = function(id)
+				realAI(id)
+				if not moved then
+					moved = true
+					OnMOVE_CMD(105, 100)
+				end
+				if ReturnToMoveHold == 1 and StickyX == 105 then STICKY_PINNED = true end
+				local x, y = GetV(V_POSITION, MyID)
+				if STICKY_PINNED and (x ~= 105 or y ~= 100) then STICKY_MOVED = true end
+			end
+		end,
+		checks = {
+			["the move command pins the homunculus on the cell"] = function() return STICKY_PINNED == true end,
+			["MoveStickyFight = 0 keeps it out of the fight and on the cell"] = function()
+				return (HarnessMob(2001).attacks or 0) == 0 and STICKY_MOVED ~= true
+					and MyState == IDLE_ST
+			end,
+		} },
+
+	-- MoveStickyFight = 1: it engages the monster from the pin, walks back to the cell when the
+	-- fight ends, and a second move command releases the pin.
+	move_sticky_fight = { homuntype = 2, skills = {}, mobs = { {112,100} },
+		minAttacks = 1, ticks = 150,
+		set = { MoveSticky = 1, MoveStickyFight = 1, UseIdleWalk = 4 },
+		afterLoad = function()
+			local realAI = AI
+			AI = function(id)
+				realAI(id)
+				local now = GetTick()
+				if now == 1000 then
+					OnMOVE_CMD(105, 100)
+				elseif now == 5000 then
+					STICKY_ATTACKS = HarnessMob(2001).attacks or 0
+					-- the monster walks out of sight: the fight ends and the pin takes over again
+					local m = HarnessMob(60001)
+					m.x, m.y = 140, 100
+				elseif now == 9000 then
+					OnMOVE_CMD(107, 100)
+				end
+				local x = GetV(V_POSITION, MyID)
+				if STICKY_ATTACKS and now > 5000 and now < 9000 and MyState == IDLE_ST
+					and math.abs(x - 105) <= 3 then
+					STICKY_BACK = true
+				end
+				if STICKY_ATTACKS and ReturnToMoveHold == 0 and StickyX == 0 then UNPINNED = true end
+			end
+		end,
+		checks = {
+			["with MoveStickyFight = 1 it fights from the pin"] = function()
+				return (STICKY_ATTACKS or 0) > 0
+			end,
+			["it walks back to the sticky cell after the fight"] = function()
+				return STICKY_BACK == true
+			end,
+			["a second move command releases the pin"] = function() return UNPINNED == true end,
+		} },
+
 	-- FOLLOW_CMD_ST friending (StandbyFriending): while the owner sits, a player one cell to the
 	-- right joins MyFriends (FRIEND_CIRCLE_ST) and one to the left leaves it (FRIEND_CROSS_ST).
 	-- The command state is set before the first tick, so idle targeting never runs.

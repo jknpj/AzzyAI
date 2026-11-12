@@ -22,8 +22,16 @@ Patch release: performance, a targeting fix and test coverage.
   `--trace`) to get the traces back.
 - Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
   as a friend target, as it did before the targeting consolidation.
-- Tests: the harness now covers `OnREST_ST` (owner sits/stands), the patrol command, the tank
-  tactic and the retainer friend-target case, with 108 scenarios.
+- Fix: `MoveStickyFight` now does what the reference says. With `MoveSticky = 1` the move
+  command pins the homunculus around the cell where it arrived; with `MoveStickyFight = 0`
+  (default) it holds that spot without engaging enemies, and with `MoveStickyFight = 1` it
+  fights normally from there and walks back to the cell afterwards. Before this the option had
+  no code at all, so a pinned homunculus always fought (and drifted back to the owner while
+  idle-walking).
+- Tests: the harness covers the legacy command states (`OnMOVE_CMD`, `OnSTOP_CMD`,
+  `OnATTACK_AREA_CMD`, `OnHOLD_CMD`, `OnFOLLOW_CMD`, `OnSKILL_AREA_CMD`, `OnSKILL_OBJECT_CMD`,
+  `OnATTACK_OBJECT_CMD`), `OnREST_ST`, the patrol command, the tank tactic, the retainer and
+  map-change reloads, and a mercenary run, with 124 scenarios.
 - Repository: branches are `main` (development) and `classic` (original AzzyAI); the browser
   configuration is included in the release ZIP; the CI builds Lua 5.1 from source when the
   Ubuntu mirrors are unreachable.

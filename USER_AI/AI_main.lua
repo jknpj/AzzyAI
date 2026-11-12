@@ -622,6 +622,12 @@ end
 
 
 function	OnIDLE_ST ()
+	-- MoveSticky: the move command pins the homunculus around the cell where it arrived
+	-- (ReturnToMoveHold/StickyX,StickyY, set by OnMOVE_CMD_ST) instead of following the owner.
+	-- While pinned it does not idle-walk and only engages enemies when MoveStickyFight = 1;
+	-- the "Following" block below already measures the distance to that cell, so it walks back
+	-- to it after a fight.
+	local pinned = (MoveSticky ~= 0 and ReturnToMoveHold ~= 0)
 	if TraceAIEnabled ~= 0 then TraceAI ("OnIDLE_ST") end
 	ResetCounters()
 	MySkill					= 0
@@ -637,7 +643,7 @@ function	OnIDLE_ST ()
 		return
 	end
 	--Targeting
-	if SuperPassive~=1 then
+	if SuperPassive~=1 and (not pinned or MoveStickyFight==1) then
 		local	object = SelectEnemy(GetFriendTargets())
 		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
 			MyState = CHASE_ST
@@ -687,7 +693,7 @@ function	OnIDLE_ST ()
 	end
 	if stayaway ~= nil then
 		-- keeping the stay-away distance: no following or idle walking
-	elseif (UseIdleWalk~=0 and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP)) then -- CHECK
+	elseif (UseIdleWalk~=0 and not pinned and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP)) then -- CHECK
 		if ( distance > GetMoveBounds() or distance == -1) then		-- MYOWNER_OUTSIGNT_IN
 			MyState = FOLLOW_ST
 			if TraceAIEnabled ~= 0 then TraceAI ("IDLE_ST -> FOLLOW_ST") end
@@ -707,7 +713,7 @@ function	OnIDLE_ST ()
 		end
 	end
 	DoAutoBuffs(-2)
-	if UseIdleWalk ~=0 and stayaway == nil and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP) then
+	if UseIdleWalk ~=0 and not pinned and stayaway == nil and HPPercent(MyID) > AggroHP and SPPercent(MyID) > math.max(AggroSP,IdleWalkSP) then
 		if TraceAIEnabled ~= 0 then TraceAI("IDLE_ST -> IDLEWALK_ST, idle walk mode ="..UseIdleWalk) end
 		MyState=IDLEWALK_ST
 	end
