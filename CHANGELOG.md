@@ -22,6 +22,13 @@ Patch release: performance, a targeting fix and test coverage.
   `--trace`) to get the traces back.
 - Fix: a monster attacked by the owner's other homunculus/mercenary (a retainer) again counts
   as a friend target, as it did before the targeting consolidation.
+- Fix: `KiteParanoid` now does what the reference says: with it on, a monster that has not
+  attacked anyone yet is kited too, using `KiteParanoidThreshold`. It was never read by the AI.
+- Removed options that no AI code read (changing them did nothing): `AttackLastHPSP` (superseded
+  by `AttackLastFullSP`), `AutoComboSkill` (superseded by `AutoComboMode`/`AutoComboSpheres`),
+  `RouteWalkCircle`, `ProvokeOwnerTries`, `ProvokeOwnerDelay`, `FastChange_A2I` and
+  `AtkPosbugTimeoutLimit` (with its never-used `AtkPosbugFixTimeout` counter). The `PVPMode` line
+  in `Defaults.lua` was a typo for `PVPmode` and never took effect.
 - Fix: a monster you order the homunculus to attack is now actually reached when it stands
   farther than the 14-cell limit from you — the move was discarded and the order dropped, which
   made the option useless for fighting away from a weak owner. `CommandedFightStay = 0` still
@@ -35,7 +42,7 @@ Patch release: performance, a targeting fix and test coverage.
 - Tests: the harness covers the legacy command states (`OnMOVE_CMD`, `OnSTOP_CMD`,
   `OnATTACK_AREA_CMD`, `OnHOLD_CMD`, `OnFOLLOW_CMD`, `OnSKILL_AREA_CMD`, `OnSKILL_OBJECT_CMD`,
   `OnATTACK_OBJECT_CMD`), `OnREST_ST`, the patrol command, the tank tactic, the retainer and
-  map-change reloads, the sticky move, ordered fights (including a target far from the owner) and a mercenary run, with 128 scenarios.
+  map-change reloads, the sticky move, ordered fights (including a target far from the owner), kiting and a mercenary run, with 130 scenarios. The harness also fails when a `Defaults.lua` option has no reader, which is how the options above were found.
 - Repository: branches are `main` (development) and `classic` (original AzzyAI); the browser
   configuration is included in the release ZIP; the CI builds Lua 5.1 from source when the
   Ubuntu mirrors are unreachable.

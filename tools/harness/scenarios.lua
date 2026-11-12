@@ -1690,6 +1690,42 @@ SCENARIOS = {
 			end
 			return true
 		end }),
+	-- KiteParanoid: kite a monster that is not on us yet, with KiteParanoidThreshold instead of
+	-- KiteThreshold. The monster is KITE_REACT (by tactic) and passive, so only the option can
+	-- start the kite.
+	kite_paranoid = { homuntype = 2, skills = {}, mobs = { {103,100} }, passive = true, minAttacks = 0,
+		set = { KiteMonsters = 1, ForceKite = 1, KiteParanoid = 1, KiteByRange = 0, UseIdleWalk = 0 },
+		tactics = { [1002] = { [1] = 0, [3] = 1 } }, -- TACT_BASIC = TACT_IGNORE, TACT_KITE = KITE_REACT
+		afterLoad = function()
+			local real = DoKiteAdjust
+			DoKiteAdjust = function(myid, enemy, minstep)
+				if KITE_FIRST == nil then KITE_FIRST = { GetDistanceA(myid, enemy), minstep } end
+				return real(myid, enemy, minstep)
+			end
+		end,
+		checks = {
+			["kites a monster that is not attacking anyone yet"] = function()
+				local k = KITE_FIRST
+				return k ~= nil and k[1] <= 2
+			end,
+		} },
+
+	kite_paranoid_off = { homuntype = 2, skills = {}, mobs = { {103,100} }, passive = true, minAttacks = 0,
+		set = { KiteMonsters = 1, ForceKite = 1, KiteByRange = 0, UseIdleWalk = 0 },
+		tactics = { [1002] = { [1] = 0, [3] = 1 } }, -- TACT_BASIC = TACT_IGNORE, TACT_KITE = KITE_REACT
+		afterLoad = function()
+			local real = DoKiteAdjust
+			DoKiteAdjust = function(myid, enemy, minstep)
+				if KITE_FIRST == nil then KITE_FIRST = { GetDistanceA(myid, enemy), minstep } end
+				return real(myid, enemy, minstep)
+			end
+		end,
+		checks = {
+			["without the option it does not kite a monster that ignores us"] = function()
+				return KITE_FIRST == nil
+			end,
+		} },
+
 	kite_range_off = kiteScenario(0, {
 		["does not kite until the monster is within KiteParanoidThreshold"] = function()
 			local k = KITE_FIRST

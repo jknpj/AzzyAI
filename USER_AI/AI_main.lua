@@ -604,7 +604,6 @@ function ResetCounters()
 	FriendMotionTime		= 0
 	FriendCircleIter		= 0
 	FriendCircleTimeout		= 0
-	AtkPosbugFixTimeout		= 0
 	SkillObjectCMDTimeout	= 0
 	FollowTryCount			= 0
 	MyMoveX,MyMoveY			= 0,0
@@ -4209,7 +4208,9 @@ function AI(myid)
 				if (IsMonster(v)==1 and IsFriendOrSelf(v)==0 and GetV(V_MOTION,v) ~= MOTION_DEAD) then
 					local target=GetV(V_TARGET,v)
 					local tact = GetTact(TACT_KITE,v)
-					if ((IsFriendOrSelf(target)==1 and tact==1) or tact==2) then
+					-- KiteParanoid: also kite a monster that is not on us yet (kite before being
+					-- attacked), with KiteParanoidThreshold instead of KiteThreshold
+					if ((IsFriendOrSelf(target)==1 and tact==1) or tact==2 or (KiteParanoid==1 and tact==1)) then
 						local threshold
 						if (IsFriend(target)==1 or target==MyID) then
 							threshold=KiteThreshold

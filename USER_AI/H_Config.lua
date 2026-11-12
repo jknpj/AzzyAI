@@ -26,7 +26,6 @@ AttackSkillReserveSP     = 0
 AutoMobMode              = 2 
 AutoMobCount             = 2
 AutoComboMode            = 2
-AutoComboSkill		=0
 AutoComboSpheres         = 1
 UseHomunSSkillChase      = 1
 UseHomunSSkillAttack     = 1 

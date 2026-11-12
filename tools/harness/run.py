@@ -2,7 +2,7 @@
 """Runs the AzzyAI checks: Lua syntax for every file, then the offline AI scenarios.
 
 Usage:
-    python tools/harness/run.py                 # syntax check + all scenarios
+    python tools/harness/run.py                 # syntax, version, option and scenario checks
     python tools/harness/run.py bayeri dieter   # only these scenarios
     python tools/harness/run.py --verbose sera  # also print every cast
     python tools/harness/run.py --globals       # globals assigned inside functions (missing 'local')
@@ -94,6 +94,28 @@ def check_version():
     return ok
 
 
+# Options that live in Defaults.lua without a reader on purpose. Keep this empty unless an option
+# really must exist for a plugin or for the config files only.
+UNUSED_OK = set()
+
+
+def check_options():
+    """Every option in USER_AI/Defaults.lua must be read by some USER_AI file: a default nothing
+    reads is a switch the player can change with no effect at all (MoveStickyFight was one)."""
+    def read(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            return f.read()
+    names = sorted(set(re.findall(r"^\s*([A-Za-z_]\w*)\s*=", read(os.path.join(USER_AI, "Defaults.lua")), re.M)))
+    blob = "\n".join(read(os.path.join(USER_AI, n)) for n in sorted(os.listdir(USER_AI))
+                     if n.endswith(".lua") and n != "Defaults.lua")
+    unused = [n for n in names
+              if n not in UNUSED_OK and not re.search(r"\b%s\b" % re.escape(n), blob)]
+    for name in unused:
+        print(f"OPTION ERROR: {name} is in Defaults.lua but nothing in USER_AI reads it")
+    print(f"options: {len(names)} in Defaults.lua, {len(unused)} unread")
+    return not unused
+
+
 def all_scenarios():
     with open(os.path.join(HERE, "scenarios.lua"), encoding="utf-8") as f:
         text = f.read()
@@ -152,7 +174,7 @@ def main():
     parser.add_argument("--profile", action="store_true", help="print time per AI() call and the hottest functions")
     parser.add_argument("--globals", action="store_true",
                         help="only list globals assigned inside functions of USER_AI (missing 'local' candidates)")
-    parser.add_argument("--skip-syntax", action="store_true")
+    parser.add_argument("--skip-syntax", action="store_true", help="skip syntax, version and option checks")
     args = parser.parse_args()
 
     lua = find_tool("LUA", ["lua5.1", "lua51", "lua"])
@@ -164,6 +186,7 @@ def main():
     if not args.skip_syntax:
         ok = check_syntax(luac)
         ok = check_version() and ok
+        ok = check_options() and ok
 
     env = dict(os.environ, HARNESS_VERBOSE="1" if args.verbose else "0", HARNESS_TRACE="1" if args.trace else "0",
                HARNESS_PROFILE="1" if args.profile else "0")

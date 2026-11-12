@@ -547,7 +547,6 @@ FriendMotionTime		= 0
 FriendCircleIter		= 0
 FriendCircleTimeout		= 0
 DoneInit				= 0
-AtkPosbugFixTimeout		= 0
 EleanorMode				= 0
 EleanorWasDead			= 0
 EleanorModeResyncPending	= 0
