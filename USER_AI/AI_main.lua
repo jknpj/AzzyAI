@@ -622,11 +622,6 @@ end
 
 
 function	OnIDLE_ST ()
-	--if ReturnToMoveHold~=0 then 
-	--	MyState=MOVE_CMD_HOLD_ST
-	--	OnMOVE_CMD_HOLD_ST()
-	--	return
-	--end
 	if TraceAIEnabled ~= 0 then TraceAI ("OnIDLE_ST") end
 	ResetCounters()
 	MySkill					= 0
@@ -1851,55 +1846,6 @@ function	OnMOVE_CMD_ST ()
 		Move(MyID,MyDestX,MyDestY)
 	end
 end
-
-function	OnMOVE_CMD_HOLD_ST ()
-	
-	if TraceAIEnabled ~= 0 then TraceAI ("OnMOVE_CMD_HOLD_ST") end
-	MySkillUsedCount		= 0
-	ChaseGiveUpCount		= 0
-	AttackGiveUpCount		= 0
-	ChaseDebuffUsed			= 0
-	AttackDebuffUsed		= 0
-	BypassKSProtect			= 0
-	BerserkMode			= 0
-	if (DoIdleTasks()==nil) then
-		return
-	end
-	if (MoveStickyFight==1 and SuperPassive~=1 ) then
-		local	object = SelectEnemy(GetFriendTargets())
-		if (object ~= 0) then							-- MYOWNER_ATTACKED_IN
-			MyState = CHASE_ST
-			MyEnemy = object
-			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : MYOWNER_ATTACKED_IN") end
-			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
-				OnCHASE_ST()
-			end
-			return 
-		end
-		object = SelectEnemy(GetEnemyList(MyID,0))
-		if (object ~= 0) then							-- ATTACKED_IN
-			MyState = CHASE_ST
-			MyEnemy = object
-			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> CHASE_ST : ATTACKED_IN") end
-			if (FastChangeCount < FastChangeLimit and FastChange_I2C ==1) then
-				OnCHASE_ST()
-			end
-			return
-		end
-		if HasTankTargets then
-			object = SelectEnemy(GetEnemyList(MyID,-1))
-		else
-			object = 0
-		end
-		if (object ~= 0) then
-			MyState = TANKCHASE_ST
-			MyEnemy = object
-			if TraceAIEnabled ~= 0 then TraceAI ("MOVE_CMD_HOLD_ST -> TANKCHASE_ST") end
-			return
-		end
-	end
-end
-
 
 function OnSTOP_CMD_ST ()
 
@@ -4339,8 +4285,6 @@ function AI(myid)
 		OnTANK_ST()
 	elseif (MyState == PROVOKE_ST) then
 		OnPROVOKE_ST()
-	elseif (MyState == MOVE_CMD_HOLD_ST) then
-		OnMOVE_CMD_HOLD_ST()
 	elseif (MyState == FRIEND_CROSS_ST) then
 		OnFRIEND_CROSS_ST()
 	elseif (MyState == FRIEND_CIRCLE_ST) then

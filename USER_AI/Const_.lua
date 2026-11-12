@@ -451,7 +451,7 @@ TANK_ST					= 104
 PROVOKE_ST				= 105
 FRIEND_CROSS_ST				= 106
 FRIEND_CIRCLE_ST			= 107	
-MOVE_CMD_HOLD_ST			= 108
+MOVE_CMD_HOLD_ST			= 108 -- legacy: unreachable since 1.56, no handler in AI(); kept so plugins can read the constant
 ----------------------------
 
 ------------------------------------------
