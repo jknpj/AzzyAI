@@ -32,8 +32,9 @@ on the inherited files, or on its modifications to them.** The inherited parts a
 - `GUI/` (the configuration application, apart from files that are new to this version)
 - `USER_AI/` (apart from the new files listed below)
 - `CHANGELOG.md`, `docs/legacy-documentation.doc` and `USER_AI/Documentation.pdf`
-- the fixture `tools/harness/fixtures/H_Config.lua`, which is a copy of the
-  inherited `H_Config.lua` with test values
+- the fixtures `tools/harness/fixtures/H_Config.lua` and
+  `tools/harness/fixtures/M_Config.lua`, which are copies of the inherited
+  `H_Config.lua`/`M_Config.lua` with test values
 
 If you are Dr. Azzy (SpenceKonde) and would like to state a license for the
 original work, or to say you object to this fork, please
@@ -45,7 +46,8 @@ repository be licensed consistently, which is the maintainers' wish.
 
 These files did not exist in the original AzzyAI and were written for this version:
 
-- `tools/`, except `tools/harness/fixtures/H_Config.lua` and
+- `tools/`, except `tools/harness/fixtures/H_Config.lua`,
+  `tools/harness/fixtures/M_Config.lua` and
   `tools/harness/fixtures/divinepride_latam.json`
 - `docs/` (user manuals, release notes, preset tuning, figures)
 - `README.md`, `README.pt-BR.md`, `README.es.md`, `NOTICE.md`, `SECURITY.md`,

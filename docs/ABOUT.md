@@ -47,7 +47,7 @@ does and adds the following. This is what you would notice in game:
 | **Your server's numbers** | One set of values. | Official data (RO LATAM, Episode 19) or rAthena data, chosen with `ServerType`, so cooldowns, ranges and costs match your server. |
 | **Settings** | Windows app. | The Windows app and a **browser page** in English, Português and Español, with skill descriptions, presets per homunculus and suggested monster tactics for a map. |
 | **Updates** | Manual. | The Windows app can update the AI and the monster data for you, without touching your settings. |
-| **Testing** | No offline test suite. | Each change runs against a simulated server (dozens of scenarios) before it is published. |
+| **Testing** | No offline test suite. | Each change runs against a simulated server (more than 130 scenarios) before it is published. |
 
 The monster-aware features are for **homunculi**. Mercenaries get the tools and
 the bug fixes, but not the monster database.
@@ -74,9 +74,9 @@ These are on from the start; each can be turned off in the configuration tool.
 - **Commanded fights** (`CommandedFightStay`): a monster you tell it to attack is fought until it dies.
 
 Optional extras, off by default: smarter target choice (`TargetPriority`),
-keeping distance by the monster's real range (`KiteByRange`) and escaping when
-HP drops fast (`UseDamageDanger`). Offline tests cover them, but they have not
-been verified in game yet.
+keeping distance by the monster's real range (`KiteByRange`), kiting before the
+first hit (`KiteParanoid`) and escaping when HP drops fast (`UseDamageDanger`).
+Offline tests cover them, but they have not been verified in game yet.
 
 ## Honest status
 

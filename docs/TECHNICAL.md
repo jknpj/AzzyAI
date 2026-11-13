@@ -42,9 +42,13 @@ of its own.
 
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
 changed, the two numbers in `AssemblyInfo.cs` and the "Current release" line in
-`CHANGELOG.md`, add the changes to `CHANGELOG.md`, run the harness, rebuild the app
-(`tools\build-gui.cmd`), commit, and tag the commit
-`v<number>` (for example `v2.0.0`). The CI builds the ZIP for tags that start with `v`.
+`CHANGELOG.md`, add the changes to `CHANGELOG.md`, run the harness, commit, and tag the
+commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
+`USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
+`tools\build-gui.cmd` is only needed to test the app before committing. The tag run builds
+`AzzyAI.zip` and publishes it as a release, using the matching `## <version>` section of
+`CHANGELOG.md` as the release body — that section is the release note, so write it for
+the player.
 
 ## Project and compatibility background
 
@@ -53,7 +57,9 @@ Original project website: [drazzy.com](http://drazzy.com/ro/ai).
 
 ## Organization
 
-* `DEFAULT` contains the default AI
+* `DEFAULT` is the stock (original client) AI, kept to compare against what this version
+  changes. It is **not** in the release ZIP: the game client already has those files in `AI\`,
+  and the install only copies into `AI\USER_AI`.
 * `USER_AI` contains AzzyAI
 * `webgui` is a git submodule with the browser configuration GUI ([jknpj/AzzyAI-webgui](https://github.com/jknpj/AzzyAI-webgui)). Clone with `git clone --recursive`, or run `git submodule update --init` in an existing clone.
 
@@ -95,7 +101,7 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
     * Light of Regenerate (optional autobuff, off by default: `UseEiraLightOfRegene`, `EiraLightOfRegeneLevel`, `EiraLightOfRegeneOwnerHP`). Attempts to maintain the resurrection buff; successful resurrection still depends on server conditions. It needs Loyal intimacy and lowers intimacy on every cast.
 * **Eleanor**
     * Blazing And Furious
-    * The One Fighter Rise
+    * The One Fighter Rises
 * **Sera**
     * Toxin Of Mandara
     * Needle Stinger
@@ -139,7 +145,9 @@ x86 executable and copies it to `USER_AI\AzzyAIConfig.exe`, the copy that is com
 that players run. The PowerShell commands below do the same build and also run and test the app.
 The CI does this too: on a push to `main` a follow-up job commits the freshly built
 `USER_AI/AzzyAIConfig.exe` when it differs, so a C# change never leaves the committed copy
-behind (it commits with `[skip ci]`, and a byte-identical build is not committed).
+behind (it commits with `[skip ci]`, and a byte-identical build is not committed). Never write
+`[skip ci]` in the message of a commit that must run CI: GitHub looks for the marker anywhere
+in the message, body included, and silently skips the workflow.
 
 The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
 Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
@@ -212,7 +220,7 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 When automatic Eleanor combos are enabled, their starters wait for `AutoComboSpheres`, so Sonic Claw does not spend the spheres needed for its follow-ups. With automatic combos disabled, starters only require their normal sphere cost. New skills retain their priority and can consume spheres before a combo starts.
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.
 Confirmed Style Change casts update the tracked style whether requested manually or automatically; `eleanor_manual_style` verifies a manual switch followed by the grapple chain.
-`SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the default remains 400 ms.
+`SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the built-in default remains 400 ms (the shipped `H_Config.lua` uses 200 and `M_Config.lua` uses 400).
 
 The simulated server follows rAthena's rules (`skill_isNotOk_hom`, `unit_skilluse_id2`, `skill_check_condition_mercenary`): a cast is refused when the level isn't learned, the skill is still in cooldown (counted from the end of the cast), the target is beyond the skill range (square distance, the homunculus doesn't walk into range), Goldene Ferse and Angriffs Modus overlap, or Eleanor lacks the style, combo or spirit spheres (one sphere every second hit dealt in fighting style or taken in grappling style, at most 10; the homunculus swings once per 800 ms, however often the AI asks for an attack; costs from `SkillSphereCost`, or rAthena's on private scenarios). Eleanor's fighting-style sphere estimate credits at most one normal attack attempt per 800 ms, scaled by `SphereTrackFactor`; it does not require the client to expose her attack animation. This is an estimate, not a read of the server's sphere count; refused sphere skills correct it downward. `eleanor_hidden_motion` tests a client that hides those animations. On `SERVER_PRIVATE` scenarios its SP costs, cast times, delays, cooldowns and ranges come from rAthena's `db/re/skill_db.yml`; on official ones from AzzyAI's official profile. The rAthena data lives in `tools/harness/fixtures/rathena.lua`, generated from a pinned rAthena commit and committed so the harness needs no network. It also gives scenarios real monsters (`{ x, y, mobId }`: aggressive ones attack the owner, passive ones fight back, plants never move) and lets `rathena_skill_tree` check `SkillList`/`SkillInfo` against `db/re/homunculus_db.yml`. To move to a newer rAthena (standard library only; behind a proxy set `HTTPS_PROXY` first):
 
@@ -341,13 +349,14 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
 - Lua syntax check and simulator;
 - `node --check` on the web GUI (checked out from the `webgui` submodule);
-- build of the .NET 4.0 config GUI, packaging `USER_AI` + `AzzyAIConfig.exe`,
-  the three READMEs, manuals, technical notes and historical changelog as the
-  `AzzyAI` artifact;
+- build of the .NET 4.0 config GUI and the `AzzyAI` artifact: `USER_AI` (without `.pdb`) with
+  the freshly built `AzzyAIConfig.exe`, plus `docs/`, `LICENSES/`, `webgui/`, the three
+  READMEs, `CHANGELOG.md`, `NOTICE.md`, `SECURITY.md` and `CONTRIBUTING.md`;
 - on pushes to `main`, a follow-up job commits that build back to
   `USER_AI/AzzyAIConfig.exe` when it changed (short `build:` commit, `[skip ci]`).
 
-Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release.
+Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release, with the matching
+`## <version>` section of `CHANGELOG.md` as the release body.
 
 ## Configuration Guide
 

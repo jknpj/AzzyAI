@@ -7,7 +7,7 @@
 > **Getting started?** Use the [user manual](MANUAL.md) for installation, configuration and
 > troubleshooting. This page is the detailed lookup for commands, options and tactics.
 
-This reference updates material from the original AzzyAI 1.50 manual for release 2.0.0:
+This reference updates material from the original AzzyAI 1.50 manual for release 2.0.1:
 
 - Every option name, default and value was checked against `USER_AI/Defaults.lua`,
   `USER_AI/H_Config.lua` and `USER_AI/Const_.lua`. Where the original manual was wrong or out
@@ -50,7 +50,7 @@ there is no way to type a command to it.
 | What you do | What the AI does | Related options |
 |---|---|---|
 | **Standby** key: **Alt+T** (homunculus), **Ctrl+T** (mercenary) | Toggles standby: the unit stops being aggressive. Press again to leave it. | `DefendStandby` (keeps defending you in standby), `StickyStandby` (goes back to standby after a defensive fight) |
-| **Alt + right-click** on a cell | Moves there. Also how you [friend](#2-friends) someone. A move more than 15 cells away from you is ignored and logged as an error. | `MoveSticky`, `MoveStickyFight` |
+| **Alt + right-click** on a cell | Moves there. Also how you [friend](#2-friends) someone. A move more than 14 cells away from you is ignored and logged as an error. | `MoveSticky`, `MoveStickyFight` |
 | **Alt + double right-click** on a monster | Drops everything and attacks that monster. | `CommandedFightStay` (**new**), `UseBerserkAttack` |
 | Use a skill **on a monster** | Attacks the target and opens with that skill. | `UseBerserkSkill` |
 | Use a skill **on a player**, outside PVP | Moves into range and casts it on them. | |
@@ -140,7 +140,7 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 | Option | Default | What it does |
 |---|---|---|
 | `FollowStayBack` | 2 | Cells it stays behind you when following. |
-| `StationaryMoveBounds`, `MobileMoveBounds` | 14, 9 | How far from you it may go to react (you standing / moving). Past this it drops everything and returns. Keep both at **14 or less**. |
+| `StationaryMoveBounds`, `MobileMoveBounds` | 14, 14 | How far from you it may go to react (you standing / moving). Past this it drops everything and returns. Both ship at 14; lower `MobileMoveBounds` if the unit gets left behind while you run. |
 | `MoveSticky` | 0 | 1 = after a move command, stay around that cell until told to move again, including walking back to it after a fight. |
 | `MoveStickyFight` | 0 | 1 = in that sticky state it still fights normally. |
 | `StayAwayDistance` | 0 | **New.** Keep about this many cells from you while idle (limited by the move bounds). 0 = off. Useful in instances where the homunculus tanks. |
@@ -169,8 +169,8 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 | `AoEMaximizeTargets` | 0 | 1 = aim area skills at the spot that hits the most monsters, even if that misses the current target. |
 | `AoEReserveSP` | 0 | 1 = never spend SP on another attack if that leaves too little for the area skill. |
 | `AttackSkillReserveSP` | 0 | SP kept in reserve: no offensive skill is used if it would leave less than this. Overridden per monster by the [SP tactic](#sp-tactic). |
-| `AutoSkillLimit` | 0 | Most times an offensive skill is used on one target. 0 = no limit. Tactics can override. |
-| `AutoSkillDelay` | 200 | Extra wait, in ms, between skills, to avoid double casting. 0 removes only this wait, not cooldowns or cast time. |
+| `AutoSkillLimit` | 0 | Cap on offensive skills used against one target, applied on top of the monster's skill tactic (whichever number is lower wins). 0 = no limit. The count restarts when the target changes. |
+| `AutoSkillDelay` | 200 (mercenary 400) | Extra wait, in ms, between skills, to avoid double casting. 0 removes only this wait, not cooldowns or cast time. |
 | `CastTimeRatio` | .80 | Fraction of the skill's cast time the AI expects, for your cast-time reductions. |
 | `AutoComboMode` | 2 | Combo skills (Eleanor): 0 never; 1 only for monsters whose skill class is a combo class; 2 always. |
 | `AutoComboSpheres` | 1 | Spheres needed to **start** an automatic chain. |
@@ -259,7 +259,8 @@ level 5 when idle). Lif cannot heal itself.
 
 Berserk mode makes the unit fight more aggressively after a command or against a big mob. After a
 command it ends when the target dies. **The working spelling is `Berserk`** (the original manual writes
-"Berzerk").
+"Berzerk"). The shipped `M_Config.lua` uses these names; a config that still spells the mercenary
+options `Berzerk_*` is read anyway, and the startup log says so.
 
 | Option | Default | What it does |
 |---|---|---|

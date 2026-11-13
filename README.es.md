@@ -12,8 +12,8 @@ ventana o en el navegador, sin código que editar.
 
 **En el juego, eso significa:**
 
-- Conoce a cada monstruo: Dieter no lanza Lava Slide contra un monstruo de Fuego
-  y no se gasta SP en plantas.
+- Conoce a los monstruos de su base de datos (unos 2.700), así que Dieter no lanza
+  Lava Slide contra un monstruo de Fuego y no se gasta SP en plantas.
 - No despierta a un MVP sin querer, pero igual te defiende si uno ataca.
 - Un monstruo al que le ordenas atacar se combate hasta que muera, aunque te alejes.
 - Las habilidades de área apuntan al grupo más grande de monstruos que realmente

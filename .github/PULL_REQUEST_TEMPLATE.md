@@ -10,7 +10,7 @@
 
 ## Checklist
 
-- [ ] A new option is in `Defaults.lua`, the Windows app, the web page (with PT/ES descriptions) and the manual
+- [ ] A new option is in `Defaults.lua`, `H_Config.lua`/`M_Config.lua`, the Windows app, the web page (with PT/ES descriptions) and the manual
 - [ ] I regenerated, and did not edit by hand, any generated file (`MobInfo.lua`, `rathena.lua`, `skilldata.js`)
 - [ ] No personal config, `data` folder, logs or keys are included
 - [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md) and [NOTICE.md](../NOTICE.md)

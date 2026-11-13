@@ -47,7 +47,7 @@ que ele faz e acrescenta o que está abaixo. É o que você notaria no jogo:
 | **Os números do seu servidor** | Um único conjunto de valores. | Dados oficiais (RO LATAM, Episódio 19) ou do rAthena, escolhidos com `ServerType`, para que cooldowns, alcances e custos batam com o seu servidor. |
 | **Configuração** | Aplicativo Windows. | O aplicativo Windows e uma **página no navegador** em English, Português e Español, com descrições das habilidades, presets por homúnculo e sugestão de táticas de monstros por mapa. |
 | **Atualizações** | Manuais. | O aplicativo Windows atualiza a IA e os dados de monstros para você, sem mexer nas suas configurações. |
-| **Testes** | Sem suíte de testes offline. | Cada mudança roda contra um servidor simulado (dezenas de cenários) antes de ser publicada. |
+| **Testes** | Sem suíte de testes offline. | Cada mudança roda contra um servidor simulado (mais de 130 cenários) antes de ser publicada. |
 
 As funções que reconhecem monstros são para **homúnculos**. Mercenários recebem
 as ferramentas e as correções de bugs, mas não o banco de monstros.
@@ -76,8 +76,9 @@ configuração.
 
 Extras opcionais, desligados por padrão: escolha de alvo mais esperta
 (`TargetPriority`), manter distância pelo alcance real do monstro
-(`KiteByRange`) e fugir quando o HP cai rápido (`UseDamageDanger`). Os testes
-offline cobrem esses extras, mas eles ainda não foram verificados no jogo.
+(`KiteByRange`), kitar antes do primeiro golpe (`KiteParanoid`) e fugir quando o
+HP cai rápido (`UseDamageDanger`). Os testes offline cobrem esses extras, mas
+eles ainda não foram verificados no jogo.
 
 ## Situação real
 

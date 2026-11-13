@@ -44,10 +44,12 @@ the Windows app.
 - **A behavior change needs a scenario** in `tools\harness\scenarios.lua`
   (`expect`, `forbid`, `checks`). If you fix a bug, add the case that failed.
 - **A new option must be read by the AI**: `run.py` fails when a name in
-  `USER_AI\Defaults.lua` appears nowhere in `USER_AI` (an option that changes nothing is a bug;
-  `KiteParanoid` and `MoveStickyFight` were both like that). Add the reader before the default.
+  `USER_AI\Defaults.lua`, `USER_AI\H_Config.lua` or `USER_AI\M_Config.lua` appears nowhere in
+  `USER_AI` (an option that changes nothing is a bug; `KiteParanoid` and `MoveStickyFight` were
+  both like that). Add the reader before the default.
 - **A new option** goes in all of these places:
   - `USER_AI\Defaults.lua`, with a one-line comment;
+  - `USER_AI\H_Config.lua` or `USER_AI\M_Config.lua`, if the player is meant to see and change it;
   - the Windows app: `GUI\AzzyAIConfig\HomConf.Additional.cs` (or the matching
     mercenary file);
   - the web page: `webgui\homSchema.js` (and the `AzzyHomHgOnly` list) or

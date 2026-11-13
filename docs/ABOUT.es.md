@@ -47,7 +47,7 @@ que hace y añade lo siguiente. Esto es lo que notarías en el juego:
 | **Los números de tu servidor** | Un único conjunto de valores. | Datos oficiales (RO LATAM, Episodio 19) o de rAthena, elegidos con `ServerType`, para que cooldowns, alcances y costos coincidan con tu servidor. |
 | **Configuración** | Aplicación Windows. | La aplicación Windows y una **página en el navegador** en English, Português y Español, con descripciones de habilidades, presets por homúnculo y sugerencia de tácticas de monstruos por mapa. |
 | **Actualizaciones** | Manuales. | La aplicación Windows actualiza la IA y los datos de monstruos por ti, sin tocar tus ajustes. |
-| **Pruebas** | Sin suite de pruebas sin conexión. | Cada cambio se ejecuta contra un servidor simulado (decenas de escenarios) antes de publicarse. |
+| **Pruebas** | Sin suite de pruebas sin conexión. | Cada cambio se ejecuta contra un servidor simulado (más de 130 escenarios) antes de publicarse. |
 
 Las funciones que reconocen monstruos son para **homúnculos**. Los mercenarios
 reciben las herramientas y las correcciones de errores, pero no la base de datos
@@ -77,7 +77,8 @@ herramienta de configuración.
 
 Extras opcionales, desactivados por defecto: elección de objetivo más
 inteligente (`TargetPriority`), mantener distancia según el alcance real del
-monstruo (`KiteByRange`) y escapar cuando el HP baja rápido (`UseDamageDanger`).
+monstruo (`KiteByRange`), kitear antes del primer golpe (`KiteParanoid`) y
+escapar cuando el HP baja rápido (`UseDamageDanger`).
 Las pruebas sin conexión los cubren, pero aún no se han verificado en el juego.
 
 ## Estado real

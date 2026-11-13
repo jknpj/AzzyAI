@@ -117,6 +117,8 @@ As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* e
 | `UseDamageDanger` | Desligado por padrão. Se o homúnculo perder `DamageDangerDrop`% (30) do HP máximo em 3 s com HP abaixo de `DamageDangerHP`% (60), ele kita mesmo com `KiteMonsters` desligado, e o Bayeri usa Stein Wand. Ele só enxerga o próprio HP, não os buffs dos inimigos. |
 | `UseDanceAttack` | Ativa movimento durante ataques. Pode mudar o posicionamento; não remove cooldowns. |
 | `CommandedFightStay` | Ligado por padrão. Um monstro que você mandou o homúnculo atacar é combatido até morrer ou até você dar outra ordem, mesmo que você se afaste. Use 0 para ele desistir e voltar quando o alvo sair dos limites de movimento ou o tempo limite de ataque passar. |
+| `StationaryMoveBounds` / `MobileMoveBounds` | Até que distância de você pode ir para reagir (com você parado / em movimento). Ambos vêm em 14; diminua `MobileMoveBounds` se a unidade ficar para trás quando você corre. |
+| `AutoSkillLimit` | Teto de habilidades ofensivas usadas contra um alvo (0 = sem limite). Vale em cima da tática de habilidade do monstro: o menor dos dois números vence. A contagem recomeça quando o alvo muda. |
 
 A detecção automática ajuda em alguns clientes privados, mas escolha o tipo
 de servidor explicitamente ao investigar problemas. A detecção do tipo original

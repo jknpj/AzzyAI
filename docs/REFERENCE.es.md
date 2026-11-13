@@ -8,7 +8,7 @@
 > configuración y solución de problemas. Esta página sirve como consulta detallada de comandos,
 > opciones y tácticas.
 
-Esta referencia actualiza el contenido del manual original de AzzyAI 1.50 para la versión 2.0.0:
+Esta referencia actualiza el contenido del manual original de AzzyAI 1.50 para la versión 2.0.1:
 
 - Los nombres, valores predeterminados y valores de las opciones se comprobaron en
   `USER_AI/Defaults.lua`, `USER_AI/H_Config.lua` y `USER_AI/Const_.lua`. Cuando el manual original
@@ -53,7 +53,7 @@ chat, por lo que no es posible escribirle un comando.
 | Qué haces | Qué hace la IA | Opciones relacionadas |
 |---|---|---|
 | Tecla de **espera**: **Alt+T** (homúnculo), **Ctrl+T** (mercenario) | Alterna el modo de espera: la unidad deja de ser agresiva. Pulsa de nuevo para salir. | `DefendStandby` (sigue defendiéndote en espera), `StickyStandby` (vuelve a la espera tras un combate defensivo) |
-| **Alt + clic derecho** en una celda | Se mueve hasta allí. También sirve para [añadir amigos](#2-friends). Un movimiento a más de 15 celdas de ti se ignora y se registra como error. | `MoveSticky`, `MoveStickyFight` |
+| **Alt + clic derecho** en una celda | Se mueve hasta allí. También sirve para [añadir amigos](#2-friends). Un movimiento a más de 14 celdas de ti se ignora y se registra como error. | `MoveSticky`, `MoveStickyFight` |
 | **Alt + doble clic derecho** en un monstruo | Interrumpe lo que estaba haciendo y ataca a ese monstruo. | `CommandedFightStay` (**nuevo**), `UseBerserkAttack` |
 | Usas una habilidad **en un monstruo** | Ataca al objetivo, empezando con esa habilidad. | `UseBerserkSkill` |
 | Usas una habilidad **en un jugador**, fuera de PVP | Se acerca hasta estar a alcance y usa la habilidad en él. | |
@@ -148,7 +148,7 @@ cerca de ti.
 | Opción | Predeterminado | Qué hace |
 |---|---|---|
 | `FollowStayBack` | 2 | Celdas que se queda detrás de ti al seguirte. |
-| `StationaryMoveBounds`, `MobileMoveBounds` | 14, 9 | Hasta qué distancia de ti puede ir para reaccionar (estando tú quieto / en movimiento). Más allá, abandona todo y vuelve. Mantén ambos en **14 o menos**. |
+| `StationaryMoveBounds`, `MobileMoveBounds` | 14, 14 | Hasta qué distancia de ti puede ir para reaccionar (estando tú quieto / en movimiento). Más allá, abandona todo y vuelve. Ambos vienen en 14; reduce `MobileMoveBounds` si la unidad se queda atrás cuando corres. |
 | `MoveSticky` | 0 | 1 = tras una orden de movimiento, se queda en torno al destino hasta recibir otra orden de movimiento, incluso volviendo a él después de una pelea. |
 | `MoveStickyFight` | 0 | 1 = aun estando fijada así, sigue luchando normalmente. |
 | `StayAwayDistance` | 0 | **Nuevo.** Mantiene aproximadamente esta distancia de ti mientras está inactiva (limitada por los límites de movimiento). 0 = desactivado. Útil en instancias donde el homúnculo retiene a los monstruos. |
@@ -177,8 +177,8 @@ cerca de ti.
 | `AoEMaximizeTargets` | 0 | 1 = apunta las habilidades de área al punto que alcanza más monstruos, aunque no alcance al objetivo actual. |
 | `AoEReserveSP` | 0 | 1 = nunca gasta SP en otro ataque si eso deja SP insuficiente para la habilidad de área. |
 | `AttackSkillReserveSP` | 0 | SP en reserva: no usa una habilidad ofensiva si dejaría menos que esto. Se puede sobrescribir por monstruo mediante la [táctica SP](#sp-tactic). |
-| `AutoSkillLimit` | 0 | Máximo de veces que usa una habilidad ofensiva en un objetivo. 0 = sin límite. Las tácticas pueden sobrescribirlo. |
-| `AutoSkillDelay` | 200 | Espera adicional, en ms, entre habilidades, para evitar usos duplicados. 0 elimina solo esta espera, no la recarga ni el tiempo de lanzamiento. |
+| `AutoSkillLimit` | 0 | Tope de habilidades ofensivas usadas contra un objetivo, aplicado sobre la táctica de habilidad del monstruo (gana el número menor de los dos). 0 = sin límite. La cuenta se reinicia cuando cambia el objetivo. |
+| `AutoSkillDelay` | 200 (mercenario 400) | Espera adicional, en ms, entre habilidades, para evitar usos duplicados. 0 elimina solo esta espera, no la recarga ni el tiempo de lanzamiento. |
 | `CastTimeRatio` | .80 | Fracción del tiempo de lanzamiento que espera la IA, considerando tus reducciones de lanzamiento. |
 | `AutoComboMode` | 2 | Combos (Eleanor): 0 nunca; 1 solo en monstruos cuya clase de habilidad es de combo; 2 siempre. |
 | `AutoComboSpheres` | 1 | Esferas necesarias para **iniciar** una cadena automática. |
@@ -325,7 +325,9 @@ estando inactivo). Lif no puede curarse a sí misma.
 
 El modo Berserk hace que la unidad luche más agresivamente tras un comando o contra un grupo
 grande. Tras un comando, termina cuando muere el objetivo. **La grafía funcional es `Berserk`**
-(el manual original escribe “Berzerk”).
+(el manual original escribe “Berzerk”). El `M_Config.lua` distribuido usa estos nombres; un config
+que todavía escriba las opciones de mercenario como `Berzerk_*` se lee igual, y el log de inicio lo
+avisa.
 
 | Opción | Predeterminado | Qué hace |
 |---|---|---|

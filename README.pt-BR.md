@@ -12,8 +12,8 @@ comportamento dele numa janela ou no navegador, sem código para editar.
 
 **No jogo, isso significa:**
 
-- Ele conhece cada monstro: o Dieter não joga Lava Slide num monstro de Fogo e
-  não se gasta SP em plantas.
+- Ele conhece os monstros da base de dados (cerca de 2.700), então o Dieter não
+  joga Lava Slide num monstro de Fogo e não se gasta SP em plantas.
 - Ele não acorda um MVP sem querer, mas ainda defende você se um atacar.
 - Um monstro que você manda atacar é combatido até morrer, mesmo que você se afaste.
 - Habilidades em área são apontadas para o maior grupo de monstros que realmente
