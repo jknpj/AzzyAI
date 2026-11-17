@@ -5,6 +5,10 @@
 UseEleanorSonicClaw = 0
 -- Caprice (Vanilmirth skill inherited by Homunculus S) off for this client.
 UseVanilCaprice = 0
+-- Hero Saga has many custom MVP monsters. By default the AI never *starts* a
+-- fight with an MVP (BossAggro=1), leaving Eleanor idle in content that marks
+-- its mobs as MVP. AttackMVPs=1 overrides that and makes MVPs attackable.
+AttackMVPs = 1
 -- The One Fighter Rises is the sphere starter: on rAthena it refills all 10 spirit spheres, then the
 -- grappling chain (Tinder -> CBC -> EQC) can run. Blazing and Furious stays off: it consumes spheres.
 UseEleanorTheOneFighterRises = 1
