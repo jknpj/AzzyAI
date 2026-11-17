@@ -28,7 +28,7 @@ BasicDebuffs[MA_FREEZINGTRAP]=	1
 --[[
 Tactics switching:
 You may desire to switch your tactics based on conditions. The can be accomplished by making a second tactics file, and including a require "./AI/USER_AI/(your tactics file name)", and uncommenting the lines below
-Replace the "1==1" test with a test of your choice (you can test if a player of a specific ID is on screen with Players[player id]~=nil (this will be true if the player is on the screen)) and so on. 
+Replace the "1==1" test with a test of your choice (you can test if a player is on screen with Players[player id]~=nil (this will be true if you have a player on the screen)) and so on.
 This feature is not guaranteed and may not function as intended.
 Dr. Azzy takes no responsibility for your lua programming; I barely take responsibility or my own. 
 ]]--

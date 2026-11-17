@@ -2616,7 +2616,14 @@ function GetGrappleSkill(myid)
 				else
 					level=EleanorEQCLevel
 				end
-			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER) then
+			elseif ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and not IsSkillReady(MH_EQC) then
+				logappend("AAI_SKILLFAIL", string.format("EQC skip: cooldown %d/%d spheres %.1f mode %d",
+					AutoSkillCooldown[MH_EQC] or 0, GetTick(), MySpheres or 0, EleanorMode or -1))
+			elseif ComboSVTimeout > GetTick() and EleanorMode == GRAPPLING_MODE then
+				logappend("AAI_SKILLFAIL", string.format("EQC skip: followAt %d/%d useEQC %s ready %s spheres %.1f",
+					GetTick(), ComboFollowAt or 0, tostring(UseEleanorEQC), tostring(IsSkillReady(MH_EQC)), MySpheres or 0))
+			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER)
+				and not (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
@@ -3591,7 +3598,10 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		MySpheres = math.max(0,MySpheres - sphereCost)
 	end
 	-- the official server refuses a combo follow-up sent while the previous skill is still playing
-	ComboFollowAt=GetTick()+(EleanorComboGap or 0)
+	-- Hero Saga: CBC -> EQC is faster than Tinder -> CBC on this server
+	local comboGap = EleanorComboGap or 0
+	if skill == MH_CBC and EleanorFollowGap ~= nil then comboGap = EleanorFollowGap end
+	ComboFollowAt=GetTick()+comboGap
 	if skill==MH_MIDNIGHT_FRENZY then
 		ComboSVTimeout=0
 		UpdateTimeoutFile()
@@ -4084,6 +4094,11 @@ end
 -- Called by the skill watcher once it knows whether a cast went through.
 function SkillCastResult(skill, level, success)
 	local info = LearnedSkill[skill]
+	-- Hero Saga: combo follow-ups (CBC/EQC) have unreliable SP/motion confirmation on this client;
+	-- watcher "failures" are not server refusals of the level, so never step their level down.
+	if MyHomunType == ELEANOR and (skill == MH_CBC or skill == MH_EQC) then
+		return
+	end
 	if info == nil or info.cap == nil then
 		return
 	end
@@ -4480,7 +4495,9 @@ function GetNewMobSkill(myid,target,tact_skillclass)
 			local skill = candidate[2]
 			if candidate[1] ~= nil and candidate[1] ~= 0 and IsSkillReady(skill)
 				and not IsOffensiveCastPaused(skill)
-				and not (skill == MH_BLAZING_AND_FURIOUS and (MySpheres or 0) < ELEANOR_BLAZING_MIN_SPHERES) then
+				and not (skill == MH_BLAZING_AND_FURIOUS and (MySpheres or 0) < ELEANOR_BLAZING_MIN_SPHERES)
+				and not (skill == MH_THE_ONE_FIGHTER_RISES and MyHomunType == ELEANOR
+					and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())) then
 				local level = candidate[3] or SkillList[htype][skill] or 0
 				if level ~= 0 and (target == nil or ShouldUseMobSkill(skill, level, target, tact_skillclass)) then
 					return skill, level

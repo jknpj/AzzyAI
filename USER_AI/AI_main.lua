@@ -1032,7 +1032,7 @@ function OnCHASE_ST()
         
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
-        if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+        if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
             if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -1340,7 +1340,7 @@ function OnATTACK_ST()
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
-            if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+            if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
                 if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -3983,6 +3983,11 @@ function AI(myid)
 			end
 			EleanorModeResyncPending=0
 		end
+		-- The One Fighter Rises summons 10 spirit spheres (client skilldata.js: "Summons the
+		-- maximum amount of spirit sphere upon using the skill"). Credit only on confirmed cast.
+		if MyHomunType == ELEANOR and CastSkill == MH_THE_ONE_FIGHTER_RISES then
+			MySpheres = 10
+		end
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
 		--LavaSlideMode=constant
@@ -4024,8 +4029,14 @@ function AI(myid)
 			elseif CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
 				-- Follow-ups can fail because their combo or target disappeared, not only
 				-- because of spheres. Do not erase the estimate for those failures.
-				ComboSCTimeout = 0
-				ComboSVTimeout = 0
+				-- Hero Saga: the watcher often fails to confirm CBC/EQC even when the server
+				-- accepted it. Keep the combo window so the next step (EQC) can still fire.
+				if MyHomunType == ELEANOR and (CastSkill == MH_CBC or CastSkill == MH_EQC) then
+					-- keep ComboSCTimeout / ComboSVTimeout
+				else
+					ComboSCTimeout = 0
+					ComboSVTimeout = 0
+				end
 			else
 				MySpheres = refusedCost - 1
 			end
