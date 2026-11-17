@@ -22,6 +22,8 @@ crítico por 10 minutos**. O objetivo é manter a Eleanor usando esse combo.
 - `SkillInfo[MH_TINDER_BREAKER][5] = {0,0,0,0,0}` — sem barra de cast neste cliente.
 - `MyTact[0][TACT_SKILLCLASS] = CLASS_GRAPPLE_2` — libera o EQC (CLASS_S só permite Tinder/CBC).
 - `EleanorComboGap = 1100`, `EleanorFollowGap = 500`.
+- `AttackMVPs = 1` — muito conteúdo do Hero Saga marca monstros custom como MVP;
+  o padrão (`BossAggro=1`) faria a Eleanor nunca iniciar luta com eles.
 
 ### `USER_AI/AI_main.lua`
 - Fallback de Sonic Claw (que trocava para Fighting) agora exige `UseEleanorSonicClaw == 1`.
