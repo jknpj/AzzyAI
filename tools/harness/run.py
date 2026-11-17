@@ -148,6 +148,15 @@ def run_scenario(lua, name, ticks, env):
         merc = env.get("HARNESS_MCONFIG") or os.path.join(HERE, "fixtures", "M_Config.lua")
         if os.path.exists(merc):
             shutil.copy(merc, os.path.join(dst, "M_Config.lua"))
+        # Per-type presets are part of the shipped USER_AI and may be customized per server
+        # (e.g. the hero branch's Eleanor preset). Tests exercise the generic AI, so use the
+        # fixed fixture to keep the shipped preset from silently changing what they check.
+        fixtures_types = os.path.join(HERE, "fixtures", "Types")
+        if os.path.isdir(fixtures_types):
+            os.makedirs(os.path.join(dst, "Types"), exist_ok=True)
+            for n in os.listdir(fixtures_types):
+                if n.endswith(".lua"):
+                    shutil.copy(os.path.join(fixtures_types, n), os.path.join(dst, "Types", n))
         r = subprocess.run([lua, os.path.join(HERE, "harness.lua"), name, str(ticks)],
                            cwd=tmp, capture_output=True, text=True, env=env, timeout=300)
         sys.stdout.write(r.stdout)
