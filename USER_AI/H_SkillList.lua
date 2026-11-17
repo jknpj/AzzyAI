@@ -328,7 +328,7 @@ ServerSkillOverrides[SERVER_PRIVATE]={
 -- {flat, perLevel, divisor, defApplies}: ratio % = flat + perLevel * skill level * base level / divisor
 -- (rAthena calculateSkillRatio, without the stat bonus). defApplies = 1 when the target's DEF reduces it.
 -- Ground skills that tick (Poison Mist, Lava Slide, Blast Forge) and Eleanor's sphere skills are left out.
-SkillDamageBaseLevel = 250
+SkillDamageBaseLevel = 275
 SkillDamage={}
 SkillDamage[MH_ERASER_CUTTER]={-100,450,100,0}
 SkillDamage[MH_XENO_SLASHER]={-100,450,100,0}

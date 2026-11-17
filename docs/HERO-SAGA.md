@@ -48,6 +48,12 @@ páginas de conteúdo (revisado em 17/11/2026).
 - `AttackMVPs = 1` — ver seção "MVPs customizados" acima; liga o ataque a MVPs que,
   no padrão da IA (`BossAggro=1`), só receberiam reação.
 
+### `USER_AI/H_SkillList.lua`
+- `SkillDamageBaseLevel = 275` (era 250) — o nível máximo do servidor é 275/65;
+  alinha a pontuação de dano das skills usada para escolher entre elas. Não afeta
+  as skills de esfera da Eleanor (Tinder/CBC/EQC ficam fora desse cálculo), mas
+  deixa o cálculo correto para os outros homúnculos.
+
 ### `USER_AI/AI_main.lua`
 - Fallback de Sonic Claw (que trocava para Fighting) agora exige `UseEleanorSonicClaw == 1`.
 - TOFR credita **10 esferas** no sucesso confirmado (o cliente só reporta +1).
