@@ -9,6 +9,29 @@ Eleanor usar o combo de grappling **Tinder Breaker → CBC → EQC** neste servi
 O EQC (Eternal Quick Combo / Estado Traumático) dá ao mestre **+50% de dano
 crítico por 10 minutos**. O objetivo é manter a Eleanor usando esse combo.
 
+## MVPs customizados (Hero Saga)
+
+A wiki do servidor mostra que boa parte do conteúdo (Singularidade, Jardim dos
+Elementais, Pesadelo dos Heróis, Trial etc.) usa monstros marcados como
+**MVP**. No AzzyAI o padrão é `BossAggro = 1`: a IA **nunca inicia luta** com
+MVP, só reage se o monstro atacar. Num servidor onde o "mob comum" do conteúdo
+é MVP, isso deixa a homúnculo parada exatamente onde ela deveria trabalhar.
+
+Por isso o preset da Eleanor usa `AttackMVPs = 1`: ele **vence sobre o
+`BossAggro`** e transforma táticas de reação em ataque, para que ela engaje
+esses monstros normalmente. É uma decisão **específica do servidor** — o
+`main` mantém `AttackMVPs = 0` (comportamento original: não começar briga com
+MVP).
+
+**Efeito colateral e exceções:** com `AttackMVPs = 1`, qualquer MVP vira alvo
+em potencial, inclusive um que você talvez queira deixar em paz. Se isso
+acontecer em algum conteúdo específico, use `H_Tactics.lua` com `TACT_IGNORE`
+no ID daquele monstro — a tática por monstro continua tendo prioridade sobre o
+preset global.
+
+Fonte observada: `https://wiki.rpgherosaga.com/sobre/modificacoes-hero` e as
+páginas de conteúdo (revisado em 17/11/2026).
+
 ## O que está diferente daqui
 
 ### `USER_AI/Types/Eleanor.lua`
@@ -22,8 +45,8 @@ crítico por 10 minutos**. O objetivo é manter a Eleanor usando esse combo.
 - `SkillInfo[MH_TINDER_BREAKER][5] = {0,0,0,0,0}` — sem barra de cast neste cliente.
 - `MyTact[0][TACT_SKILLCLASS] = CLASS_GRAPPLE_2` — libera o EQC (CLASS_S só permite Tinder/CBC).
 - `EleanorComboGap = 1100`, `EleanorFollowGap = 500`.
-- `AttackMVPs = 1` — muito conteúdo do Hero Saga marca monstros custom como MVP;
-  o padrão (`BossAggro=1`) faria a Eleanor nunca iniciar luta com eles.
+- `AttackMVPs = 1` — ver seção "MVPs customizados" acima; liga o ataque a MVPs que,
+  no padrão da IA (`BossAggro=1`), só receberiam reação.
 
 ### `USER_AI/AI_main.lua`
 - Fallback de Sonic Claw (que trocava para Fighting) agora exige `UseEleanorSonicClaw == 1`.
