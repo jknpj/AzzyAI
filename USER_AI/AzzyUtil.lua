@@ -2616,7 +2616,8 @@ function GetGrappleSkill(myid)
 				else
 					level=EleanorEQCLevel
 				end
-			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER) then
+			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER)
+				and not (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]

@@ -1032,7 +1032,7 @@ function OnCHASE_ST()
         
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
-        if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+        if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
             if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -1340,7 +1340,7 @@ function OnATTACK_ST()
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
-            if skilltouse[2] == 0 and MyHomunType == ELEANOR and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+            if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
                 if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
