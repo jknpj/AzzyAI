@@ -149,21 +149,28 @@ jobs:
         with:
           name: azzy-gui
           path: .artifacts
-      - name: Commit tools/azzy-gui/azzy-gui.exe when the build differs
+      - uses: actions/download-artifact@v4
+        with:
+          name: azzy-native
+          path: .artifacts
+      - name: Commit the Windows binaries when the build differs
         run: |
           set -euo pipefail
-          built=.artifacts/azzy-gui.exe
-          test -f "$built" || { echo "::error::the azzy-gui artifact is missing"; exit 1; }
-          cp "$built" tools/azzy-gui/azzy-gui.exe
-          # git diff only sees tracked files; the first build adds the exe, so ask git status
-          if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe)" ]; then
-            echo "tools/azzy-gui/azzy-gui.exe already matches the build"
+          for pair in "azzy-gui.exe:tools/azzy-gui/azzy-gui.exe" "azzy-native.exe:tools/azzy-native/azzy-native.exe"; do
+            built=".artifacts/${pair%%:*}"
+            target="${pair##*:}"
+            test -f "$built" || { echo "::error::the $built artifact is missing"; exit 1; }
+            cp "$built" "$target"
+          done
+          # git diff only sees tracked files; the first build adds them, so ask git status
+          if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe)" ]; then
+            echo "both Windows binaries already match the build"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/azzy-gui/azzy-gui.exe
-          git commit -q -m "build: refresh azzy-gui.exe from CI [skip ci]"
+          git add tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe
+          git commit -q -m "build: refresh the Windows binaries from CI [skip ci]"
           for attempt in 1 2 3; do
             if git push; then exit 0; fi
             git pull --rebase --autostash origin spike/gui-rust
