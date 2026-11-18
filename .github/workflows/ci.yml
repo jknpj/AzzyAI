@@ -105,6 +105,27 @@ jobs:
           name: AzzyAI
           path: AzzyAI.zip
 
+  gui-rust:
+    name: Build azzy-gui (Rust, spike)
+    # branch spike/gui-rust: builds the local host so it can be tested without a Rust toolchain
+    if: github.ref == 'refs/heads/spike/gui-rust'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
+      - name: Build
+        run: cargo build --release -p azzy-gui --manifest-path tools/Cargo.toml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azzy-gui
+          path: tools/target/release/azzy-gui.exe
+          if-no-files-found: error
+
   commit-gui:
     name: Refresh the committed GUI
     # only real pushes to main: PRs and tags build but do not write back
