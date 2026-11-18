@@ -40,7 +40,7 @@ Patch release: skill-level detection on the official server, and the web GUI's e
   `UseDanceAttack` was off and 32 options were missing, so a configuration created in the web page
   behaved differently from the shipped one (the Dieter cast Lava Slide at the owner's feet and only
   while idle). The page now starts from `USER_AI/H_Config.lua` and `USER_AI/M_Config.lua`, and the
-  CI fails when the copy drifts (`tools/webgui_templates_check.py`).
+  CI fails when the copy drifts (`tools/webgui_templates_check.js`).
 - New: **Support > Export diagnostics for a bug report...** in the Windows app writes one file with
   the startup report, the last lines of the AI logs, the configuration, `Types\*.lua` and the `data`
   files that remember learned skill levels and cooldowns, with owner IDs replaced by `<owner>`.

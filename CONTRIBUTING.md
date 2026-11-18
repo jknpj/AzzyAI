@@ -59,7 +59,7 @@ the Windows app.
 - **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
   bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
   starts a new configuration from them). Copy the file into the `String.raw` body whenever you
-  change it; `python tools\webgui_templates_check.py` compares them and CI runs the same check.
+  change it; `node tools\webgui_templates_check.js` compares them (Node, like the web GUI) and CI runs the same check.
 - **Keep it Lua 5.1.** Declare variables `local`; `run.py --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.

@@ -67,7 +67,7 @@ jobs:
         shell: bash
         run: |
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
-          python3 tools/webgui_templates_check.py
+          node tools/webgui_templates_check.js
 
   gui:
     name: Build config GUI (.NET 4.0)
