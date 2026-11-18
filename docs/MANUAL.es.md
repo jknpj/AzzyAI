@@ -92,14 +92,20 @@ La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
   pasan a `<owner>`, la ventana muestra todo antes de escribir y no se envía nada a ningún sitio. El
   archivo va al Escritorio (`AzzyAI-diag-<fecha>.zip`, o un `.txt` si no hay PowerShell 5) y el
   Explorador se abre con él seleccionado. Adjúntalo en la incidencia.
+- **Copy version and startup summary** pone la versión y el informe de inicio en el portapapeles,
+  listo para pegar en Discord.
 - **Report a problem on GitHub** abre el formulario de error con la versión ya rellenada.
 Si el programa falla, se abre la misma ventana con el texto del error incluido y la exportación lista.
+El tamaño y la posición de la ventana y la pestaña abierta se guardan en `AzzyAIConfig.session.txt`.
 
 ### Navegador
 
 Abre [la web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Elige **AzzyAI** (no el Classic), tu idioma y **File > Open USER_AI folder** para abrir la
-carpeta instalada en el juego.
+carpeta instalada en el juego. **Help > Export diagnostics for a bug report...** arma el mismo paquete
+que la aplicación de Windows (un `.zip` con el informe de inicio, los logs, la configuración y los
+niveles de habilidad aprendidos, IDs de dueño cambiados por `<owner>`) desde la carpeta del juego que
+elijas, y luego abre el formulario de incidencia en GitHub.
 
 - Chrome/Edge pueden escribir directamente si el acceso a carpetas está admitido y autorizado.
 - Sin escritura directa, usa el ZIP descargado/exportado y extrae los archivos

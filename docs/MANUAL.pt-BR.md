@@ -93,14 +93,20 @@ A pasta do clone fica salva em `AzzyAIConfig.update.txt`.
   viram `<owner>`, a janela lista tudo antes de gravar e nada é enviado para lugar nenhum. O arquivo
   vai para a Área de Trabalho (`AzzyAI-diag-<data>.zip`, ou um `.txt` quando não há PowerShell 5) e
   o Explorer abre com ele selecionado. Anexe esse arquivo na issue.
+- **Copy version and startup summary** coloca a versão e o relatório de inicialização na área de
+  transferência, pronto para colar no Discord.
 - **Report a problem on GitHub** abre o formulário de bug com a versão já preenchida.
 Se o programa travar, a mesma janela abre com o texto do erro incluído e a exportação pronta.
+O tamanho e a posição da janela e a aba aberta ficam salvos em `AzzyAIConfig.session.txt`.
 
 ### Navegador
 
 Abra a [web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Escolha **AzzyAI** (não o Classic), o idioma e **File > Open USER_AI folder** para abrir a
-pasta instalada no jogo.
+pasta instalada no jogo. **Help > Export diagnostics for a bug report...** monta o mesmo pacote do
+aplicativo Windows (um `.zip` com o relatório de inicialização, os logs, a configuração e os níveis de
+skill aprendidos, IDs de dono trocados por `<owner>`) a partir da pasta do jogo que você escolher, e
+em seguida abre o formulário de issue no GitHub.
 
 - Chrome/Edge podem gravar diretamente quando o acesso à pasta é suportado e autorizado.
 - Sem gravação direta, use o ZIP baixado/exportado e extraia os arquivos de

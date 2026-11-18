@@ -4,7 +4,22 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.0.2**
+**Current release: 2.0.3**
+
+## 2.0.3
+
+Patch release: the diagnostics bundle reaches the web GUI, and the Windows app uses it for crashes.
+
+- New: **Help > Export diagnostics for a bug report...** in the web GUI builds the same bundle as the
+  Windows application (a `.zip` with the startup report, the last lines of the AI logs, the
+  configuration, `Types/*.lua` and the `data` files that remember learned skill levels and
+  cooldowns) from the game folder the player picks, with owner IDs replaced by `<owner>`, and then
+  opens the issue form.
+- New: an unhandled exception in the Windows app opens the export dialog with the error in the
+  bundle (`crash.txt`) instead of a bare stack trace; **Support > Copy version and startup summary**
+  puts the version and the startup report on the clipboard for a Discord message; the window size,
+  position and open tab are remembered in `AzzyAIConfig.session.txt`; About shows the version and
+  the repository, issues and web GUI links.
 
 ## 2.0.2
 

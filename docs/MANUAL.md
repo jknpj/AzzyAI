@@ -91,14 +91,20 @@ The clone folder is remembered in `AzzyAIConfig.update.txt`.
   `<owner>`, the dialog lists everything before writing, and nothing is sent anywhere. The file goes
   to your Desktop (`AzzyAI-diag-<date>.zip`, or a `.txt` when PowerShell 5 is missing) and Explorer
   opens with it selected. Attach it to the issue.
+- **Copy version and startup summary** puts the version and the startup report on the clipboard,
+  ready to paste in Discord.
 - **Report a problem on GitHub** opens the bug report form with the version filled in.
 If the program crashes, the same dialog opens with the error text included and the export ready.
+The window size, position and the open tab are remembered in `AzzyAIConfig.session.txt`.
 
 ### Browser application
 
 Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Choose **AzzyAI** (not Classic), your language, then **File > Open USER_AI folder** and
-select the folder installed in the game.
+select the folder installed in the game. **Help > Export diagnostics for a bug report...** builds the
+same bundle as the Windows application (a `.zip` with the startup report, the logs, the configuration
+and the learned skill levels, owner IDs replaced by `<owner>`) from the game folder you pick, and
+then opens the GitHub issue form.
 
 - Chrome/Edge can write directly when folder access is supported and permitted.
 - If direct writing is unavailable, use the downloaded/exported configuration

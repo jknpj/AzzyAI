@@ -32,6 +32,8 @@ namespace AzzyAIConfig
             AddUpdateMenu();
             AddSupportMenu();
             FormClosing += MainForm_FormClosing;
+            FormClosing += SaveSession;
+            Shown += delegate { LoadSession(); };
         }
 
         // Support menu: the diagnostics export (one file to attach) and the GitHub issue form
@@ -40,6 +42,20 @@ namespace AzzyAIConfig
             ToolStripMenuItem support = new ToolStripMenuItem("Support");
             support.DropDownItems.Add("Export diagnostics for a bug report...", null,
                 delegate { using (DiagnosticsForm f = new DiagnosticsForm()) f.ShowDialog(this); });
+            support.DropDownItems.Add("Copy version and startup summary", null, delegate
+            {
+                try
+                {
+                    string logDir;
+                    List<DiagnosticsEntry> entries = Diagnostics.Collect(out logDir);
+                    Clipboard.SetText(Diagnostics.Summary(entries, logDir));
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(this, "Could not read the summary: " + e.Message, "Support",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            });
             support.DropDownItems.Add("Report a problem on GitHub", null, delegate
             {
                 try
@@ -101,6 +117,84 @@ namespace AzzyAIConfig
         {
             MessageBox.Show(this, "Settings could not be saved completely. Your edits are still open.\n\n" + error.Message,
                 "Save failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        // Window size, position and the open tab survive a restart; a monitor change must not hide
+        // the window off-screen, so the saved bounds are clamped to the current screen.
+        static string SessionPath
+        {
+            get { return Path.Combine(UpdateTools.AiDir, "AzzyAIConfig.session.txt"); }
+        }
+
+        void LoadSession()
+        {
+            try
+            {
+                if (!File.Exists(SessionPath)) return;
+                Dictionary<string, string> values = new Dictionary<string, string>();
+                foreach (string line in File.ReadAllLines(SessionPath))
+                {
+                    int eq = line.IndexOf('=');
+                    if (eq > 0) values[line.Substring(0, eq).Trim()] = line.Substring(eq + 1).Trim();
+                }
+                int w, h, x, y, tab;
+                if (int.TryParse(Value(values, "width"), out w) && int.TryParse(Value(values, "height"), out h)
+                    && int.TryParse(Value(values, "x"), out x) && int.TryParse(Value(values, "y"), out y)
+                    && w >= 640 && h >= 480 && w <= 4000 && h <= 3000)
+                {
+                    Rectangle wanted = new Rectangle(x, y, w, h);
+                    Rectangle area = Screen.FromRectangle(wanted).WorkingArea;
+                    w = Math.Min(w, area.Width);
+                    h = Math.Min(h, area.Height);
+                    x = Math.Max(area.Left, Math.Min(x, area.Right - w));
+                    y = Math.Max(area.Top, Math.Min(y, area.Bottom - h));
+                    StartPosition = FormStartPosition.Manual;
+                    Bounds = new Rectangle(x, y, w, h);
+                }
+                TabControl tabs = FindTabs(this);
+                if (tabs != null && int.TryParse(Value(values, "tab"), out tab) && tab >= 0 && tab < tabs.TabCount)
+                    tabs.SelectedIndex = tab;
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        void SaveSession(object sender, FormClosingEventArgs e)
+        {
+            try
+            {
+                Rectangle bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+                TabControl tabs = FindTabs(this);
+                File.WriteAllLines(SessionPath, new string[]
+                {
+                    "width=" + bounds.Width,
+                    "height=" + bounds.Height,
+                    "x=" + bounds.X,
+                    "y=" + bounds.Y,
+                    "tab=" + (tabs == null ? 0 : tabs.SelectedIndex)
+                });
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        // The designer keeps the tab control in a local variable, so it is looked up by type.
+        static TabControl FindTabs(Control parent)
+        {
+            TabControl tabs = parent as TabControl;
+            if (tabs != null) return tabs;
+            foreach (Control child in parent.Controls)
+            {
+                tabs = FindTabs(child);
+                if (tabs != null) return tabs;
+            }
+            return null;
+        }
+
+        static string Value(Dictionary<string, string> values, string key)
+        {
+            string v;
+            return values.TryGetValue(key, out v) ? v : "";
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -294,7 +388,8 @@ namespace AzzyAIConfig
             //AzzyAIAboutBox about = new AzzyAIAboutBox();
             // Show the about box
             //about.ShowDialog();
-            MessageBox.Show("AzzyAI\nAI by Dr. Azzy; GUI by Machiavellian and contributors\n\nIncludes current Homunculus S settings and official/private server selection.\n\nIcon by Kami Kali",
+            MessageBox.Show("AzzyAI " + Application.ProductVersion + "\nAI by Dr. Azzy; GUI by Machiavellian and contributors\n\nIncludes current Homunculus S settings and official/private server selection.\n\nIcon by Kami Kali\n\nRepository: " + Diagnostics.RepoUrl
+                + "\nIssues: " + Diagnostics.IssueUrl + "\nWeb GUI: https://jknpj.github.io/AzzyAI-webgui/",
                 "About AzzyAI", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
