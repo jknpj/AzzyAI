@@ -42,6 +42,13 @@ fácil. Respeite as regras do seu servidor sobre IA personalizada.
    homúnculo está ativa (para mercenário, **`/merai`**).
 5. Invoque o homúnculo de novo, ou reconecte, para o jogo carregar os arquivos novos.
 
+**Se o Windows avisar sobre o `AzzyAIConfig.exe`:** o aplicativo ainda não tem assinatura
+de código, então o SmartScreen pode mostrar "O Windows protegeu o seu PC", ou um antivírus
+pode reclamar de um executável pequeno e pouco baixado. O código está neste repositório e é
+o CI que gera esse arquivo a partir dele; para continuar, clique em **Mais informações >
+Executar assim mesmo**. Se preferir, use a configuração pelo navegador abaixo - não precisa
+baixar nada.
+
 **Já usa o AzzyAI?** Copiar arquivos por cima dos seus substitui suas
 configurações, táticas e lista de amigos. Leia antes o
 [checklist de atualização](docs/MANUAL.pt-BR.md#atualizações-e-backups).

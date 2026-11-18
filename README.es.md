@@ -42,6 +42,13 @@ monstruo fácil. Respeta las reglas de tu servidor sobre IA personalizada.
    personalizada del homúnculo está activa (para un mercenario, **`/merai`**).
 5. Invoca de nuevo al homúnculo, o reconéctate, para que el juego cargue los archivos nuevos.
 
+**Si Windows avisa sobre `AzzyAIConfig.exe`:** la aplicación aún no tiene firma de código,
+así que SmartScreen puede mostrar "Windows protegió tu PC", o un antivirus puede quejarse de
+un ejecutable pequeño y poco descargado. El código está en este repositorio y es el CI el que
+genera ese archivo a partir de él; para continuar, haz clic en **Más información > Ejecutar de
+todas formas**. Si prefieres evitarlo, usa la configuración del navegador de abajo: no requiere
+descargar nada.
+
 **¿Ya usas AzzyAI?** Copiar archivos encima de los tuyos reemplaza tus ajustes,
 tácticas y lista de amigos. Lee antes el
 [checklist de actualización](docs/MANUAL.es.md#actualizaciones-y-respaldos).

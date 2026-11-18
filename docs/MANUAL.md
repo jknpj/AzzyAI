@@ -56,6 +56,11 @@ Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits files
 beside its executable, even if launched from a shortcut. Check the displayed
 configuration location before saving.
 
+The app has no code signature yet, so SmartScreen can show "Windows protected your PC"
+for a fresh download (an antivirus may also flag a small, rarely downloaded executable).
+The source is in this repository and CI builds that file from it; to continue, click
+**More info > Run anyway**. The browser configuration needs no download if you prefer.
+
 - **Homunculus / Mercenary:** general behavior, skills and buffs.
 - **Homunculus Tactics / Mercenary Tactics:** behavior for each monster.
 - **PVP Tactics / Merc PVP Tactics:** behavior for players.
