@@ -1,0 +1,10 @@
+Native configuration GUI prototype for AzzyAI (Rust + egui).
+
+Usage:
+    azzy-native [file] [--write]
+
+    file      configuration to edit (default: USER_AI/H_Config.lua)
+    --write   save to the file itself; without it, Save writes <file>.new
+
+Left panel: the comment sections of the file. Top bar: search, changed count,
+Reload (discard) and Save (enabled when something changed).

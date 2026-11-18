@@ -1,0 +1,11 @@
+Serves the AzzyAI web GUI from the local folder and opens it in the default browser.
+
+The page needs a secure context for "Open USER_AI folder" (File System Access API):
+opening index.html from file:// does not offer it, but http://127.0.0.1 does. That is
+all this program is: a local static server for webgui/, no internet, no WebView runtime.
+
+Usage:
+    azzy-gui                    # serve webgui/ next to the exe (or in the repo) and open the browser
+    azzy-gui --no-browser       # only serve; print the URL
+    azzy-gui --port 8080        # fixed port (default: any free one)
+    azzy-gui --root <folder>    # serve another copy of the web GUI

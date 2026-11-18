@@ -1,0 +1,14 @@
+[package]
+name = "azzy-config"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Format-preserving reader/writer for the AzzyAI Lua configuration files"
+
+[lib]
+name = "azzy_config"
+path = "src/lib.rs"
+
+[[bin]]
+name = "azzy-config"
+path = "src/main.rs"
