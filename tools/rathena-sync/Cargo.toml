@@ -5,10 +5,6 @@ edition = "2021"
 description = "Regenerates fixtures/rathena.lua, USER_AI/MobInfo.lua and webgui/mobdata.js from the rAthena Renewal databases"
 license = "GPL-3.0-or-later"
 
-[lib]
-name = "rathena_sync_yaml"
-path = "src/yaml.rs"
-
 [[bin]]
 name = "rathena-sync"
 path = "src/main.rs"
