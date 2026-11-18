@@ -10,6 +10,7 @@
 // Missing for parity with the C# app: tactics/PVP grids, per-type presets, the updater, the
 // diagnostics dialog (which already exists as Rust logic in the Windows app) and translations.
 
+use std::io::Write as _;
 use std::path::PathBuf;
 
 use azzy_config::Config;
@@ -182,6 +183,38 @@ mod tests {
     }
 }
 
+// A window that flashes and closes leaves nothing behind; the log does.
+fn log(message: &str) {
+    let dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        .unwrap_or_else(|| PathBuf::from("."));
+    let path = dir.join("azzy-native.log");
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = writeln!(file, "{stamp} {message}");
+    }
+    eprintln!("azzy-native: {message}");
+}
+
+// Launched by double-click the working directory is the exe's folder, so try the layouts the
+// repository and the packaged zip use before giving up.
+fn resolve(path: Option<PathBuf>) -> Option<PathBuf> {
+    if let Some(path) = path {
+        return Some(path);
+    }
+    let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()))?;
+    let candidates = [
+        PathBuf::from("USER_AI/H_Config.lua"),
+        exe_dir.join("../../USER_AI/H_Config.lua"),
+        exe_dir.join("../USER_AI/H_Config.lua"),
+        exe_dir.join("USER_AI/H_Config.lua"),
+        PathBuf::from("AI/USER_AI/H_Config.lua"),
+    ];
+    candidates.into_iter().find(|c| c.is_file())
+}
+
 fn main() -> eframe::Result<()> {
     let mut path: Option<PathBuf> = None;
     let mut write_in_place = false;
@@ -196,11 +229,15 @@ fn main() -> eframe::Result<()> {
             other => path = Some(PathBuf::from(other)),
         }
     }
-    let path = path.unwrap_or_else(|| PathBuf::from("USER_AI/H_Config.lua"));
+    let Some(path) = resolve(path) else {
+        log("no configuration found: pass the file, e.g. azzy-native.exe C:\\git\\AzzyAI\\USER_AI\\H_Config.lua");
+        std::process::exit(2);
+    };
+    log(&format!("opening {}", path.display()));
     let app = match App::new(path.clone(), write_in_place) {
         Ok(app) => app,
         Err(e) => {
-            eprintln!("azzy-native: {e}");
+            log(&format!("cannot load {}: {e}", path.display()));
             std::process::exit(1);
         }
     };
@@ -208,5 +245,10 @@ fn main() -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default().with_inner_size([980.0, 720.0]),
         ..Default::default()
     };
-    eframe::run_native("AzzyAI configuration (Rust prototype)", options, Box::new(|_cc| Ok(Box::new(app))))
+    let result = eframe::run_native("AzzyAI configuration (Rust prototype)", options, Box::new(|_cc| Ok(Box::new(app))));
+    match &result {
+        Ok(()) => log("window closed normally"),
+        Err(e) => log(&format!("could not open the window: {e}")),
+    }
+    result
 }
