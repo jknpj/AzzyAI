@@ -1,0 +1,18 @@
+# Workspace for the AzzyAI developer tools. Both crates build with one command and share one
+# target directory:
+#     cargo build --release --manifest-path tools/Cargo.toml
+# Running one of them:
+#     cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync -- --ref <sha>
+#     cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- --refresh
+[workspace]
+resolver = "2"
+members = ["rathena-sync", "divinepride-sync"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[profile.release]
+lto = true
+strip = true

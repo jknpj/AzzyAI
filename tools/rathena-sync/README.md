@@ -15,11 +15,16 @@ Outputs:
 Usage:
 
 ```
-cargo run --release --manifest-path tools/rathena-sync/Cargo.toml -- [--ref <sha>] [--fixture-only]
+cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]
 ```
 
 `--ref` is an rAthena commit, branch or tag (default `master`); `--fixture-only` rewrites only
 `fixtures/rathena.lua`. HTTPS_PROXY is honored through reqwest.
+
+Both AzzyAI tool crates live in one workspace (`tools/Cargo.toml`), so
+`cargo build --release --manifest-path tools/Cargo.toml` builds `rathena-sync` and
+`divinepride-sync` together, sharing `tools/target/` and the dependency build. Running one of them
+with `--manifest-path tools/rathena-sync/Cargo.toml` still works.
 
 What it ports, one to one:
 

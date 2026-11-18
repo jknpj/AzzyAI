@@ -18,6 +18,8 @@ GUI/AzzyAIConfig/publish/
 *.pdb
 *.pfx
 
-# Rust build output of the tools crates
+# Rust build output of the tools workspace (tools/Cargo.toml)
+tools/target/
+# per-crate target dirs left by builds from before the workspace existed
 tools/rathena-sync/target/
 tools/divinepride-sync/target/

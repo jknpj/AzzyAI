@@ -1,9 +1,9 @@
 [package]
 name = "divinepride-sync"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 description = "Downloads the homunculus skill data AzzyAI uses from the Divine Pride API"
-license = "GPL-3.0-or-later"
+license.workspace = true
 
 [[bin]]
 name = "divinepride-sync"
@@ -13,6 +13,3 @@ path = "src/main.rs"
 reqwest = { version = "0.12", features = ["blocking", "rustls-tls"], default-features = false }
 serde_json = "1"
 
-[profile.release]
-lto = true
-strip = true

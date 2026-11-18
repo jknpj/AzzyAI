@@ -242,10 +242,6 @@ fn t_insert(t: &mut Table, key: &str, value: Value) {
     }
 }
 
-fn t_get<'a>(t: &'a Table, key: &str) -> Option<&'a Value> {
-    t.iter().find(|(k, _)| k == key).map(|(_, v)| v)
-}
-
 fn build_skills(body: &[Value]) -> BTreeMap<i64, Table> {
     let mut skills: BTreeMap<i64, Table> = BTreeMap::new();
     for s in body {

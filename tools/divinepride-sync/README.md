@@ -12,13 +12,16 @@ Usage (needs a free API key from your divine-pride.net profile page):
 
 ```
 set DIVINEPRIDE_API_KEY=<your key>
-cargo run --release --manifest-path tools/divinepride-sync/Cargo.toml -- [--server LATAM] [--language en] [--delay 1.0] [--refresh]
+cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- [--server LATAM] [--language en] [--delay 1.0] [--refresh]
 ```
 
 - `--server` Divine Pride server code (default `LATAM`); the file name uses its lowercase form.
 - `--language` `Accept-Language` for names and descriptions (default `en`).
 - `--delay` seconds between requests (default 1.0); be kind to the API.
 - `--refresh` fetches every skill again instead of reusing the answers already in the file.
+
+The crate is a member of the `tools/Cargo.toml` workspace, together with `rathena-sync`:
+`cargo build --release --manifest-path tools/Cargo.toml` builds both and they share `tools/target/`.
 
 Only the 53 known homunculus skill IDs are requested (no enumeration), answers already saved are
 reused, and `429` answers are retried after `Retry-After` (five attempts, 30 s when the header is
