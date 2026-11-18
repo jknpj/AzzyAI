@@ -330,7 +330,7 @@ What this does not prove: the stats are hypothetical and the real DPS depends on
 
 Checked against the measured Sonic Claw sessions, the benchmark is 1.7% above one (75,747 against 74,476 DPS, `AutoSkillDelay` 0) and 10.6% above the other (65,941 against 59,602, `AutoSkillDelay` 200): the simulated client has no latency per cast. Only Sonic Claw alone is validated that way. The combo rows predict casts about twice as often as the earlier measured sessions (61 Sonic Claw > Silvervein Rush > Midnight Frenzy cycles in 180 s against 23), but those ran before the Eleanor sphere and chain fixes and with 200 ms of extra delay, so they say nothing yet about the current AI. Sensitivity of the combo advantage over Sonic Claw alone (+43% by default) to the two calibrated values: +33% without swing pauses at 100 ms per swing, +45% at 200 ms per swing; with a 1,000 ms pause per cast Sonic Claw alone collapses to 12,401 DPS, because her spheres come from her own swings.
 
-In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level.
+In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level. `probeFiller = { "MH_LAVA_SLIDE" }` makes the simulated client answer the "not learned" filler for that skill (range + 1) and keeps `TrustSkillProbe` at the official default, which is how `dieter_official_probe_filler` reproduces the LATAM report.
 
 ### Learned skill levels
 
@@ -340,6 +340,18 @@ The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACK
 - lowers the level by one after 2 refused casts at it (never below a level that already worked);
 - saves that level in `data/H_<owner>Skills.lua`, so map changes don't start over;
 - tries one level higher at most once per hour (`LEARNED_SKILL_RECHECK_SECONDS`), in case the skill was levelled.
+
+The official client answers the probe in its own way: a learned skill reports its table range, an
+unlearned one reports range + 1 (or a flat 8 where the table range is off), and the client's value
+can differ from the AI's table. The LATAM client answered 8 for every level of Lava Slide, which
+the AI read as "not learned": `LintSkillOptions` disabled `UseDieterLavaSlide` at startup and
+`DoSkill` skipped the skill, so the Dieter never cast it. With `TrustSkillProbe = -1` on
+`SERVER_OFFICIAL` the probe is not trusted to rule a skill out: an enabled skill starts at the
+configured level and the step-down above is what finds the real level, so the server is the only
+authority. The level is saved, so the walk down happens once per owner. A skill that the server
+keeps refusing at every level ends at 0 and is reported as "the server refused every level" in the
+startup report; `TrustSkillProbe = 1` trusts the probe again (the behavior before 2.0.1), `0`
+distrusts it on private servers too.
 
 Skill cooldowns are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change, including short cooldowns such as Toxin of Mandara.
 

@@ -182,7 +182,7 @@ perto de você.
 | `AutoComboSpheres` | 1 | Esferas necessárias para **iniciar** uma sequência automática. |
 | `UseVanilCaprice` | 1 | Vanilmirth: usar Caprice. |
 | `LintUserOptions` | 1 | **Novo.** Na inicialização, desativa opções de habilidades não aprendidas pelo homúnculo e reduz os níveis para o nível aprendido. |
-| `TrustSkillProbe` | -1 | **Novo.** Define se confia na resposta do cliente sobre níveis de habilidades aprendidos. -1 = automático (não no servidor oficial, sim em servidores privados). |
+| `TrustSkillProbe` | -1 | **Novo.** Define se confia na resposta do cliente sobre níveis de habilidades aprendidos. -1 = automático (não no servidor oficial, sim em servidores privados). Com o sondeo sem confiança, uma habilidade que o cliente informa como não aprendida ainda é tentada no nível configurado e o nível desce quando o servidor recusa, em vez de a opção ser desativada no início. |
 | `ServerType`, `AutoDetectServerType` | oficial, 1 | **Novo.** Servidor oficial ou rAthena/Hercules. Veja o [manual](MANUAL.pt-BR.md#4-comportamento-básico). |
 
 **Ativação e níveis de habilidades.** Cada habilidade tem `Use<Type><Skill>` (1 = ativada) e

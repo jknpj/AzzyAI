@@ -4036,17 +4036,22 @@ function GetSkillLevelCap(skill)
 		if IsHomun(MyID) == 1 then
 			cap, exact, maxLevel, filler = GetLearnedSkillLevel(MyID, skill)
 		end
-		-- Some official clients answer the range probe wrongly (learned skills as not learned).
-		-- With the probe untrusted, "not learned" is believed only when the client answered with
-		-- the filler range; a plain 1 is ambiguous, so the skill is tried anyway and the level
-		-- steps down if the server keeps refusing it.
-		if cap ~= nil and SkillProbeUntrusted() and exact and not filler then
+		-- Official clients answer the range probe in their own way: the table range when the skill
+		-- is learned, and the "not learned" filler (range + 1, or a flat 8) when it is not - but
+		-- the filler also shows up for learned skills whose range the client reports differently
+		-- from SkillInfo (Lava Slide on LATAM answered 8 for every level and the option was
+		-- disabled at startup). Without a trustworthy probe, "not learned" proves nothing: an
+		-- enabled skill is tried at the configured maximum, and SkillCastResult lowers the level
+		-- when the server keeps refusing it. Only a skill missing from the unit's catalog
+		-- (maxLevel 0) is 0 here.
+		local unproven = false
+		if cap ~= nil and SkillProbeUntrusted() and cap == 0 and maxLevel > 0 then
+			cap = maxLevel
 			exact = false
-			if cap == 0 and maxLevel > 0 then
-				cap = maxLevel
-			end
+			unproven = true
 		end
-		info = { cap = cap, upper = cap, exact = exact, ok = 0, rejects = 0, probeUp = false }
+		info = { cap = cap, upper = cap, exact = exact, ok = 0, rejects = 0, probeUp = false,
+			unproven = unproven }
 		LearnedSkill[skill] = info
 		if cap ~= nil and not exact then
 			if LearnedSkillSaved == nil then
@@ -4060,7 +4065,8 @@ function GetSkillLevelCap(skill)
 			end
 		end
 		if cap ~= nil then
-			logappend("AAI_SKILLFAIL", "Learned level of "..FormatSkill(skill, info.cap).." upper "..cap.." exact="..tostring(exact))
+			logappend("AAI_SKILLFAIL", "Learned level of "..FormatSkill(skill, info.cap).." upper "..cap
+				.." exact="..tostring(exact)..(filler and " filler" or "")..(unproven and " unproven" or ""))
 		end
 	end
 	return info.cap
@@ -4099,10 +4105,15 @@ function SkillCastResult(skill, level, success)
 		end
 		return
 	end
-	-- A refused level-up probe just confirms the saved level.
-	-- Probed levels are trusted; failures there are range/interrupt problems, not the level.
-	if SkillProbeUntrusted() then
-		return -- the client's answer was already discarded; refusals say nothing about the learned level
+	-- A refused level-up probe just confirms the saved level. Probed levels are trusted; failures
+	-- there are range/interrupt problems, not the level.
+	-- With a distrusted probe (official client) there is no trusted probe value at all: the server
+	-- is the only source of truth. While the skill has never worked, a refusal may simply mean the
+	-- requested level is above the learned one, so it steps down one level at a time. After the
+	-- first success the level is proven; a later refusal is a range, interruption or "already
+	-- active" problem and is left to the CastInterrupt backoff.
+	if SkillProbeUntrusted() and (info.exact or info.ok > 0) then
+		return
 	end
 	if level > info.cap or info.exact or level ~= info.cap or level <= info.ok then
 		return
@@ -4342,10 +4353,12 @@ function LintSkillOptions(myid, logstring)
 
             if learnedLevel == nil then
                 -- No skill list for this unit, nothing to check.
-            elseif learnedLevel == 0 and info.exact then
-                -- Skill is not learned at all.
+            elseif learnedLevel == 0 then
+                -- Not learned: the skill is not in this unit's catalog, or an earlier session
+                -- walked the level down to 0 because the server refused every level.
                 if _G[useOptionName] and _G[useOptionName] ~= 0 then
-                    logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned.\n"
+                    logstring = logstring .. "Disabled " .. useOptionName .. " - skill ("..skillName..") not learned"
+                        .. (info.exact and ".\n" or " (the server refused every level).\n")
                     _G[useOptionName] = 0
                 end
             else
@@ -4355,7 +4368,10 @@ function LintSkillOptions(myid, logstring)
                     logstring = logstring .. "Adjusting " .. levelOptionName .. " from " .. _G[levelOptionName] .. " to learned level " .. info.upper .. ".\n"
                     _G[levelOptionName] = info.upper
                 end
-                if not info.exact then
+                if info.unproven and _G[useOptionName] and _G[useOptionName] ~= 0 then
+                    logstring = logstring .. skillName .. ": this client cannot report the learned level; using level "
+                        .. learnedLevel .. " (at most " .. info.upper .. "), lowered if the server refuses it.\n"
+                elseif not info.exact then
                     logstring = logstring .. skillName .. ": learned level can't be read exactly (range 1); using level " .. learnedLevel .. " (at most " .. info.upper .. "), adjusted if the server refuses it.\n"
                 end
             end

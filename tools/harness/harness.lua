@@ -104,6 +104,10 @@ function IsInAttackSight(a, b, skill, lvl)
 end
 
 local skillKnown = {}
+-- Skill names the simulated official client answers with the "not learned" filler even though they
+-- are in the scenario's `skills` (an official-client quirk, see ProbeAnswerPlausible). Set from
+-- `sc.probeFiller` once the scenario is known.
+local probeFiller = nil
 local getvCalls = {}
 local getvSites = {}
 local profileSites = os.getenv("HARNESS_PROFILE_SITES") == "1"
@@ -137,6 +141,14 @@ function GetV(v, id, extra, extra2)
 		return 1
 	end
 	if v == V_SKILLATTACKRANGE_LEVEL then
+		if probeFiller ~= nil then
+			for _, name in ipairs(probeFiller) do
+				-- the scenario names the skill, because it is read before H_SkillList defines the constants
+				local skill = type(name) == "string" and _G[name] or name
+				-- the official client answers a skill it reports as "not learned" with range + 1
+				if skill ~= nil and skill == extra then return rangeOf(extra, extra2) + 1 end
+			end
+		end
 		if skillKnown[extra] and (extra2 or 1) <= skillKnown[extra] then return rangeOf(extra, extra2) end
 		return 1
 	end
@@ -454,6 +466,7 @@ local sc = SCENARIOS[scenario]
 if sc then
 	ATTACK_DELAY, ATTACK_MOTION = sc.attackDelay or 800, sc.attackMotion or 400
 	SWING_MS, CAST_PAUSE_MS = sc.swingMs, sc.castPauseMs
+	probeFiller = sc.probeFiller
 end
 if not sc then
 	print("unknown scenario " .. scenario)
@@ -523,7 +536,9 @@ local function loadAI()
 		local r = realdofile(path)
 		if path:find("Config%.lua") then
 			if sc.private then ServerType = SERVER_PRIVATE end
-			TrustSkillProbe = 1 -- the simulated client answers the learned-level probe honestly
+			-- the simulated client answers the learned-level probe honestly unless the scenario
+			-- emulates the official answers with `probeFiller`, which also needs the official default
+			TrustSkillProbe = sc.probeFiller and -1 or 1
 			EleanorComboGap = 0 -- and the simulated server accepts follow-ups immediately
 			if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
 		end

@@ -10,6 +10,16 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 Patch release: performance, targeting and command fixes, removal of options that did nothing, and test coverage.
 
+- Fix: an enabled skill is no longer disabled at startup because of the official client's learned
+  level answers. On LATAM the client answered the "not learned" filler (range + 1) for every level
+  of Lava Slide, so `LintSkillOptions` disabled `UseDieterLavaSlide` and `DoSkill` skipped the cast:
+  the Dieter never used Lava Slide while every other skill worked. With `TrustSkillProbe = -1` on
+  `SERVER_OFFICIAL` the skill now starts at the configured level, and the level steps down only
+  while it has never succeeded, so the server decides the real level. A skill the server refuses at
+  every level ends at 0, and the startup report says it was "refused every level" instead of
+  silently turning the option off. Covered by `dieter_official_probe_filler` and
+  `dieter_official_probe_unlearned`.
+
 - Performance: the IDLE target acquisition builds `FriendTargets` inside the actor loop (no
   second walk over the actors), caches the target-priority context and the AoE cluster weights
   per AI call, skips the tank list when no target has a tank tactic, and does not resolve the
