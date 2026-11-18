@@ -1123,10 +1123,19 @@ SCENARIOS = {
 					eqc = UseEleanorEQC,
 					tinderBreaker = UseEleanorTinderBreaker,
 				}
+				-- a chain in progress (the timeouts are in the future) only offers its follow-up
+				local function comboInProgress()
+					ComboSCTimeout = GetTick() + 1000
+					ComboSVTimeout = GetTick() + 1000
+				end
+				local function comboExpired()
+					ComboSCTimeout = GetTick() - 1
+					ComboSVTimeout = GetTick() - 1
+				end
+
 				EleanorMode = GRAPPLING_MODE
 				MySpheres = AutoComboSpheres
-				ComboSCTimeout = GetTick() + 1000
-				ComboSVTimeout = GetTick() + 1000
+				comboInProgress()
 
 				UseEleanorCBC = 0
 				UseEleanorEQC = 1
@@ -1137,9 +1146,15 @@ SCENARIOS = {
 				UseEleanorEQC = 0
 				local cbc = GetGrappleSkill(MyID)
 
+				-- Tinder Breaker must not restart a running chain: that reset ComboFollowAt and
+				-- the chain never reached CBC/EQC
 				UseEleanorCBC = 0
 				UseEleanorEQC = 0
 				UseEleanorTinderBreaker = 1
+				local duringCombo = GetGrappleSkill(MyID)
+
+				-- with the chain over, the same switches start a new one
+				comboExpired()
 				local tinderBreaker = GetGrappleSkill(MyID)
 
 				UseEleanorTinderBreaker = 0
@@ -1153,7 +1168,8 @@ SCENARIOS = {
 				UseEleanorEQC = previous.eqc
 				UseEleanorTinderBreaker = previous.tinderBreaker
 
-				return eqc == MH_EQC and cbc == MH_CBC and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
+				return eqc == MH_EQC and cbc == MH_CBC and duringCombo == 0
+					and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
 			end,
 		} },
 	eleanor_manual_style_recovery = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
@@ -1344,6 +1360,12 @@ SCENARIOS = {
 				return HarnessServer.style == "fighting" and EleanorMode == FIGHTING_MODE
 			end,
 		} },
+	-- UseEleanorSonicClaw=0 must also stop the grapple fallback: it used to cast Sonic Claw to
+	-- recover spheres and switched her to fighting style against the preset
+	eleanor_sonic_claw_disabled = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		tactics = { [0] = { [7] = 6 } },
+		set = { AutoComboMode = 0, UseEleanorSonicClaw = 0 },
+		forbid = { "Sonic Claw" } },
 	eleanor_aoe_single = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
 			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },
