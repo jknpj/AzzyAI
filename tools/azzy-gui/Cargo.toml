@@ -8,3 +8,7 @@ description = "Serves the web GUI from the install folder and opens it in the br
 [[bin]]
 name = "azzy-gui"
 path = "src/main.rs"
+
+[dependencies]
+zip = { version = "2", default-features = false, features = ["deflate"] }
+reqwest = { version = "0.12", features = ["blocking", "rustls-tls"], default-features = false }

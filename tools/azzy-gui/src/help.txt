@@ -9,3 +9,10 @@ Usage:
     azzy-gui --no-browser       # only serve; print the URL
     azzy-gui --port 8080        # fixed port (default: any free one)
     azzy-gui --root <folder>    # serve another copy of the web GUI
+    azzy-gui --user-ai <folder> # folder to update (default: USER_AI next to the web GUI)
+    azzy-gui --idle 15          # stop after N minutes without requests (0 keeps it running)
+    azzy-gui --overwrite-presets  # also replace Types/*.lua on update (kept by default)
+
+API used by the page:
+    GET  /api/version           {"version":..,"update":true,"user_ai":true}
+    POST /api/update            download the main branch and apply it; JSON with the counts

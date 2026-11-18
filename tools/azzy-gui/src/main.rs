@@ -12,11 +12,19 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Component, Path, PathBuf};
 use std::process::ExitCode;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+mod update;
 
 fn main() -> ExitCode {
     let mut port: u16 = 0;
     let mut root: Option<PathBuf> = None;
+    let mut user_ai: Option<PathBuf> = None;
+    let mut update_url = DEFAULT_UPDATE_URL.to_string();
+    let mut idle_minutes: u64 = 15;
+    let mut overwrite_presets = false;
     let mut open = true;
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
@@ -29,6 +37,19 @@ fn main() -> ExitCode {
                 Some(p) => root = Some(PathBuf::from(p)),
                 None => return usage("--root needs a folder"),
             },
+            "--user-ai" => match it.next() {
+                Some(p) => user_ai = Some(PathBuf::from(p)),
+                None => return usage("--user-ai needs a folder"),
+            },
+            "--update-url" => match it.next() {
+                Some(u) => update_url = u,
+                None => return usage("--update-url needs an URL"),
+            },
+            "--idle" => match it.next().and_then(|v| v.parse().ok()) {
+                Some(minutes) => idle_minutes = minutes,
+                None => return usage("--idle needs minutes (0 disables the exit)"),
+            },
+            "--overwrite-presets" => overwrite_presets = true,
             "--no-browser" => open = false,
             "-h" | "--help" => {
                 print!("{}", include_str!("help.txt"));
@@ -44,7 +65,8 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    match serve(&root, port, open) {
+    let user_ai = user_ai.or_else(|| find_user_ai(&root));
+    match serve(&root, user_ai, &update_url, idle_minutes, overwrite_presets, port, open) {
         Ok(()) => ExitCode::SUCCESS,
         Err(msg) => {
             eprintln!("azzy-gui: {msg}");
@@ -82,13 +104,36 @@ fn find_webgui() -> Option<PathBuf> {
     None
 }
 
-fn serve(root: &Path, port: u16, open: bool) -> Result<(), String> {
+const DEFAULT_UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
+
+fn serve(root: &Path, user_ai: Option<PathBuf>, update_url: &str, idle_minutes: u64, overwrite_presets: bool, port: u16, open: bool) -> Result<(), String> {
     let listener = TcpListener::bind(("127.0.0.1", port)).map_err(|e| format!("bind: {e}"))?;
     let addr = listener.local_addr().map_err(|e| format!("local_addr: {e}"))?;
     let url = format!("http://127.0.0.1:{}/", addr.port());
     let root = Arc::new(root.to_path_buf());
+    let state = Arc::new(State {
+        user_ai: Arc::new(user_ai),
+        update_url: update_url.to_string(),
+        overwrite_presets,
+        last_request: AtomicU64::new(now_ms()),
+    });
     println!("serving {} at {url}", root.display());
+    match state.user_ai.as_ref().as_ref() {
+        Some(dir) => println!("update target: {}", dir.display()),
+        None => println!("no USER_AI folder found; /api/update will refuse (use --user-ai)"),
+    }
     println!("Ctrl+C stops it; the page keeps its theme and settings in the browser");
+    if idle_minutes > 0 {
+        let state = Arc::clone(&state);
+        std::thread::spawn(move || loop {
+            std::thread::sleep(Duration::from_secs(30));
+            let idle = now_ms().saturating_sub(state.last_request.load(Ordering::Relaxed));
+            if idle > idle_minutes * 60_000 {
+                println!("no request for {idle_minutes} min, stopping");
+                std::process::exit(0);
+            }
+        });
+    }
     if open {
         if let Err(e) = open_browser(&url) {
             println!("  could not open the browser ({e}); open the URL above by hand");
@@ -98,8 +143,10 @@ fn serve(root: &Path, port: u16, open: bool) -> Result<(), String> {
         match stream {
             Ok(stream) => {
                 let root = Arc::clone(&root);
+                let state = Arc::clone(&state);
                 std::thread::spawn(move || {
-                    if let Err(e) = handle(stream, &root) {
+                    state.last_request.store(now_ms(), Ordering::Relaxed);
+                    if let Err(e) = handle(stream, &root, &state) {
                         eprintln!("  {e}");
                     }
                 });
@@ -110,7 +157,29 @@ fn serve(root: &Path, port: u16, open: bool) -> Result<(), String> {
     Ok(())
 }
 
-fn handle(mut stream: TcpStream, root: &Path) -> Result<(), String> {
+struct State {
+    user_ai: Arc<Option<PathBuf>>,
+    update_url: String,
+    overwrite_presets: bool,
+    last_request: AtomicU64,
+}
+
+fn now_ms() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+// USER_AI sits next to the web GUI in the packaged zip, or under the repository root.
+fn find_user_ai(webgui: &Path) -> Option<PathBuf> {
+    let parent = webgui.parent()?;
+    for candidate in [parent.join("USER_AI"), parent.join("AI").join("USER_AI")] {
+        if candidate.join("H_Config.lua").is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn handle(mut stream: TcpStream, root: &Path, state: &State) -> Result<(), String> {
     stream.set_read_timeout(Some(std::time::Duration::from_secs(10))).ok();
     let mut reader = BufReader::new(stream.try_clone().map_err(|e| e.to_string())?);
     let mut request = String::new();
@@ -125,6 +194,33 @@ fn handle(mut stream: TcpStream, root: &Path) -> Result<(), String> {
     let mut parts = request.split_whitespace();
     let method = parts.next().unwrap_or("");
     let target = parts.next().unwrap_or("/");
+    if target == "/api/version" {
+        let user_ai = state.user_ai.is_some();
+        let body = format!(
+            "{{\"name\":\"azzy-gui\",\"version\":\"{}\",\"update\":{},\"user_ai\":{}}}",
+            env!("CARGO_PKG_VERSION"),
+            user_ai,
+            user_ai
+        );
+        return respond(&mut stream, 200, "application/json", body.as_bytes());
+    }
+    if target == "/api/update" {
+        if method != "POST" {
+            return respond(&mut stream, 405, "text/plain", b"POST only");
+        }
+        let Some(dir) = state.user_ai.as_ref().as_ref() else {
+            return respond(&mut stream, 409, "application/json", b"{\"error\":\"no USER_AI folder (use --user-ai)\"}");
+        };
+        let body = match download(&state.update_url) {
+            Ok(bytes) => match update::apply_zip(&bytes, dir, state.overwrite_presets) {
+                Ok(report) => report.to_json(),
+                Err(e) => format!("{{\"error\":\"{}\"}}", e.replace('"', "'")),
+            },
+            Err(e) => format!("{{\"error\":\"{}\"}}", e.replace('"', "'")),
+        };
+        let status = if body.contains("\"error\"") { 502 } else { 200 };
+        return respond(&mut stream, status, "application/json", body.as_bytes());
+    }
     if method != "GET" && method != "HEAD" {
         return respond(&mut stream, 405, "text/plain", b"method not allowed");
     }
@@ -224,6 +320,19 @@ fn reason(status: u16) -> &'static str {
         405 => "Method Not Allowed",
         _ => "Error",
     }
+}
+
+fn download(url: &str) -> Result<Vec<u8>, String> {
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("azzy-gui")
+        .timeout(Duration::from_secs(120))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client.get(url).send().map_err(|e| format!("{url}: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("{url}: HTTP {}", response.status().as_u16()));
+    }
+    response.bytes().map(|b| b.to_vec()).map_err(|e| format!("{url}: {e}"))
 }
 
 fn open_browser(url: &str) -> Result<(), String> {
