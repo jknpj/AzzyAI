@@ -82,6 +82,17 @@ The desktop labels are in English.
 
 The clone folder is remembered in `AzzyAIConfig.update.txt`.
 
+**Support menu (Windows application only):**
+
+- **Export diagnostics for a bug report...** writes one file with the startup report
+  (`AAIStartH.txt`/`AAIStartM.txt`), the last lines of `AAI_ERROR.log`, `AAI_SKILLFAIL.log` and
+  `AAI_PROBE.log`, your `H_Config.lua`, `M_Config.lua`, the tactics and extra files, `Types\*.lua`
+  and the `data` files that remember learned skill levels and cooldowns. Owner IDs become
+  `<owner>`, the dialog lists everything before writing, and nothing is sent anywhere. The file goes
+  to your Desktop (`AzzyAI-diag-<date>.zip`, or a `.txt` when PowerShell 5 is missing) and Explorer
+  opens with it selected. Attach it to the issue.
+- **Report a problem on GitHub** opens the bug report form with the version filled in.
+
 ### Browser application
 
 Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).

@@ -30,7 +30,32 @@ namespace AzzyAIConfig
             // Pregenerated designer code
             InitializeComponent();
             AddUpdateMenu();
+            AddSupportMenu();
             FormClosing += MainForm_FormClosing;
+        }
+
+        // Support menu: the diagnostics export (one file to attach) and the GitHub issue form
+        private void AddSupportMenu()
+        {
+            ToolStripMenuItem support = new ToolStripMenuItem("Support");
+            support.DropDownItems.Add("Export diagnostics for a bug report...", null,
+                delegate { using (DiagnosticsForm f = new DiagnosticsForm()) f.ShowDialog(this); });
+            support.DropDownItems.Add("Report a problem on GitHub", null, delegate
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(Diagnostics.IssueUrl);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(this, "Could not open the browser: " + e.Message + "\n\n" + Diagnostics.IssueUrl,
+                        "GitHub", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            });
+            ToolStripItem help = null;
+            foreach (ToolStripItem item in MainMenuStrip.Items)
+                if (item.Text == "Help") help = item;
+            MainMenuStrip.Items.Insert(help == null ? MainMenuStrip.Items.Count : MainMenuStrip.Items.IndexOf(help), support);
         }
 
         // The Update menu is built here instead of in the designer file

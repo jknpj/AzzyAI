@@ -26,6 +26,11 @@ Patch release: skill-level detection on the official server, and the web GUI's e
   behaved differently from the shipped one (the Dieter cast Lava Slide at the owner's feet and only
   while idle). The page now starts from `USER_AI/H_Config.lua` and `USER_AI/M_Config.lua`, and the
   CI fails when the copy drifts (`tools/webgui_templates_check.py`).
+- New: **Support > Export diagnostics for a bug report...** in the Windows app writes one file with
+  the startup report, the last lines of the AI logs, the configuration, `Types\*.lua` and the `data`
+  files that remember learned skill levels and cooldowns, with owner IDs replaced by `<owner>`.
+  **Report a problem on GitHub** opens the bug report form with the version filled in. The app sends
+  nothing by itself: the file stays on the Desktop until the player attaches it.
 
 ## 2.0.1
 

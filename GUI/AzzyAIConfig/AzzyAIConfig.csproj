@@ -140,6 +140,8 @@
     <Compile Include="TypePreset.cs" />
     <Compile Include="UpdateTools.cs" />
     <Compile Include="UpdateForm.cs"><SubType>Form</SubType></Compile>
+    <Compile Include="Diagnostics.cs" />
+    <Compile Include="DiagnosticsForm.cs"><SubType>Form</SubType></Compile>
     <Compile Include="HomunculusConfigControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

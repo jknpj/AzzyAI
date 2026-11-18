@@ -84,6 +84,17 @@ Os rótulos do aplicativo Windows estão em inglês.
 
 A pasta do clone fica salva em `AzzyAIConfig.update.txt`.
 
+**Menu Support (só no aplicativo Windows):**
+
+- **Export diagnostics for a bug report...** grava um arquivo com o relatório de inicialização
+  (`AAIStartH.txt`/`AAIStartM.txt`), as últimas linhas de `AAI_ERROR.log`, `AAI_SKILLFAIL.log` e
+  `AAI_PROBE.log`, os seus `H_Config.lua`, `M_Config.lua`, os arquivos de táticas e extras,
+  `Types\*.lua` e os arquivos de `data` que guardam níveis aprendidos e recargas. Os IDs de dono
+  viram `<owner>`, a janela lista tudo antes de gravar e nada é enviado para lugar nenhum. O arquivo
+  vai para a Área de Trabalho (`AzzyAI-diag-<data>.zip`, ou um `.txt` quando não há PowerShell 5) e
+  o Explorer abre com ele selecionado. Anexe esse arquivo na issue.
+- **Report a problem on GitHub** abre o formulário de bug com a versão já preenchida.
+
 ### Navegador
 
 Abra a [web GUI](https://jknpj.github.io/AzzyAI-webgui/).
