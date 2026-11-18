@@ -58,6 +58,13 @@ Execute `AzzyAIConfig.exe` na pasta `AI\USER_AI` instalada no jogo. Ele edita
 os arquivos ao lado do executável, mesmo aberto por atalho. Confira o caminho
 da configuração antes de salvar.
 
+O aplicativo ainda não tem assinatura de código, então o SmartScreen pode mostrar
+"O Windows protegeu o seu PC" num download novo (um antivírus também pode reclamar
+de um executável pequeno e pouco baixado). O código está neste repositório e o CI
+gera esse arquivo a partir dele; para continuar, clique em **Mais informações >
+Executar assim mesmo**. A configuração pelo navegador não precisa de download, se
+você preferir.
+
 - **Homunculus / Mercenary:** comportamento geral, habilidades e buffs.
 - **Homunculus Tactics / Mercenary Tactics:** comportamento por monstro.
 - **PVP Tactics / Merc PVP Tactics:** comportamento para jogadores.

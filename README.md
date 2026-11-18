@@ -41,6 +41,12 @@ Follow your server's rules for custom AI.
    (for a mercenary, **`/merai`**).
 5. Summon the homunculus again, or reconnect, so the game loads the new files.
 
+**If Windows warns about `AzzyAIConfig.exe`:** the app has no code signature yet, so
+SmartScreen may show "Windows protected your PC", or an antivirus may flag a small,
+rarely downloaded executable. The source is in this repository and CI builds that file
+from it; to continue, click **More info > Run anyway**. If you would rather not, use the
+browser configuration below - it needs no download.
+
 **Already using AzzyAI?** Copying files over yours replaces your settings, tactics
 and friend list. Read the [update checklist](docs/MANUAL.md#updates-and-backups) first.
 
