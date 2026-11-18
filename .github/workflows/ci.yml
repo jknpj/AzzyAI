@@ -156,26 +156,27 @@ jobs:
       - name: Commit the Windows binaries when the build differs
         run: |
           set -euo pipefail
-          for pair in "azzy-gui.exe:tools/azzy-gui/azzy-gui.exe" "azzy-native.exe:tools/azzy-native/azzy-native.exe"; do
-            built=".artifacts/${pair%%:*}"
-            target="${pair##*:}"
-            test -f "$built" || { echo "::error::the $built artifact is missing"; exit 1; }
-            cp "$built" "$target"
-          done
-          # git diff only sees tracked files; the first build adds them, so ask git status
-          if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe)" ]; then
-            echo "both Windows binaries already match the build"
-            exit 0
-          fi
+          test -f .artifacts/azzy-gui.exe || { echo "::error::the azzy-gui artifact is missing"; exit 1; }
+          test -f .artifacts/azzy-native.exe || { echo "::error::the azzy-native artifact is missing"; exit 1; }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe
-          git commit -q -m "build: refresh the Windows binaries from CI [skip ci]"
+          # Another push can land between checkout and here, and rebasing two different builds of a
+          # binary conflicts; rebuild the commit from the current tip on every attempt instead.
           for attempt in 1 2 3; do
-            if git push; then exit 0; fi
-            git pull --rebase --autostash origin spike/gui-rust
+            git fetch -q origin spike/gui-rust
+            git reset -q --hard FETCH_HEAD
+            cp .artifacts/azzy-gui.exe tools/azzy-gui/azzy-gui.exe
+            cp .artifacts/azzy-native.exe tools/azzy-native/azzy-native.exe
+            if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe)" ]; then
+              echo "both Windows binaries already match the build"
+              exit 0
+            fi
+            git add tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe
+            git commit -q -m "build: refresh the Windows binaries from CI [skip ci]"
+            if git push origin HEAD:spike/gui-rust; then exit 0; fi
+            echo "push rejected, retrying from the new tip"
           done
-          echo "::error::could not push the refreshed azzy-gui.exe"
+          echo "::error::could not push the refreshed binaries"
           exit 1
 
   commit-gui:
