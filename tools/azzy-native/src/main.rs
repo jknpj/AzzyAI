@@ -18,6 +18,7 @@ use eframe::egui;
 
 struct App {
     path: PathBuf,
+    shown_path: String,
     write_in_place: bool,
     config: Config,
     sections: Vec<(String, Vec<String>)>,
@@ -30,8 +31,13 @@ impl App {
     fn new(path: PathBuf, write_in_place: bool) -> Result<App, String> {
         let config = Config::load(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         let sections = config.sections();
+        let shown_path = std::fs::canonicalize(&path)
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| path.display().to_string());
+        let shown_path = shown_path.strip_prefix(r"\\?\").unwrap_or(&shown_path).to_string();
         Ok(App {
             path,
+            shown_path,
             write_in_place,
             config,
             sections,
@@ -92,7 +98,7 @@ impl eframe::App for App {
             ui.horizontal(|ui| {
                 ui.heading("AzzyAI configuration");
                 ui.separator();
-                ui.label(self.path.display().to_string());
+                ui.label(&self.shown_path);
                 ui.separator();
                 let changed = self.config.changed();
                 ui.colored_label(
@@ -137,16 +143,32 @@ impl eframe::App for App {
                     }
                     ui.horizontal(|ui| {
                         let width = ui.available_width();
-                        ui.add_sized([width * 0.42, 18.0], egui::Label::new(&assignment.name));
+                        let name_w = (width * 0.32).max(120.0);
+                        let value_w = (width * 0.22).max(80.0);
+                        // a Label inside add_sized is centred; allocate with a left layout instead
+                        ui.allocate_ui_with_layout(
+                            egui::vec2(name_w, 20.0),
+                            egui::Layout::left_to_right(egui::Align::Center),
+                            |ui| { ui.label(&assignment.name); },
+                        );
                         let mut value = assignment.value.clone();
-                        let response = ui.add_sized([width * 0.30, 18.0], egui::TextEdit::singleline(&mut value));
+                        let response = ui.add_sized([value_w, 20.0], egui::TextEdit::singleline(&mut value));
                         if response.changed() {
                             edits.push((assignment.name.clone(), value));
                         }
                         if assignment.changed() {
                             ui.colored_label(egui::Color32::from_rgb(200, 120, 0), "changed");
                         } else if !assignment.comment.is_empty() {
-                            ui.weak(assignment.comment.trim());
+                            let rest = (width - name_w - value_w - 60.0).max(60.0);
+                            ui.allocate_ui_with_layout(
+                                egui::vec2(rest, 20.0),
+                                egui::Layout::left_to_right(egui::Align::Center),
+                                |ui| {
+                                    ui.add(egui::Label::new(
+                                        egui::RichText::new(assignment.comment.trim()).weak()
+                                    ).truncate());
+                                },
+                            );
                         }
                     });
                 }

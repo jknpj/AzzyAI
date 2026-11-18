@@ -23,3 +23,6 @@ tools/target/
 # per-crate target dirs left by builds from before the workspace existed
 tools/rathena-sync/target/
 tools/divinepride-sync/target/
+
+# runtime log of the native prototype (written next to the exe)
+tools/azzy-native/azzy-native.log

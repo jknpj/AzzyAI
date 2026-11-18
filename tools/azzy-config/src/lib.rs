@@ -119,19 +119,25 @@ impl Config {
         self.assignments().filter(|a| a.changed()).count()
     }
 
-    /// Option names grouped under the `-- comment` that precedes them, in file order.
+    /// Option names grouped under the `-- comment` that precedes them, in file order. A block of
+    /// consecutive comments names the section by its FIRST line: the shipped H_Config.lua starts
+    /// its Homunculus S block with "-- New Homunculus S Skills" and then explains the choice, and
+    /// the header is what a reader recognises, not the last line of the explanation.
     pub fn sections(&self) -> Vec<(String, Vec<String>)> {
         let mut out: Vec<(String, Vec<String>)> = Vec::new();
         let mut current = String::new();
+        let mut in_comment_block = false;
         for (line, _) in &self.lines {
             match line {
                 Line::Comment(text) => {
                     let t = text.trim_start_matches('-').trim();
-                    if !t.is_empty() {
+                    if !t.is_empty() && !in_comment_block {
                         current = t.to_string();
                     }
+                    in_comment_block = true;
                 }
                 Line::Assignment(a) => {
+                    in_comment_block = false;
                     if out.last().map(|(s, _)| s != &current).unwrap_or(true) {
                         out.push((current.clone(), Vec::new()));
                     }
@@ -139,7 +145,7 @@ impl Config {
                         names.push(a.name.clone());
                     }
                 }
-                _ => {}
+                _ => in_comment_block = false,
             }
         }
         out
@@ -287,6 +293,18 @@ mod tests {
             ("Buffs".to_string(), vec!["C".to_string()]),
         ]);
         assert_eq!(config.to_text(), text);
+    }
+
+    #[test]
+    fn sections_of_the_shipped_file_use_the_header_line() {
+        let path = repo().join("USER_AI/H_Config.lua");
+        let config = Config::load(&path).unwrap();
+        let sections = config.sections();
+        let homun = sections.iter().find(|(name, _)| name == "New Homunculus S Skills")
+            .unwrap_or_else(|| panic!("no New Homunculus S Skills section: {:?}",
+                sections.iter().map(|(n, _)| n).collect::<Vec<_>>()));
+        assert_eq!(homun.1.len(), 20, "{:?}", homun.1);
+        assert!(sections.iter().all(|(name, _)| !name.starts_with("Blazing And Furious (Eleanor)")));
     }
 
     #[test]
