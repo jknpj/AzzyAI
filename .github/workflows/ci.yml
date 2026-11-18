@@ -150,7 +150,8 @@ jobs:
           built=.artifacts/azzy-gui.exe
           test -f "$built" || { echo "::error::the azzy-gui artifact is missing"; exit 1; }
           cp "$built" tools/azzy-gui/azzy-gui.exe
-          if git diff --quiet -- tools/azzy-gui/azzy-gui.exe; then
+          # git diff only sees tracked files; the first build adds the exe, so ask git status
+          if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe)" ]; then
             echo "tools/azzy-gui/azzy-gui.exe already matches the build"
             exit 0
           fi
