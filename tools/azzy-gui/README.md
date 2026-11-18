@@ -19,6 +19,13 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-gui -- [--port 8080
 - The static server itself has no dependencies: GET/HEAD, MIME, 404/403/405, no path traversal and
   percent-decoding are plain std Rust. The updater adds `reqwest` and `zip` (already in the
   workspace for the sync tools).
+- **`GET /api/files` and `POST /api/save`** carry the host mode: served by `azzy-gui` the page
+  reads the configuration from disk and writes the edited files straight back, so there is no
+  "Open USER_AI folder", no File System Access API (Firefox/Safari work too) and no copy in
+  `localStorage` to drift from the files. Only the nine page files plus `Types/*.lua` are read or
+  written; writes go to a `.lua.tmp` and are renamed, so a half-written config never exists.
+  Both require the token the host injects into `index.html` as a meta tag plus a matching `Origin`,
+  so another page in the same browser cannot drive the API.
 - **`POST /api/update`** is the Windows app's "Update AI from git" without git: downloads
   `https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip`, keeps `H_Config.lua`, `M_Config.lua`,
   the tactics/extra files, `A_Friends.lua` and `Types/*.lua` (the last unless `--overwrite-presets`),

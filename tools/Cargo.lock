@@ -126,6 +126,7 @@ name = "azzy-gui"
 version = "0.1.0"
 dependencies = [
  "reqwest",
+ "serde_json",
  "zip",
 ]
 
