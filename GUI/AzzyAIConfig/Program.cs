@@ -23,6 +23,16 @@ namespace AzzyAIConfig
         [STAThread]
         static void Main()
         {
+            // A crash is the moment a report is most useful: the dialog offers the diagnostics
+            // bundle and the GitHub issue instead of a wall of text the player has to copy.
+            Application.ThreadException += delegate(object sender, System.Threading.ThreadExceptionEventArgs e)
+            {
+                ShowCrash(e.Exception);
+            };
+            AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e)
+            {
+                ShowCrash(e.ExceptionObject as Exception);
+            };
             try
             {
                 Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -32,8 +42,20 @@ namespace AzzyAIConfig
             }
             catch (Exception e)
             {
-                // Display an error message if there were any unhandled exceptions during runtime
-                MessageBox.Show(e.ToString());
+                ShowCrash(e);
+            }
+        }
+
+        static void ShowCrash(Exception e)
+        {
+            string text = e == null ? "Unknown error." : e.ToString();
+            try
+            {
+                using (DiagnosticsForm f = new DiagnosticsForm(text)) f.ShowDialog();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(text, "AzzyAI error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -211,6 +211,19 @@ namespace AzzyAIConfig
         // Writes the bundle next to the Desktop and returns the file that was created.
         public static string Export(List<DiagnosticsEntry> entries, string logDir)
         {
+            return Export(entries, logDir, null);
+        }
+
+        public static string Export(List<DiagnosticsEntry> entries, string logDir, string crash)
+        {
+            if (!string.IsNullOrEmpty(crash))
+            {
+                DiagnosticsEntry entry = new DiagnosticsEntry();
+                entry.Name = "crash.txt";
+                entry.Source = "";
+                entry.Content = crash;
+                entries.Add(entry);
+            }
             string stamp = DateTime.Now.ToString("yyyyMMdd-HHmm", CultureInfo.InvariantCulture);
             string root = Path.Combine(Path.GetTempPath(), "AzzyAI-diag-" + stamp);
             string files = Path.Combine(root, "AzzyAI-diag");

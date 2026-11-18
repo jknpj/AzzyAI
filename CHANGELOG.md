@@ -29,8 +29,9 @@ Patch release: skill-level detection on the official server, and the web GUI's e
 - New: **Support > Export diagnostics for a bug report...** in the Windows app writes one file with
   the startup report, the last lines of the AI logs, the configuration, `Types\*.lua` and the `data`
   files that remember learned skill levels and cooldowns, with owner IDs replaced by `<owner>`.
-  **Report a problem on GitHub** opens the bug report form with the version filled in. The app sends
-  nothing by itself: the file stays on the Desktop until the player attaches it.
+  **Report a problem on GitHub** opens the bug report form with the version filled in, and an
+  unhandled exception opens the same dialog with the error already in the bundle (`crash.txt`). The
+  app sends nothing by itself: the file stays on the Desktop until the player attaches it.
 
 ## 2.0.1
 

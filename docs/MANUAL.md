@@ -92,6 +92,7 @@ The clone folder is remembered in `AzzyAIConfig.update.txt`.
   to your Desktop (`AzzyAI-diag-<date>.zip`, or a `.txt` when PowerShell 5 is missing) and Explorer
   opens with it selected. Attach it to the issue.
 - **Report a problem on GitHub** opens the bug report form with the version filled in.
+If the program crashes, the same dialog opens with the error text included and the export ready.
 
 ### Browser application
 

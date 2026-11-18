@@ -93,6 +93,7 @@ La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
   archivo va al Escritorio (`AzzyAI-diag-<fecha>.zip`, o un `.txt` si no hay PowerShell 5) y el
   Explorador se abre con él seleccionado. Adjúntalo en la incidencia.
 - **Report a problem on GitHub** abre el formulario de error con la versión ya rellenada.
+Si el programa falla, se abre la misma ventana con el texto del error incluido y la exportación lista.
 
 ### Navegador
 

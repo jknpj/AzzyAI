@@ -94,6 +94,7 @@ A pasta do clone fica salva em `AzzyAIConfig.update.txt`.
   vai para a Área de Trabalho (`AzzyAI-diag-<data>.zip`, ou um `.txt` quando não há PowerShell 5) e
   o Explorer abre com ele selecionado. Anexe esse arquivo na issue.
 - **Report a problem on GitHub** abre o formulário de bug com a versão já preenchida.
+Se o programa travar, a mesma janela abre com o texto do erro incluído e a exportação pronta.
 
 ### Navegador
 

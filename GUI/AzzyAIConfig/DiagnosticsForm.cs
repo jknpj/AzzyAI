@@ -26,9 +26,14 @@ namespace AzzyAIConfig
         string _logDir;
         string _summary = "";
         string _exported;
+        readonly string _crash;
 
-        public DiagnosticsForm()
+        public DiagnosticsForm() : this(null) { }
+
+        // crash != null: opened after an unhandled exception, which is added to the bundle
+        public DiagnosticsForm(string crash)
         {
+            _crash = crash;
             Text = "Export diagnostics";
             StartPosition = FormStartPosition.CenterParent;
             ClientSize = new Size(760, 560);
@@ -104,6 +109,8 @@ namespace AzzyAIConfig
             {
                 _entries = Diagnostics.Collect(out _logDir);
                 _summary = Diagnostics.Summary(_entries, _logDir);
+                if (!string.IsNullOrEmpty(_crash))
+                    _summary = "The program stopped with this error:\n" + _crash + "\n\n" + _summary;
                 _text.Text = _summary.Replace("\n", "\r\n");
             }
             catch (Exception e)
@@ -141,7 +148,7 @@ namespace AzzyAIConfig
             try
             {
                 Cursor = Cursors.WaitCursor;
-                _exported = Diagnostics.Export(_entries, _logDir);
+                _exported = Diagnostics.Export(_entries, _logDir, _crash);
             }
             catch (Exception e)
             {
