@@ -119,11 +119,16 @@ jobs:
         with:
           workspaces: tools
       - name: Build
-        run: cargo build --release -p azzy-gui --manifest-path tools/Cargo.toml
+        run: cargo build --release -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - uses: actions/upload-artifact@v4
         with:
           name: azzy-gui
           path: tools/target/release/azzy-gui.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azzy-native
+          path: tools/target/release/azzy-native.exe
           if-no-files-found: error
 
   commit-gui-rust:
