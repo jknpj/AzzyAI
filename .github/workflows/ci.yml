@@ -126,6 +126,45 @@ jobs:
           path: tools/target/release/azzy-gui.exe
           if-no-files-found: error
 
+  commit-gui-rust:
+    name: Commit azzy-gui.exe on the spike branch
+    # so testing the host is a plain `git pull`: the artifact is committed on the branch, the same
+    # way commit-gui keeps USER_AI/AzzyAIConfig.exe current on main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/spike/gui-rust'
+    needs: [gui-rust]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: commit-gui-rust-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: azzy-gui
+          path: .artifacts
+      - name: Commit tools/azzy-gui/azzy-gui.exe when the build differs
+        run: |
+          set -euo pipefail
+          built=.artifacts/azzy-gui.exe
+          test -f "$built" || { echo "::error::the azzy-gui artifact is missing"; exit 1; }
+          cp "$built" tools/azzy-gui/azzy-gui.exe
+          if git diff --quiet -- tools/azzy-gui/azzy-gui.exe; then
+            echo "tools/azzy-gui/azzy-gui.exe already matches the build"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/azzy-gui/azzy-gui.exe
+          git commit -q -m "build: refresh azzy-gui.exe from CI [skip ci]"
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash origin spike/gui-rust
+          done
+          echo "::error::could not push the refreshed azzy-gui.exe"
+          exit 1
+
   commit-gui:
     name: Refresh the committed GUI
     # only real pushes to main: PRs and tags build but do not write back
