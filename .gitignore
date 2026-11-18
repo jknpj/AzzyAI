@@ -18,5 +18,6 @@ GUI/AzzyAIConfig/publish/
 *.pdb
 *.pfx
 
-# Rust build output of tools/rathena-sync
+# Rust build output of the tools crates
 tools/rathena-sync/target/
+tools/divinepride-sync/target/
