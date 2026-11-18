@@ -1,0 +1,23 @@
+[package]
+name = "rathena-sync"
+version = "0.1.0"
+edition = "2021"
+description = "Regenerates fixtures/rathena.lua, USER_AI/MobInfo.lua and webgui/mobdata.js from the rAthena Renewal databases"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rathena_sync_yaml"
+path = "src/yaml.rs"
+
+[[bin]]
+name = "rathena-sync"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+reqwest = { version = "0.12", features = ["blocking", "rustls-tls"], default-features = false }
+regex = "1"
+
+[profile.release]
+lto = true
+strip = true

@@ -1,0 +1,9 @@
+Regenerates tools/harness/fixtures/rathena.lua and USER_AI/MobInfo.lua from the rAthena Renewal databases.
+
+Rust port of tools/harness/rathena_sync.py: same flags, same outputs, byte-for-byte when the
+upstream commit is the same (except the generation date). The Python script stays the reference.
+
+Usage:
+    rathena-sync              # latest rathena/rathena master
+    rathena-sync --ref <sha>  # a specific commit/branch/tag
+    rathena-sync --fixture-only  # only rewrite fixtures/rathena.lua

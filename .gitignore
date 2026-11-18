@@ -17,3 +17,6 @@ GUI/AzzyAIConfig/publish/
 *.user
 *.pdb
 *.pfx
+
+# Rust build output of tools/rathena-sync
+tools/rathena-sync/target/

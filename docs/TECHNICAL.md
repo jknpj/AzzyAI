@@ -230,6 +230,8 @@ python tools/harness/rathena_sync.py --ref <sha>  # a specific commit
 python tools/harness/rathena_sync.py --fixture-only  # only fixtures/rathena.lua (no MobInfo.lua / mobdata.js)
 ```
 
+`tools/rathena-sync` is the same regeneration in Rust (no Python needed): `cargo run --release --manifest-path tools/rathena-sync/Cargo.toml -- [--ref <sha>] [--fixture-only]`. Same flags, same three outputs, and the files are byte-identical to the Python run for the same rAthena commit (only the generation date differs). It parses the databases, walks the spawn scripts and writes the ~2.7k-monster files about 5x faster (12 s against 69 s from here, most of it network); the Python script stays the reference implementation and the one CI depends on.
+
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
 ```
