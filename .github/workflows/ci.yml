@@ -63,6 +63,11 @@ jobs:
         run: |
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
           find webgui -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+      - name: Embedded config templates match the shipped preset
+        shell: bash
+        run: |
+          if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
+          python3 tools/webgui_templates_check.py
 
   gui:
     name: Build config GUI (.NET 4.0)

@@ -55,6 +55,11 @@ the Windows app.
   - the web page: `webgui\homSchema.js` (and the `AzzyHomHgOnly` list) or
     `merSchema.js`, plus `i18n.desc.pt.js` and `i18n.desc.es.js`;
   - the manual, in the three languages if you can (say so in the pull request if you cannot).
+
+- **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
+  bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
+  starts a new configuration from them). Copy the file into the `String.raw` body whenever you
+  change it; `python tools\webgui_templates_check.py` compares them and CI runs the same check.
 - **Keep it Lua 5.1.** Declare variables `local`; `run.py --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.

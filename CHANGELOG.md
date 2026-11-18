@@ -4,11 +4,11 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.0.1**
+**Current release: 2.0.2**
 
-## 2.0.1
+## 2.0.2
 
-Patch release: performance, targeting and command fixes, removal of options that did nothing, and test coverage.
+Patch release: skill-level detection on the official server, and the web GUI's embedded preset.
 
 - Fix: an enabled skill is no longer disabled at startup because of the official client's learned
   level answers. On LATAM the client answered the "not learned" filler (range + 1) for every level
@@ -19,6 +19,18 @@ Patch release: performance, targeting and command fixes, removal of options that
   every level ends at 0, and the startup report says it was "refused every level" instead of
   silently turning the option off. Covered by `dieter_official_probe_filler` and
   `dieter_official_probe_unlearned`.
+- Fix: the web GUI's embedded `H_Config.lua` and `M_Config.lua` were a copy of an old saved
+  configuration (July 2025), not of the shipped preset: `LavaSlideMode` and `PoisonMistMode` were
+  1 instead of 0, `UseDieterMagmaFlow` and `UseDieterPyroclastic` were 1 instead of 3,
+  `UseDanceAttack` was off and 32 options were missing, so a configuration created in the web page
+  behaved differently from the shipped one (the Dieter cast Lava Slide at the owner's feet and only
+  while idle). The page now starts from `USER_AI/H_Config.lua` and `USER_AI/M_Config.lua`, and the
+  CI fails when the copy drifts (`tools/webgui_templates_check.py`).
+
+## 2.0.1
+
+Patch release: performance, targeting and command fixes, removal of options that did nothing, and test coverage.
+
 
 - Performance: the IDLE target acquisition builds `FriendTargets` inside the actor loop (no
   second walk over the actors), caches the target-priority context and the AoE cluster weights
