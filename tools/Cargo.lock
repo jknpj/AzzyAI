@@ -136,6 +136,7 @@ version = "0.1.0"
 dependencies = [
  "azzy-config",
  "eframe",
+ "serde_json",
 ]
 
 [[package]]

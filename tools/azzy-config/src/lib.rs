@@ -91,6 +91,11 @@ impl Config {
         out
     }
 
+    /// The trailing comment of `name`, as written in the file (" -- ..."), if any.
+    pub fn comment_of(&self, name: &str) -> Option<&str> {
+        self.assignments().find(|a| a.name == name).map(|a| a.comment.as_str())
+    }
+
     pub fn get(&self, name: &str) -> Option<&str> {
         self.assignments().find(|a| a.name == name).map(|a| a.value.as_str())
     }
@@ -305,6 +310,14 @@ mod tests {
                 sections.iter().map(|(n, _)| n).collect::<Vec<_>>()));
         assert_eq!(homun.1.len(), 20, "{:?}", homun.1);
         assert!(sections.iter().all(|(name, _)| !name.starts_with("Blazing And Furious (Eleanor)")));
+    }
+
+    #[test]
+    fn trailing_comments_are_readable() {
+        let config = Config::parse("ServerType = SERVER_OFFICIAL -- private servers\nAggroHP = 0\n");
+        assert_eq!(config.comment_of("ServerType"), Some(" -- private servers"));
+        assert_eq!(config.comment_of("AggroHP"), Some(""));
+        assert_eq!(config.comment_of("Nope"), None);
     }
 
     #[test]

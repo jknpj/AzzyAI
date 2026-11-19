@@ -1,94 +1,153 @@
-// azzy-native: prototype of a native configuration GUI for AzzyAI, in Rust with egui.
+// azzy-native: the AzzyAI configuration GUI in Rust (egui), mirroring the web GUI.
 //
-// This is the "full rewrite" path (spike): it proves that the model and the editing loop fit, not
-// that the whole 24k-line WinForms app is replaced. Scope here:
-//   - loads H_Config.lua (or any file passed on the command line) through azzy-config,
-//   - lists the options grouped by their comment sections, with a search box,
-//   - edits values in place and shows how many changed,
-//   - Save writes the file (or <file>.new unless --write is given),
-//   - Reload discards the edits.
-// Missing for parity with the C# app: tactics/PVP grids, per-type presets, the updater, the
-// diagnostics dialog (which already exists as Rust logic in the Windows app) and translations.
+// Scope of this milestone (M1): both settings tabs (Homunculus and Mercenary) driven by the same
+// schema the web GUI uses (tools/webgui-data.js -> data/options.json), with the option's English
+// description, search, category filter, "only non-default" filter, typed editors (int, double,
+// bool, enum, server type) and Apply/Revert through azzy-config, which preserves the file byte for
+// byte. Tactics/PVP grids, per-type presets, Extra Options, the update flow and translations are
+// the next milestones (see README).
 
+mod data;
+
+use std::collections::BTreeMap;
 use std::io::Write as _;
 use std::path::PathBuf;
 
 use azzy_config::Config;
+use data::{OptionDef, Schema};
 use eframe::egui;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Unit {
+    Homunculus,
+    Mercenary,
+}
+
 struct App {
-    path: PathBuf,
-    shown_path: String,
+    hom: Schema,
+    mer: Schema,
+    unit: Unit,
+    configs: BTreeMap<&'static str, Config>, // "H" / "M"
+    paths: BTreeMap<&'static str, PathBuf>,
     write_in_place: bool,
-    config: Config,
-    sections: Vec<(String, Vec<String>)>,
-    section: Option<usize>,
+    shown_path: String,
     search: String,
+    category: Option<String>,
+    only_changed: bool,
+    selected: Option<String>,
     status: String,
 }
 
 impl App {
-    fn new(path: PathBuf, write_in_place: bool) -> Result<App, String> {
-        let config = Config::load(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        let sections = config.sections();
-        let shown_path = std::fs::canonicalize(&path)
-            .map(|p| p.display().to_string())
-            .unwrap_or_else(|_| path.display().to_string());
-        let shown_path = shown_path.strip_prefix(r"\\?\").unwrap_or(&shown_path).to_string();
+    fn new(paths: &BTreeMap<&'static str, PathBuf>, write_in_place: bool) -> Result<App, String> {
+        let (hom, mer) = data::load()?;
+        let mut configs = BTreeMap::new();
+        let mut shown = Vec::new();
+        for (key, path) in paths {
+            let config = Config::load(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let canonical = std::fs::canonicalize(path).map(|p| p.display().to_string())
+                .unwrap_or_else(|_| path.display().to_string());
+            shown.push(canonical.strip_prefix(r"\\?\").unwrap_or(&canonical).to_string());
+            configs.insert(*key, config);
+        }
         Ok(App {
-            path,
-            shown_path,
+            hom,
+            mer,
+            unit: Unit::Homunculus,
+            configs,
+            paths: paths.clone(),
             write_in_place,
-            config,
-            sections,
-            section: None,
+            shown_path: shown.join("  +  "),
             search: String::new(),
+            category: None,
+            only_changed: false,
+            selected: None,
             status: String::new(),
         })
     }
 
+    fn schema(&self) -> &Schema {
+        match self.unit {
+            Unit::Homunculus => &self.hom,
+            Unit::Mercenary => &self.mer,
+        }
+    }
+
+    fn config(&self) -> &Config {
+        self.configs.get(match self.unit {
+            Unit::Homunculus => "H",
+            Unit::Mercenary => "M",
+        }).expect("config loaded for every unit")
+    }
+
+    fn config_mut(&mut self) -> &mut Config {
+        self.configs.get_mut(match self.unit {
+            Unit::Homunculus => "H",
+            Unit::Mercenary => "M",
+        }).expect("config loaded for every unit")
+    }
+
+    fn changed(&self) -> usize {
+        self.configs.values().map(|c| c.changed()).sum()
+    }
+
     fn reload(&mut self) {
-        match Config::load(&self.path) {
+        let key = match self.unit { Unit::Homunculus => "H", Unit::Mercenary => "M" };
+        let path = self.paths[key].clone();
+        match Config::load(&path) {
             Ok(config) => {
-                self.sections = config.sections();
-                self.config = config;
-                self.status = "reloaded".into();
+                self.configs.insert(key, config);
+                self.status = "reloaded from disk".into();
             }
             Err(e) => self.status = format!("reload failed: {e}"),
         }
     }
 
     fn save(&mut self) {
+        let key = match self.unit { Unit::Homunculus => "H", Unit::Mercenary => "M" };
+        let source = self.paths[key].clone();
         let target = if self.write_in_place {
-            self.path.clone()
+            source.clone()
         } else {
-            let mut name = self.path.clone().into_os_string();
-            name.push(".new");
-            PathBuf::from(name)
+            PathBuf::from(format!("{}.new", source.display()))
         };
-        match self.config.save(&target) {
-            Ok(()) => {
-                self.status = format!("wrote {} ({} changed)", target.display(), self.config.changed());
-                self.config = Config::load(&target).unwrap_or_else(|_| self.config.clone());
-                if !self.write_in_place {
-                    self.status.push_str(" - pass --write to edit the file itself");
-                }
-            }
-            Err(e) => self.status = format!("save failed: {e}"),
+        let changed = self.config().changed();
+        if let Err(e) = self.config().save(&target) {
+            self.status = format!("save failed: {e}");
+            return;
         }
+        // reload so the "changed" counter starts from what is now on disk
+        if let Ok(fresh) = Config::load(&target) {
+            self.configs.insert(key, fresh);
+        }
+        self.status = format!("wrote {} ({changed} changed){}", target.display(),
+            if self.write_in_place { "" } else { " - pass --write to edit the file itself" });
     }
 
-    fn visible(&self, name: &str) -> bool {
-        if let Some(index) = self.section {
-            if !self.sections.get(index).map(|(_, names)| names.iter().any(|n| n == name)).unwrap_or(false) {
+    fn visible(&self, option: &OptionDef) -> bool {
+        if let Some(category) = &self.category {
+            if &option.category != category {
                 return false;
             }
         }
-        if self.search.is_empty() {
-            return true;
+        if !self.search.is_empty() {
+            let needle = self.search.to_lowercase();
+            let haystack = format!("{} {}", option.name, option.description).to_lowercase();
+            if !haystack.contains(&needle) {
+                return false;
+            }
         }
-        let needle = self.search.to_lowercase();
-        name.to_lowercase().contains(&needle)
+        if self.only_changed {
+            let current = self.config().get(&option.name).unwrap_or("");
+            if current == self.schema().default_token(option) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn set_token(&mut self, name: &str, token: String) {
+        self.config_mut().set(name, &token);
     }
 }
 
@@ -98,9 +157,17 @@ impl eframe::App for App {
             ui.horizontal(|ui| {
                 ui.heading("AzzyAI configuration");
                 ui.separator();
+                for (label, unit) in [("Homunculus", Unit::Homunculus), ("Mercenary", Unit::Mercenary)] {
+                    if ui.selectable_label(self.unit == unit, label).clicked() {
+                        self.unit = unit;
+                        self.category = None;
+                        self.selected = None;
+                    }
+                }
+                ui.separator();
                 ui.label(&self.shown_path);
                 ui.separator();
-                let changed = self.config.changed();
+                let changed = self.changed();
                 ui.colored_label(
                     if changed > 0 { egui::Color32::from_rgb(200, 120, 0) } else { egui::Color32::GRAY },
                     format!("{changed} changed"),
@@ -112,7 +179,8 @@ impl eframe::App for App {
                     if ui.button("Reload").clicked() {
                         self.reload();
                     }
-                    ui.add(egui::TextEdit::singleline(&mut self.search).hint_text("search"));
+                    ui.add(egui::TextEdit::singleline(&mut self.search).hint_text("name or description"));
+                    ui.checkbox(&mut self.only_changed, "only non-default");
                 });
             });
             if !self.status.is_empty() {
@@ -120,88 +188,152 @@ impl eframe::App for App {
             }
         });
 
-        egui::SidePanel::left("sections").resizable(true).show(ctx, |ui| {
-            ui.heading("Sections");
-            if ui.selectable_label(self.section.is_none(), format!("All ({})", self.config.option_count())).clicked() {
-                self.section = None;
+        egui::SidePanel::left("categories").resizable(true).default_width(220.0).show(ctx, |ui| {
+            ui.heading("Categories");
+            // counts first: assigning self.category while schema borrows self is not allowed
+            let (total, categories) = {
+                let schema = self.schema();
+                let total = schema.options.iter().filter(|o| self.visible(o)).count();
+                let categories: Vec<(String, usize)> = schema
+                    .categories
+                    .iter()
+                    .map(|category| {
+                        let count = schema
+                            .options
+                            .iter()
+                            .filter(|o| &o.category == category && self.visible(o))
+                            .count();
+                        (category.clone(), count)
+                    })
+                    .collect();
+                (total, categories)
+            };
+            if ui.selectable_label(self.category.is_none(), format!("All matching ({total})")).clicked() {
+                self.category = None;
             }
-            for (index, (name, names)) in self.sections.iter().enumerate() {
-                let label = if name.is_empty() { "(no section)" } else { name.as_str() };
-                if ui.selectable_label(self.section == Some(index), format!("{label} ({})", names.len())).clicked() {
-                    self.section = Some(index);
+            for (category, count) in categories {
+                if ui.selectable_label(self.category.as_deref() == Some(category.as_str()),
+                    format!("{category} ({count})")).clicked() {
+                    self.category = Some(category);
                 }
+            }
+        });
+
+        egui::TopBottomPanel::bottom("description").resizable(true).min_height(90.0).show(ctx, |ui| {
+            match self.selected.as_deref().and_then(|name| self.schema().get(name)) {
+                Some(option) => {
+                    ui.horizontal(|ui| {
+                        ui.strong(&option.name);
+                        let mut facts = format!("{}  ·  {}", option.category, option.kind);
+                        if let (Some(min), Some(max)) = (option.min, option.max) {
+                            facts.push_str(&format!("  ·  {min}..{max}"));
+                        }
+                        facts.push_str(&format!("  ·  default {}", self.schema().default_token(option)));
+                        ui.weak(facts);
+                    });
+                    egui::ScrollArea::vertical().max_height(160.0).show(ui, |ui| {
+                        ui.label(&option.description);
+                    });
+                }
+                None => { ui.weak("Select an option to read its description."); }
             }
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-                // edits are collected first: the config cannot be borrowed while it is drawn
                 let mut edits: Vec<(String, String)> = Vec::new();
-                for assignment in self.config.assignments() {
-                    if !self.visible(&assignment.name) {
-                        continue;
-                    }
-                    ui.horizontal(|ui| {
-                        let width = ui.available_width();
-                        let name_w = (width * 0.32).max(120.0);
-                        let value_w = (width * 0.22).max(80.0);
-                        // a Label inside add_sized is centred; allocate with a left layout instead
-                        ui.allocate_ui_with_layout(
-                            egui::vec2(name_w, 20.0),
-                            egui::Layout::left_to_right(egui::Align::Center),
-                            |ui| { ui.label(&assignment.name); },
+                let mut selected = None;
+                let has_comment = |name: &str| self.config().comment_of(name);
+                egui::Grid::new("options").num_columns(3).spacing([10.0, 3.0]).striped(true).show(ui, |ui| {
+                    ui.strong("Option");
+                    ui.strong("Value");
+                    ui.strong("Notes");
+                    ui.end_row();
+                    // clone the option list so the config can be edited while drawing
+                    let schema = self.schema();
+                    let options: Vec<OptionDef> = schema.options.iter().filter(|o| self.visible(o)).cloned().collect();
+                    for option in &options {
+                        let current = self.config().get(&option.name).map(|v| v.to_string()).unwrap_or_default();
+                        let response = ui.selectable_label(
+                            self.selected.as_deref() == Some(option.name.as_str()),
+                            &option.name,
                         );
-                        let mut value = assignment.value.clone();
-                        let response = ui.add_sized([value_w, 20.0], egui::TextEdit::singleline(&mut value));
-                        if response.changed() {
-                            edits.push((assignment.name.clone(), value));
+                        if response.clicked() {
+                            selected = Some(option.name.clone());
                         }
-                        if assignment.changed() {
-                            ui.colored_label(egui::Color32::from_rgb(200, 120, 0), "changed");
-                        } else if !assignment.comment.is_empty() {
-                            let rest = (width - name_w - value_w - 60.0).max(60.0);
-                            ui.allocate_ui_with_layout(
-                                egui::vec2(rest, 20.0),
-                                egui::Layout::left_to_right(egui::Align::Center),
-                                |ui| {
-                                    ui.add(egui::Label::new(
-                                        egui::RichText::new(assignment.comment.trim()).weak()
-                                    ).truncate());
-                                },
-                            );
+                        let mut token = current.clone();
+                        match option.kind.as_str() {
+                            "bool" => {
+                                let mut on = token.trim() != "0" && !token.is_empty();
+                                if ui.checkbox(&mut on, "").changed() {
+                                    token = if on { "1".into() } else { "0".into() };
+                                    edits.push((option.name.clone(), token.clone()));
+                                }
+                            }
+                            "enum" | "serverType" => {
+                                let values: Vec<(String, i64)> = if option.kind == "serverType" {
+                                    vec![("SERVER_OFFICIAL".into(), 0), ("SERVER_PRIVATE".into(), 1)]
+                                } else {
+                                    schema.enum_values(option).cloned().unwrap_or_default()
+                                };
+                                let selected_label = match option.kind.as_str() {
+                                    "serverType" => if token.trim() == "SERVER_PRIVATE" { "SERVER_PRIVATE" } else { "SERVER_OFFICIAL" }.to_string(),
+                                    _ => token.parse::<i64>().ok()
+                                        .and_then(|n| values.iter().find(|(_, v)| *v == n).map(|(l, _)| l.clone()))
+                                        .unwrap_or_else(|| token.clone()),
+                                };
+                                let mut chosen = selected_label.clone();
+                                egui::ComboBox::from_id_source(format!("{}-{}", option.name, option.kind))
+                                    .selected_text(chosen.clone())
+                                    .show_ui(ui, |ui| {
+                                        for (label, value) in &values {
+                                            let text = if option.kind == "serverType" { label.clone() } else { format!("{label} ({value})") };
+                                            if ui.selectable_value(&mut chosen, label.clone(), text).clicked() {
+                                                token = if option.kind == "serverType" {
+                                                    label.clone()
+                                                } else {
+                                                    value.to_string()
+                                                };
+                                            }
+                                        }
+                                    });
+                                if token != current {
+                                    edits.push((option.name.clone(), token.clone()));
+                                }
+                            }
+                            _ => {
+                                let width = if option.kind == "double" { 80.0 } else { 96.0 };
+                                if ui.add_sized([width, 20.0], egui::TextEdit::singleline(&mut token)).changed() {
+                                    if let Ok(value) = token.trim().parse::<f64>() {
+                                        // the web GUI clamps to min/max; do the same here
+                                        let clamped = value
+                                            .max(option.min.unwrap_or(f64::MIN))
+                                            .min(option.max.unwrap_or(f64::MAX));
+                                        token = if option.kind == "double" {
+                                            format!("{clamped}")
+                                        } else {
+                                            format!("{}", clamped as i64)
+                                        };
+                                        edits.push((option.name.clone(), token.clone()));
+                                    }
+                                }
+                            }
                         }
-                    });
+                        match has_comment(&option.name) {
+                            Some(comment) => { ui.weak(comment.trim()); }
+                            None => { ui.label(""); }
+                        }
+                        ui.end_row();
+                    }
+                });
+                for (name, token) in edits {
+                    self.set_token(&name, token);
                 }
-                for (name, value) in edits {
-                    self.config.set(&name, &value);
+                if let Some(name) = selected {
+                    self.selected = Some(name);
                 }
             });
         });
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn edit_and_save_writes_only_the_changed_value() {
-        let dir = std::env::temp_dir().join(format!("azzy-native-test-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("H_Config.lua");
-        let original = "LavaSlideMode = 0 -- lava at the target\nAutoMobCount = 2";
-        std::fs::write(&path, original).unwrap();
-
-        let mut app = App::new(path.clone(), false).unwrap();
-        assert_eq!(app.sections.len(), 1);
-        assert!(app.config.set("LavaSlideMode", "1"));
-        app.save();
-
-        let written = std::fs::read_to_string(dir.join("H_Config.lua.new")).unwrap();
-        assert_eq!(written, "LavaSlideMode = 1 -- lava at the target\nAutoMobCount = 2");
-        // the original file is untouched without --write
-        assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
-        let _ = std::fs::remove_dir_all(&dir);
     }
 }
 
@@ -220,26 +352,24 @@ fn log(message: &str) {
     eprintln!("azzy-native: {message}");
 }
 
-// Launched by double-click the working directory is the exe's folder, so try the layouts the
-// repository and the packaged zip use before giving up.
-fn resolve(path: Option<PathBuf>) -> Option<PathBuf> {
+fn resolve(path: Option<PathBuf>, name: &str) -> Option<PathBuf> {
     if let Some(path) = path {
         return Some(path);
     }
     let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()))?;
-    let candidates = [
-        PathBuf::from("USER_AI/H_Config.lua"),
-        exe_dir.join("../../USER_AI/H_Config.lua"),
-        exe_dir.join("../USER_AI/H_Config.lua"),
-        exe_dir.join("USER_AI/H_Config.lua"),
-        PathBuf::from("AI/USER_AI/H_Config.lua"),
-    ];
-    candidates.into_iter().find(|c| c.is_file())
+    [
+        PathBuf::from(name),
+        exe_dir.join("../../USER_AI").join(name),
+        exe_dir.join("../USER_AI").join(name),
+        exe_dir.join("USER_AI").join(name),
+    ]
+    .into_iter()
+    .find(|c| c.is_file())
 }
 
 fn main() -> eframe::Result<()> {
-    let mut path: Option<PathBuf> = None;
     let mut write_in_place = false;
+    let mut dir: Option<PathBuf> = None;
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
         match arg.as_str() {
@@ -248,26 +378,44 @@ fn main() -> eframe::Result<()> {
                 print!("{}", include_str!("help.txt"));
                 return Ok(());
             }
-            other => path = Some(PathBuf::from(other)),
+            other => dir = Some(PathBuf::from(other)),
         }
     }
-    let Some(path) = resolve(path) else {
-        log("no configuration found: pass the file, e.g. azzy-native.exe C:\\git\\AzzyAI\\USER_AI\\H_Config.lua");
-        std::process::exit(2);
-    };
-    log(&format!("opening {}", path.display()));
-    let app = match App::new(path.clone(), write_in_place) {
+    let base = dir.clone().or_else(|| {
+        let cwd_has = PathBuf::from("USER_AI/H_Config.lua").is_file();
+        if cwd_has { Some(PathBuf::from("USER_AI")) } else { None }
+    });
+    let mut paths: BTreeMap<&'static str, PathBuf> = BTreeMap::new();
+    for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+        let candidate = match &base {
+            Some(base) => base.join(file),
+            None => match resolve(Some(PathBuf::from(file)), file) {
+                Some(path) => path,
+                None => {
+                    log(&format!("{file} not found: pass the USER_AI folder, e.g. azzy-native.exe C:\\\\git\\\\AzzyAI\\\\USER_AI"));
+                    std::process::exit(2);
+                }
+            },
+        };
+        if !candidate.is_file() {
+            log(&format!("{} not found", candidate.display()));
+            std::process::exit(2);
+        }
+        paths.insert(key, candidate);
+    }
+    log(&format!("opening {} and {}", paths["H"].display(), paths["M"].display()));
+    let app = match App::new(&paths, write_in_place) {
         Ok(app) => app,
         Err(e) => {
-            log(&format!("cannot load {}: {e}", path.display()));
+            log(&format!("cannot start: {e}"));
             std::process::exit(1);
         }
     };
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([980.0, 720.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([1100.0, 760.0]),
         ..Default::default()
     };
-    let result = eframe::run_native("AzzyAI configuration (Rust prototype)", options, Box::new(|_cc| Ok(Box::new(app))));
+    let result = eframe::run_native("AzzyAI configuration", options, Box::new(|_cc| Ok(Box::new(app))));
     match &result {
         Ok(()) => log("window closed normally"),
         Err(e) => log(&format!("could not open the window: {e}")),

@@ -68,6 +68,7 @@ jobs:
         run: |
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
           node tools/webgui_templates_check.js
+          node tools/webgui-data.js --check
 
   gui:
     name: Build config GUI (.NET 4.0)

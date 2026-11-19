@@ -1,25 +1,32 @@
-# azzy-native (prototype)
+# azzy-native
 
-Native configuration GUI for AzzyAI in Rust with `egui` - the "full rewrite" path, as a slice.
+The AzzyAI configuration GUI in Rust (egui), mirroring the web GUI.
 
-Scope of the spike: load a configuration through `azzy-config`, list its options grouped by the
-file's comment sections, search, edit values in place, show how many changed, Save and Reload.
+## Milestone 1 (done)
+
+- **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: `tools/webgui-data.js`
+  dumps `homSchema.js`/`merSchema.js` (263 options with categories, types, enums, defaults,
+  min/max and the English descriptions) to `data/options.json`, which is committed and checked for
+  drift in CI (`node tools/webgui-data.js --check`).
+- Search over names **and** descriptions, category filter, "only non-default" filter, changed
+  counter, and a description panel for the selected option (with category, type, range, default).
+- Typed editors: `bool` checkbox, `int`/`double` text field with the same min/max clamp as the web
+  GUI, `enum` and `serverType` combo boxes with the web GUI's labels.
+- Apply/Revert through `azzy-config`, which keeps the file byte for byte: only the values you
+  edited change, comments/tabs/order/line endings stay. Save writes `<file>.new` unless `--write`.
 
 ```
-cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [file] [--write]
+cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI folder] [--write]
 ```
 
-- default file `USER_AI/H_Config.lua`; Save writes `<file>.new` unless `--write` is given.
-- `cargo test -p azzy-native` covers the editing loop headlessly (load, change one value, save to
-  `.new`, original untouched).
-- Release binary: ~6.3 MB, no runtime to install (egui + glow, no GTK/WebView).
+## Still missing for parity with the web GUI
 
-What a real port would still need, and why this is not "the app already works": tactics and PVP
-grids (the C# `DataGridView` tables), the per-type presets editor, the updater (git/zip), the
-diagnostics dialog, translations and the option descriptions (the web GUI has them in
-`i18n.desc.*.js`; the C# app in attributes). The C# app is ~24k lines, most of it form
-infrastructure that the schema-driven approach would replace - but that replacement is the project,
-not this prototype.
+- Tactics, PVP tactics and Extra Options tabs (the DataGridView-like grids; needs `mobdata.js` for
+  monster names and maps).
+- Per-type presets (`Types/<Name>.lua`, the "Settings for" selector).
+- Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
+  diagnostics bundle (the Windows app already has it).
+- UI translations (pt/es) and the option descriptions in those languages (`i18n.desc.*.js`).
 
-The `egui` dependency tree (~200 crates) is why the workspace keeps this crate out of
-`default-members`: a plain `cargo build` at `tools/` builds everything else.
+`cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults) and the
+editing loop; `cargo test -p azzy-config` covers the file round-trip.
