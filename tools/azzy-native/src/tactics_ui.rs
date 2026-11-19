@@ -439,21 +439,28 @@ fn list_panel(
         scroll_to_selected = true;
     }
     let list_height = (height - 80.0).max(140.0);
-    egui::Frame::none()
-        .fill(p.grid)
-        .stroke(egui::Stroke::new(1.0_f32, p.border))
-        .rounding(egui::Rounding::same(4.0))
-        .inner_margin(egui::Margin::same(3.0))
-        .show(ui, |ui| {
-            ui.set_min_size(egui::vec2(ui.available_width().max(0.0), list_height));
-            ui.set_max_height(list_height);
-            egui::ScrollArea::vertical()
-                .max_height((list_height - 6.0).max(80.0))
-                .min_scrolled_height((list_height - 6.0).max(80.0))
-                .auto_shrink([false, false])
-                .drag_to_scroll(false)
-                .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
-                .show(ui, |ui| {
+    // A fixed rectangle + a clipped child UI, instead of an auto-sized Frame: the ScrollArea
+    // was allowed to grow beyond the card and the Add/Remove row ended up inside it.
+    let (list_rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width().max(0.0), list_height),
+        egui::Sense::hover(),
+    );
+    ui.painter().rect_filled(list_rect, egui::Rounding::same(4.0), p.grid);
+    ui.painter().rect_stroke(
+        list_rect,
+        egui::Rounding::same(4.0),
+        egui::Stroke::new(1.0_f32, p.border),
+    );
+    let content_rect = list_rect.shrink(3.0);
+    let mut list_ui = ui.child_ui(content_rect, egui::Layout::top_down(egui::Align::Min), None);
+    list_ui.set_clip_rect(content_rect);
+    let scroll_output = egui::ScrollArea::vertical()
+        .max_height(content_rect.height())
+        .min_scrolled_height(content_rect.height())
+        .auto_shrink([false, false])
+        .drag_to_scroll(false)
+        .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
+        .show(&mut list_ui, |ui| {
                     ui.set_min_width(ui.available_width().max(0.0));
                     if visible.is_empty() {
                         ui.label(
@@ -494,12 +501,6 @@ fn list_panel(
                         ui.ctx().data_mut(|data| {
                             data.insert_temp(egui::Id::new(("tact-row", tab.key(), index)), rect);
                         });
-                        ui.ctx().data_mut(|data| {
-                            data.insert_temp(
-                                egui::Id::new(("tact-row", tab.key(), index)),
-                                rect,
-                            );
-                        });
                         if response.clicked() {
                             *selected = index;
                         }
@@ -510,7 +511,12 @@ fn list_panel(
                         }
                     }
                 });
-        });
+    ui.ctx().data_mut(|data| {
+        data.insert_temp(
+            egui::Id::new(("tact-scroll", tab.key())),
+            (scroll_output.content_size, scroll_output.inner_rect, scroll_output.state.offset),
+        );
+    });
     ui.add_space(6.0);
     ui.horizontal(|ui| {
         if ui
@@ -1000,6 +1006,7 @@ fn suggest_window(
         .collapsible(false)
         .resizable(true)
         .default_width(560.0)
+        .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 58.0))
         .show(ctx, |ui| {
             ui.label(
                 egui::RichText::new(

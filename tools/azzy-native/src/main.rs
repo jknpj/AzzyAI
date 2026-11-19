@@ -1597,6 +1597,56 @@ mod tests {
             app.tact_selected["homtact"], index,
             "clicking the center of a row must select it"
         );
+        let scroll = ctx.data(|data| {
+            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+        });
+        assert!(scroll.map(|(content, inner, _)| content.y > inner.height()).unwrap_or(false));
+    }
+
+    #[test]
+    fn the_tactic_list_scrolls_with_the_wheel() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = repo.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        let ctx = egui::Context::default();
+        let input = |events| egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            events,
+            ..Default::default()
+        };
+        for _ in 0..2 {
+            let _ = ctx.run(input(Vec::new()), |ctx| app.draw(ctx));
+        }
+        let pos = egui::pos2(190.0, 300.0);
+        let wheel = egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Line,
+            delta: egui::vec2(0.0, -5.0),
+            modifiers: Default::default(),
+        };
+        for _ in 0..3 {
+            let _ = ctx.run(
+                input(vec![egui::Event::PointerMoved(pos), wheel.clone()]),
+                |ctx| app.draw(ctx),
+            );
+        }
+        let scroll = ctx.data(|data| {
+            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+        });
+        assert!(
+            scroll.map(|(_, _, offset)| offset.y > 0.0).unwrap_or(false),
+            "the wheel must scroll the tactics list"
+        );
     }
 
     #[test]
