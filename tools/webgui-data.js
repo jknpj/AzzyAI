@@ -1,6 +1,7 @@
 // webgui-data.js
-// Dumps the web GUI's option data (enums + schema, with descriptions) to JSON for the Rust GUI,
-// so the two front ends share one source of truth instead of a hand-copied schema.
+// Dumps the web GUI's option schema (enums + options, with descriptions) and the monster/map
+// database to JSON for the Rust GUI, so the two front ends share one source of truth instead of a
+// hand-copied schema.
 //
 //   node tools/webgui-data.js            # write tools/azzy-native/data/
 //   node tools/webgui-data.js --check    # compare without writing (CI)
@@ -13,7 +14,7 @@ const vm = require('vm');
 const REPO = path.join(__dirname, '..');
 const WEBGUI = path.join(REPO, 'webgui');
 const OUT_DIR = path.join(REPO, 'tools', 'azzy-native', 'data');
-const FILES = ['homSchema.js', 'merSchema.js'];
+const FILES = ['homSchema.js', 'merSchema.js', 'mobdata.js'];
 
 function load() {
   const window = {};
@@ -25,7 +26,8 @@ function load() {
   }
   return {
     hom: { enums: window.AzzyHomEnums || {}, schema: window.AzzyHomSchema || [] },
-    mer: { enums: window.AzzyMerEnums || {}, schema: window.AzzyMerSchema || [] }
+    mer: { enums: window.AzzyMerEnums || {}, schema: window.AzzyMerSchema || [] },
+    mobs: window.AzzyMobData || null
   };
 }
 
@@ -49,21 +51,33 @@ function main() {
     return 0;
   }
   const data = load();
-  const target = path.join(OUT_DIR, 'options.json');
-  const text = dump(data);
-  if (process.argv.includes('--check')) {
-    const current = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
-    if (current === text) {
-      console.log('options.json matches the web GUI schema');
-      return 0;
+  const outputs = [
+    ['options.json', dump({ hom: data.hom, mer: data.mer }), `${data.hom.schema.length} homunculus, ${data.mer.schema.length} mercenary options`]
+  ];
+  if (data.mobs) {
+    const count = Object.keys(data.mobs.mobs || {}).length;
+    outputs.push(['mobs.json', dump(data.mobs), `${count} monsters, ${Object.keys(data.mobs.maps || {}).length} maps`]);
+  }
+  const check = process.argv.includes('--check');
+  if (check) {
+    for (const [name, text] of outputs) {
+      const target = path.join(OUT_DIR, name);
+      const current = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
+      if (current !== text) {
+        console.log(`ERROR: tools/azzy-native/data/${name} is stale`);
+        console.log('  run: node tools/webgui-data.js');
+        return 1;
+      }
+      console.log(`${name} matches the web GUI data`);
     }
-    console.log('ERROR: tools/azzy-native/data/options.json is stale');
-    console.log('  run: node tools/webgui-data.js');
-    return 1;
+    return 0;
   }
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(target, text);
-  console.log(`wrote ${path.relative(REPO, target)}: ${data.hom.schema.length} homunculus, ${data.mer.schema.length} mercenary options`);
+  for (const [name, text, summary] of outputs) {
+    const target = path.join(OUT_DIR, name);
+    fs.writeFileSync(target, text);
+    console.log(`wrote ${path.relative(REPO, target)}: ${summary}`);
+  }
   return 0;
 }
 

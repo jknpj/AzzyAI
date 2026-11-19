@@ -30,10 +30,23 @@ badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied f
 cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI folder] [--write]
 ```
 
+## Milestone 2 (in progress)
+
+- **Tactics, Mercenary Tactics, PVP Tactics and Merc PVP Tactics** are loaded together with the
+  settings and edited in their own tabs: the entry list on the left, name/id and the "Overall
+  Tactics" form on the right, with the same fields/options as `webgui/tactics.js` (basic behavior,
+  skill mode, debuff, kiting, cast reaction, class, snipe, rescue, SP, kill-steal, weight, chase).
+- `azzy_config::tactics` parses `MyTact[...]`/`MyPVPTact[...]` and preserves every unedited line;
+  edits rewrite only their entry, new entries are appended, removed entries are dropped, and a
+  file created from scratch gets `MyTact={}`.
+- `webgui/mobdata.js` is dumped to `data/mobs.json` by the same script as the schema (2675
+  monsters), so the editor shows the monster name/level/element/race under the id.
+- Apply Settings now writes every file with pending edits (settings and tactics).
+
 ## Still missing for parity with the web GUI
 
-- Tactics, PVP tactics and Extra Options tabs (the DataGridView-like grids; needs `mobdata.js` for
-  monster names and maps).
+- The "Suggested tactics" panel (needs the suggestion rules in `webgui/tactSuggest.js`).
+- Extra Options tab (free-form editor for `H_Extra.lua`/`M_Extra.lua`).
 - Per-type presets (`Types/<Name>.lua`, the "Settings for" selector).
 - Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
   diagnostics bundle (the Windows app already has it).

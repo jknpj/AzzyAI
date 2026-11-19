@@ -7,6 +7,8 @@
 //!
 //! This is the model a native GUI would sit on; it has no UI dependency.
 
+pub mod tactics;
+
 use std::path::Path;
 
 #[derive(Debug, Clone)]

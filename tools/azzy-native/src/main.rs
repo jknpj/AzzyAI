@@ -11,12 +11,15 @@
 // translations are the next milestones (see README).
 
 mod data;
+mod mobs;
+mod tactics_ui;
 mod theme;
 
 use std::collections::BTreeMap;
 use std::io::Write as _;
 use std::path::PathBuf;
 
+use azzy_config::tactics::Tactics;
 use azzy_config::Config;
 use data::{OptionDef, Schema};
 use eframe::egui;
@@ -65,6 +68,11 @@ struct App {
     drafts: BTreeMap<String, String>,
     // options appended in memory because the file did not have them (undo on reset)
     appended: std::collections::BTreeSet<String>,
+    mobs: mobs::Mobs,
+    tactics: BTreeMap<&'static str, Tactics>,
+    tact_paths: BTreeMap<&'static str, PathBuf>,
+    tact_selected: BTreeMap<&'static str, usize>,
+    open_tact: Option<tactics_ui::Tab>,
 }
 
 /// Everything a grid row needs, copied out of the schema/config so the UI can mutate them.
@@ -128,6 +136,7 @@ fn bool_of(token: &str) -> bool {
 impl App {
     fn new(paths: &BTreeMap<&'static str, PathBuf>, write_in_place: bool) -> Result<App, String> {
         let (hom, mer) = data::load()?;
+        let mobs = mobs::load()?;
         let mut configs = BTreeMap::new();
         let mut shown = Vec::new();
         for (key, path) in paths {
@@ -136,6 +145,24 @@ impl App {
                 .unwrap_or_else(|_| path.display().to_string());
             shown.push(canonical.strip_prefix(r"\\?\").unwrap_or(&canonical).to_string());
             configs.insert(*key, config);
+        }
+        // The tactics files live next to the two config files. A missing one is an empty model
+        // that Apply Settings can create; it must not stop the settings tabs from opening.
+        let base = paths["H"].parent().map(|dir| dir.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
+        let mut tactics = BTreeMap::new();
+        let mut tact_paths = BTreeMap::new();
+        let mut tact_selected = BTreeMap::new();
+        for tab in tactics_ui::Tab::ALL {
+            let path = base.join(tab.layout().file);
+            let model = if path.is_file() {
+                Tactics::load(&path, tab.layout().kind)
+                    .map_err(|e| format!("{}: {e}", path.display()))?
+            } else {
+                Tactics::parse("", tab.layout().kind)
+            };
+            tact_paths.insert(tab.key(), path);
+            tact_selected.insert(tab.key(), 0);
+            tactics.insert(tab.key(), model);
         }
         Ok(App {
             hom,
@@ -156,6 +183,11 @@ impl App {
             focus_search: false,
             drafts: BTreeMap::new(),
             appended: std::collections::BTreeSet::new(),
+            mobs,
+            tactics,
+            tact_paths,
+            tact_selected,
+            open_tact: None,
         })
     }
 
@@ -180,46 +212,122 @@ impl App {
 
     /// Edits not written to disk yet (the amber marker).
     fn changed(&self) -> usize {
-        self.configs.values().map(|c| c.changed()).sum()
+        self.configs.values().map(|c| c.changed()).sum::<usize>()
+            + self.tactics.values().map(|t| t.changed()).sum::<usize>()
     }
 
-    fn reload(&mut self) {
-        let key = self.unit_key();
-        let path = self.paths[key].clone();
-        match Config::load(&path) {
-            Ok(config) => {
-                self.configs.insert(key, config);
-                self.drafts.clear();
-                self.appended.clear();
-                self.status = "reloaded from disk".into();
-            }
-            Err(e) => self.status = format!("reload failed: {e}"),
-        }
-    }
-
-    fn save(&mut self) {
-        let key = self.unit_key();
-        let source = self.paths[key].clone();
-        let target = if self.write_in_place {
+    fn target_for(&self, source: &PathBuf) -> PathBuf {
+        if self.write_in_place {
             source.clone()
         } else {
             PathBuf::from(format!("{}.new", source.display()))
-        };
-        let Some(config) = self.config() else { return };
-        let changed = config.changed();
-        if let Err(e) = config.save(&target) {
-            self.status = format!("save failed: {e}");
-            return;
         }
-        // reload so the "changed" counter starts from what is now on disk
-        if let Ok(fresh) = Config::load(&target) {
-            self.configs.insert(key, fresh);
+    }
+
+    fn active_path(&self) -> String {
+        match self.open_tact {
+            Some(tab) => {
+                let path = self.tact_paths[tab.key()].display().to_string();
+                path.strip_prefix(r"\?\").unwrap_or(&path).to_string()
+            }
+            None => self.shown_path.clone(),
+        }
+    }
+
+    fn reload(&mut self) {
+        let mut errors = Vec::new();
+        for (key, path) in &self.paths {
+            match Config::load(path) {
+                Ok(config) => {
+                    self.configs.insert(*key, config);
+                }
+                Err(e) => errors.push(format!("{}: {e}", path.display())),
+            }
+        }
+        for tab in tactics_ui::Tab::ALL {
+            let key = tab.key();
+            let Some(path) = self.tact_paths.get(key).cloned() else { continue };
+            let loaded = if path.is_file() {
+                Tactics::load(&path, tab.layout().kind)
+                    .map_err(|e| format!("{}: {e}", path.display()))
+            } else {
+                Ok(Tactics::parse("", tab.layout().kind))
+            };
+            match loaded {
+                Ok(model) => {
+                    self.tactics.insert(key, model);
+                    self.tact_selected.insert(key, 0);
+                }
+                Err(e) => errors.push(e),
+            }
         }
         self.drafts.clear();
         self.appended.clear();
-        self.status = format!("applied {} change(s) to {}", changed, target.display());
-        if !self.write_in_place {
-            self.status.push_str(" (pass --write to edit the file itself)");
+        self.status = if errors.is_empty() {
+            "reloaded from disk".into()
+        } else {
+            format!("reload failed: {}", errors.join("; "))
+        };
+    }
+
+    fn save(&mut self) {
+        let mut written = Vec::new();
+        let mut errors = Vec::new();
+        let mut total = 0;
+        let config_keys: Vec<&'static str> = self
+            .configs
+            .iter()
+            .filter(|(_, config)| config.changed() > 0)
+            .map(|(key, _)| *key)
+            .collect();
+        for key in config_keys {
+            let source = self.paths[key].clone();
+            let target = self.target_for(&source);
+            let changed = self.configs[key].changed();
+            match self.configs[key].save(&target) {
+                Ok(()) => {
+                    total += changed;
+                    written.push(target.display().to_string());
+                    if let Ok(fresh) = Config::load(&target) {
+                        self.configs.insert(key, fresh);
+                    }
+                }
+                Err(e) => errors.push(format!("{}: {e}", target.display())),
+            }
+        }
+        let tactic_tabs: Vec<tactics_ui::Tab> = tactics_ui::Tab::ALL
+            .iter()
+            .copied()
+            .filter(|tab| self.tactics.get(tab.key()).map(|t| t.changed()).unwrap_or(0) > 0)
+            .collect();
+        for tab in tactic_tabs {
+            let key = tab.key();
+            let source = self.tact_paths[key].clone();
+            let target = self.target_for(&source);
+            let changed = self.tactics[key].changed();
+            match self.tactics[key].save(&target) {
+                Ok(()) => {
+                    total += changed;
+                    written.push(target.display().to_string());
+                    if let Ok(fresh) = Tactics::load(&target, tab.layout().kind) {
+                        self.tactics.insert(key, fresh);
+                    }
+                }
+                Err(e) => errors.push(format!("{}: {e}", target.display())),
+            }
+        }
+        self.drafts.clear();
+        self.appended.clear();
+        if !errors.is_empty() {
+            self.status = format!("save failed: {}", errors.join("; "));
+        } else if written.is_empty() {
+            self.status = "nothing to apply".into();
+        } else {
+            self.status = format!(
+                "applied {total} change(s) to {}{}",
+                written.join(", "),
+                if self.write_in_place { "" } else { " (pass --write to edit the files themselves)" }
+            );
         }
     }
 
@@ -490,9 +598,9 @@ impl App {
                         }
                         // whatever is left of the row shows the file being edited
                         let status = if self.status.is_empty() {
-                            self.shown_path.clone()
+                            self.active_path()
                         } else {
-                            format!("{}   ·   {}", self.shown_path, self.status)
+                            format!("{}   ·   {}", self.active_path(), self.status)
                         };
                         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                             ui.add(
@@ -520,15 +628,30 @@ impl App {
             let mut active_tab = None;
             ui.horizontal(|ui| {
                 for unit in [Unit::Homunculus, Unit::Mercenary] {
-                    let active = self.unit == unit;
+                    let active = self.open_tact.is_none() && self.unit == unit;
                     let response = theme::tab(ui, p, unit.label(), active);
                     if active {
                         active_tab = Some(response.rect);
                     }
-                    if response.clicked() && self.unit != unit {
-                        self.unit = unit;
-                        self.category = None;
-                        self.selected = None;
+                    if response.clicked() {
+                        let switching = self.unit != unit || self.open_tact.is_some();
+                        self.open_tact = None;
+                        if switching {
+                            self.unit = unit;
+                            self.category = None;
+                            self.selected = None;
+                            self.drafts.clear();
+                        }
+                    }
+                }
+                for tab in tactics_ui::Tab::ALL {
+                    let active = self.open_tact == Some(tab);
+                    let response = theme::tab(ui, p, tab.layout().title, active);
+                    if active {
+                        active_tab = Some(response.rect);
+                    }
+                    if response.clicked() {
+                        self.open_tact = Some(tab);
                         self.drafts.clear();
                     }
                 }
@@ -543,7 +666,10 @@ impl App {
                 ui.spacing_mut().item_spacing.y = 6.0;
                 ui.set_min_width(ui.available_width());
                 ui.set_min_height(ui.available_height());
-                self.workspace(ui, p);
+                match self.open_tact {
+                    Some(tab) => self.tactics_workspace(ui, p, tab),
+                    None => self.workspace(ui, p),
+                }
             });
             // the active tab opens into the panel: erase the card's top border under it
             if let Some(tab) = active_tab {
@@ -554,6 +680,16 @@ impl App {
                 ui.painter().rect_filled(cover, 0.0, p.panel);
             }
         });
+    }
+
+    fn tactics_workspace(&mut self, ui: &mut egui::Ui, p: &Palette, tab: tactics_ui::Tab) {
+        let key = tab.key();
+        let mut selected = self.tact_selected.get(key).copied().unwrap_or(0);
+        let mobs = &self.mobs;
+        if let Some(tactics) = self.tactics.get_mut(key) {
+            tactics_ui::draw(ui, p, tab, tactics, &mut selected, mobs);
+        }
+        self.tact_selected.insert(key, selected);
     }
 
     fn workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -1207,6 +1343,40 @@ mod tests {
     }
 
     #[test]
+    fn applying_tactics_writes_only_that_file() {
+        use azzy_config::tactics::BASIC;
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let source = repo.join("H_Tactics.lua");
+        if !source.is_file() {
+            return; // the submodule is not checked out
+        }
+        let dir = std::env::temp_dir().join(format!("azzy-native-tactics-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        for file in ["H_Config.lua", "M_Config.lua", "H_Tactics.lua"] {
+            std::fs::copy(repo.join(file), dir.join(file)).unwrap();
+        }
+        let mut paths = BTreeMap::new();
+        paths.insert("H", dir.join("H_Config.lua"));
+        paths.insert("M", dir.join("M_Config.lua"));
+        let before_h = std::fs::read_to_string(dir.join("H_Config.lua")).unwrap();
+        let before_m = std::fs::read_to_string(dir.join("M_Config.lua")).unwrap();
+        let mut app = App::new(&paths, true).unwrap();
+        let tactics = app.tactics.get_mut("homtact").unwrap();
+        let index = tactics.entries.iter().position(|entry| entry.id == "1005").unwrap();
+        tactics.entry_mut(index).unwrap().values[BASIC] = "TACT_TANK".into();
+        app.save();
+        assert_eq!(std::fs::read_to_string(dir.join("H_Config.lua")).unwrap(), before_h);
+        assert_eq!(std::fs::read_to_string(dir.join("M_Config.lua")).unwrap(), before_m);
+        let after = std::fs::read_to_string(dir.join("H_Tactics.lua")).unwrap();
+        assert!(after.contains("MyTact[1005]={TACT_TANK,"));
+        let before = std::fs::read_to_string(source).unwrap();
+        assert_eq!(before.lines().count(), after.lines().count());
+        assert_eq!(app.changed(), 0, "a save must clear the pending changes");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn draws_without_panicking() {
         // egui lays out for real in a headless context: this catches invalid sizes, duplicated
         // widget ids and the borrow mistakes that only show up while drawing.
@@ -1221,18 +1391,31 @@ mod tests {
         }
         let mut app = App::new(&paths, false).unwrap();
         let ctx = egui::Context::default();
+        // a real window size: the default RawInput has no screen rect and egui then lays out
+        // into a degenerate one, which is not what the app ever sees
+        let input = || egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            ..Default::default()
+        };
         for _ in 0..3 {
-            let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+            let _ = ctx.run(input(), |ctx| app.draw(ctx));
         }
         app.search = "heal".into();
         app.only_changed = true;
-        let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.unit = Unit::Mercenary;
         app.search.clear();
         app.only_changed = false;
         app.category = None;
         app.selected = Some("AutoMobMode".into());
-        let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        for tab in tactics_ui::Tab::ALL {
+            app.open_tact = Some(tab);
+            let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        }
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
     }
 }
