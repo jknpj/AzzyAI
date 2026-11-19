@@ -41,12 +41,19 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
   file created from scratch gets `MyTact={}`.
 - `webgui/mobdata.js` is dumped to `data/mobs.json` by the same script as the schema (2675
   monsters), so the editor shows the monster name/level/element/race under the id.
-- Apply Settings now writes every file with pending edits (settings and tactics).
+- Apply Settings now writes every file with pending edits (settings, tactics and extras).
+- **Extra Options** tab: a monospaced free-form editor for `H_Extra.lua`/`M_Extra.lua` (the files the
+  GUI does not model), with a Homunculus/Mercenary selector and the same "not applied" badge.
+
+## Icons
+
+The window and the navbar use the real `webgui/azzyai.ico`, converted once to
+`data/azzyai-48.rgba` (48x48, raw RGBA) so egui can use it without an image-loading dependency.
+The remaining icons (skill icons from `webgui/img/skills`, element icons) are part of M4.
 
 ## Still missing for parity with the web GUI
 
 - The "Suggested tactics" panel (needs the suggestion rules in `webgui/tactSuggest.js`).
-- Extra Options tab (free-form editor for `H_Extra.lua`/`M_Extra.lua`).
 - Per-type presets (`Types/<Name>.lua`, the "Settings for" selector).
 - Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
   diagnostics bundle (the Windows app already has it).

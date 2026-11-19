@@ -47,6 +47,15 @@ impl Unit {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Page {
+    Settings,
+    Tactics(tactics_ui::Tab),
+    Extra,
+}
+
+const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
+
 struct App {
     hom: Schema,
     mer: Schema,
@@ -72,7 +81,12 @@ struct App {
     tactics: BTreeMap<&'static str, Tactics>,
     tact_paths: BTreeMap<&'static str, PathBuf>,
     tact_selected: BTreeMap<&'static str, usize>,
-    open_tact: Option<tactics_ui::Tab>,
+    page: Page,
+    extra: BTreeMap<&'static str, String>,
+    extra_original: BTreeMap<&'static str, String>,
+    extra_paths: BTreeMap<&'static str, PathBuf>,
+    extra_selected: &'static str,
+    logo: Option<egui::TextureHandle>,
 }
 
 /// Everything a grid row needs, copied out of the schema/config so the UI can mutate them.
@@ -164,6 +178,17 @@ impl App {
             tact_selected.insert(tab.key(), 0);
             tactics.insert(tab.key(), model);
         }
+        // H_Extra.lua / M_Extra.lua are free-form files: the editor shows the whole text.
+        let mut extra = BTreeMap::new();
+        let mut extra_original = BTreeMap::new();
+        let mut extra_paths = BTreeMap::new();
+        for file in EXTRA_FILES {
+            let path = base.join(file);
+            let text = std::fs::read_to_string(&path).unwrap_or_default();
+            extra_paths.insert(file, path);
+            extra.insert(file, text.clone());
+            extra_original.insert(file, text);
+        }
         Ok(App {
             hom,
             mer,
@@ -187,7 +212,12 @@ impl App {
             tactics,
             tact_paths,
             tact_selected,
-            open_tact: None,
+            page: Page::Settings,
+            extra,
+            extra_original,
+            extra_paths,
+            extra_selected: "H_Extra.lua",
+            logo: None,
         })
     }
 
@@ -214,6 +244,10 @@ impl App {
     fn changed(&self) -> usize {
         self.configs.values().map(|c| c.changed()).sum::<usize>()
             + self.tactics.values().map(|t| t.changed()).sum::<usize>()
+            + EXTRA_FILES
+                .iter()
+                .filter(|file| self.extra.get(*file) != self.extra_original.get(*file))
+                .count()
     }
 
     fn target_for(&self, source: &PathBuf) -> PathBuf {
@@ -225,13 +259,12 @@ impl App {
     }
 
     fn active_path(&self) -> String {
-        match self.open_tact {
-            Some(tab) => {
-                let path = self.tact_paths[tab.key()].display().to_string();
-                path.strip_prefix(r"\?\").unwrap_or(&path).to_string()
-            }
-            None => self.shown_path.clone(),
-        }
+        let path = match self.page {
+            Page::Settings => return self.shown_path.clone(),
+            Page::Tactics(tab) => self.tact_paths[tab.key()].display().to_string(),
+            Page::Extra => self.extra_paths[self.extra_selected].display().to_string(),
+        };
+        path.strip_prefix(r"\\?\").unwrap_or(&path).to_string()
     }
 
     fn reload(&mut self) {
@@ -259,6 +292,20 @@ impl App {
                     self.tact_selected.insert(key, 0);
                 }
                 Err(e) => errors.push(e),
+            }
+        }
+        for file in EXTRA_FILES {
+            let path = self.extra_paths[file].clone();
+            match std::fs::read_to_string(&path) {
+                Ok(text) => {
+                    self.extra.insert(file, text.clone());
+                    self.extra_original.insert(file, text);
+                }
+                Err(_e) if !path.exists() => {
+                    self.extra.insert(file, String::new());
+                    self.extra_original.insert(file, String::new());
+                }
+                Err(e) => errors.push(format!("{}: {e}", path.display())),
             }
         }
         self.drafts.clear();
@@ -312,6 +359,22 @@ impl App {
                     if let Ok(fresh) = Tactics::load(&target, tab.layout().kind) {
                         self.tactics.insert(key, fresh);
                     }
+                }
+                Err(e) => errors.push(format!("{}: {e}", target.display())),
+            }
+        }
+        for file in EXTRA_FILES {
+            let changed = self.extra.get(file) != self.extra_original.get(file);
+            if !changed {
+                continue;
+            }
+            let target = self.target_for(&self.extra_paths[file]);
+            let text = self.extra.get(file).cloned().unwrap_or_default();
+            match std::fs::write(&target, &text) {
+                Ok(()) => {
+                    total += 1;
+                    written.push(target.display().to_string());
+                    self.extra_original.insert(file, text);
                 }
                 Err(e) => errors.push(format!("{}: {e}", target.display())),
             }
@@ -496,14 +559,23 @@ impl App {
             .show(ctx, |ui| {
                 theme::band(ui, 46.0, p.title1, p.title2, |ui| {
                     let (logo, _) = ui.allocate_exact_size(egui::vec2(22.0, 22.0), egui::Sense::hover());
-                    ui.painter().rect_filled(logo, egui::Rounding::same(4.0), p.primary);
-                    ui.painter().text(
-                        logo.center(),
-                        egui::Align2::CENTER_CENTER,
-                        "A",
-                        egui::FontId::proportional(14.0),
-                        p.title_text,
-                    );
+                    if let Some(texture) = &self.logo {
+                        ui.painter().image(
+                            texture.id(),
+                            logo,
+                            egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                            egui::Color32::WHITE,
+                        );
+                    } else {
+                        ui.painter().rect_filled(logo, egui::Rounding::same(4.0), p.primary);
+                        ui.painter().text(
+                            logo.center(),
+                            egui::Align2::CENTER_CENTER,
+                            "A",
+                            egui::FontId::proportional(14.0),
+                            p.title_text,
+                        );
+                    }
                     ui.add_space(4.0);
                     ui.label(
                         egui::RichText::new("AzzyAI Configuration")
@@ -628,14 +700,14 @@ impl App {
             let mut active_tab = None;
             ui.horizontal(|ui| {
                 for unit in [Unit::Homunculus, Unit::Mercenary] {
-                    let active = self.open_tact.is_none() && self.unit == unit;
+                    let active = self.page == Page::Settings && self.unit == unit;
                     let response = theme::tab(ui, p, unit.label(), active);
                     if active {
                         active_tab = Some(response.rect);
                     }
                     if response.clicked() {
-                        let switching = self.unit != unit || self.open_tact.is_some();
-                        self.open_tact = None;
+                        let switching = self.unit != unit || self.page != Page::Settings;
+                        self.page = Page::Settings;
                         if switching {
                             self.unit = unit;
                             self.category = None;
@@ -645,15 +717,24 @@ impl App {
                     }
                 }
                 for tab in tactics_ui::Tab::ALL {
-                    let active = self.open_tact == Some(tab);
+                    let active = self.page == Page::Tactics(tab);
                     let response = theme::tab(ui, p, tab.layout().title, active);
                     if active {
                         active_tab = Some(response.rect);
                     }
                     if response.clicked() {
-                        self.open_tact = Some(tab);
+                        self.page = Page::Tactics(tab);
                         self.drafts.clear();
                     }
+                }
+                let active = self.page == Page::Extra;
+                let response = theme::tab(ui, p, "Extra Options", active);
+                if active {
+                    active_tab = Some(response.rect);
+                }
+                if response.clicked() {
+                    self.page = Page::Extra;
+                    self.drafts.clear();
                 }
             });
             let card_top = ui.cursor().min.y;
@@ -666,9 +747,10 @@ impl App {
                 ui.spacing_mut().item_spacing.y = 6.0;
                 ui.set_min_width(ui.available_width());
                 ui.set_min_height(ui.available_height());
-                match self.open_tact {
-                    Some(tab) => self.tactics_workspace(ui, p, tab),
-                    None => self.workspace(ui, p),
+                match self.page {
+                    Page::Settings => self.workspace(ui, p),
+                    Page::Tactics(tab) => self.tactics_workspace(ui, p, tab),
+                    Page::Extra => self.extra_workspace(ui, p),
                 }
             });
             // the active tab opens into the panel: erase the card's top border under it
@@ -690,6 +772,66 @@ impl App {
             tactics_ui::draw(ui, p, tab, tactics, &mut selected, mobs);
         }
         self.tact_selected.insert(key, selected);
+    }
+
+    fn extra_workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Extra options file:").color(p.text));
+            for (file, label) in [("H_Extra.lua", "Homunculus"), ("M_Extra.lua", "Mercenary")] {
+                let active = self.extra_selected == file;
+                if theme::tab(ui, p, label, active).clicked() {
+                    self.extra_selected = file;
+                }
+            }
+            ui.add_space(8.0);
+            let path = self.extra_paths[self.extra_selected].display().to_string();
+            ui.add(
+                egui::Label::new(egui::RichText::new(path).color(p.muted).size(11.0)).truncate(),
+            );
+            let changed = self.extra.get(self.extra_selected)
+                != self.extra_original.get(self.extra_selected);
+            if changed {
+                ui.add_space(6.0);
+                theme::badge(ui, "not applied", p.pending, egui::Color32::BLACK);
+            }
+        });
+        ui.label(
+            egui::RichText::new(
+                "Here you can modify configurations that are not supported by the GUI.",
+            )
+            .color(p.muted)
+            .size(11.0),
+        );
+        ui.add_space(4.0);
+        let file = self.extra_selected;
+        let mut text = self.extra.get(file).cloned().unwrap_or_default();
+        let height = (ui.available_height() - 10.0).max(200.0);
+        let mut edited = false;
+        egui::Frame::none()
+            .fill(p.grid)
+            .stroke(egui::Stroke::new(1.0_f32, p.border))
+            .rounding(egui::Rounding::same(4.0))
+            .inner_margin(egui::Margin::same(4.0))
+            .show(ui, |ui| {
+                egui::ScrollArea::both()
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        let response = ui.add_sized(
+                            [ui.available_width().max(300.0), height - 12.0],
+                            egui::TextEdit::multiline(&mut text)
+                                .code_editor()
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(30)
+                                .id_source(format!("extra:{file}")),
+                        );
+                        if response.changed() {
+                            edited = true;
+                        }
+                    });
+            });
+        if edited {
+            self.extra.insert(file, text);
+        }
     }
 
     fn workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -939,6 +1081,13 @@ impl App {
             self.applied_mode = Some(self.mode);
         }
         let p = theme::palette(self.mode);
+        if self.logo.is_none() {
+            let image = egui::ColorImage::from_rgba_unmultiplied(
+                [48, 48],
+                include_bytes!("../data/azzyai-48.rgba"),
+            );
+            self.logo = Some(ctx.load_texture("azzyai", image, egui::TextureOptions::LINEAR));
+        }
 
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, egui::Key::S)) && self.changed() > 0 {
             self.save();
@@ -1304,11 +1453,17 @@ fn main() -> eframe::Result<()> {
             std::process::exit(1);
         }
     };
+    let icon = egui::viewport::IconData {
+        rgba: include_bytes!("../data/azzyai-48.rgba").to_vec(),
+        width: 48,
+        height: 48,
+    };
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1180.0, 800.0])
             .with_min_inner_size([920.0, 600.0])
-            .with_title("AzzyAI Configuration"),
+            .with_title("AzzyAI Configuration")
+            .with_icon(std::sync::Arc::new(icon)),
         ..Default::default()
     };
     let result = eframe::run_native(
@@ -1413,9 +1568,11 @@ mod tests {
         app.selected = Some("AutoMobMode".into());
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         for tab in tactics_ui::Tab::ALL {
-            app.open_tact = Some(tab);
+            app.page = Page::Tactics(tab);
             let _ = ctx.run(input(), |ctx| app.draw(ctx));
         }
+        app.page = Page::Extra;
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
     }
 }
