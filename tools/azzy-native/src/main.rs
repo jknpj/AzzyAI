@@ -175,8 +175,6 @@ impl eframe::App for App {
                     }
                 }
                 ui.separator();
-                ui.label(&self.shown_path);
-                ui.separator();
                 let changed = self.changed();
                 ui.colored_label(
                     if changed > 0 { egui::Color32::from_rgb(200, 120, 0) } else { egui::Color32::GRAY },
@@ -189,7 +187,21 @@ impl eframe::App for App {
                     if ui.button("Reload").clicked() {
                         self.reload();
                     }
-                    ui.add(egui::TextEdit::singleline(&mut self.search).hint_text("name or description"));
+                });
+            });
+            // the path needs its own row: on one line it ran under the search box and the counter
+            ui.horizontal(|ui| {
+                let path_width = (ui.available_width() - 360.0).max(120.0);
+                ui.add_sized(
+                    [path_width, 18.0],
+                    egui::Label::new(egui::RichText::new(&self.shown_path).weak()).truncate(),
+                );
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.search)
+                            .hint_text("name or description")
+                            .desired_width(200.0),
+                    );
                     ui.checkbox(&mut self.only_changed, "only non-default");
                 });
             });
