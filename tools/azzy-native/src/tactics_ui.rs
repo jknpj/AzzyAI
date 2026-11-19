@@ -287,6 +287,7 @@ pub fn draw(
     tab: Tab,
     tactics: &mut Tactics,
     selected: &mut usize,
+    filter: &mut String,
     mobs: &Mobs,
 ) {
     let layout = tab.layout();
@@ -302,7 +303,7 @@ pub fn draw(
         ui.allocate_ui_with_layout(
             egui::vec2(left_w, height),
             egui::Layout::top_down(egui::Align::Min),
-            |ui| list_panel(ui, p, tab, tactics, selected, mobs, height),
+            |ui| list_panel(ui, p, tab, tactics, selected, filter, mobs, height),
         );
         ui.add_space(8.0);
         ui.allocate_ui_with_layout(
@@ -356,21 +357,45 @@ fn list_panel(
     tab: Tab,
     tactics: &mut Tactics,
     selected: &mut usize,
+    filter: &mut String,
     mobs: &Mobs,
     height: f32,
 ) {
     let layout = tab.layout();
+    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new("Find:").color(p.muted).size(11.0));
+        let width = (ui.available_width() - 50.0).max(80.0);
+        ui.add_sized(
+            [width, 20.0],
+            egui::TextEdit::singleline(filter)
+                .hint_text("name or id")
+                .id_source(format!("tact-filter:{}", tab.key())),
+        );
+        if ui.small_button("Clear").clicked() {
+            filter.clear();
+        }
+    });
+    ui.add_space(4.0);
+    let needle = filter.trim().to_lowercase();
     let visible: Vec<usize> = tactics
         .entries
         .iter()
         .enumerate()
         .filter(|(_, entry)| !entry.is_removed())
+        .filter(|(index, entry)| {
+            if needle.is_empty() {
+                return true;
+            }
+            entry_label(layout, tactics, *index, mobs).to_lowercase().contains(&needle)
+                || entry.id.to_lowercase().contains(&needle)
+                || entry.name.to_lowercase().contains(&needle)
+        })
         .map(|(index, _)| index)
         .collect();
     if !visible.is_empty() && !visible.contains(selected) {
         *selected = visible[0];
     }
-    let list_height = (height - 46.0).max(160.0);
+    let list_height = (height - 80.0).max(140.0);
     egui::Frame::none()
         .fill(p.grid)
         .stroke(egui::Stroke::new(1.0_f32, p.border))
@@ -392,10 +417,32 @@ fn list_panel(
                     for index in visible {
                         let text = entry_label(layout, tactics, index, mobs);
                         let active = index == *selected;
-                        let response = ui.selectable_label(active, egui::RichText::new(text).size(12.0));
+                        // the whole row is the click target: aiming at the text alone was hard
+                        let (rect, response) = ui.allocate_exact_size(
+                            egui::vec2(ui.available_width(), 22.0),
+                            egui::Sense::click(),
+                        );
+                        let fill = if active {
+                            p.primary
+                        } else if response.hovered() {
+                            p.panel2
+                        } else {
+                            egui::Color32::TRANSPARENT
+                        };
+                        ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
+                        ui.painter()
+                            .with_clip_rect(rect)
+                            .text(
+                                rect.left_center() + egui::vec2(6.0, 0.0),
+                                egui::Align2::LEFT_CENTER,
+                                &text,
+                                egui::FontId::proportional(12.0),
+                                if active { egui::Color32::WHITE } else { p.text },
+                            );
                         if response.clicked() {
                             *selected = index;
                         }
+                        response.on_hover_cursor(egui::CursorIcon::PointingHand);
                     }
                 });
         });
