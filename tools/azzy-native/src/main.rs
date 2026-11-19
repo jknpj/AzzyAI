@@ -36,6 +36,7 @@ struct App {
     only_changed: bool,
     selected: Option<String>,
     status: String,
+    frames: u64,
 }
 
 impl App {
@@ -63,6 +64,7 @@ impl App {
             only_changed: false,
             selected: None,
             status: String::new(),
+            frames: 0,
         })
     }
 
@@ -73,18 +75,19 @@ impl App {
         }
     }
 
-    fn config(&self) -> &Config {
-        self.configs.get(match self.unit {
+    fn unit_key(&self) -> &'static str {
+        match self.unit {
             Unit::Homunculus => "H",
             Unit::Mercenary => "M",
-        }).expect("config loaded for every unit")
+        }
     }
 
-    fn config_mut(&mut self) -> &mut Config {
-        self.configs.get_mut(match self.unit {
-            Unit::Homunculus => "H",
-            Unit::Mercenary => "M",
-        }).expect("config loaded for every unit")
+    fn config(&self) -> Option<&Config> {
+        self.configs.get(self.unit_key())
+    }
+
+    fn config_mut(&mut self) -> Option<&mut Config> {
+        self.configs.get_mut(self.unit_key())
     }
 
     fn changed(&self) -> usize {
@@ -92,7 +95,7 @@ impl App {
     }
 
     fn reload(&mut self) {
-        let key = match self.unit { Unit::Homunculus => "H", Unit::Mercenary => "M" };
+        let key = self.unit_key();
         let path = self.paths[key].clone();
         match Config::load(&path) {
             Ok(config) => {
@@ -104,15 +107,16 @@ impl App {
     }
 
     fn save(&mut self) {
-        let key = match self.unit { Unit::Homunculus => "H", Unit::Mercenary => "M" };
+        let key = self.unit_key();
         let source = self.paths[key].clone();
         let target = if self.write_in_place {
             source.clone()
         } else {
             PathBuf::from(format!("{}.new", source.display()))
         };
-        let changed = self.config().changed();
-        if let Err(e) = self.config().save(&target) {
+        let Some(config) = self.config() else { return };
+        let changed = config.changed();
+        if let Err(e) = config.save(&target) {
             self.status = format!("save failed: {e}");
             return;
         }
@@ -138,7 +142,7 @@ impl App {
             }
         }
         if self.only_changed {
-            let current = self.config().get(&option.name).unwrap_or("");
+            let current = self.config().and_then(|c| c.get(&option.name)).unwrap_or("");
             if current == self.schema().default_token(option) {
                 return false;
             }
@@ -147,12 +151,18 @@ impl App {
     }
 
     fn set_token(&mut self, name: &str, token: String) {
-        self.config_mut().set(name, &token);
+        if let Some(config) = self.config_mut() {
+            config.set(name, &token);
+        }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.frames += 1;
+        if self.frames == 1 || self.frames == 5 {
+            log(&format!("frame {}", self.frames));
+        }
         egui::TopBottomPanel::top("bar").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.heading("AzzyAI configuration");
@@ -243,7 +253,7 @@ impl eframe::App for App {
             egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
                 let mut edits: Vec<(String, String)> = Vec::new();
                 let mut selected = None;
-                let has_comment = |name: &str| self.config().comment_of(name);
+                let has_comment = |name: &str| self.config().and_then(|c| c.comment_of(name));
                 egui::Grid::new("options").num_columns(3).spacing([10.0, 3.0]).striped(true).show(ui, |ui| {
                     ui.strong("Option");
                     ui.strong("Value");
@@ -253,7 +263,7 @@ impl eframe::App for App {
                     let schema = self.schema();
                     let options: Vec<OptionDef> = schema.options.iter().filter(|o| self.visible(o)).cloned().collect();
                     for option in &options {
-                        let current = self.config().get(&option.name).map(|v| v.to_string()).unwrap_or_default();
+                        let current = self.config().and_then(|c| c.get(&option.name)).map(|v| v.to_string()).unwrap_or_default();
                         let response = ui.selectable_label(
                             self.selected.as_deref() == Some(option.name.as_str()),
                             &option.name,
@@ -367,7 +377,25 @@ fn resolve(path: Option<PathBuf>, name: &str) -> Option<PathBuf> {
     .find(|c| c.is_file())
 }
 
+fn install_panic_hook() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic| {
+        let location = panic.location().map(|l| format!("{}:{}", l.file(), l.line())).unwrap_or_default();
+        let message = if let Some(text) = panic.payload().downcast_ref::<&str>() {
+            (*text).to_string()
+        } else if let Some(text) = panic.payload().downcast_ref::<String>() {
+            text.clone()
+        } else {
+            "unknown panic".into()
+        };
+        let backtrace = std::backtrace::Backtrace::force_capture();
+        log(&format!("PANIC at {location}: {message}\n{backtrace}"));
+        previous(panic);
+    }));
+}
+
 fn main() -> eframe::Result<()> {
+    install_panic_hook();
     let mut write_in_place = false;
     let mut dir: Option<PathBuf> = None;
     let mut it = std::env::args().skip(1);
