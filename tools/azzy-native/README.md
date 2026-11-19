@@ -47,7 +47,10 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
 - **Suggested tactics**: "Suggest..." in a tactics tab opens the panel from `tactSuggest.js`; a
   map or monster name/id adds the rows the monster database implies (plant, MVP, boss, aggressive,
   immobile, passive), "Add all plants and mushrooms" does the bulk case, and "Replace rows that
-  already exist" controls duplicates. The search lists the first matching monsters by name.
+  already exist" controls duplicates. The search lists the first matching monsters by name; the
+  window is anchored to the right and closes after a successful add so it never covers the list.
+- The entry list navigates with **Up/Down** (one row), **PageUp/PageDown** (ten) and **Home/End**
+  when no text field or popup has the keyboard, and scrolls the selected row into view.
 
 ## Icons
 

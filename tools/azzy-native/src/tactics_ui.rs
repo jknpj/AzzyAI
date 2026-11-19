@@ -299,7 +299,6 @@ pub fn draw(
     tactics: &mut Tactics,
     selected: &mut usize,
     filter: &mut String,
-    focus_filter: &mut bool,
     suggest: &mut SuggestState,
     mobs: &Mobs,
 ) {
@@ -325,7 +324,6 @@ pub fn draw(
             tactics,
             selected,
             filter,
-            focus_filter,
             suggest,
             mobs,
             height,
@@ -384,7 +382,6 @@ fn list_panel(
     tactics: &mut Tactics,
     selected: &mut usize,
     filter: &mut String,
-    focus_filter: &mut bool,
     suggest: &mut SuggestState,
     mobs: &Mobs,
     height: f32,
@@ -400,9 +397,6 @@ fn list_panel(
                 .hint_text("type a name or id, Enter picks the first match")
                 .id_source(format!("tact-filter:{}", tab.key())),
         );
-        if std::mem::take(focus_filter) {
-            response.request_focus();
-        }
         if response.lost_focus() && !response.changed() {
             select_first = true;
         }
@@ -437,6 +431,34 @@ fn list_panel(
     } else if !visible.is_empty() && !visible.contains(selected) {
         *selected = visible[0];
         scroll_to_selected = true;
+    }
+    // Arrow keys navigate the list when no text field or popup has the keyboard. The Find box
+    // and the form controls keep their usual keys.
+    let keyboard_free = ui.ctx().memory(|memory| {
+        memory.focused().is_none() && !memory.any_popup_open()
+    });
+    if keyboard_free && !visible.is_empty() {
+        let current = visible.iter().position(|index| *index == *selected);
+        let mut target = None;
+        ui.input(|input| {
+            if input.key_pressed(egui::Key::ArrowDown) {
+                target = Some(current.map(|i| (i + 1).min(visible.len() - 1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::ArrowUp) {
+                target = Some(current.map(|i| i.saturating_sub(1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::PageDown) {
+                target = Some(current.map(|i| (i + 10).min(visible.len() - 1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::PageUp) {
+                target = Some(current.map(|i| i.saturating_sub(10)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::Home) {
+                target = Some(0);
+            } else if input.key_pressed(egui::Key::End) {
+                target = Some(visible.len() - 1);
+            }
+        });
+        if let Some(position) = target {
+            *selected = visible[position];
+            scroll_to_selected = true;
+        }
     }
     let list_height = (height - 80.0).max(140.0);
     // A fixed rectangle + a clipped child UI, instead of an auto-sized Frame: the ScrollArea
@@ -1001,6 +1023,7 @@ fn suggest_window(
         return;
     }
     let mut open = suggest.open;
+    let mut close_after = false;
     egui::Window::new("Suggest tactics from the monster database")
         .open(&mut open)
         .collapsible(false)
@@ -1036,6 +1059,7 @@ fn suggest_window(
                             suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
                             suggest.scroll = true;
                             filter.clear();
+                            close_after = true;
                         }
                         None => suggest.result = format!("Unknown map: {name}"),
                     }
@@ -1075,6 +1099,7 @@ fn suggest_window(
                             suggest.result = add_suggested(tactics, selected, &[id], suggest.replace, mobs);
                             suggest.scroll = true;
                             filter.clear();
+                            close_after = true;
                         }
                         _ => suggest.result = format!("Unknown monster: {}", suggest.mob.trim()),
                     }
@@ -1088,6 +1113,7 @@ fn suggest_window(
                                 add_suggested(tactics, selected, &[mob.id], suggest.replace, mobs);
                             suggest.scroll = true;
                             filter.clear();
+                            close_after = true;
                         }
                     }
                 });
@@ -1102,6 +1128,7 @@ fn suggest_window(
                     suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
                     suggest.scroll = true;
                     filter.clear();
+                    close_after = true;
                 }
                 ui.checkbox(&mut suggest.replace, "Replace rows that already exist");
             });
@@ -1132,7 +1159,7 @@ fn suggest_window(
                 .size(10.5),
             );
         });
-    suggest.open = open;
+    suggest.open = open && !close_after;
 }
 
 #[cfg(test)]

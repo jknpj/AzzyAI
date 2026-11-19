@@ -82,7 +82,6 @@ struct App {
     tact_paths: BTreeMap<&'static str, PathBuf>,
     tact_selected: BTreeMap<&'static str, usize>,
     tact_filter: String,
-    tact_filter_focus: bool,
     suggest: tactics_ui::SuggestState,
     page: Page,
     extra: BTreeMap<&'static str, String>,
@@ -216,7 +215,6 @@ impl App {
             tact_paths,
             tact_selected,
             tact_filter: String::new(),
-            tact_filter_focus: false,
             suggest: tactics_ui::SuggestState::default(),
             page: Page::Settings,
             extra,
@@ -732,7 +730,6 @@ impl App {
                     if response.clicked() {
                         if self.page != Page::Tactics(tab) {
                             self.tact_filter.clear();
-                            self.tact_filter_focus = true;
                         }
                         self.page = Page::Tactics(tab);
                         self.suggest.open = false;
@@ -789,7 +786,6 @@ impl App {
                 tactics,
                 &mut selected,
                 &mut self.tact_filter,
-                &mut self.tact_filter_focus,
                 &mut self.suggest,
                 mobs,
             );
@@ -1536,7 +1532,6 @@ mod tests {
         }
         let mut app = App::new(&paths, false).unwrap();
         app.page = Page::Tactics(tactics_ui::Tab::Hom);
-        app.tact_filter_focus = false;
         let ctx = egui::Context::default();
         let input = |events| egui::RawInput {
             screen_rect: Some(egui::Rect::from_min_size(
@@ -1646,6 +1641,112 @@ mod tests {
         assert!(
             scroll.map(|(_, _, offset)| offset.y > 0.0).unwrap_or(false),
             "the wheel must scroll the tactics list"
+        );
+    }
+
+    #[test]
+    fn arrow_keys_navigate_the_tactic_list() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = repo.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        let ctx = egui::Context::default();
+        let input = |events| egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            events,
+            ..Default::default()
+        };
+        for _ in 0..2 {
+            let _ = ctx.run(input(Vec::new()), |ctx| app.draw(ctx));
+        }
+        let press = |key| {
+            input(vec![egui::Event::Key {
+                key,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: Default::default(),
+            }])
+        };
+        let _ = ctx.run(press(egui::Key::ArrowDown), |ctx| app.draw(ctx));
+        assert_eq!(app.tact_selected["homtact"], 1, "down moves one row");
+        let _ = ctx.run(press(egui::Key::ArrowUp), |ctx| app.draw(ctx));
+        assert_eq!(app.tact_selected["homtact"], 0, "up moves back");
+        let _ = ctx.run(press(egui::Key::End), |ctx| app.draw(ctx));
+        let last = app.tactics["homtact"].entries.len() - 1;
+        assert_eq!(app.tact_selected["homtact"], last, "End goes to the last row");
+        let _ = ctx.run(press(egui::Key::Home), |ctx| app.draw(ctx));
+        assert_eq!(app.tact_selected["homtact"], 0, "Home goes to the first row");
+    }
+
+    #[test]
+    fn adding_suggestions_does_not_break_the_list_scroll() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = repo.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        {
+            let tactics = app.tactics.get_mut("homtact").unwrap();
+            for id in 1000..1030 {
+                tactics.add_with_values(
+                    id.to_string(),
+                    format!("Monster {id}"),
+                    azzy_config::tactics::TACT_DEFAULTS
+                        .iter()
+                        .map(|value| value.to_string())
+                        .collect(),
+                );
+            }
+            app.tact_selected.insert("homtact", tactics.entries.len() - 1);
+        }
+        app.suggest.open = true;
+        let ctx = egui::Context::default();
+        let input = |events| egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            events,
+            ..Default::default()
+        };
+        for _ in 0..2 {
+            let _ = ctx.run(input(Vec::new()), |ctx| app.draw(ctx));
+        }
+        let pos = egui::pos2(190.0, 300.0);
+        let wheel = egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Line,
+            delta: egui::vec2(0.0, -5.0),
+            modifiers: Default::default(),
+        };
+        for _ in 0..3 {
+            let _ = ctx.run(
+                input(vec![egui::Event::PointerMoved(pos), wheel.clone()]),
+                |ctx| app.draw(ctx),
+            );
+        }
+        let scroll = ctx.data(|data| {
+            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+        });
+        assert!(
+            scroll.map(|(_, _, offset)| offset.y > 0.0).unwrap_or(false),
+            "the wheel must scroll the list after suggestions were added"
         );
     }
 
