@@ -4,6 +4,14 @@ The AzzyAI configuration GUI in Rust (egui), mirroring the web GUI.
 
 ## Milestone 1 (done)
 
+The look follows `webgui/index.html`: the blue gradient navbar with the app name and the
+Reload/theme buttons, the nav-tabs joined to the panel, the toolbar with search +
+"only changed from default" + "Clear filters", category tabs with counts, the grid card
+with the coloured row markers (blue = changed from default, amber = not applied yet, with
+the reset button) and the description card on the right, and the footer with the changes
+badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied from the
+`--ro-*` variables of the web GUI; the navbar uses Segoe UI when Windows has it.
+
 - **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: `tools/webgui-data.js`
   dumps `homSchema.js`/`merSchema.js` (263 options with categories, types, enums, defaults,
   min/max and the English descriptions) to `data/options.json`, which is committed and checked for

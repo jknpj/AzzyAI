@@ -1,13 +1,17 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 // azzy-native: the AzzyAI configuration GUI in Rust (egui), mirroring the web GUI.
 //
 // Scope of this milestone (M1): both settings tabs (Homunculus and Mercenary) driven by the same
 // schema the web GUI uses (tools/webgui-data.js -> data/options.json), with the option's English
-// description, search, category filter, "only non-default" filter, typed editors (int, double,
-// bool, enum, server type) and Apply/Revert through azzy-config, which preserves the file byte for
-// byte. Tactics/PVP grids, per-type presets, Extra Options, the update flow and translations are
-// the next milestones (see README).
+// description, search, category tabs, "only changed from default" filter, typed editors (int,
+// double, bool, enum, server type) and Apply/Revert through azzy-config, which preserves the file
+// byte for byte. The look (navbar, nav-tabs, cards, footer, row markers) comes from theme.rs, which
+// copies webgui/index.html. Tactics/PVP grids, per-type presets, Extra Options, the update flow and
+// translations are the next milestones (see README).
 
 mod data;
+mod theme;
 
 use std::collections::BTreeMap;
 use std::io::Write as _;
@@ -16,11 +20,28 @@ use std::path::PathBuf;
 use azzy_config::Config;
 use data::{OptionDef, Schema};
 use eframe::egui;
+use theme::Palette;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Unit {
     Homunculus,
     Mercenary,
+}
+
+impl Unit {
+    fn label(self) -> &'static str {
+        match self {
+            Unit::Homunculus => "Homunculus",
+            Unit::Mercenary => "Mercenary",
+        }
+    }
+
+    fn key(self) -> &'static str {
+        match self {
+            Unit::Homunculus => "H",
+            Unit::Mercenary => "M",
+        }
+    }
 }
 
 struct App {
@@ -37,6 +58,68 @@ struct App {
     selected: Option<String>,
     status: String,
     frames: u64,
+    mode: theme::Mode,
+    applied_mode: Option<theme::Mode>,
+    focus_search: bool,
+    // raw text of a numeric field being typed, so "-" or "1." is not thrown away mid-number
+    drafts: BTreeMap<String, String>,
+}
+
+/// Everything a grid row needs, copied out of the schema/config so the UI can mutate them.
+struct RowData {
+    option: OptionDef,
+    values: Vec<(String, i64)>,
+    current: String,
+    default_label: String,
+    pending: bool,
+    modified: bool,
+    comment: String,
+}
+
+enum Row {
+    Group { name: String, count: usize },
+    Option(RowData),
+}
+
+/// Same value as the web GUI's sameValue(): numbers compare as numbers ("60" == "60.0", as the
+/// file and the schema can format them differently), booleans as booleans, tokens as text.
+fn same_value(kind: &str, a: &str, b: &str) -> bool {
+    match kind {
+        "bool" => {
+            let on = |s: &str| {
+                let s = s.trim();
+                !(s.is_empty() || s == "0" || s.eq_ignore_ascii_case("false"))
+            };
+            on(a) == on(b)
+        }
+        "int" | "double" | "enum" => match (a.trim().parse::<f64>(), b.trim().parse::<f64>()) {
+            (Ok(x), Ok(y)) => x == y,
+            _ => a.trim() == b.trim(),
+        },
+        _ => a.trim() == b.trim(),
+    }
+}
+
+/// What the UI shows for an enum/serverType default ("Chasing"), not the raw token ("-1").
+fn default_label(schema: &Schema, option: &OptionDef) -> String {
+    match option.kind.as_str() {
+        "bool" => if option.default.as_bool().unwrap_or(false) { "True" } else { "False" }.to_string(),
+        "serverType" => if option.default.as_i64().unwrap_or(0) == 1 { "SERVER_PRIVATE" } else { "SERVER_OFFICIAL" }.to_string(),
+        "enum" => {
+            let value = option.default.as_i64().unwrap_or(0);
+            schema
+                .enum_values(option)
+                .and_then(|values| values.iter().find(|(_, v)| *v == value).map(|(label, _)| label.clone()))
+                .unwrap_or_else(|| schema.default_token(option))
+        }
+        _ => schema.default_token(option),
+    }
+}
+
+/// The web GUI's "True"/"False" select, but it also accepts "false" written by hand.
+fn bool_of(token: &str) -> bool {
+    let token = token.trim();
+    !(token.is_empty() || token == "0" || token.eq_ignore_ascii_case("false"))
 }
 
 impl App {
@@ -65,6 +148,10 @@ impl App {
             selected: None,
             status: String::new(),
             frames: 0,
+            mode: theme::Mode::Dark,
+            applied_mode: None,
+            focus_search: false,
+            drafts: BTreeMap::new(),
         })
     }
 
@@ -76,10 +163,7 @@ impl App {
     }
 
     fn unit_key(&self) -> &'static str {
-        match self.unit {
-            Unit::Homunculus => "H",
-            Unit::Mercenary => "M",
-        }
+        self.unit.key()
     }
 
     fn config(&self) -> Option<&Config> {
@@ -90,6 +174,7 @@ impl App {
         self.configs.get_mut(self.unit_key())
     }
 
+    /// Edits not written to disk yet (the amber marker).
     fn changed(&self) -> usize {
         self.configs.values().map(|c| c.changed()).sum()
     }
@@ -100,6 +185,7 @@ impl App {
         match Config::load(&path) {
             Ok(config) => {
                 self.configs.insert(key, config);
+                self.drafts.clear();
                 self.status = "reloaded from disk".into();
             }
             Err(e) => self.status = format!("reload failed: {e}"),
@@ -124,19 +210,22 @@ impl App {
         if let Ok(fresh) = Config::load(&target) {
             self.configs.insert(key, fresh);
         }
-        self.status = format!("wrote {} ({changed} changed){}", target.display(),
-            if self.write_in_place { "" } else { " - pass --write to edit the file itself" });
+        self.drafts.clear();
+        self.status = format!("applied {} change(s) to {}", changed, target.display());
+        if !self.write_in_place {
+            self.status.push_str(" (pass --write to edit the file itself)");
+        }
     }
 
-    // The category is its own filter: the sidebar counts must ignore it, or every other category
-    // reads "(0)" as soon as one is selected (seen in the screenshot).
+    // The category is its own filter: the tab counts must ignore it, or every other category
+    // reads "0" as soon as one is selected.
     fn matches(&self, option: &OptionDef, category: Option<&str>) -> bool {
         if let Some(category) = category {
             if option.category != *category {
                 return false;
             }
         }
-        if !self.search.is_empty() {
+        if !self.search.trim().is_empty() {
             let needle = self.search.to_lowercase();
             let haystack = format!("{} {}", option.name, option.description).to_lowercase();
             if !haystack.contains(&needle) {
@@ -152,14 +241,544 @@ impl App {
         true
     }
 
-    fn visible(&self, option: &OptionDef) -> bool {
-        self.matches(option, self.category.as_deref())
-    }
-
     fn set_token(&mut self, name: &str, token: String) {
         if let Some(config) = self.config_mut() {
             config.set(name, &token);
         }
+    }
+
+    fn reset_to_default(&mut self, name: &str) {
+        let token = {
+            let schema = self.schema();
+            match schema.get(name) {
+                Some(option) => schema.default_token(option),
+                None => return,
+            }
+        };
+        self.set_token(name, token);
+        self.status = format!("{name} reset to its default");
+    }
+
+    fn is_searching(&self) -> bool {
+        !self.search.trim().is_empty() || self.only_changed
+    }
+
+    /// Builds the rows for one frame. If `grouped`, every category is shown under its header
+    /// (search, "only changed" and the "All" tab); otherwise just the selected category.
+    fn build_rows(&self, grouped: bool) -> Vec<Row> {
+        let schema = self.schema();
+        let config = self.config();
+        let make = |option: &OptionDef| -> RowData {
+            let current = config
+                .and_then(|c| c.get(&option.name))
+                .unwrap_or("")
+                .to_string();
+            let default_token = schema.default_token(option);
+            let modified = !same_value(&option.kind, &current, &default_token);
+            let pending = config.map(|c| c.changed_of(&option.name)).unwrap_or(false);
+            let values = if option.kind == "serverType" {
+                vec![
+                    ("SERVER_OFFICIAL".to_string(), 0),
+                    ("SERVER_PRIVATE".to_string(), 1),
+                ]
+            } else {
+                schema.enum_values(option).cloned().unwrap_or_default()
+            };
+            RowData {
+                option: option.clone(),
+                values,
+                default_label: default_label(schema, option),
+                current,
+                pending,
+                modified,
+                comment: config
+                    .and_then(|c| c.comment_of(&option.name))
+                    .unwrap_or("")
+                    .trim()
+                    .to_string(),
+            }
+        };
+        let mut rows = Vec::new();
+        if grouped {
+            for category in &schema.categories {
+                let mut list: Vec<&OptionDef> = schema
+                    .options
+                    .iter()
+                    .filter(|o| self.matches(o, Some(category)))
+                    .collect();
+                list.sort_by_key(|o| o.name.to_lowercase());
+                if list.is_empty() {
+                    continue;
+                }
+                rows.push(Row::Group { name: category.clone(), count: list.len() });
+                for option in list {
+                    rows.push(Row::Option(make(option)));
+                }
+            }
+        } else {
+            let mut list: Vec<&OptionDef> = schema
+                .options
+                .iter()
+                .filter(|o| self.matches(o, self.category.as_deref()))
+                .collect();
+            list.sort_by_key(|o| o.name.to_lowercase());
+            for option in list {
+                rows.push(Row::Option(make(option)));
+            }
+        }
+        rows
+    }
+
+    fn modified_count(&self) -> usize {
+        let schema = self.schema();
+        let config = self.config();
+        schema
+            .options
+            .iter()
+            .filter(|o| {
+                let current = config.and_then(|c| c.get(&o.name)).unwrap_or("");
+                !same_value(&o.kind, current, &schema.default_token(o))
+            })
+            .count()
+    }
+
+    // ---------- drawing ----------
+
+    fn navbar(&mut self, ctx: &egui::Context, p: &Palette) {
+        egui::TopBottomPanel::top("navbar")
+            .frame(egui::Frame::none().fill(p.title1))
+            .show(ctx, |ui| {
+                theme::band(ui, 46.0, p.title1, p.title2, |ui| {
+                    let (logo, _) = ui.allocate_exact_size(egui::vec2(22.0, 22.0), egui::Sense::hover());
+                    ui.painter().rect_filled(logo, egui::Rounding::same(4.0), p.primary);
+                    ui.painter().text(
+                        logo.center(),
+                        egui::Align2::CENTER_CENTER,
+                        "A",
+                        egui::FontId::proportional(14.0),
+                        p.title_text,
+                    );
+                    ui.add_space(4.0);
+                    ui.label(
+                        egui::RichText::new("AzzyAI Configuration")
+                            .color(p.title_text)
+                            .size(18.0)
+                            .strong(),
+                    );
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        let label = match self.mode {
+                            theme::Mode::Dark => "Light theme",
+                            theme::Mode::Light => "Dark theme",
+                        };
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new(label).color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .clicked()
+                        {
+                            self.mode = self.mode.toggled();
+                        }
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new("Reload").color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .on_hover_text("Discard the edits and read the files again (Ctrl+R)")
+                            .clicked()
+                        {
+                            self.reload();
+                        }
+                    });
+                });
+            });
+    }
+
+    fn footer(&mut self, ctx: &egui::Context, p: &Palette) {
+        egui::TopBottomPanel::bottom("footer")
+            .frame(egui::Frame::none().fill(p.bg1))
+            .show(ctx, |ui| {
+                theme::band(ui, 44.0, p.tab2, p.bg1, |ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new("Quit").color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .clicked()
+                        {
+                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        }
+                        let changed = self.changed();
+                        let apply = egui::Button::new(
+                            egui::RichText::new("Apply Settings")
+                                .color(egui::Color32::WHITE)
+                                .strong(),
+                        )
+                        .fill(p.primary)
+                        .stroke(egui::Stroke::new(1.0_f32, p.title_edge))
+                        .min_size(egui::vec2(0.0, 24.0));
+                        if ui
+                            .add_enabled(changed > 0, apply)
+                            .on_hover_text(if changed > 0 {
+                                "Write the edited files (Ctrl+S)"
+                            } else {
+                                "No changes to apply"
+                            })
+                            .clicked()
+                        {
+                            self.save();
+                        }
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new("Reload").color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .clicked()
+                        {
+                            self.reload();
+                        }
+                        if changed > 0 {
+                            theme::badge(
+                                ui,
+                                &format!("{changed} not applied"),
+                                p.pending,
+                                egui::Color32::BLACK,
+                            );
+                        }
+                        // whatever is left of the row shows the file being edited
+                        let status = if self.status.is_empty() {
+                            self.shown_path.clone()
+                        } else {
+                            format!("{}   ·   {}", self.shown_path, self.status)
+                        };
+                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                            ui.add(
+                                egui::Label::new(
+                                    egui::RichText::new(status).color(p.muted).size(11.0),
+                                )
+                                .truncate(),
+                            );
+                        });
+                    });
+                });
+            });
+    }
+
+    fn body(&mut self, ctx: &egui::Context, p: &Palette) {
+        let page = egui::Frame::none().fill(p.bg1).inner_margin(egui::Margin {
+            left: 12.0,
+            right: 12.0,
+            top: 8.0,
+            bottom: 8.0,
+        });
+        egui::CentralPanel::default().frame(page).show(ctx, |ui| {
+            theme::gradient(ui.painter(), ui.max_rect(), p.bg1, p.bg2);
+            ui.spacing_mut().item_spacing.y = 0.0;
+            let mut active_tab = None;
+            ui.horizontal(|ui| {
+                for unit in [Unit::Homunculus, Unit::Mercenary] {
+                    let active = self.unit == unit;
+                    let response = theme::tab(ui, p, unit.label(), active);
+                    if active {
+                        active_tab = Some(response.rect);
+                    }
+                    if response.clicked() && self.unit != unit {
+                        self.unit = unit;
+                        self.category = None;
+                        self.selected = None;
+                        self.drafts.clear();
+                    }
+                }
+            });
+            let card_top = ui.cursor().min.y;
+            let card = egui::Frame::none()
+                .fill(p.panel)
+                .stroke(egui::Stroke::new(1.0_f32, p.border))
+                .rounding(egui::Rounding { nw: 0.0, ne: 7.0, sw: 7.0, se: 7.0 })
+                .inner_margin(egui::Margin::same(10.0));
+            card.show(ui, |ui| {
+                ui.spacing_mut().item_spacing.y = 6.0;
+                ui.set_min_width(ui.available_width());
+                ui.set_min_height(ui.available_height());
+                self.workspace(ui, p);
+            });
+            // the active tab opens into the panel: erase the card's top border under it
+            if let Some(tab) = active_tab {
+                let cover = egui::Rect::from_min_max(
+                    egui::pos2(tab.left() + 1.0, card_top - 1.0),
+                    egui::pos2(tab.right() - 1.0, card_top + 1.5),
+                );
+                ui.painter().rect_filled(cover, 0.0, p.panel);
+            }
+        });
+    }
+
+    fn workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        self.toolbar(ui, p);
+        ui.add_space(6.0);
+        self.category_tabs(ui, p);
+        ui.add_space(6.0);
+
+        let searching = self.is_searching();
+        let grouped = searching || self.category.is_none();
+        let legend_h = 24.0;
+        let grid_h = (ui.available_height() - legend_h).max(200.0);
+        let gap = ui.spacing().item_spacing.x;
+        let total_w = ui.available_width();
+        let desc_w = (total_w * 0.30).clamp(250.0, 380.0);
+        let grid_w = (total_w - desc_w - gap).max(200.0);
+
+        ui.horizontal_top(|ui| {
+            ui.allocate_ui_with_layout(
+                egui::vec2(grid_w, grid_h),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| {
+                    self.grid_card(ui, p, grouped, grid_h);
+                },
+            );
+            self.description_card(ui, p, grid_h);
+        });
+        ui.add_space(4.0);
+        self.legend(ui, p, grouped);
+    }
+
+    fn toolbar(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Search settings:").color(p.text));
+            let reserve = 350.0;
+            let width = (ui.available_width() - reserve).max(160.0);
+            let response = ui.add_sized(
+                [width, 22.0],
+                egui::TextEdit::singleline(&mut self.search)
+                    .hint_text("Name or description (Ctrl+F)")
+                    .id_source("search"),
+            );
+            if std::mem::take(&mut self.focus_search) {
+                response.request_focus();
+            }
+            ui.checkbox(&mut self.only_changed, "Only changed from default");
+            if ui.button("Clear filters").clicked() {
+                self.search.clear();
+                self.only_changed = false;
+                self.category = None;
+            }
+        });
+    }
+
+    fn category_tabs(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        // counts ignore the selected category (they are per category already) but follow the search
+        let (total, categories) = {
+            let schema = self.schema();
+            let total = schema.options.iter().filter(|o| self.matches(o, None)).count();
+            let categories: Vec<(String, usize)> = schema
+                .categories
+                .iter()
+                .map(|category| {
+                    let count = schema
+                        .options
+                        .iter()
+                        .filter(|o| self.matches(o, Some(category)))
+                        .count();
+                    (category.clone(), count)
+                })
+                .collect();
+            (total, categories)
+        };
+        let searching = self.is_searching();
+        let mut selection: Option<Option<String>> = None;
+        ui.horizontal_wrapped(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(2.0, 2.0);
+            if theme::tab(ui, p, &format!("All ({total})"), !searching && self.category.is_none())
+                .clicked()
+            {
+                selection = Some(None);
+            }
+            for (category, count) in categories {
+                let active = !searching && self.category.as_deref() == Some(category.as_str());
+                if theme::tab(ui, p, &format!("{category} ({count})"), active).clicked() {
+                    selection = Some(Some(category));
+                }
+            }
+        });
+        if let Some(selection) = selection {
+            // clicking a category while a search is active means "show me that category"
+            if searching {
+                self.search.clear();
+                self.only_changed = false;
+            }
+            self.category = selection;
+        }
+    }
+
+    fn grid_card(&mut self, ui: &mut egui::Ui, p: &Palette, grouped: bool, height: f32) {
+        egui::Frame::none()
+            .fill(p.grid)
+            .stroke(egui::Stroke::new(1.0_f32, p.border))
+            .rounding(egui::Rounding::same(4.0))
+            .inner_margin(egui::Margin::same(3.0))
+            .show(ui, |ui| {
+                ui.set_min_size(egui::vec2(ui.available_width(), (height - 8.0).max(100.0)));
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        ui.set_min_width(ui.available_width());
+                        self.grid_rows(ui, p, grouped);
+                    });
+            });
+    }
+
+    fn grid_rows(&mut self, ui: &mut egui::Ui, p: &Palette, grouped: bool) {
+        let rows = self.build_rows(grouped);
+        let selected = self.selected.clone();
+        let mut edits: Vec<(String, String)> = Vec::new();
+        let mut reset: Option<String> = None;
+        let mut clicked: Option<String> = None;
+        for row in rows {
+            match row {
+                Row::Group { name, count } => group_header(ui, p, &name, count),
+                Row::Option(data) => {
+                    let is_selected = selected.as_deref() == Some(data.option.name.as_str());
+                    let (select, edit, do_reset) =
+                        option_row(ui, p, &data, is_selected, &mut self.drafts);
+                    if select {
+                        clicked = Some(data.option.name.clone());
+                    }
+                    if let Some(token) = edit {
+                        edits.push((data.option.name.clone(), token));
+                    }
+                    if do_reset {
+                        reset = Some(data.option.name.clone());
+                    }
+                }
+            }
+        }
+        for (name, token) in edits {
+            self.set_token(&name, token);
+        }
+        if let Some(name) = reset {
+            self.reset_to_default(&name);
+        }
+        if let Some(name) = clicked {
+            self.selected = Some(name);
+        }
+    }
+
+    fn description_card(&self, ui: &mut egui::Ui, p: &Palette, height: f32) {
+        theme::card(p).show(ui, |ui| {
+                ui.set_min_size(egui::vec2(ui.available_width(), (height - 12.0).max(100.0)));
+                theme::title_bar(p, ui, "Description");
+                ui.add_space(6.0);
+                let Some(option) = self.selected.as_deref().and_then(|name| self.schema().get(name)) else {
+                    ui.label(
+                        egui::RichText::new("Click a setting to read its description.")
+                            .color(p.muted)
+                            .size(12.0),
+                    );
+                    return;
+                };
+                ui.label(egui::RichText::new(&option.name).color(p.text).strong().size(15.0));
+                let mut facts = format!("{}  ·  {}", option.category, option.kind);
+                if let (Some(min), Some(max)) = (option.min, option.max) {
+                    facts.push_str(&format!("  ·  {min}..{max}"));
+                }
+                facts.push_str(&format!(
+                    "  ·  default {}",
+                    default_label(self.schema(), option)
+                ));
+                ui.label(egui::RichText::new(facts).color(p.muted).size(11.0));
+                ui.add_space(4.0);
+                ui.separator();
+                ui.add_space(4.0);
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        ui.label(
+                            egui::RichText::new(&option.description)
+                                .color(p.text)
+                                .size(12.5),
+                        );
+                        if let Some(comment) = self.config().and_then(|c| c.comment_of(&option.name)) {
+                            let comment = comment.trim();
+                            if !comment.is_empty() {
+                                ui.add_space(6.0);
+                                ui.label(
+                                    egui::RichText::new("In the file:")
+                                        .color(p.muted)
+                                        .size(11.0)
+                                        .strong(),
+                                );
+                                ui.label(
+                                    egui::RichText::new(comment).color(p.muted).italics().size(11.5),
+                                );
+                            }
+                        }
+                    });
+            });
+    }
+
+    fn legend(&self, ui: &mut egui::Ui, p: &Palette, grouped: bool) {
+        let schema = self.schema();
+        let shown = schema
+            .options
+            .iter()
+            .filter(|o| {
+                if grouped {
+                    self.matches(o, None)
+                } else {
+                    self.matches(o, self.category.as_deref())
+                }
+            })
+            .count();
+        let modified = self.modified_count();
+        ui.horizontal(|ui| {
+            ui.label(
+                egui::RichText::new(format!(
+                    "{shown} settings  ·  {modified} changed from default"
+                ))
+                .color(p.muted)
+                .size(11.0),
+            );
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.label(egui::RichText::new("Not applied yet").color(p.muted).size(11.0));
+                theme::swatch(ui, p.pending);
+                ui.add_space(10.0);
+                ui.label(
+                    egui::RichText::new("Changed from default")
+                        .color(p.muted)
+                        .size(11.0),
+                );
+                theme::swatch(ui, p.modified);
+            });
+        });
+    }
+}
+
+impl App {
+    fn draw(&mut self, ctx: &egui::Context) {
+        if self.applied_mode != Some(self.mode) {
+            theme::apply(ctx, self.mode);
+            self.applied_mode = Some(self.mode);
+        }
+        let p = theme::palette(self.mode);
+
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, egui::Key::S)) && self.changed() > 0 {
+            self.save();
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, egui::Key::F)) {
+            self.focus_search = true;
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, egui::Key::R)) {
+            self.reload();
+        }
+
+        self.navbar(ctx, &p);
+        self.footer(ctx, &p);
+        self.body(ctx, &p);
     }
 }
 
@@ -169,200 +788,215 @@ impl eframe::App for App {
         if self.frames == 1 || self.frames == 5 {
             log(&format!("frame {}", self.frames));
         }
-        egui::TopBottomPanel::top("bar").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.heading("AzzyAI configuration");
-                ui.separator();
-                for (label, unit) in [("Homunculus", Unit::Homunculus), ("Mercenary", Unit::Mercenary)] {
-                    if ui.selectable_label(self.unit == unit, label).clicked() {
-                        self.unit = unit;
-                        self.category = None;
-                        self.selected = None;
-                    }
-                }
-                ui.separator();
-                let changed = self.changed();
-                ui.colored_label(
-                    if changed > 0 { egui::Color32::from_rgb(200, 120, 0) } else { egui::Color32::GRAY },
-                    format!("{changed} changed"),
-                );
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.add_enabled(changed > 0, egui::Button::new("Save")).clicked() {
-                        self.save();
-                    }
-                    if ui.button("Reload").clicked() {
-                        self.reload();
-                    }
-                });
-            });
-            // the path needs its own row: on one line it ran under the search box and the counter
-            ui.horizontal(|ui| {
-                let path_width = (ui.available_width() - 360.0).max(120.0);
-                ui.add_sized(
-                    [path_width, 18.0],
-                    egui::Label::new(egui::RichText::new(&self.shown_path).weak()).truncate(),
-                );
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.add(
-                        egui::TextEdit::singleline(&mut self.search)
-                            .hint_text("name or description")
-                            .desired_width(200.0),
-                    );
-                    ui.checkbox(&mut self.only_changed, "only non-default");
-                });
-            });
-            if !self.status.is_empty() {
-                ui.label(&self.status);
-            }
-        });
-
-        egui::SidePanel::left("categories").resizable(true).default_width(220.0).show(ctx, |ui| {
-            ui.heading("Categories");
-            // counts first: assigning self.category while schema borrows self is not allowed
-            let (total, categories) = {
-                let schema = self.schema();
-                let total = schema.options.iter().filter(|o| self.matches(o, None)).count();
-                let categories: Vec<(String, usize)> = schema
-                    .categories
-                    .iter()
-                    .map(|category| {
-                        let count = schema
-                            .options
-                            .iter()
-                            .filter(|o| self.matches(o, Some(category)))
-                            .count();
-                        (category.clone(), count)
-                    })
-                    .collect();
-                (total, categories)
-            };
-            if ui.selectable_label(self.category.is_none(), format!("All matching ({total})")).clicked() {
-                self.category = None;
-            }
-            for (category, count) in categories {
-                if ui.selectable_label(self.category.as_deref() == Some(category.as_str()),
-                    format!("{category} ({count})")).clicked() {
-                    self.category = Some(category);
-                }
-            }
-        });
-
-        egui::TopBottomPanel::bottom("description").resizable(true).min_height(90.0).show(ctx, |ui| {
-            match self.selected.as_deref().and_then(|name| self.schema().get(name)) {
-                Some(option) => {
-                    ui.horizontal(|ui| {
-                        ui.strong(&option.name);
-                        let mut facts = format!("{}  ·  {}", option.category, option.kind);
-                        if let (Some(min), Some(max)) = (option.min, option.max) {
-                            facts.push_str(&format!("  ·  {min}..{max}"));
-                        }
-                        facts.push_str(&format!("  ·  default {}", self.schema().default_token(option)));
-                        ui.weak(facts);
-                    });
-                    egui::ScrollArea::vertical().max_height(160.0).show(ui, |ui| {
-                        ui.label(&option.description);
-                    });
-                }
-                None => { ui.weak("Select an option to read its description."); }
-            }
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-                let mut edits: Vec<(String, String)> = Vec::new();
-                let mut selected = None;
-                let has_comment = |name: &str| self.config().and_then(|c| c.comment_of(name));
-                egui::Grid::new("options").num_columns(3).spacing([10.0, 3.0]).striped(true).show(ui, |ui| {
-                    ui.strong("Option");
-                    ui.strong("Value");
-                    ui.strong("Notes");
-                    ui.end_row();
-                    // clone the option list so the config can be edited while drawing
-                    let schema = self.schema();
-                    let options: Vec<OptionDef> = schema.options.iter().filter(|o| self.visible(o)).cloned().collect();
-                    for option in &options {
-                        let current = self.config().and_then(|c| c.get(&option.name)).map(|v| v.to_string()).unwrap_or_default();
-                        let response = ui.selectable_label(
-                            self.selected.as_deref() == Some(option.name.as_str()),
-                            &option.name,
-                        );
-                        if response.clicked() {
-                            selected = Some(option.name.clone());
-                        }
-                        let mut token = current.clone();
-                        match option.kind.as_str() {
-                            "bool" => {
-                                let mut on = token.trim() != "0" && !token.is_empty();
-                                if ui.checkbox(&mut on, "").changed() {
-                                    token = if on { "1".into() } else { "0".into() };
-                                    edits.push((option.name.clone(), token.clone()));
-                                }
-                            }
-                            "enum" | "serverType" => {
-                                let values: Vec<(String, i64)> = if option.kind == "serverType" {
-                                    vec![("SERVER_OFFICIAL".into(), 0), ("SERVER_PRIVATE".into(), 1)]
-                                } else {
-                                    schema.enum_values(option).cloned().unwrap_or_default()
-                                };
-                                let selected_label = match option.kind.as_str() {
-                                    "serverType" => if token.trim() == "SERVER_PRIVATE" { "SERVER_PRIVATE" } else { "SERVER_OFFICIAL" }.to_string(),
-                                    _ => token.parse::<i64>().ok()
-                                        .and_then(|n| values.iter().find(|(_, v)| *v == n).map(|(l, _)| l.clone()))
-                                        .unwrap_or_else(|| token.clone()),
-                                };
-                                let mut chosen = selected_label.clone();
-                                egui::ComboBox::from_id_source(format!("{}-{}", option.name, option.kind))
-                                    .selected_text(chosen.clone())
-                                    .show_ui(ui, |ui| {
-                                        for (label, value) in &values {
-                                            let text = if option.kind == "serverType" { label.clone() } else { format!("{label} ({value})") };
-                                            if ui.selectable_value(&mut chosen, label.clone(), text).clicked() {
-                                                token = if option.kind == "serverType" {
-                                                    label.clone()
-                                                } else {
-                                                    value.to_string()
-                                                };
-                                            }
-                                        }
-                                    });
-                                if token != current {
-                                    edits.push((option.name.clone(), token.clone()));
-                                }
-                            }
-                            _ => {
-                                let width = if option.kind == "double" { 80.0 } else { 96.0 };
-                                if ui.add_sized([width, 20.0], egui::TextEdit::singleline(&mut token)).changed() {
-                                    if let Ok(value) = token.trim().parse::<f64>() {
-                                        // the web GUI clamps to min/max; do the same here
-                                        let clamped = value
-                                            .max(option.min.unwrap_or(f64::MIN))
-                                            .min(option.max.unwrap_or(f64::MAX));
-                                        token = if option.kind == "double" {
-                                            format!("{clamped}")
-                                        } else {
-                                            format!("{}", clamped as i64)
-                                        };
-                                        edits.push((option.name.clone(), token.clone()));
-                                    }
-                                }
-                            }
-                        }
-                        match has_comment(&option.name) {
-                            Some(comment) => { ui.weak(comment.trim()); }
-                            None => { ui.label(""); }
-                        }
-                        ui.end_row();
-                    }
-                });
-                for (name, token) in edits {
-                    self.set_token(&name, token);
-                }
-                if let Some(name) = selected {
-                    self.selected = Some(name);
-                }
-            });
-        });
+        self.draw(ctx);
     }
+}
+
+/// A category header inside the grid, like the web GUI's `tr.group-row th`.
+fn group_header(ui: &mut egui::Ui, p: &Palette, name: &str, count: usize) {
+    let (rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width(), 25.0),
+        egui::Sense::hover(),
+    );
+    ui.painter().rect_filled(rect, egui::Rounding::same(3.0), p.panel2);
+    ui.painter().text(
+        rect.left_center() + egui::vec2(8.0, 0.0),
+        egui::Align2::LEFT_CENTER,
+        name,
+        egui::FontId::proportional(12.5),
+        p.tab_text,
+    );
+    // the count pill on the right, like the badge in the web group row
+    let text = ui.painter().layout_no_wrap(
+        count.to_string(),
+        egui::FontId::proportional(11.0),
+        egui::Color32::WHITE,
+    );
+    let size = text.size() + egui::vec2(12.0, 3.0);
+    let pill = egui::Rect::from_min_size(
+        egui::pos2(rect.right() - size.x - 8.0, rect.center().y - size.y / 2.0),
+        size,
+    );
+    ui.painter().rect_filled(pill, egui::Rounding::same(8.0), p.btn_border);
+    ui.painter().galley(pill.center() - text.size() / 2.0, text, egui::Color32::WHITE);
+}
+
+/// One settings row: marker, name, editor and (when changed from default) the reset button.
+fn option_row(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    row: &RowData,
+    selected: bool,
+    drafts: &mut BTreeMap<String, String>,
+) -> (bool, Option<String>, bool) {
+    let full_w = ui.available_width().max(120.0);
+    let height = 28.0;
+    // reserve the full row first: allocate_ui_at_rect would advance only by the content height
+    // and the next row would overlap this one
+    let (rect, _) = ui.allocate_exact_size(egui::vec2(full_w, height), egui::Sense::hover());
+    let hovered = ui.rect_contains_pointer(rect);
+    let background = if row.pending {
+        p.pending.gamma_multiply(0.10)
+    } else if selected {
+        p.tab2
+    } else if hovered {
+        p.panel2
+    } else {
+        egui::Color32::TRANSPARENT
+    };
+    ui.painter().rect_filled(rect, egui::Rounding::same(3.0), background);
+    let marker = if row.pending {
+        Some(p.pending)
+    } else if row.modified {
+        Some(p.modified)
+    } else {
+        None
+    };
+    if let Some(color) = marker {
+        let bar = egui::Rect::from_min_size(
+            rect.left_top() + egui::vec2(0.0, 3.0),
+            egui::vec2(4.0, height - 6.0),
+        );
+        ui.painter().rect_filled(bar, egui::Rounding::same(2.0), color);
+    }
+
+    let mut clicked = false;
+    let mut token_out: Option<String> = None;
+    let mut reset = false;
+    ui.allocate_ui_at_rect(rect.shrink2(egui::vec2(10.0, 1.0)), |ui| {
+        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+            let name_w = (full_w * 0.45).min((full_w - 300.0).max(140.0));
+            let mut name = egui::RichText::new(&row.option.name)
+                .color(if row.pending { p.pending } else { p.text })
+                .size(12.5);
+            if row.modified {
+                name = name.strong();
+            }
+            let mut tooltip = format!("{}  ·  {}", row.option.category, row.option.kind);
+            if row.pending {
+                tooltip.push_str("  ·  not applied yet");
+            } else if row.modified {
+                tooltip.push_str("  ·  changed from default");
+            }
+            if !row.comment.is_empty() {
+                tooltip.push_str(&format!("\n{}", row.comment));
+            }
+            let response = ui.add_sized(
+                [name_w, 20.0],
+                egui::Label::new(name).truncate().sense(egui::Sense::click()),
+            );
+            if response.on_hover_text(tooltip).clicked() {
+                clicked = true;
+            }
+
+            match row.option.kind.as_str() {
+                "bool" => {
+                    let mut on = bool_of(&row.current);
+                    let before = on;
+                    egui::ComboBox::from_id_source(format!("bool:{}", row.option.name))
+                        .width(82.0)
+                        .selected_text(if on { "True" } else { "False" })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut on, true, "True");
+                            ui.selectable_value(&mut on, false, "False");
+                        });
+                    if on != before {
+                        token_out = Some(if on { "1" } else { "0" }.to_string());
+                    }
+                }
+                "serverType" => {
+                    let mut chosen = if row.current.trim() == "SERVER_PRIVATE" { 1 } else { 0 };
+                    let before = chosen;
+                    egui::ComboBox::from_id_source(format!("server:{}", row.option.name))
+                        .width(160.0)
+                        .selected_text(if chosen == 1 { "SERVER_PRIVATE" } else { "SERVER_OFFICIAL" })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut chosen, 0, "SERVER_OFFICIAL");
+                            ui.selectable_value(&mut chosen, 1, "SERVER_PRIVATE");
+                        });
+                    if chosen != before {
+                        token_out = Some(
+                            if chosen == 1 { "SERVER_PRIVATE" } else { "SERVER_OFFICIAL" }.to_string(),
+                        );
+                    }
+                }
+                "enum" => {
+                    let selected_label = row
+                        .current
+                        .trim()
+                        .parse::<i64>()
+                        .ok()
+                        .and_then(|n| row.values.iter().find(|(_, v)| *v == n).map(|(l, _)| l.clone()))
+                        .unwrap_or_else(|| row.current.clone());
+                    let mut chosen = selected_label.clone();
+                    egui::ComboBox::from_id_source(format!("enum:{}", row.option.name))
+                        .width(170.0)
+                        .selected_text(selected_label)
+                        .show_ui(ui, |ui| {
+                            for (label, value) in &row.values {
+                                if ui.selectable_value(&mut chosen, label.clone(), label).clicked() {
+                                    token_out = Some(value.to_string());
+                                }
+                            }
+                        });
+                }
+                _ => {
+                    let width = if row.option.kind == "double" { 86.0 } else { 76.0 };
+                    let mut text = drafts
+                        .get(&row.option.name)
+                        .cloned()
+                        .unwrap_or_else(|| row.current.clone());
+                    let response = ui.add_sized(
+                        [width, 20.0],
+                        egui::TextEdit::singleline(&mut text)
+                            .id_source(format!("num:{}", row.option.name)),
+                    );
+                    if response.changed() {
+                        // keep the raw text even while it is not a number yet ("-", "1."), or the
+                        // next frame would restore the old value and negative numbers would be
+                        // impossible to type
+                        drafts.insert(row.option.name.clone(), text.clone());
+                        if text.trim().parse::<f64>().is_ok() {
+                            token_out = Some(text.clone());
+                        }
+                    }
+                    if response.lost_focus() {
+                        drafts.remove(&row.option.name);
+                        // the web's number input clamps on change; do it when the field is done,
+                        // not on every keystroke
+                        match text.trim().parse::<f64>() {
+                            Ok(value) => {
+                                let clamped = value
+                                    .max(row.option.min.unwrap_or(f64::MIN))
+                                    .min(row.option.max.unwrap_or(f64::MAX));
+                                token_out = Some(if row.option.kind == "double" {
+                                    format!("{clamped}")
+                                } else {
+                                    format!("{}", clamped as i64)
+                                });
+                            }
+                            Err(_) => token_out = Some(row.current.clone()),
+                        }
+                    }
+                }
+            }
+
+            if row.modified {
+                if ui
+                    .add(
+                        egui::Button::new(egui::RichText::new("reset").size(11.0))
+                            .frame(false)
+                            .fill(egui::Color32::TRANSPARENT),
+                    )
+                    .on_hover_text(format!("Reset to default ({})", row.default_label))
+                    .clicked()
+                {
+                    reset = true;
+                }
+            }
+        });
+    });
+    (clicked, token_out, reset)
 }
 
 // A window that flashes and closes leaves nothing behind; the log does.
@@ -378,6 +1012,49 @@ fn log(message: &str) {
         let _ = writeln!(file, "{stamp} {message}");
     }
     eprintln!("azzy-native: {message}");
+}
+
+fn install_panic_hook() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic| {
+        let location = panic.location().map(|l| format!("{}:{}", l.file(), l.line())).unwrap_or_default();
+        let message = if let Some(text) = panic.payload().downcast_ref::<&str>() {
+            (*text).to_string()
+        } else if let Some(text) = panic.payload().downcast_ref::<String>() {
+            text.clone()
+        } else {
+            "unknown panic".into()
+        };
+        let backtrace = std::backtrace::Backtrace::force_capture();
+        log(&format!("PANIC at {location}: {message}\n{backtrace}"));
+        previous(panic);
+    }));
+}
+
+// The web GUI uses Tahoma/Verdana/Segoe UI; on Windows use the real Segoe UI so the app does not
+// look like a Linux demo. Missing file (or another OS) just keeps egui's default font.
+fn install_fonts(ctx: &egui::Context) {
+    let candidates = [r"C:\Windows\Fonts\segoeui.ttf", r"C:\Windows\Fonts\segoeuib.ttf"];
+    let mut fonts = egui::FontDefinitions::default();
+    let mut loaded = false;
+    for path in candidates {
+        if let Ok(bytes) = std::fs::read(path) {
+            let name = format!("segoe:{}", fonts.font_data.len());
+            fonts
+                .font_data
+                .insert(name.clone(), egui::FontData::from_owned(bytes));
+            // at the front: egui takes glyphs from the first family entry that has them
+            fonts
+                .families
+                .entry(egui::FontFamily::Proportional)
+                .or_default()
+                .insert(0, name);
+            loaded = true;
+        }
+    }
+    if loaded {
+        ctx.set_fonts(fonts);
+    }
 }
 
 // Finds USER_AI/<name> without being told, so a double-click works: the working directory, the
@@ -398,23 +1075,6 @@ fn resolve(name: &str) -> Option<PathBuf> {
         }
     }
     roots.into_iter().map(|root| root.join(name)).find(|c| c.is_file())
-}
-
-fn install_panic_hook() {
-    let previous = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |panic| {
-        let location = panic.location().map(|l| format!("{}:{}", l.file(), l.line())).unwrap_or_default();
-        let message = if let Some(text) = panic.payload().downcast_ref::<&str>() {
-            (*text).to_string()
-        } else if let Some(text) = panic.payload().downcast_ref::<String>() {
-            text.clone()
-        } else {
-            "unknown panic".into()
-        };
-        let backtrace = std::backtrace::Backtrace::force_capture();
-        log(&format!("PANIC at {location}: {message}\n{backtrace}"));
-        previous(panic);
-    }));
 }
 
 fn main() -> eframe::Result<()> {
@@ -441,7 +1101,7 @@ fn main() -> eframe::Result<()> {
                 Some(path) => path,
                 None => {
                     log(&format!(
-                        "{file} not found: pass the USER_AI folder, e.g. azzy-native.exe C:\\git\\AzzyAI\\USER_AI"
+                        "{file} not found: pass the USER_AI folder, e.g. azzy-native.exe C:\\\\git\\\\AzzyAI\\\\USER_AI"
                     ));
                     std::process::exit(2);
                 }
@@ -462,13 +1122,70 @@ fn main() -> eframe::Result<()> {
         }
     };
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1100.0, 760.0]),
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1180.0, 800.0])
+            .with_min_inner_size([920.0, 600.0])
+            .with_title("AzzyAI Configuration"),
         ..Default::default()
     };
-    let result = eframe::run_native("AzzyAI configuration", options, Box::new(|_cc| Ok(Box::new(app))));
+    let result = eframe::run_native(
+        "AzzyAI Configuration",
+        options,
+        Box::new(move |cc| {
+            install_fonts(&cc.egui_ctx);
+            Ok(Box::new(app))
+        }),
+    );
     match &result {
         Ok(()) => log("window closed normally"),
         Err(e) => log(&format!("could not open the window: {e}")),
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn values_compare_like_the_web_gui() {
+        assert!(same_value("int", "60", "60.0"));
+        assert!(same_value("double", "0.5", "0.50"));
+        assert!(!same_value("int", "60", "61"));
+        assert!(same_value("bool", "1", "true"));
+        assert!(same_value("bool", "0", "false"));
+        assert!(!same_value("bool", "1", "0"));
+        assert!(same_value("serverType", "SERVER_OFFICIAL", "SERVER_OFFICIAL"));
+        assert!(!same_value("serverType", "SERVER_OFFICIAL", "SERVER_PRIVATE"));
+    }
+
+    #[test]
+    fn draws_without_panicking() {
+        // egui lays out for real in a headless context: this catches invalid sizes, duplicated
+        // widget ids and the borrow mistakes that only show up while drawing.
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return; // the submodule is not checked out
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        let ctx = egui::Context::default();
+        for _ in 0..3 {
+            let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+        }
+        app.search = "heal".into();
+        app.only_changed = true;
+        let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+        app.unit = Unit::Mercenary;
+        app.search.clear();
+        app.only_changed = false;
+        app.category = None;
+        app.selected = Some("AutoMobMode".into());
+        let _ = ctx.run(egui::RawInput::default(), |ctx| app.draw(ctx));
+        assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
+    }
 }

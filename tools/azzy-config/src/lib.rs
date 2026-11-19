@@ -100,6 +100,11 @@ impl Config {
         self.assignments().find(|a| a.name == name).map(|a| a.value.as_str())
     }
 
+    /// Whether `name` was edited in memory since the file was read (the amber "not applied" state).
+    pub fn changed_of(&self, name: &str) -> bool {
+        self.assignments().find(|a| a.name == name).map(|a| a.changed()).unwrap_or(false)
+    }
+
     /// Replaces the value token of `name`; the rest of the line stays byte for byte.
     pub fn set(&mut self, name: &str, value: &str) -> bool {
         for (line, _) in &mut self.lines {
@@ -318,6 +323,19 @@ mod tests {
         assert_eq!(config.comment_of("ServerType"), Some(" -- private servers"));
         assert_eq!(config.comment_of("AggroHP"), Some(""));
         assert_eq!(config.comment_of("Nope"), None);
+    }
+
+    #[test]
+    fn changed_of_tracks_edits_per_option() {
+        let mut config = Config::parse("AggroHP = 60\nUseAutoHeal = 1\n");
+        assert!(!config.changed_of("AggroHP"));
+        config.set("AggroHP", "80");
+        assert!(config.changed_of("AggroHP"));
+        assert!(!config.changed_of("UseAutoHeal"));
+        // setting it back to the value on disk clears the flag
+        config.set("AggroHP", "60");
+        assert!(!config.changed_of("AggroHP"));
+        assert!(!config.changed_of("Unknown"));
     }
 
     #[test]
