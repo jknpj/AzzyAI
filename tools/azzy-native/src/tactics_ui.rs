@@ -71,6 +71,12 @@ pub struct Layout {
 }
 
 #[derive(Default)]
+pub struct ListState {
+    pub offset: f32,
+    pub ensure_visible: bool,
+}
+
+#[derive(Default)]
 pub struct SuggestState {
     pub open: bool,
     pub map: String,
@@ -300,6 +306,7 @@ pub fn draw(
     selected: &mut usize,
     filter: &mut String,
     suggest: &mut SuggestState,
+    list_state: &mut ListState,
     mobs: &Mobs,
 ) {
     let layout = tab.layout();
@@ -325,6 +332,7 @@ pub fn draw(
             selected,
             filter,
             suggest,
+            list_state,
             mobs,
             height,
         );
@@ -383,6 +391,7 @@ fn list_panel(
     selected: &mut usize,
     filter: &mut String,
     suggest: &mut SuggestState,
+    list_state: &mut ListState,
     mobs: &Mobs,
     height: f32,
 ) {
@@ -422,21 +431,22 @@ fn list_panel(
         .map(|(index, _)| index)
         .collect();
     let visible_count = visible.len();
-    let mut scroll_to_selected = std::mem::take(&mut suggest.scroll);
+    let mut ensure_visible =
+        std::mem::take(&mut suggest.scroll) || std::mem::take(&mut list_state.ensure_visible);
     if select_first {
         if let Some(first) = visible.first() {
             *selected = *first;
-            scroll_to_selected = true;
+            ensure_visible = true;
         }
     } else if !visible.is_empty() && !visible.contains(selected) {
         *selected = visible[0];
-        scroll_to_selected = true;
+        ensure_visible = true;
     }
     // Arrow keys navigate the list when no text field or popup has the keyboard. The Find box
     // and the form controls keep their usual keys.
-    let keyboard_free = ui.ctx().memory(|memory| {
-        memory.focused().is_none() && !memory.any_popup_open()
-    });
+    let keyboard_free = ui
+        .ctx()
+        .memory(|memory| memory.focused().is_none() && !memory.any_popup_open());
     if keyboard_free && !visible.is_empty() {
         let current = visible.iter().position(|index| *index == *selected);
         let mut target = None;
@@ -457,88 +467,146 @@ fn list_panel(
         });
         if let Some(position) = target {
             *selected = visible[position];
-            scroll_to_selected = true;
+            ensure_visible = true;
         }
     }
+
+    let row_h = 26.0;
     let list_height = (height - 80.0).max(140.0);
-    // A fixed rectangle + a clipped child UI, instead of an auto-sized Frame: the ScrollArea
-    // was allowed to grow beyond the card and the Add/Remove row ended up inside it.
+    // A fixed rectangle + manual row drawing: no ScrollArea, so the wheel and the keys cannot
+    // be stolen by an invisible interaction area, and nothing paints outside the card.
     let (list_rect, _) = ui.allocate_exact_size(
         egui::vec2(ui.available_width().max(0.0), list_height),
         egui::Sense::hover(),
     );
+    let content_rect = list_rect.shrink(3.0);
+    let track_w = 9.0;
+    let rows_rect = egui::Rect::from_min_max(
+        content_rect.min,
+        egui::pos2(content_rect.right() - track_w, content_rect.bottom()),
+    );
+    let viewport_h = rows_rect.height().max(1.0);
+    let content_h = visible.len() as f32 * row_h;
+    let max_offset = (content_h - viewport_h).max(0.0);
+    list_state.offset = list_state.offset.clamp(0.0, max_offset);
+
+    // Wheel: the pointer over the list scrolls it, with no ScrollArea in between.
+    if ui.rect_contains_pointer(list_rect) {
+        let delta = ui.input(|input| input.raw_scroll_delta.y);
+        if delta != 0.0 {
+            list_state.offset = (list_state.offset - delta).clamp(0.0, max_offset);
+        }
+    }
+
+    if ensure_visible {
+        if let Some(position) = visible.iter().position(|index| *index == *selected) {
+            let top = position as f32 * row_h;
+            let bottom = top + row_h;
+            if top < list_state.offset {
+                list_state.offset = top;
+            }
+            if bottom > list_state.offset + viewport_h {
+                list_state.offset = bottom - viewport_h;
+            }
+            list_state.offset = list_state.offset.clamp(0.0, max_offset);
+        }
+    }
+
     ui.painter().rect_filled(list_rect, egui::Rounding::same(4.0), p.grid);
     ui.painter().rect_stroke(
         list_rect,
         egui::Rounding::same(4.0),
         egui::Stroke::new(1.0_f32, p.border),
     );
-    let content_rect = list_rect.shrink(3.0);
-    let mut list_ui = ui.child_ui(content_rect, egui::Layout::top_down(egui::Align::Min), None);
-    list_ui.set_clip_rect(content_rect);
-    let scroll_output = egui::ScrollArea::vertical()
-        .max_height(content_rect.height())
-        .min_scrolled_height(content_rect.height())
-        .auto_shrink([false, false])
-        .drag_to_scroll(false)
-        .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
-        .show(&mut list_ui, |ui| {
-                    ui.set_min_width(ui.available_width().max(0.0));
-                    if visible.is_empty() {
-                        ui.label(
-                            egui::RichText::new("No entries yet. Use Add.")
-                                .color(p.muted)
-                                .size(12.0),
-                        );
-                    }
-                    for index in visible {
-                        let text = entry_label(layout, tactics, index, mobs);
-                        let active = index == *selected;
-                        // the whole row is the click target: aiming at the text alone was hard
-                        let (rect, response) = ui.allocate_exact_size(
-                            egui::vec2(ui.available_width(), 24.0),
-                            egui::Sense::click(),
-                        );
-                        let fill = if active {
-                            p.primary
-                        } else if response.hovered() {
-                            p.panel2
-                        } else {
-                            egui::Color32::TRANSPARENT
-                        };
-                        ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
-                        // intersect with the scroll viewport: replacing the clip with the row
-                        // rect let the text of rows below the viewport paint over Add/Remove
-                        let clip = rect.intersect(ui.clip_rect());
-                        ui.painter()
-                            .with_clip_rect(clip)
-                            .text(
-                                rect.left_center() + egui::vec2(6.0, 0.0),
-                                egui::Align2::LEFT_CENTER,
-                                &text,
-                                egui::FontId::proportional(12.0),
-                                if active { egui::Color32::WHITE } else { p.text },
-                            );
-                        // remembered for the headless click test
-                        ui.ctx().data_mut(|data| {
-                            data.insert_temp(egui::Id::new(("tact-row", tab.key(), index)), rect);
-                        });
-                        if response.clicked() {
-                            *selected = index;
-                        }
-                        response.on_hover_cursor(egui::CursorIcon::PointingHand);
-                        if active && scroll_to_selected {
-                            ui.scroll_to_rect(rect, Some(egui::Align::Center));
-                            scroll_to_selected = false;
-                        }
-                    }
-                });
+
+    let first = (list_state.offset / row_h).floor() as usize;
+    let count = (viewport_h / row_h).ceil() as usize + 1;
+    for (position, index) in visible.iter().enumerate().skip(first).take(count) {
+        let y = rows_rect.top() + position as f32 * row_h - list_state.offset;
+        let rect = egui::Rect::from_min_size(
+            egui::pos2(rows_rect.left(), y),
+            egui::vec2(rows_rect.width(), row_h),
+        );
+        if !rect.intersects(rows_rect) {
+            continue;
+        }
+        let text = entry_label(layout, tactics, *index, mobs);
+        let active = *index == *selected;
+        let response = ui.interact(
+            rect,
+            egui::Id::new(("tact-row", tab.key(), *index)),
+            egui::Sense::click(),
+        );
+        let fill = if active {
+            p.primary
+        } else if response.hovered() {
+            p.panel2
+        } else {
+            egui::Color32::TRANSPARENT
+        };
+        ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
+        let clip = rect.intersect(rows_rect);
+        ui.painter().with_clip_rect(clip).text(
+            rect.left_center() + egui::vec2(6.0, 0.0),
+            egui::Align2::LEFT_CENTER,
+            &text,
+            egui::FontId::proportional(12.0),
+            if active { egui::Color32::WHITE } else { p.text },
+        );
+        ui.ctx().data_mut(|data| {
+            data.insert_temp(egui::Id::new(("tact-row", tab.key(), *index)), rect);
+        });
+        if response.clicked() {
+            *selected = *index;
+        }
+        response.on_hover_cursor(egui::CursorIcon::PointingHand);
+    }
+
+    if visible.is_empty() {
+        ui.painter().text(
+            rows_rect.center(),
+            egui::Align2::CENTER_CENTER,
+            "No entries yet. Use Add.",
+            egui::FontId::proportional(12.0),
+            p.muted,
+        );
+    }
+
+    if max_offset > 0.0 {
+        let track = egui::Rect::from_min_max(
+            egui::pos2(content_rect.right() - track_w, content_rect.top()),
+            content_rect.max,
+        );
+        ui.painter().rect_filled(track, egui::Rounding::same(4.0), p.panel2);
+        let handle_h = (viewport_h * viewport_h / content_h).clamp(24.0, viewport_h);
+        let travel = (track.height() - handle_h).max(1.0);
+        let handle_y = track.top() + (list_state.offset / max_offset) * travel;
+        let handle = egui::Rect::from_min_size(
+            egui::pos2(track.left() + 1.0, handle_y),
+            egui::vec2(track.width() - 2.0, handle_h),
+        );
+        ui.painter().rect_filled(handle, egui::Rounding::same(3.0), p.tab_text);
+        let bar = ui.interact(
+            track,
+            egui::Id::new(("tact-scrollbar", tab.key())),
+            egui::Sense::click_and_drag(),
+        );
+        if bar.dragged() || bar.clicked() {
+            if let Some(pos) = bar.interact_pointer_pos() {
+                let t = ((pos.y - track.top() - handle_h / 2.0) / travel).clamp(0.0, 1.0);
+                list_state.offset = t * max_offset;
+            }
+        }
+        bar.on_hover_cursor(egui::CursorIcon::PointingHand);
+    }
+
     ui.ctx().data_mut(|data| {
         data.insert_temp(
             egui::Id::new(("tact-scroll", tab.key())),
-            (scroll_output.content_size, scroll_output.inner_rect, scroll_output.state.offset),
+            (content_h, viewport_h, list_state.offset),
         );
     });
+
     ui.add_space(6.0);
     ui.horizontal(|ui| {
         if ui
@@ -561,6 +629,7 @@ fn list_panel(
                 tactics.next_numeric_id()
             };
             *selected = tactics.add(id, "");
+            list_state.ensure_visible = true;
         }
         let can_remove = tactics
             .entries
@@ -578,6 +647,7 @@ fn list_panel(
         {
             if tactics.remove(*selected) {
                 *selected = 0;
+                list_state.ensure_visible = true;
             }
         }
         if !layout.kind.is_pvp() && ui.small_button("Suggest...").clicked() {

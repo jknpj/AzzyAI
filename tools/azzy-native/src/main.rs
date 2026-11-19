@@ -82,6 +82,7 @@ struct App {
     tact_paths: BTreeMap<&'static str, PathBuf>,
     tact_selected: BTreeMap<&'static str, usize>,
     tact_filter: String,
+    tact_list: BTreeMap<&'static str, tactics_ui::ListState>,
     suggest: tactics_ui::SuggestState,
     page: Page,
     extra: BTreeMap<&'static str, String>,
@@ -215,6 +216,10 @@ impl App {
             tact_paths,
             tact_selected,
             tact_filter: String::new(),
+            tact_list: tactics_ui::Tab::ALL
+                .iter()
+                .map(|tab| (tab.key(), tactics_ui::ListState::default()))
+                .collect(),
             suggest: tactics_ui::SuggestState::default(),
             page: Page::Settings,
             extra,
@@ -778,6 +783,7 @@ impl App {
         let key = tab.key();
         let mut selected = self.tact_selected.get(key).copied().unwrap_or(0);
         let mobs = &self.mobs;
+        let list_state = self.tact_list.entry(key).or_default();
         if let Some(tactics) = self.tactics.get_mut(key) {
             tactics_ui::draw(
                 ui,
@@ -787,6 +793,7 @@ impl App {
                 &mut selected,
                 &mut self.tact_filter,
                 &mut self.suggest,
+                list_state,
                 mobs,
             );
         }
@@ -1593,9 +1600,9 @@ mod tests {
             "clicking the center of a row must select it"
         );
         let scroll = ctx.data(|data| {
-            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+            data.get_temp::<(f32, f32, f32)>(egui::Id::new(("tact-scroll", "homtact")))
         });
-        assert!(scroll.map(|(content, inner, _)| content.y > inner.height()).unwrap_or(false));
+        assert!(scroll.map(|(content, viewport, _)| content > viewport).unwrap_or(false));
     }
 
     #[test]
@@ -1636,10 +1643,10 @@ mod tests {
             );
         }
         let scroll = ctx.data(|data| {
-            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+            data.get_temp::<(f32, f32, f32)>(egui::Id::new(("tact-scroll", "homtact")))
         });
         assert!(
-            scroll.map(|(_, _, offset)| offset.y > 0.0).unwrap_or(false),
+            scroll.map(|(_, _, offset)| offset > 0.0).unwrap_or(false),
             "the wheel must scroll the tactics list"
         );
     }
@@ -1742,10 +1749,10 @@ mod tests {
             );
         }
         let scroll = ctx.data(|data| {
-            data.get_temp::<(egui::Vec2, egui::Rect, egui::Vec2)>(egui::Id::new(("tact-scroll", "homtact")))
+            data.get_temp::<(f32, f32, f32)>(egui::Id::new(("tact-scroll", "homtact")))
         });
         assert!(
-            scroll.map(|(_, _, offset)| offset.y > 0.0).unwrap_or(false),
+            scroll.map(|(_, _, offset)| offset > 0.0).unwrap_or(false),
             "the wheel must scroll the list after suggestions were added"
         );
     }
