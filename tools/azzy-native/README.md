@@ -22,6 +22,9 @@ badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied f
   GUI, `enum` and `serverType` combo boxes with the web GUI's labels.
 - Apply/Revert through `azzy-config`, which keeps the file byte for byte: only the values you
   edited change, comments/tabs/order/line endings stay. Save writes `<file>.new` unless `--write`.
+- Options the shipped file does not have yet are shown with their schema default (not as an empty
+  field marked "changed") and are appended only when set to something other than the default,
+  exactly like the web GUI; resetting one removes the line again.
 
 ```
 cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI folder] [--write]

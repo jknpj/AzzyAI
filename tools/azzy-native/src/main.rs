@@ -63,6 +63,8 @@ struct App {
     focus_search: bool,
     // raw text of a numeric field being typed, so "-" or "1." is not thrown away mid-number
     drafts: BTreeMap<String, String>,
+    // options appended in memory because the file did not have them (undo on reset)
+    appended: std::collections::BTreeSet<String>,
 }
 
 /// Everything a grid row needs, copied out of the schema/config so the UI can mutate them.
@@ -71,6 +73,7 @@ struct RowData {
     values: Vec<(String, i64)>,
     current: String,
     default_label: String,
+    present: bool,
     pending: bool,
     modified: bool,
     comment: String,
@@ -152,6 +155,7 @@ impl App {
             applied_mode: None,
             focus_search: false,
             drafts: BTreeMap::new(),
+            appended: std::collections::BTreeSet::new(),
         })
     }
 
@@ -186,6 +190,7 @@ impl App {
             Ok(config) => {
                 self.configs.insert(key, config);
                 self.drafts.clear();
+                self.appended.clear();
                 self.status = "reloaded from disk".into();
             }
             Err(e) => self.status = format!("reload failed: {e}"),
@@ -211,6 +216,7 @@ impl App {
             self.configs.insert(key, fresh);
         }
         self.drafts.clear();
+        self.appended.clear();
         self.status = format!("applied {} change(s) to {}", changed, target.display());
         if !self.write_in_place {
             self.status.push_str(" (pass --write to edit the file itself)");
@@ -242,8 +248,29 @@ impl App {
     }
 
     fn set_token(&mut self, name: &str, token: String) {
+        let (kind, default) = {
+            let schema = self.schema();
+            match schema.get(name) {
+                Some(option) => (option.kind.clone(), schema.default_token(option)),
+                None => return,
+            }
+        };
+        let differs = !same_value(&kind, &token, &default);
+        let existed = self.config().map(|c| c.get(name).is_some()).unwrap_or(false);
+        let was_appended = self.appended.contains(name);
         if let Some(config) = self.config_mut() {
-            config.set(name, &token);
+            if existed {
+                config.set(name, &token);
+                // an option that only exists because it was edited: going back to the default
+                // removes the line, exactly like the web GUI never appending it
+                if !differs && was_appended {
+                    config.remove(name);
+                    self.appended.remove(name);
+                }
+            } else if differs {
+                config.set_or_append(name, &token);
+                self.appended.insert(name.to_string());
+            }
         }
     }
 
@@ -255,7 +282,14 @@ impl App {
                 None => return,
             }
         };
-        self.set_token(name, token);
+        if self.appended.contains(name) {
+            if let Some(config) = self.config_mut() {
+                config.remove(name);
+            }
+            self.appended.remove(name);
+        } else {
+            self.set_token(name, token);
+        }
         self.status = format!("{name} reset to its default");
     }
 
@@ -269,11 +303,14 @@ impl App {
         let schema = self.schema();
         let config = self.config();
         let make = |option: &OptionDef| -> RowData {
+            let present = config.map(|c| c.get(&option.name).is_some()).unwrap_or(false);
+            let default_token = schema.default_token(option);
+            // missing options read as their default, like the web GUI; otherwise the row would
+            // look edited and the editor would be empty
             let current = config
                 .and_then(|c| c.get(&option.name))
-                .unwrap_or("")
-                .to_string();
-            let default_token = schema.default_token(option);
+                .map(|value| value.to_string())
+                .unwrap_or_else(|| default_token.clone());
             let modified = !same_value(&option.kind, &current, &default_token);
             let pending = config.map(|c| c.changed_of(&option.name)).unwrap_or(false);
             let values = if option.kind == "serverType" {
@@ -289,6 +326,7 @@ impl App {
                 values,
                 default_label: default_label(schema, option),
                 current,
+                present,
                 pending,
                 modified,
                 comment: config
@@ -878,6 +916,9 @@ fn option_row(
             } else if row.modified {
                 tooltip.push_str("  ·  changed from default");
             }
+            if !row.present {
+                tooltip.push_str("  ·  not in the file yet");
+            }
             if !row.comment.is_empty() {
                 tooltip.push_str(&format!("\n{}", row.comment));
             }
@@ -889,7 +930,11 @@ fn option_row(
                 clicked = true;
             }
 
-            match row.option.kind.as_str() {
+            ui.allocate_ui_with_layout(
+                egui::vec2(190.0, 20.0),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| {
+                    match row.option.kind.as_str() {
                 "bool" => {
                     let mut on = bool_of(&row.current);
                     let before = on;
@@ -979,7 +1024,9 @@ fn option_row(
                         }
                     }
                 }
-            }
+                    }
+                },
+            );
 
             if row.modified {
                 if ui

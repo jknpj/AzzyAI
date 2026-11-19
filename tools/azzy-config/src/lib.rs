@@ -105,6 +105,53 @@ impl Config {
         self.assignments().find(|a| a.name == name).map(|a| a.changed()).unwrap_or(false)
     }
 
+    /// Adds `Name = value` at the end of the file, using the file's line ending and the same
+    /// alignment as the web GUI (name padded to 25 columns). Used for options the shipped file
+    /// does not have yet, but which the schema does.
+    pub fn set_or_append(&mut self, name: &str, value: &str) -> bool {
+        if self.set(name, value) {
+            return true;
+        }
+        let eol = self
+            .lines
+            .iter()
+            .map(|(_, ending)| ending.as_str())
+            .find(|ending| !ending.is_empty())
+            .unwrap_or("\n")
+            .to_string();
+        if let Some((_, ending)) = self.lines.last_mut() {
+            if ending.is_empty() {
+                *ending = eol.clone();
+            }
+        }
+        let mut padded = name.to_string();
+        while padded.len() < 25 {
+            padded.push(' ');
+        }
+        let prefix = format!("{padded}= ");
+        self.lines.push((
+            Line::Assignment(Assignment {
+                name: name.to_string(),
+                prefix,
+                value: value.to_string(),
+                comment: String::new(),
+                raw: String::new(),
+                // differs from the value on disk (there was no line), so changed() and
+                // changed_of() count the appended option as pending
+                original: String::new(),
+            }),
+            eol,
+        ));
+        true
+    }
+
+    /// Removes every assignment of `name` (used to undo an append that went back to its default).
+    pub fn remove(&mut self, name: &str) -> bool {
+        let before = self.lines.len();
+        self.lines.retain(|(line, _)| !matches!(line, Line::Assignment(a) if a.name == name));
+        self.lines.len() != before
+    }
+
     /// Replaces the value token of `name`; the rest of the line stays byte for byte.
     pub fn set(&mut self, name: &str, value: &str) -> bool {
         for (line, _) in &mut self.lines {
@@ -323,6 +370,22 @@ mod tests {
         assert_eq!(config.comment_of("ServerType"), Some(" -- private servers"));
         assert_eq!(config.comment_of("AggroHP"), Some(""));
         assert_eq!(config.comment_of("Nope"), None);
+    }
+
+    #[test]
+    fn missing_options_are_appended_like_the_web_gui() {
+        let mut config = Config::parse("AggroHP = 60\n");
+        assert!(config.set_or_append("BossAggro", "2"));
+        assert_eq!(config.get("BossAggro"), Some("2"));
+        assert!(config.changed_of("BossAggro"));
+        assert_eq!(config.changed(), 1);
+        let text = config.to_text();
+        assert!(text.contains("BossAggro                = 2\n"), "{text:?}");
+        // the next edit replaces the line instead of appending a second one
+        assert!(config.set_or_append("BossAggro", "3"));
+        assert_eq!(config.to_text().matches("BossAggro").count(), 1);
+        assert!(config.remove("BossAggro"));
+        assert_eq!(config.get("BossAggro"), None);
     }
 
     #[test]
