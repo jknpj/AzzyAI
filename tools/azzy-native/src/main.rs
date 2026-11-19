@@ -362,19 +362,24 @@ fn log(message: &str) {
     eprintln!("azzy-native: {message}");
 }
 
-fn resolve(path: Option<PathBuf>, name: &str) -> Option<PathBuf> {
-    if let Some(path) = path {
-        return Some(path);
+// Finds USER_AI/<name> without being told, so a double-click works: the working directory, the
+// exe's folder, and up to three levels above it (tools/azzy-native -> repository root).
+fn resolve(name: &str) -> Option<PathBuf> {
+    let mut roots: Vec<PathBuf> = Vec::new();
+    if let Ok(cwd) = std::env::current_dir() {
+        roots.push(cwd.join("USER_AI"));
     }
-    let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()))?;
-    [
-        PathBuf::from(name),
-        exe_dir.join("../../USER_AI").join(name),
-        exe_dir.join("../USER_AI").join(name),
-        exe_dir.join("USER_AI").join(name),
-    ]
-    .into_iter()
-    .find(|c| c.is_file())
+    if let Ok(exe) = std::env::current_exe() {
+        let mut dir = exe;
+        for _ in 0..4 {
+            if !dir.pop() {
+                break;
+            }
+            roots.push(dir.join("USER_AI"));
+            roots.push(dir.join("AI").join("USER_AI"));
+        }
+    }
+    roots.into_iter().map(|root| root.join(name)).find(|c| c.is_file())
 }
 
 fn install_panic_hook() {
@@ -409,24 +414,23 @@ fn main() -> eframe::Result<()> {
             other => dir = Some(PathBuf::from(other)),
         }
     }
-    let base = dir.clone().or_else(|| {
-        let cwd_has = PathBuf::from("USER_AI/H_Config.lua").is_file();
-        if cwd_has { Some(PathBuf::from("USER_AI")) } else { None }
-    });
+    let base = dir.clone();
     let mut paths: BTreeMap<&'static str, PathBuf> = BTreeMap::new();
     for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
         let candidate = match &base {
             Some(base) => base.join(file),
-            None => match resolve(Some(PathBuf::from(file)), file) {
+            None => match resolve(file) {
                 Some(path) => path,
                 None => {
-                    log(&format!("{file} not found: pass the USER_AI folder, e.g. azzy-native.exe C:\\\\git\\\\AzzyAI\\\\USER_AI"));
+                    log(&format!(
+                        "{file} not found: pass the USER_AI folder, e.g. azzy-native.exe C:\\git\\AzzyAI\\USER_AI"
+                    ));
                     std::process::exit(2);
                 }
             },
         };
         if !candidate.is_file() {
-            log(&format!("{} not found", candidate.display()));
+            log(&format!("{} not found (pass the USER_AI folder)", candidate.display()));
             std::process::exit(2);
         }
         paths.insert(key, candidate);
