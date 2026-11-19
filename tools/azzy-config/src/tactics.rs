@@ -326,8 +326,25 @@ impl Tactics {
     }
 
     pub fn add(&mut self, id: impl Into<String>, name: impl Into<String>) -> usize {
-        let index = self.entries.len();
         let values = self.kind.defaults().iter().map(|value| value.to_string()).collect::<Vec<_>>();
+        self.add_with_values(id, name, values)
+    }
+
+    /// Adds an entry with explicit values (the tactics suggestion panel); the vector is padded
+    /// or truncated to the number of fields of the file.
+    pub fn add_with_values(
+        &mut self,
+        id: impl Into<String>,
+        name: impl Into<String>,
+        values: Vec<String>,
+    ) -> usize {
+        let index = self.entries.len();
+        let defaults = self.kind.defaults();
+        let mut values = values;
+        values.truncate(defaults.len());
+        while values.len() < defaults.len() {
+            values.push(defaults[values.len()].to_string());
+        }
         self.entries.push(Entry {
             id: id.into(),
             name: name.into(),

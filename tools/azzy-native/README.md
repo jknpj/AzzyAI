@@ -30,7 +30,7 @@ badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied f
 cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI folder] [--write]
 ```
 
-## Milestone 2 (in progress)
+## Milestone 2 (done)
 
 - **Tactics, Mercenary Tactics, PVP Tactics and Merc PVP Tactics** are loaded together with the
   settings and edited in their own tabs: the entry list on the left, name/id and the "Overall
@@ -44,6 +44,10 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
 - Apply Settings now writes every file with pending edits (settings, tactics and extras).
 - **Extra Options** tab: a monospaced free-form editor for `H_Extra.lua`/`M_Extra.lua` (the files the
   GUI does not model), with a Homunculus/Mercenary selector and the same "not applied" badge.
+- **Suggested tactics**: "Suggest..." in a tactics tab opens the panel from `tactSuggest.js`; a
+  map or monster name/id adds the rows the monster database implies (plant, MVP, boss, aggressive,
+  immobile, passive), "Add all plants and mushrooms" does the bulk case, and "Replace rows that
+  already exist" controls duplicates. The search lists the first matching monsters by name.
 
 ## Icons
 
@@ -53,11 +57,11 @@ The remaining icons (skill icons from `webgui/img/skills`, element icons) are pa
 
 ## Still missing for parity with the web GUI
 
-- The "Suggested tactics" panel (needs the suggestion rules in `webgui/tactSuggest.js`).
 - Per-type presets (`Types/<Name>.lua`, the "Settings for" selector).
 - Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
   diagnostics bundle (the Windows app already has it).
 - UI translations (pt/es) and the option descriptions in those languages (`i18n.desc.*.js`).
 
-`cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults) and the
-editing loop; `cargo test -p azzy-config` covers the file round-trip.
+`cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
+editor (including a simulated row click and the suggestion rules) and a real save into a temporary
+folder; `cargo test -p azzy-config` covers the config and tactics round-trips.

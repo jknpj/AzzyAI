@@ -83,6 +83,7 @@ struct App {
     tact_selected: BTreeMap<&'static str, usize>,
     tact_filter: String,
     tact_filter_focus: bool,
+    suggest: tactics_ui::SuggestState,
     page: Page,
     extra: BTreeMap<&'static str, String>,
     extra_original: BTreeMap<&'static str, String>,
@@ -216,6 +217,7 @@ impl App {
             tact_selected,
             tact_filter: String::new(),
             tact_filter_focus: false,
+            suggest: tactics_ui::SuggestState::default(),
             page: Page::Settings,
             extra,
             extra_original,
@@ -712,6 +714,7 @@ impl App {
                     if response.clicked() {
                         let switching = self.unit != unit || self.page != Page::Settings;
                         self.page = Page::Settings;
+                        self.suggest.open = false;
                         if switching {
                             self.unit = unit;
                             self.category = None;
@@ -732,6 +735,7 @@ impl App {
                             self.tact_filter_focus = true;
                         }
                         self.page = Page::Tactics(tab);
+                        self.suggest.open = false;
                         self.drafts.clear();
                     }
                 }
@@ -742,6 +746,7 @@ impl App {
                 }
                 if response.clicked() {
                     self.page = Page::Extra;
+                    self.suggest.open = false;
                     self.drafts.clear();
                 }
             });
@@ -785,6 +790,7 @@ impl App {
                 &mut selected,
                 &mut self.tact_filter,
                 &mut self.tact_filter_focus,
+                &mut self.suggest,
                 mobs,
             );
         }
@@ -1669,6 +1675,12 @@ mod tests {
         }
         app.page = Page::Extra;
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        app.suggest.open = true;
+        app.suggest.map = "prt_fild08".into();
+        app.suggest.mob = "poring".into();
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.suggest.open = false;
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
     }
 }

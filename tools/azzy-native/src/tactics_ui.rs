@@ -70,6 +70,17 @@ pub struct Layout {
     pub fields: &'static [Field],
 }
 
+#[derive(Default)]
+pub struct SuggestState {
+    pub open: bool,
+    pub map: String,
+    pub mob: String,
+    pub replace: bool,
+    pub result: String,
+    /// The list should scroll to the selected row on the next frame (a suggestion was added).
+    pub scroll: bool,
+}
+
 // ---------- options, copied from webgui/tactics.js ----------
 
 static BASIC_OPTIONS: &[(&str, &str)] = &[
@@ -289,6 +300,7 @@ pub fn draw(
     selected: &mut usize,
     filter: &mut String,
     focus_filter: &mut bool,
+    suggest: &mut SuggestState,
     mobs: &Mobs,
 ) {
     let layout = tab.layout();
@@ -306,7 +318,18 @@ pub fn draw(
         // top of the rows and made their hover/click responses false (egui only sees the column).
         let left_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(left_w, height));
         let mut list_ui = ui.child_ui(left_rect, egui::Layout::top_down(egui::Align::Min), None);
-        list_panel(&mut list_ui, p, tab, tactics, selected, filter, focus_filter, mobs, height);
+        list_panel(
+            &mut list_ui,
+            p,
+            tab,
+            tactics,
+            selected,
+            filter,
+            focus_filter,
+            suggest,
+            mobs,
+            height,
+        );
         ui.advance_cursor_after_rect(left_rect);
         ui.add_space(8.0);
         let right_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(right_w, height));
@@ -314,6 +337,7 @@ pub fn draw(
         form_panel(&mut form_ui, p, layout, tab.key(), tactics, *selected, mobs, height);
         ui.advance_cursor_after_rect(right_rect);
     });
+    suggest_window(ui.ctx(), p, tactics, selected, filter, suggest, mobs);
     ui.add_space(4.0);
     let visible = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
     ui.label(
@@ -361,6 +385,7 @@ fn list_panel(
     selected: &mut usize,
     filter: &mut String,
     focus_filter: &mut bool,
+    suggest: &mut SuggestState,
     mobs: &Mobs,
     height: f32,
 ) {
@@ -403,7 +428,7 @@ fn list_panel(
         .map(|(index, _)| index)
         .collect();
     let visible_count = visible.len();
-    let mut scroll_to_selected = false;
+    let mut scroll_to_selected = std::mem::take(&mut suggest.scroll);
     if select_first {
         if let Some(first) = visible.first() {
             *selected = *first;
@@ -526,6 +551,9 @@ fn list_panel(
             if tactics.remove(*selected) {
                 *selected = 0;
             }
+        }
+        if !layout.kind.is_pvp() && ui.small_button("Suggest...").clicked() {
+            suggest.open = true;
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let total = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
@@ -911,5 +939,224 @@ fn debuff_ui(
             None => "DEBUFF_NEVER".to_string(),
             Some(kind) => format!("DEBUFF_{kind}_{phase}"),
         };
+    }
+}
+
+fn add_suggested(
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    ids: &[u32],
+    replace: bool,
+    mobs: &Mobs,
+) -> String {
+    let mut added = 0;
+    let mut kept = 0;
+    let mut first_new = None;
+    for id in ids {
+        let Some(suggested) = mobs.suggest(*id) else { continue };
+        let existing = tactics
+            .entries
+            .iter()
+            .position(|entry| !entry.is_removed() && entry.id == suggested.id);
+        if let Some(index) = existing {
+            if !replace {
+                kept += 1;
+                continue;
+            }
+            if let Some(entry) = tactics.entry_mut(index) {
+                entry.name = suggested.name;
+                entry.values = suggested.values;
+                added += 1;
+            }
+        } else {
+            let index = tactics.add_with_values(suggested.id, suggested.name, suggested.values);
+            if first_new.is_none() {
+                first_new = Some(index);
+            }
+            added += 1;
+        }
+    }
+    if let Some(index) = first_new {
+        *selected = index;
+    }
+    format!("Added {added} monster(s), {kept} already had a row.")
+}
+
+fn suggest_window(
+    ctx: &egui::Context,
+    p: &Palette,
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    filter: &mut String,
+    suggest: &mut SuggestState,
+    mobs: &Mobs,
+) {
+    if !suggest.open {
+        return;
+    }
+    let mut open = suggest.open;
+    egui::Window::new("Suggest tactics from the monster database")
+        .open(&mut open)
+        .collapsible(false)
+        .resizable(true)
+        .default_width(560.0)
+        .show(ctx, |ui| {
+            ui.label(
+                egui::RichText::new(
+                    "Build rows from what the monster is (plant, boss, MVP, aggressive, immobile).",
+                )
+                .color(p.muted)
+                .size(11.0),
+            );
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label("Map:");
+                ui.add_sized(
+                    [220.0, 20.0],
+                    egui::TextEdit::singleline(&mut suggest.map)
+                        .hint_text("e.g. prt_fild08")
+                        .id_source("suggest:map"),
+                );
+                if ui
+                    .button("Add the monsters of this map")
+                    .on_hover_text("Adds every monster that spawns on the map")
+                    .clicked()
+                {
+                    let name = suggest.map.trim().to_string();
+                    match mobs.map_mobs(&name) {
+                        Some(ids) => {
+                            let ids = ids.clone();
+                            suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                        }
+                        None => suggest.result = format!("Unknown map: {name}"),
+                    }
+                }
+            });
+            if !suggest.map.trim().is_empty() {
+                let needle = suggest.map.trim().to_lowercase();
+                let names: Vec<String> = mobs
+                    .map_names()
+                    .into_iter()
+                    .filter(|name| name.to_lowercase().contains(&needle))
+                    .take(8)
+                    .map(str::to_string)
+                    .collect();
+                if !names.is_empty() {
+                    ui.horizontal_wrapped(|ui| {
+                        for name in names {
+                            if ui.small_button(&name).clicked() {
+                                suggest.map = name;
+                            }
+                        }
+                    });
+                }
+            }
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label("Monster:");
+                ui.add_sized(
+                    [220.0, 20.0],
+                    egui::TextEdit::singleline(&mut suggest.mob)
+                        .hint_text("name or ID")
+                        .id_source("suggest:mob"),
+                );
+                if ui.button("Add monster").clicked() {
+                    match Mobs::parse_mob(&suggest.mob) {
+                        Some(id) if mobs.mob(id).is_some() => {
+                            suggest.result = add_suggested(tactics, selected, &[id], suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                        }
+                        _ => suggest.result = format!("Unknown monster: {}", suggest.mob.trim()),
+                    }
+                }
+            });
+            if !suggest.mob.trim().is_empty() {
+                ui.horizontal_wrapped(|ui| {
+                    for mob in mobs.search(&suggest.mob, 8) {
+                        if ui.small_button(mobs.label(mob)).clicked() {
+                            suggest.result =
+                                add_suggested(tactics, selected, &[mob.id], suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                        }
+                    }
+                });
+            }
+            ui.add_space(6.0);
+            ui.horizontal(|ui| {
+                if ui
+                    .button("Add all plants and mushrooms")
+                    .clicked()
+                {
+                    let ids = mobs.plants();
+                    suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
+                    suggest.scroll = true;
+                    filter.clear();
+                }
+                ui.checkbox(&mut suggest.replace, "Replace rows that already exist");
+            });
+            if !suggest.result.is_empty() {
+                ui.label(
+                    egui::RichText::new(&suggest.result)
+                        .color(p.pending)
+                        .strong()
+                        .size(11.5),
+                );
+            }
+            ui.separator();
+            ui.label(
+                egui::RichText::new("Suggested rows (edit them afterwards as you like):")
+                    .color(p.text)
+                    .size(11.5),
+            );
+            for rule in Mobs::rules() {
+                ui.label(egui::RichText::new(format!("• {rule}")).color(p.muted).size(11.0));
+            }
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new(
+                    "Monster and spawn data: rAthena Renewal. Spawns on your server may differ.",
+                )
+                .color(p.muted)
+                .italics()
+                .size(10.5),
+            );
+        });
+    suggest.open = open;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn suggestions_add_and_replace_rows() {
+        let mobs = crate::mobs::load().unwrap();
+        let mut tactics = Tactics::parse("MyTact={}\r\n", Kind::Tactics);
+        let mut selected = 0;
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], false, &mobs);
+        assert!(result.contains("Added 1"), "{result}");
+        assert_eq!(tactics.entries[selected].id, "1002");
+        assert_eq!(tactics.entries[selected].name, "Poring (Water 1)");
+        assert_eq!(tactics.entries[selected].values[0], "TACT_ATTACK_M");
+
+        let count = tactics.entries.len();
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], false, &mobs);
+        assert!(result.contains("0 already had a row") || result.contains("1 already had a row"), "{result}");
+        assert_eq!(tactics.entries.len(), count);
+
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], true, &mobs);
+        assert!(result.contains("Added 1"), "{result}");
+        assert_eq!(tactics.entries.len(), count);
+    }
+
+    #[test]
+    fn unknown_maps_and_monsters_are_reported() {
+        let mobs = crate::mobs::load().unwrap();
+        assert!(mobs.map_mobs("not_a_map").is_none());
+        assert!(Mobs::parse_mob("Unknown").is_none());
     }
 }
