@@ -12,6 +12,7 @@
 
 mod data;
 mod mobs;
+mod skills;
 mod tactics_ui;
 mod theme;
 
@@ -102,6 +103,8 @@ struct App {
     // options appended in memory because the file did not have them (undo on reset)
     appended: std::collections::BTreeSet<String>,
     mobs: mobs::Mobs,
+    skills: skills::Skills,
+    skill_texture: Option<egui::TextureHandle>,
     tactics: BTreeMap<&'static str, Tactics>,
     tact_paths: BTreeMap<&'static str, PathBuf>,
     tact_selected: BTreeMap<&'static str, usize>,
@@ -124,6 +127,8 @@ struct RowData {
     default_label: String,
     present: bool,
     uses_global: bool,
+    icon: Option<usize>,
+    skill_name: String,
     pending: bool,
     modified: bool,
     comment: String,
@@ -179,6 +184,7 @@ impl App {
     fn new(paths: &BTreeMap<&'static str, PathBuf>, write_in_place: bool) -> Result<App, String> {
         let (hom, mer) = data::load()?;
         let mobs = mobs::load()?;
+        let skills = skills::load()?;
         let mut configs = BTreeMap::new();
         let mut shown = Vec::new();
         for (key, path) in paths {
@@ -262,6 +268,8 @@ impl App {
             drafts: BTreeMap::new(),
             appended: std::collections::BTreeSet::new(),
             mobs,
+            skills,
+            skill_texture: None,
             tactics,
             tact_paths,
             tact_selected,
@@ -673,6 +681,11 @@ impl App {
                 .unwrap_or_else(|| default_token.clone());
             let modified = !same_value(&option.kind, &current, &default_token);
             let pending = active.map(|c| c.changed_of(&option.name)).unwrap_or(false);
+            let skill = if self.unit == Unit::Homunculus {
+                self.skills.for_setting(&option.name)
+            } else {
+                None
+            };
             let values = if option.kind == "serverType" {
                 vec![
                     ("SERVER_OFFICIAL".to_string(), 0),
@@ -688,6 +701,8 @@ impl App {
                 current,
                 present,
                 uses_global,
+                icon: skill.map(|skill| skill.icon),
+                skill_name: skill.map(|skill| skill.name.clone()).unwrap_or_default(),
                 pending,
                 modified,
                 comment: self.comment_for(&option.name).unwrap_or("").trim().to_string(),
@@ -1477,8 +1492,15 @@ impl App {
                 Row::Group { name, count } => group_header(ui, p, &name, count),
                 Row::Option(data) => {
                     let is_selected = selected.as_deref() == Some(data.option.name.as_str());
-                    let (select, edit, do_reset) =
-                        option_row(ui, p, &data, is_selected, &mut self.drafts);
+                    let (select, edit, do_reset) = option_row(
+                        ui,
+                        p,
+                        &data,
+                        is_selected,
+                        &mut self.drafts,
+                        self.skill_texture.as_ref(),
+                        &self.skills,
+                    );
                     if select {
                         clicked = Some(data.option.name.clone());
                     }
@@ -1524,6 +1546,9 @@ impl App {
                     "  ·  default {}",
                     default_label(self.schema(), option)
                 ));
+                if let Some(skill) = self.skills.for_setting(&option.name) {
+                    facts.push_str(&format!("  ·  skill {}", skill.name));
+                }
                 ui.label(egui::RichText::new(facts).color(p.muted).size(11.0));
                 ui.add_space(4.0);
                 ui.separator();
@@ -1607,6 +1632,17 @@ impl App {
             );
             self.logo = Some(ctx.load_texture("azzyai", image, egui::TextureOptions::LINEAR));
         }
+        if self.skill_texture.is_none() {
+            let image = egui::ColorImage::from_rgba_unmultiplied(
+                [self.skills.width as usize, self.skills.height as usize],
+                self.skills.atlas,
+            );
+            self.skill_texture = Some(ctx.load_texture(
+                "skill-icons",
+                image,
+                egui::TextureOptions::NEAREST,
+            ));
+        }
 
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, egui::Key::S)) && self.changed() > 0 {
             self.save();
@@ -1671,6 +1707,8 @@ fn option_row(
     row: &RowData,
     selected: bool,
     drafts: &mut BTreeMap<String, String>,
+    skill_texture: Option<&egui::TextureHandle>,
+    skills: &skills::Skills,
 ) -> (bool, Option<String>, bool) {
     let full_w = ui.available_width().max(120.0);
     let height = 28.0;
@@ -1708,7 +1746,19 @@ fn option_row(
     let mut reset = false;
     ui.allocate_ui_at_rect(rect.shrink2(egui::vec2(10.0, 1.0)), |ui| {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-            let name_w = (full_w * 0.45).min((full_w - 300.0).max(140.0));
+            let show_icon = row.icon.is_some() && skill_texture.is_some();
+            let icon_w = if show_icon { 26.0 } else { 0.0 };
+            let name_w = ((full_w * 0.45) - icon_w).min((full_w - 300.0).max(140.0));
+            if let (true, Some(texture), Some(icon)) = (show_icon, skill_texture, row.icon) {
+                let (icon_rect, _) =
+                    ui.allocate_exact_size(egui::vec2(18.0, 18.0), egui::Sense::hover());
+                ui.painter().image(
+                    texture.id(),
+                    icon_rect,
+                    skills.icon_uv(icon),
+                    egui::Color32::WHITE,
+                );
+            }
             let mut name = egui::RichText::new(&row.option.name)
                 .color(if row.pending { p.pending } else { p.text })
                 .size(12.5);
@@ -1725,6 +1775,9 @@ fn option_row(
                 tooltip.push_str("  ·  uses the global value");
             } else if !row.present {
                 tooltip.push_str("  ·  not in the file yet");
+            }
+            if !row.skill_name.is_empty() {
+                tooltip.push_str(&format!("\nSkill: {}", row.skill_name));
             }
             if !row.comment.is_empty() {
                 tooltip.push_str(&format!("\n{}", row.comment));
