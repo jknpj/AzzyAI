@@ -26,3 +26,6 @@ tools/divinepride-sync/target/
 
 # runtime log of the native prototype (written next to the exe)
 tools/azzy-native/azzy-native.log
+
+# files the native app writes instead of editing when --write is not passed
+*.lua.new
