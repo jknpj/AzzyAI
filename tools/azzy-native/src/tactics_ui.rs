@@ -14,7 +14,7 @@ use eframe::egui;
 use crate::mobs::Mobs;
 use crate::theme::{self, Palette};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     Hom,
     Mer,
@@ -301,17 +301,18 @@ pub fn draw(
     let left_w = (total * 0.30).clamp(230.0, 340.0);
     let right_w = (total - left_w - 8.0).max(240.0);
     ui.horizontal_top(|ui| {
-        ui.allocate_ui_with_layout(
-            egui::vec2(left_w, height),
-            egui::Layout::top_down(egui::Align::Min),
-            |ui| list_panel(ui, p, tab, tactics, selected, filter, focus_filter, mobs, height),
-        );
+        // child_ui + advance_cursor_after_rect instead of allocate_ui_with_layout: the latter
+        // registers a hover interaction over the whole column AFTER its contents, which sits on
+        // top of the rows and made their hover/click responses false (egui only sees the column).
+        let left_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(left_w, height));
+        let mut list_ui = ui.child_ui(left_rect, egui::Layout::top_down(egui::Align::Min), None);
+        list_panel(&mut list_ui, p, tab, tactics, selected, filter, focus_filter, mobs, height);
+        ui.advance_cursor_after_rect(left_rect);
         ui.add_space(8.0);
-        ui.allocate_ui_with_layout(
-            egui::vec2(right_w, height),
-            egui::Layout::top_down(egui::Align::Min),
-            |ui| form_panel(ui, p, layout, tab.key(), tactics, *selected, mobs, height),
-        );
+        let right_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(right_w, height));
+        let mut form_ui = ui.child_ui(right_rect, egui::Layout::top_down(egui::Align::Min), None);
+        form_panel(&mut form_ui, p, layout, tab.key(), tactics, *selected, mobs, height);
+        ui.advance_cursor_after_rect(right_rect);
     });
     ui.add_space(4.0);
     let visible = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
@@ -452,8 +453,11 @@ fn list_panel(
                             egui::Color32::TRANSPARENT
                         };
                         ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
+                        // intersect with the scroll viewport: replacing the clip with the row
+                        // rect let the text of rows below the viewport paint over Add/Remove
+                        let clip = rect.intersect(ui.clip_rect());
                         ui.painter()
-                            .with_clip_rect(rect)
+                            .with_clip_rect(clip)
                             .text(
                                 rect.left_center() + egui::vec2(6.0, 0.0),
                                 egui::Align2::LEFT_CENTER,
@@ -461,6 +465,16 @@ fn list_panel(
                                 egui::FontId::proportional(12.0),
                                 if active { egui::Color32::WHITE } else { p.text },
                             );
+                        // remembered for the headless click test
+                        ui.ctx().data_mut(|data| {
+                            data.insert_temp(egui::Id::new(("tact-row", tab.key(), index)), rect);
+                        });
+                        ui.ctx().data_mut(|data| {
+                            data.insert_temp(
+                                egui::Id::new(("tact-row", tab.key(), index)),
+                                rect,
+                            );
+                        });
                         if response.clicked() {
                             *selected = index;
                         }
@@ -555,6 +569,7 @@ fn form_panel(
         }
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
+            .drag_to_scroll(false)
             .show(ui, |ui| {
                 ui.set_min_width(ui.available_width().max(0.0));
                 ui.spacing_mut().item_spacing.y = 6.0;

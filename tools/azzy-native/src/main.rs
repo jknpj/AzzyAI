@@ -47,7 +47,7 @@ impl Unit {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Page {
     Settings,
     Tactics(tactics_ui::Tab),
@@ -832,6 +832,7 @@ impl App {
             .show(ui, |ui| {
                 egui::ScrollArea::both()
                     .auto_shrink([false, false])
+                    .drag_to_scroll(false)
                     .show(ui, |ui| {
                         let response = ui.add_sized(
                             [ui.available_width().max(300.0), height - 12.0],
@@ -958,6 +959,7 @@ impl App {
                 ui.set_min_size(egui::vec2(ui.available_width(), (height - 8.0).max(100.0)));
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
+                    .drag_to_scroll(false)
                     .show(ui, |ui| {
                         ui.set_min_width(ui.available_width());
                         self.grid_rows(ui, p, grouped);
@@ -1029,6 +1031,7 @@ impl App {
                 ui.add_space(4.0);
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
+                    .drag_to_scroll(false)
                     .show(ui, |ui| {
                         ui.label(
                             egui::RichText::new(&option.description)
@@ -1512,6 +1515,82 @@ mod tests {
         assert!(!same_value("bool", "1", "0"));
         assert!(same_value("serverType", "SERVER_OFFICIAL", "SERVER_OFFICIAL"));
         assert!(!same_value("serverType", "SERVER_OFFICIAL", "SERVER_PRIVATE"));
+    }
+
+    #[test]
+    fn clicking_a_tactic_row_selects_it() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = repo.join(file);
+            if !path.is_file() {
+                return; // the submodule is not checked out
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        app.tact_filter_focus = false;
+        let ctx = egui::Context::default();
+        let input = |events| egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            events,
+            ..Default::default()
+        };
+        // layout twice, then find the row's real rectangle (not a guessed coordinate)
+        let _ = ctx.run(input(Vec::new()), |ctx| app.draw(ctx));
+        let _ = ctx.run(input(Vec::new()), |ctx| app.draw(ctx));
+        let index = app.tactics["homtact"]
+            .entries
+            .iter()
+            .position(|entry| entry.id == "1005")
+            .expect("Familiar");
+        let id = egui::Id::new(("tact-row", "homtact", index));
+        for i in 0..4 {
+            let r = ctx.data(|data| data.get_temp::<egui::Rect>(egui::Id::new(("tact-row", "homtact", i))));
+            eprintln!("row {i}: {r:?}");
+        }
+        let rect = ctx
+            .data(|data| data.get_temp::<egui::Rect>(id))
+            .expect("the tactics list must expose the row rect");
+        let pos = rect.center();
+        // two frames: egui computes hover from the pointer position settled at the end of the
+        // previous frame, so the first frame with PointerMoved still reports hovered=false
+        let _ = ctx.run(input(vec![egui::Event::PointerMoved(pos)]), |ctx| app.draw(ctx));
+        let _ = ctx.run(input(vec![egui::Event::PointerMoved(pos)]), |ctx| app.draw(ctx));
+        let _ = ctx.run(
+            input(vec![
+                egui::Event::PointerMoved(pos),
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Default::default(),
+                },
+            ]),
+            |ctx| app.draw(ctx),
+        );
+
+        let _ = ctx.run(
+            input(vec![
+                egui::Event::PointerMoved(pos),
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: Default::default(),
+                },
+            ]),
+            |ctx| app.draw(ctx),
+        );
+
+        assert_eq!(
+            app.tact_selected["homtact"], index,
+            "clicking the center of a row must select it"
+        );
     }
 
     #[test]
