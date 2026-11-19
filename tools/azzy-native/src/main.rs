@@ -15,9 +15,9 @@ mod mobs;
 mod tactics_ui;
 mod theme;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use azzy_config::tactics::Tactics;
 use azzy_config::Config;
@@ -78,6 +78,14 @@ struct App {
     type_configs: BTreeMap<&'static str, Config>,
     type_paths: BTreeMap<&'static str, PathBuf>,
     type_selected: Option<&'static str>,
+    dirty_configs: BTreeSet<&'static str>,
+    dirty_types: BTreeSet<&'static str>,
+    dirty_tactics: BTreeSet<&'static str>,
+    dirty_extra: BTreeSet<&'static str>,
+    io_open: bool,
+    io_export_dir: String,
+    io_import_dir: String,
+    io_status: String,
     write_in_place: bool,
     shown_path: String,
     search: String,
@@ -232,6 +240,14 @@ impl App {
             type_configs,
             type_paths,
             type_selected: None,
+            dirty_configs: BTreeSet::new(),
+            dirty_types: BTreeSet::new(),
+            dirty_tactics: BTreeSet::new(),
+            dirty_extra: BTreeSet::new(),
+            io_open: false,
+            io_export_dir: String::new(),
+            io_import_dir: String::new(),
+            io_status: String::new(),
             write_in_place,
             shown_path: shown.join("  +  "),
             search: String::new(),
@@ -324,6 +340,10 @@ impl App {
             .sum::<usize>();
         configs
             + types
+            + self.dirty_configs.len()
+            + self.dirty_types.len()
+            + self.dirty_tactics.len()
+            + self.dirty_extra.len()
             + self.tactics.values().map(|t| t.changed()).sum::<usize>()
             + EXTRA_FILES
                 .iter()
@@ -411,6 +431,10 @@ impl App {
         }
         self.drafts.clear();
         self.appended.clear();
+        self.dirty_configs.clear();
+        self.dirty_types.clear();
+        self.dirty_tactics.clear();
+        self.dirty_extra.clear();
         self.status = if errors.is_empty() {
             "reloaded from disk".into()
         } else {
@@ -425,7 +449,7 @@ impl App {
         let config_keys: Vec<&'static str> = self
             .configs
             .iter()
-            .filter(|(_, config)| config.is_modified())
+            .filter(|(key, config)| config.is_modified() || self.dirty_configs.contains(*key))
             .map(|(key, _)| *key)
             .collect();
         for key in config_keys {
@@ -446,7 +470,10 @@ impl App {
         let type_names: Vec<&'static str> = TYPE_NAMES
             .iter()
             .copied()
-            .filter(|name| self.type_configs.get(name).map(|config| config.is_modified()).unwrap_or(false))
+            .filter(|name| {
+                self.dirty_types.contains(*name)
+                    || self.type_configs.get(name).map(|config| config.is_modified()).unwrap_or(false)
+            })
             .collect();
         for name in type_names {
             let source = self.type_paths[name].clone();
@@ -472,7 +499,10 @@ impl App {
         let tactic_tabs: Vec<tactics_ui::Tab> = tactics_ui::Tab::ALL
             .iter()
             .copied()
-            .filter(|tab| self.tactics.get(tab.key()).map(|t| t.changed()).unwrap_or(0) > 0)
+            .filter(|tab| {
+                self.dirty_tactics.contains(tab.key())
+                    || self.tactics.get(tab.key()).map(|t| t.changed()).unwrap_or(0) > 0
+            })
             .collect();
         for tab in tactic_tabs {
             let key = tab.key();
@@ -492,7 +522,7 @@ impl App {
         }
         for file in EXTRA_FILES {
             let changed = self.extra.get(file) != self.extra_original.get(file);
-            if !changed {
+            if !changed && !self.dirty_extra.contains(file) {
                 continue;
             }
             let target = self.target_for(&self.extra_paths[file]);
@@ -508,6 +538,10 @@ impl App {
         }
         self.drafts.clear();
         self.appended.clear();
+        self.dirty_configs.clear();
+        self.dirty_types.clear();
+        self.dirty_tactics.clear();
+        self.dirty_extra.clear();
         if !errors.is_empty() {
             self.status = format!("save failed: {}", errors.join("; "));
         } else if written.is_empty() {
@@ -759,6 +793,20 @@ impl App {
                             .clicked()
                         {
                             self.reload();
+                        }
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new("Files").color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .on_hover_text("Import, export and diagnostics")
+                            .clicked()
+                        {
+                            self.io_open = true;
+                            if self.io_export_dir.is_empty() {
+                                self.io_export_dir = self.default_export_dir();
+                            }
                         }
                     });
                 });
@@ -1034,6 +1082,241 @@ impl App {
         });
         ui.add_space(4.0);
         self.legend(ui, p, grouped);
+    }
+
+    // ---------- import / export ----------
+
+    fn user_ai_dir(&self) -> PathBuf {
+        self.paths["H"]
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| PathBuf::from("."))
+    }
+
+    fn default_export_dir(&self) -> String {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_secs())
+            .unwrap_or(0);
+        self.user_ai_dir()
+            .join(format!("azzy-export-{stamp}"))
+            .display()
+            .to_string()
+    }
+
+    /// Writes every configuration file from the current editor state (including changes not
+    /// applied yet), like the web GUI's "Download zip".
+    fn export_all(&self, dir: &Path) -> Result<usize, String> {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+        let mut count = 0;
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            if let Some(config) = self.configs.get(key) {
+                std::fs::write(dir.join(file), config.to_text())
+                    .map_err(|e| format!("{}: {e}", dir.join(file).display()))?;
+                count += 1;
+            }
+        }
+        for tab in tactics_ui::Tab::ALL {
+            if let Some(model) = self.tactics.get(tab.key()) {
+                let path = dir.join(tab.layout().file);
+                std::fs::write(&path, model.to_text())
+                    .map_err(|e| format!("{}: {e}", path.display()))?;
+                count += 1;
+            }
+        }
+        for file in EXTRA_FILES {
+            let text = self.extra.get(file).cloned().unwrap_or_default();
+            std::fs::write(dir.join(file), text)
+                .map_err(|e| format!("{}: {e}", dir.join(file).display()))?;
+            count += 1;
+        }
+        let types_dir = dir.join("Types");
+        std::fs::create_dir_all(&types_dir)
+            .map_err(|e| format!("{}: {e}", types_dir.display()))?;
+        for name in TYPE_NAMES {
+            if let Some(config) = self.type_configs.get(name) {
+                let text = config.to_text();
+                if text.trim().is_empty() {
+                    continue;
+                }
+                let path = types_dir.join(format!("{name}.lua"));
+                std::fs::write(&path, text)
+                    .map_err(|e| format!("{}: {e}", path.display()))?;
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    fn export_diagnostics(&self) -> Result<String, String> {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_secs())
+            .unwrap_or(0);
+        let dir = self.user_ai_dir().join(format!("azzy-diagnostics-{stamp}"));
+        let count = self.export_all(&dir)?;
+        let mut text = format!(
+            "azzy-native {}\nunix time: {stamp}\nos: {} {}\nuser_ai: {}\nexported files: {count}\nH_Config: {}\nM_Config: {}\nH_Tactics: {}\nM_Tactics: {}\nH_PVP: {}\nM_PVP: {}\n",
+            env!("CARGO_PKG_VERSION"),
+            std::env::consts::OS,
+            std::env::consts::ARCH,
+            self.user_ai_dir().display(),
+            self.paths["H"].display(),
+            self.paths["M"].display(),
+            self.tact_paths["homtact"].display(),
+            self.tact_paths["mertact"].display(),
+            self.tact_paths["hompvp"].display(),
+            self.tact_paths["merpvp"].display(),
+        );
+        text.push_str(&format!(
+            "settings changed: {}\ntactics entries: {}\ntype selected: {}\n",
+            self.changed(),
+            self.tactics.values().map(|tactics| tactics.entries.len()).sum::<usize>(),
+            self.type_selected.unwrap_or("Global"),
+        ));
+        if let Some(log) = log_tail() {
+            text.push_str("\n--- azzy-native.log (tail) ---\n");
+            text.push_str(&log);
+        }
+        let path = dir.join("diagnostics.txt");
+        std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+        Ok(dir.display().to_string())
+    }
+
+    /// Reads the known files from `dir` into the editor. Nothing is written to the real files
+    /// until Apply Settings; the imported text is marked as dirty so Apply writes it verbatim.
+    fn import_folder(&mut self, dir: &Path) -> Result<Vec<String>, String> {
+        if !dir.is_dir() {
+            return Err(format!("not a folder: {}", dir.display()));
+        }
+        let mut imported = Vec::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            if let Ok(text) = std::fs::read_to_string(dir.join(file)) {
+                self.configs.insert(key, Config::parse(&text));
+                self.dirty_configs.insert(key);
+                imported.push(file.to_string());
+            }
+        }
+        for tab in tactics_ui::Tab::ALL {
+            if let Ok(text) = std::fs::read_to_string(dir.join(tab.layout().file)) {
+                self.tactics.insert(
+                    tab.key(),
+                    Tactics::parse(&text, tab.layout().kind),
+                );
+                self.dirty_tactics.insert(tab.key());
+                imported.push(tab.layout().file.to_string());
+            }
+        }
+        for file in EXTRA_FILES {
+            if let Ok(text) = std::fs::read_to_string(dir.join(file)) {
+                self.extra.insert(file, text);
+                self.dirty_extra.insert(file);
+                imported.push(file.to_string());
+            }
+        }
+        let types_dir = dir.join("Types");
+        if types_dir.is_dir() {
+            for name in TYPE_NAMES {
+                if let Ok(text) = std::fs::read_to_string(types_dir.join(format!("{name}.lua"))) {
+                    self.type_configs.insert(name, Config::parse(&text));
+                    self.dirty_types.insert(name);
+                    imported.push(format!("Types/{name}.lua"));
+                }
+            }
+        }
+        self.drafts.clear();
+        self.appended.clear();
+        if imported.is_empty() {
+            Err(format!("no known configuration files in {}", dir.display()))
+        } else {
+            Ok(imported)
+        }
+    }
+
+    fn files_window(&mut self, ctx: &egui::Context, p: &Palette) {
+        if !self.io_open {
+            return;
+        }
+        let mut open = self.io_open;
+        egui::Window::new("Import / Export")
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(true)
+            .default_width(640.0)
+            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+            .show(ctx, |ui| {
+                ui.label(
+                    egui::RichText::new(
+                        "All exports use the current editor state, including changes not applied yet.",
+                    )
+                    .color(p.muted)
+                    .size(11.0),
+                );
+                ui.add_space(4.0);
+                ui.label(egui::RichText::new("Export to folder").strong().color(p.text));
+                ui.add_sized(
+                    [ui.available_width(), 20.0],
+                    egui::TextEdit::singleline(&mut self.io_export_dir)
+                        .id_source("io-export-dir"),
+                );
+                ui.horizontal(|ui| {
+                    if ui.button("Export all files").clicked() {
+                        let dir = PathBuf::from(self.io_export_dir.trim());
+                        self.io_status = match self.export_all(&dir) {
+                            Ok(count) => format!("exported {count} file(s) to {}", dir.display()),
+                            Err(e) => format!("export failed: {e}"),
+                        };
+                    }
+                    if ui
+                        .button("Export diagnostics")
+                        .on_hover_text("Configurations, paths and the tail of azzy-native.log")
+                        .clicked()
+                    {
+                        self.io_status = match self.export_diagnostics() {
+                            Ok(dir) => format!("diagnostics written to {dir}"),
+                            Err(e) => format!("diagnostics failed: {e}"),
+                        };
+                    }
+                });
+                ui.add_space(6.0);
+                ui.separator();
+                ui.add_space(4.0);
+                ui.label(egui::RichText::new("Import from folder").strong().color(p.text));
+                ui.label(
+                    egui::RichText::new(
+                        "Folder with H_Config.lua, M_Config.lua, the tactics files and/or Types/.",
+                    )
+                    .color(p.muted)
+                    .size(11.0),
+                );
+                ui.add_sized(
+                    [ui.available_width(), 20.0],
+                    egui::TextEdit::singleline(&mut self.io_import_dir)
+                        .hint_text("path to a USER_AI folder or an exported folder")
+                        .id_source("io-import-dir"),
+                );
+                if ui.button("Import into the editor").clicked() {
+                    let dir = PathBuf::from(self.io_import_dir.trim());
+                    self.io_status = match self.import_folder(&dir) {
+                        Ok(files) => format!(
+                            "imported {} file(s): {}. Nothing was written yet; Apply Settings writes them.",
+                            files.len(),
+                            files.join(", ")
+                        ),
+                        Err(e) => format!("import failed: {e}"),
+                    };
+                }
+                if !self.io_status.is_empty() {
+                    ui.add_space(6.0);
+                    ui.label(
+                        egui::RichText::new(&self.io_status)
+                            .color(p.pending)
+                            .size(11.5)
+                            .strong(),
+                    );
+                }
+            });
+        self.io_open = open;
     }
 
     fn type_selector(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -1338,6 +1621,7 @@ impl App {
         self.navbar(ctx, &p);
         self.footer(ctx, &p);
         self.body(ctx, &p);
+        self.files_window(ctx, &p);
     }
 }
 
@@ -1582,6 +1866,15 @@ fn log(message: &str) {
         let _ = writeln!(file, "{stamp} {message}");
     }
     eprintln!("azzy-native: {message}");
+}
+
+fn log_tail() -> Option<String> {
+    let exe = std::env::current_exe().ok()?;
+    let path = exe.parent()?.join("azzy-native.log");
+    let text = std::fs::read_to_string(path).ok()?;
+    let bytes = text.as_bytes();
+    let start = bytes.len().saturating_sub(20_000);
+    Some(String::from_utf8_lossy(&bytes[start..]).to_string())
 }
 
 fn install_panic_hook() {
@@ -2013,6 +2306,64 @@ mod tests {
     }
 
     #[test]
+    fn export_and_import_round_trip() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        if !repo.join("H_Config.lua").is_file() {
+            return;
+        }
+        let dir = std::env::temp_dir().join(format!("azzy-native-io-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("Types")).unwrap();
+        for file in ["H_Config.lua", "M_Config.lua", "H_Tactics.lua", "M_Tactics.lua"] {
+            if repo.join(file).is_file() {
+                std::fs::copy(repo.join(file), dir.join(file)).unwrap();
+            }
+        }
+        if repo.join("Types").is_dir() {
+            for entry in std::fs::read_dir(repo.join("Types")).unwrap() {
+                let entry = entry.unwrap();
+                std::fs::copy(entry.path(), dir.join("Types").join(entry.file_name())).unwrap();
+            }
+        }
+        let mut paths = BTreeMap::new();
+        paths.insert("H", dir.join("H_Config.lua"));
+        paths.insert("M", dir.join("M_Config.lua"));
+        let mut app = App::new(&paths, true).unwrap();
+        let export = dir.join("export");
+        let count = app.export_all(&export).unwrap();
+        assert!(count > 5, "exported {count} files");
+        assert!(export.join("H_Config.lua").is_file());
+        assert!(export.join("H_Tactics.lua").is_file());
+        assert!(export.join("Types").join("Dieter.lua").is_file());
+
+        // change one value in the exported file, then import the folder
+        let text = std::fs::read_to_string(export.join("H_Config.lua")).unwrap();
+        let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+        let mut found = false;
+        for line in &mut lines {
+            if line.trim_start().starts_with("AggroHP") && line.contains('=') {
+                *line = "AggroHP                 = 123".to_string();
+                found = true;
+            }
+        }
+        assert!(found, "AggroHP must be in H_Config.lua");
+        std::fs::write(
+            export.join("H_Config.lua"),
+            lines.join("\n") + "\n",
+        )
+        .unwrap();
+        let imported = app.import_folder(&export).unwrap();
+        assert!(imported.iter().any(|file| file == "H_Config.lua"));
+        assert!(app.dirty_configs.contains("H"));
+        assert_eq!(app.configs["H"].get("AggroHP"), Some("123"));
+        app.save();
+        let after = std::fs::read_to_string(dir.join("H_Config.lua")).unwrap();
+        assert!(after.contains("AggroHP                 = 123"), "{after}");
+        assert_eq!(app.changed(), 0, "a save must clear imported files");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn applying_tactics_writes_only_that_file() {
         use azzy_config::tactics::BASIC;
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
@@ -2092,6 +2443,11 @@ mod tests {
         app.page = Page::Extra;
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.page = Page::Tactics(tactics_ui::Tab::Hom);
+        app.io_open = true;
+        app.io_export_dir = "C:\\temp\\azzy-export".into();
+        app.io_import_dir = "C:\\temp\\azzy-import".into();
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.io_open = false;
         app.suggest.open = true;
         app.suggest.map = "prt_fild08".into();
         app.suggest.mob = "poring".into();

@@ -62,6 +62,10 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
   keeps its comments/formatting and the footer path follows the selected type.
 - A config now tracks line additions/removals (`is_modified()`), so removing an override or an
   appended option still enables Apply and rewrites the file.
+- **Files** (navbar): export every configuration file (including unapplied edits) to a folder,
+  import a folder (the known files are replaced in the editor and marked dirty; Apply writes them
+  verbatim), and export a diagnostics folder with the paths, counts and the tail of
+  `azzy-native.log`. It is folder-based, so no native file-dialog dependency is needed.
 
 ## Icons
 
@@ -71,8 +75,7 @@ The remaining icons (skill icons from `webgui/img/skills`, element icons) are pa
 
 ## Still missing for parity with the web GUI
 
-- Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
-  diagnostics bundle (the Windows app already has it).
+- The update flow from GitHub (`azzy-gui` already has the zip logic).
 - UI translations (pt/es) and the option descriptions in those languages (`i18n.desc.*.js`).
 
 `cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
