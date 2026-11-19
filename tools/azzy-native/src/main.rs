@@ -82,6 +82,7 @@ struct App {
     tact_paths: BTreeMap<&'static str, PathBuf>,
     tact_selected: BTreeMap<&'static str, usize>,
     tact_filter: String,
+    tact_filter_focus: bool,
     page: Page,
     extra: BTreeMap<&'static str, String>,
     extra_original: BTreeMap<&'static str, String>,
@@ -214,6 +215,7 @@ impl App {
             tact_paths,
             tact_selected,
             tact_filter: String::new(),
+            tact_filter_focus: false,
             page: Page::Settings,
             extra,
             extra_original,
@@ -727,6 +729,7 @@ impl App {
                     if response.clicked() {
                         if self.page != Page::Tactics(tab) {
                             self.tact_filter.clear();
+                            self.tact_filter_focus = true;
                         }
                         self.page = Page::Tactics(tab);
                         self.drafts.clear();
@@ -774,7 +777,16 @@ impl App {
         let mut selected = self.tact_selected.get(key).copied().unwrap_or(0);
         let mobs = &self.mobs;
         if let Some(tactics) = self.tactics.get_mut(key) {
-            tactics_ui::draw(ui, p, tab, tactics, &mut selected, &mut self.tact_filter, mobs);
+            tactics_ui::draw(
+                ui,
+                p,
+                tab,
+                tactics,
+                &mut selected,
+                &mut self.tact_filter,
+                &mut self.tact_filter_focus,
+                mobs,
+            );
         }
         self.tact_selected.insert(key, selected);
     }

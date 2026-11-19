@@ -288,6 +288,7 @@ pub fn draw(
     tactics: &mut Tactics,
     selected: &mut usize,
     filter: &mut String,
+    focus_filter: &mut bool,
     mobs: &Mobs,
 ) {
     let layout = tab.layout();
@@ -303,7 +304,7 @@ pub fn draw(
         ui.allocate_ui_with_layout(
             egui::vec2(left_w, height),
             egui::Layout::top_down(egui::Align::Min),
-            |ui| list_panel(ui, p, tab, tactics, selected, filter, mobs, height),
+            |ui| list_panel(ui, p, tab, tactics, selected, filter, focus_filter, mobs, height),
         );
         ui.add_space(8.0);
         ui.allocate_ui_with_layout(
@@ -358,6 +359,7 @@ fn list_panel(
     tactics: &mut Tactics,
     selected: &mut usize,
     filter: &mut String,
+    focus_filter: &mut bool,
     mobs: &Mobs,
     height: f32,
 ) {
@@ -372,6 +374,9 @@ fn list_panel(
                 .hint_text("type a name or id, Enter picks the first match")
                 .id_source(format!("tact-filter:{}", tab.key())),
         );
+        if std::mem::take(focus_filter) {
+            response.request_focus();
+        }
         if response.lost_focus() && !response.changed() {
             select_first = true;
         }
@@ -415,7 +420,10 @@ fn list_panel(
         .inner_margin(egui::Margin::same(3.0))
         .show(ui, |ui| {
             ui.set_min_size(egui::vec2(ui.available_width().max(0.0), list_height));
+            ui.set_max_height(list_height);
             egui::ScrollArea::vertical()
+                .max_height((list_height - 6.0).max(80.0))
+                .min_scrolled_height((list_height - 6.0).max(80.0))
                 .auto_shrink([false, false])
                 .drag_to_scroll(false)
                 .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
