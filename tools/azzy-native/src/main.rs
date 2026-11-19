@@ -128,9 +128,11 @@ impl App {
             if self.write_in_place { "" } else { " - pass --write to edit the file itself" });
     }
 
-    fn visible(&self, option: &OptionDef) -> bool {
-        if let Some(category) = &self.category {
-            if &option.category != category {
+    // The category is its own filter: the sidebar counts must ignore it, or every other category
+    // reads "(0)" as soon as one is selected (seen in the screenshot).
+    fn matches(&self, option: &OptionDef, category: Option<&str>) -> bool {
+        if let Some(category) = category {
+            if option.category != *category {
                 return false;
             }
         }
@@ -148,6 +150,10 @@ impl App {
             }
         }
         true
+    }
+
+    fn visible(&self, option: &OptionDef) -> bool {
+        self.matches(option, self.category.as_deref())
     }
 
     fn set_token(&mut self, name: &str, token: String) {
@@ -215,7 +221,7 @@ impl eframe::App for App {
             // counts first: assigning self.category while schema borrows self is not allowed
             let (total, categories) = {
                 let schema = self.schema();
-                let total = schema.options.iter().filter(|o| self.visible(o)).count();
+                let total = schema.options.iter().filter(|o| self.matches(o, None)).count();
                 let categories: Vec<(String, usize)> = schema
                     .categories
                     .iter()
@@ -223,7 +229,7 @@ impl eframe::App for App {
                         let count = schema
                             .options
                             .iter()
-                            .filter(|o| &o.category == category && self.visible(o))
+                            .filter(|o| self.matches(o, Some(category)))
                             .count();
                         (category.clone(), count)
                     })
