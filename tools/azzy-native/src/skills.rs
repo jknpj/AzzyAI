@@ -4,8 +4,6 @@
 // (data/skill-icons.rgba) and the metadata is data/skills.json. The mapping is the same
 // `match` substring list the web GUI uses with `AzzySkills.forSetting`.
 
-use std::collections::BTreeMap;
-
 use eframe::egui;
 use serde_json::Value;
 
@@ -13,6 +11,7 @@ use serde_json::Value;
 #[derive(Debug, Clone)]
 pub struct Skill {
     pub id: u32,
+    pub homun: String,
     pub name: String,
     pub name_pt: String,
     pub name_es: String,
@@ -31,6 +30,10 @@ pub struct Skills {
 
 impl Skills {
     /// The skill a setting belongs to, like webgui/skills.js `forSetting`.
+    pub fn get(&self, id: u32) -> Option<&Skill> {
+        self.skills.iter().find(|skill| skill.id == id)
+    }
+
     pub fn for_setting(&self, name: &str) -> Option<&Skill> {
         let lower = name.to_lowercase();
         self.skills
@@ -89,6 +92,7 @@ pub fn load() -> Result<Skills, String> {
             .unwrap_or_default();
         skills.push(Skill {
             id,
+            homun: string(entry, "homun"),
             name: string(entry, "name"),
             name_pt: string(entry, "name_pt"),
             name_es: string(entry, "name_es"),
@@ -99,10 +103,17 @@ pub fn load() -> Result<Skills, String> {
     Ok(Skills { skills, width, height, tile, columns, atlas })
 }
 
-#[allow(dead_code)]
-pub fn by_id(skills: &[Skill]) -> BTreeMap<u32, usize> {
-    skills.iter().enumerate().map(|(index, skill)| (skill.id, index)).collect()
-}
+pub const HOMUNCULI: [(&str, &str); 9] = [
+    ("lif", "Lif"),
+    ("amistr", "Amistr"),
+    ("filir", "Filir"),
+    ("vanilmirth", "Vanilmirth"),
+    ("eira", "Eira"),
+    ("bayeri", "Bayeri"),
+    ("sera", "Sera"),
+    ("dieter", "Dieter"),
+    ("eleanor", "Eleanor"),
+];
 
 #[cfg(test)]
 mod tests {

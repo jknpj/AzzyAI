@@ -79,6 +79,7 @@ struct App {
     type_configs: BTreeMap<&'static str, Config>,
     type_paths: BTreeMap<&'static str, PathBuf>,
     type_selected: Option<&'static str>,
+    skill_filter: Option<u32>,
     dirty_configs: BTreeSet<&'static str>,
     dirty_types: BTreeSet<&'static str>,
     dirty_tactics: BTreeSet<&'static str>,
@@ -246,6 +247,7 @@ impl App {
             type_configs,
             type_paths,
             type_selected: None,
+            skill_filter: None,
             dirty_configs: BTreeSet::new(),
             dirty_types: BTreeSet::new(),
             dirty_tactics: BTreeSet::new(),
@@ -566,6 +568,13 @@ impl App {
     // The category is its own filter: the tab counts must ignore it, or every other category
     // reads "0" as soon as one is selected.
     fn matches(&self, option: &OptionDef, category: Option<&str>) -> bool {
+        if self.unit == Unit::Homunculus {
+            if let Some(id) = self.skill_filter {
+                if self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id) {
+                    return false;
+                }
+            }
+        }
         if let Some(category) = category {
             if option.category != *category {
                 return false;
@@ -658,7 +667,16 @@ impl App {
     }
 
     fn is_searching(&self) -> bool {
-        !self.search.trim().is_empty() || self.only_changed
+        !self.search.trim().is_empty()
+            || self.only_changed
+            || (self.unit == Unit::Homunculus && self.skill_filter.is_some())
+    }
+
+    fn skill_has_settings(&self, id: u32) -> bool {
+        self.schema()
+            .options
+            .iter()
+            .any(|option| self.skills.for_setting(&option.name).map(|skill| skill.id) == Some(id))
     }
 
     /// Builds the rows for one frame. If `grouped`, every category is shown under its header
@@ -1072,6 +1090,8 @@ impl App {
         if self.unit == Unit::Homunculus {
             self.type_selector(ui, p);
             ui.add_space(6.0);
+            self.skills_card(ui, p);
+            ui.add_space(6.0);
         }
         self.category_tabs(ui, p);
         ui.add_space(6.0);
@@ -1334,6 +1354,114 @@ impl App {
         self.io_open = open;
     }
 
+    fn skills_card(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let mut clicked: Option<Option<u32>> = None;
+        theme::card(p).show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            theme::title_bar(p, ui, "Homunculus skills");
+            ui.horizontal(|ui| {
+                if let Some(id) = self.skill_filter {
+                    if let Some(skill) = self.skills.get(id) {
+                        if ui
+                            .small_button(format!("{}  ×", skill.name))
+                            .on_hover_text("Show all settings")
+                            .clicked()
+                        {
+                            clicked = Some(None);
+                        }
+                        ui.label(
+                            egui::RichText::new("Showing only this skill's settings.")
+                                .color(p.muted)
+                                .size(11.0),
+                        );
+                    }
+                } else {
+                    ui.label(
+                        egui::RichText::new("Click a skill to show only its settings.")
+                            .color(p.muted)
+                            .size(11.0),
+                    );
+                }
+            });
+            ui.add_space(4.0);
+            if let Some(texture) = self.skill_texture.as_ref() {
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing = egui::vec2(3.0, 3.0);
+                    for (key, label) in skills::HOMUNCULI {
+                        let list: Vec<&skills::Skill> = self
+                            .skills
+                            .skills
+                            .iter()
+                            .filter(|skill| {
+                                skill.homun == key && self.skill_has_settings(skill.id)
+                            })
+                            .collect();
+                        if list.is_empty() {
+                            continue;
+                        }
+                        ui.label(
+                            egui::RichText::new(label).color(p.muted).size(10.0),
+                        );
+                        for skill in list {
+                            let active = self.skill_filter == Some(skill.id);
+                            let (rect, response) = ui.allocate_exact_size(
+                                egui::vec2(22.0, 22.0),
+                                egui::Sense::click(),
+                            );
+                            let fill = if active {
+                                p.primary
+                            } else if response.hovered() {
+                                p.panel2
+                            } else {
+                                p.btn1
+                            };
+                            ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
+                            ui.painter().rect_stroke(
+                                rect,
+                                egui::Rounding::same(3.0),
+                                egui::Stroke::new(
+                                    1.0_f32,
+                                    if active { p.primary } else { p.btn_border },
+                                ),
+                            );
+                            let icon = egui::Rect::from_center_size(
+                                rect.center(),
+                                egui::vec2(18.0, 18.0),
+                            );
+                            ui.painter().image(
+                                texture.id(),
+                                icon,
+                                self.skills.icon_uv(skill.icon),
+                                egui::Color32::WHITE,
+                            );
+                            if response.on_hover_text(&skill.name).clicked() {
+                                clicked = Some(if active { None } else { Some(skill.id) });
+                            }
+                        }
+                        ui.add_space(6.0);
+                    }
+                });
+            }
+        });
+        if let Some(selection) = clicked {
+            self.skill_filter = selection;
+            self.category = None;
+            if let Some(id) = selection {
+                if let Some(selected) = self.selected.clone() {
+                    let belongs = self
+                        .schema()
+                        .get(&selected)
+                        .and_then(|option| self.skills.for_setting(&option.name))
+                        .map(|skill| skill.id)
+                        == Some(id);
+                    if !belongs {
+                        self.selected = None;
+                    }
+                }
+            }
+        }
+    }
+
     fn type_selector(&mut self, ui: &mut egui::Ui, p: &Palette) {
         let mut selection: Option<Option<&'static str>> = None;
         ui.horizontal(|ui| {
@@ -1454,10 +1582,11 @@ impl App {
             }
         });
         if let Some(selection) = selection {
-            // clicking a category while a search is active means "show me that category"
+            // clicking a category while a search/skill filter is active means "show me that category"
             if searching {
                 self.search.clear();
                 self.only_changed = false;
+                self.skill_filter = None;
             }
             self.category = selection;
         }
@@ -2082,6 +2211,28 @@ mod tests {
     }
 
     #[test]
+    fn a_selected_skill_filters_the_settings() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = repo.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.skill_filter = Some(8041); // Lava Slide
+        assert!(app.is_searching());
+        let lava = app.hom.get("UseDieterLavaSlide").expect("Lava Slide setting");
+        assert!(app.matches(lava, None));
+        let aggro = app.hom.get("AggroHP").expect("AggroHP");
+        assert!(!app.matches(aggro, None), "AggroHP does not belong to Lava Slide");
+        app.skill_filter = None;
+        assert!(app.matches(aggro, None));
+    }
+
+    #[test]
     fn clicking_a_tactic_row_selects_it() {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
         let mut paths = BTreeMap::new();
@@ -2489,6 +2640,9 @@ mod tests {
         app.type_selected = Some("Dieter");
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.type_selected = None;
+        app.skill_filter = Some(8041);
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.skill_filter = None;
         for tab in tactics_ui::Tab::ALL {
             app.page = Page::Tactics(tab);
             let _ = ctx.run(input(), |ctx| app.draw(ctx));

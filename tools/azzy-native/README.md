@@ -72,10 +72,12 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
 The window and the navbar use the real `webgui/azzyai.ico`, converted once to
 `data/azzyai-48.rgba` (48x48, raw RGBA) so egui can use it without an image-loading dependency.
 The **skill icons** from `webgui/img/skills` (50 PNGs) are packed once into
-`data/skill-icons.rgba` (20x20 tiles, 8 columns) with `data/skills.json` holding the ids, names
-and the same `match` substrings as `webgui/skills.js`; the Homunculus grid shows the icon before
-the setting name, and the description/tooltip names the skill. Nothing is loaded at runtime: both
-files are embedded like the schema and the monster database.
+`data/skill-icons.rgba` (20x20 tiles, 8 columns) with `data/skills.json` holding the ids, the
+homunculus, the names and the same `match` substrings as `webgui/skills.js`. The Homunculus tab
+has the **Homunculus skills** card (grouped by type): click a skill to show only its settings,
+click the chip to clear. The grid also shows the icon before each mapped setting name, and the
+tooltip/description names the skill. Nothing is loaded at runtime: both files are embedded like
+the schema and the monster database.
 
 ## Still missing for parity with the web GUI
 
