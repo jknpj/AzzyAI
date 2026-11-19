@@ -362,15 +362,19 @@ fn list_panel(
     height: f32,
 ) {
     let layout = tab.layout();
+    let mut select_first = false;
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new("Find:").color(p.muted).size(11.0));
         let width = (ui.available_width() - 50.0).max(80.0);
-        ui.add_sized(
+        let response = ui.add_sized(
             [width, 20.0],
             egui::TextEdit::singleline(filter)
-                .hint_text("name or id")
+                .hint_text("type a name or id, Enter picks the first match")
                 .id_source(format!("tact-filter:{}", tab.key())),
         );
+        if response.lost_focus() && !response.changed() {
+            select_first = true;
+        }
         if ui.small_button("Clear").clicked() {
             filter.clear();
         }
@@ -392,8 +396,16 @@ fn list_panel(
         })
         .map(|(index, _)| index)
         .collect();
-    if !visible.is_empty() && !visible.contains(selected) {
+    let visible_count = visible.len();
+    let mut scroll_to_selected = false;
+    if select_first {
+        if let Some(first) = visible.first() {
+            *selected = *first;
+            scroll_to_selected = true;
+        }
+    } else if !visible.is_empty() && !visible.contains(selected) {
         *selected = visible[0];
+        scroll_to_selected = true;
     }
     let list_height = (height - 80.0).max(140.0);
     egui::Frame::none()
@@ -405,6 +417,8 @@ fn list_panel(
             ui.set_min_size(egui::vec2(ui.available_width().max(0.0), list_height));
             egui::ScrollArea::vertical()
                 .auto_shrink([false, false])
+                .drag_to_scroll(false)
+                .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
                 .show(ui, |ui| {
                     ui.set_min_width(ui.available_width().max(0.0));
                     if visible.is_empty() {
@@ -419,7 +433,7 @@ fn list_panel(
                         let active = index == *selected;
                         // the whole row is the click target: aiming at the text alone was hard
                         let (rect, response) = ui.allocate_exact_size(
-                            egui::vec2(ui.available_width(), 22.0),
+                            egui::vec2(ui.available_width(), 24.0),
                             egui::Sense::click(),
                         );
                         let fill = if active {
@@ -443,6 +457,10 @@ fn list_panel(
                             *selected = index;
                         }
                         response.on_hover_cursor(egui::CursorIcon::PointingHand);
+                        if active && scroll_to_selected {
+                            ui.scroll_to_rect(rect, Some(egui::Align::Center));
+                            scroll_to_selected = false;
+                        }
                     }
                 });
         });
@@ -487,6 +505,14 @@ fn list_panel(
                 *selected = 0;
             }
         }
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            let total = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
+            ui.label(
+                egui::RichText::new(format!("{visible_count} of {total}"))
+                    .color(p.muted)
+                    .size(11.0),
+            );
+        });
     });
 }
 
