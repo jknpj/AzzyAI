@@ -1911,9 +1911,23 @@ fn option_row(
             if !row.comment.is_empty() {
                 tooltip.push_str(&format!("\n{}", row.comment));
             }
-            let response = ui.add_sized(
-                [name_w, 20.0],
-                egui::Label::new(name).truncate().sense(egui::Sense::click()),
+            // A child UI for the label keeps the text left-aligned (add_sized centers it), and
+            // an explicit interaction over the whole name cell makes the empty part clickable.
+            let name_rect = egui::Rect::from_min_size(
+                ui.cursor().min,
+                egui::vec2(name_w, 20.0),
+            );
+            let mut name_ui = ui.child_ui(
+                name_rect,
+                egui::Layout::left_to_right(egui::Align::Center),
+                None,
+            );
+            name_ui.add(egui::Label::new(name).truncate());
+            ui.advance_cursor_after_rect(name_rect);
+            let response = ui.interact(
+                name_rect,
+                egui::Id::new(("option-name", &row.option.name)),
+                egui::Sense::click(),
             );
             if response.on_hover_text(tooltip).clicked() {
                 clicked = true;
