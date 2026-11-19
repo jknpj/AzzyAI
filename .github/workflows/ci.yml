@@ -69,6 +69,16 @@ jobs:
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
           node tools/webgui_templates_check.js
           node tools/webgui-data.js --check
+      - name: No generated editor files are tracked
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked="$(git ls-files '*.lua.new' '*.new' 'tools/azzy-native/azzy-native.log')"
+          if [ -n "$tracked" ]; then
+            echo "::error::generated files must not be committed:"
+            printf '%s\n' "$tracked"
+            exit 1
+          fi
 
   gui:
     name: Build config GUI (.NET 4.0)
