@@ -56,12 +56,28 @@ enum Page {
 
 const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 
+/// Per-homunculus overrides in USER_AI/Types/<Name>.lua (webgui/app.js TYPE_NAMES).
+const TYPE_NAMES: [&str; 9] = [
+    "Lif",
+    "Amistr",
+    "Filir",
+    "Vanilmirth",
+    "Eira",
+    "Bayeri",
+    "Sera",
+    "Dieter",
+    "Eleanor",
+];
+
 struct App {
     hom: Schema,
     mer: Schema,
     unit: Unit,
     configs: BTreeMap<&'static str, Config>, // "H" / "M"
     paths: BTreeMap<&'static str, PathBuf>,
+    type_configs: BTreeMap<&'static str, Config>,
+    type_paths: BTreeMap<&'static str, PathBuf>,
+    type_selected: Option<&'static str>,
     write_in_place: bool,
     shown_path: String,
     search: String,
@@ -99,6 +115,7 @@ struct RowData {
     current: String,
     default_label: String,
     present: bool,
+    uses_global: bool,
     pending: bool,
     modified: bool,
     comment: String,
@@ -192,12 +209,29 @@ impl App {
             extra.insert(file, text.clone());
             extra_original.insert(file, text);
         }
+        // Per-type overrides. Missing files are empty models; a save creates them only if the
+        // player actually changes an override.
+        let mut type_configs = BTreeMap::new();
+        let mut type_paths = BTreeMap::new();
+        for name in TYPE_NAMES {
+            let path = base.join("Types").join(format!("{name}.lua"));
+            let config = if path.is_file() {
+                Config::load(&path).map_err(|e| format!("{}: {e}", path.display()))?
+            } else {
+                Config::parse("")
+            };
+            type_paths.insert(name, path);
+            type_configs.insert(name, config);
+        }
         Ok(App {
             hom,
             mer,
             unit: Unit::Homunculus,
             configs,
             paths: paths.clone(),
+            type_configs,
+            type_paths,
+            type_selected: None,
             write_in_place,
             shown_path: shown.join("  +  "),
             search: String::new(),
@@ -249,9 +283,47 @@ impl App {
         self.configs.get_mut(self.unit_key())
     }
 
+    fn is_type_mode(&self) -> bool {
+        self.unit == Unit::Homunculus && self.type_selected.is_some()
+    }
+
+    fn type_config(&self) -> Option<&Config> {
+        if !self.is_type_mode() {
+            return None;
+        }
+        self.type_selected.and_then(|name| self.type_configs.get(name))
+    }
+
+    /// The value shown in the grid: the type override when one exists, otherwise the global
+    /// value, otherwise the schema default (handled by the caller).
+    fn current_value(&self, name: &str) -> Option<&str> {
+        if let Some(value) = self.type_config().and_then(|config| config.get(name)) {
+            return Some(value);
+        }
+        self.config().and_then(|config| config.get(name))
+    }
+
+    fn comment_for(&self, name: &str) -> Option<&str> {
+        if let Some(comment) = self.type_config().and_then(|config| config.comment_of(name)) {
+            return Some(comment);
+        }
+        self.config().and_then(|config| config.comment_of(name))
+    }
+
     /// Edits not written to disk yet (the amber marker).
     fn changed(&self) -> usize {
-        self.configs.values().map(|c| c.changed()).sum::<usize>()
+        let configs = self
+            .configs
+            .values()
+            .map(|config| if config.is_modified() { config.changed().max(1) } else { 0 })
+            .sum::<usize>();
+        let types = self
+            .type_configs
+            .values()
+            .map(|config| if config.is_modified() { config.changed().max(1) } else { 0 })
+            .sum::<usize>();
+        configs
+            + types
             + self.tactics.values().map(|t| t.changed()).sum::<usize>()
             + EXTRA_FILES
                 .iter()
@@ -269,7 +341,13 @@ impl App {
 
     fn active_path(&self) -> String {
         let path = match self.page {
-            Page::Settings => return self.shown_path.clone(),
+            Page::Settings => {
+                if let Some(name) = self.type_selected.filter(|_| self.is_type_mode()) {
+                    self.type_paths[name].display().to_string()
+                } else {
+                    return self.shown_path.clone();
+                }
+            }
             Page::Tactics(tab) => self.tact_paths[tab.key()].display().to_string(),
             Page::Extra => self.extra_paths[self.extra_selected].display().to_string(),
         };
@@ -317,6 +395,20 @@ impl App {
                 Err(e) => errors.push(format!("{}: {e}", path.display())),
             }
         }
+        for name in TYPE_NAMES {
+            let path = self.type_paths[name].clone();
+            let config = if path.is_file() {
+                Config::load(&path).map_err(|e| format!("{}: {e}", path.display()))
+            } else {
+                Ok(Config::parse(""))
+            };
+            match config {
+                Ok(config) => {
+                    self.type_configs.insert(name, config);
+                }
+                Err(e) => errors.push(e),
+            }
+        }
         self.drafts.clear();
         self.appended.clear();
         self.status = if errors.is_empty() {
@@ -333,19 +425,45 @@ impl App {
         let config_keys: Vec<&'static str> = self
             .configs
             .iter()
-            .filter(|(_, config)| config.changed() > 0)
+            .filter(|(_, config)| config.is_modified())
             .map(|(key, _)| *key)
             .collect();
         for key in config_keys {
             let source = self.paths[key].clone();
             let target = self.target_for(&source);
-            let changed = self.configs[key].changed();
+            let changed = self.configs[key].changed().max(1);
             match self.configs[key].save(&target) {
                 Ok(()) => {
                     total += changed;
                     written.push(target.display().to_string());
                     if let Ok(fresh) = Config::load(&target) {
                         self.configs.insert(key, fresh);
+                    }
+                }
+                Err(e) => errors.push(format!("{}: {e}", target.display())),
+            }
+        }
+        let type_names: Vec<&'static str> = TYPE_NAMES
+            .iter()
+            .copied()
+            .filter(|name| self.type_configs.get(name).map(|config| config.is_modified()).unwrap_or(false))
+            .collect();
+        for name in type_names {
+            let source = self.type_paths[name].clone();
+            let target = self.target_for(&source);
+            if let Some(parent) = target.parent() {
+                if let Err(e) = std::fs::create_dir_all(parent) {
+                    errors.push(format!("{}: {e}", parent.display()));
+                    continue;
+                }
+            }
+            let changed = self.type_configs[name].changed().max(1);
+            match self.type_configs[name].save(&target) {
+                Ok(()) => {
+                    total += changed;
+                    written.push(target.display().to_string());
+                    if let Ok(fresh) = Config::load(&target) {
+                        self.type_configs.insert(name, fresh);
                     }
                 }
                 Err(e) => errors.push(format!("{}: {e}", target.display())),
@@ -419,8 +537,9 @@ impl App {
             }
         }
         if self.only_changed {
-            let current = self.config().and_then(|c| c.get(&option.name)).unwrap_or("");
-            if current == self.schema().default_token(option) {
+            let default = self.schema().default_token(option);
+            let current = self.current_value(&option.name).unwrap_or("");
+            if same_value(&option.kind, current, &default) {
                 return false;
             }
         }
@@ -435,6 +554,27 @@ impl App {
                 None => return,
             }
         };
+        if self.is_type_mode() {
+            let same_as_global = same_value(
+                &kind,
+                &token,
+                &self
+                    .config()
+                    .and_then(|config| config.get(name))
+                    .map(str::to_string)
+                    .unwrap_or_else(|| default.clone()),
+            );
+            let Some(type_name) = self.type_selected else { return };
+            if let Some(config) = self.type_configs.get_mut(type_name) {
+                if same_as_global {
+                    // no override: the type falls back to H_Config.lua
+                    config.remove(name);
+                } else if !config.set(name, &token) {
+                    config.set_or_append(name, &token);
+                }
+            }
+            return;
+        }
         let differs = !same_value(&kind, &token, &default);
         let existed = self.config().map(|c| c.get(name).is_some()).unwrap_or(false);
         let was_appended = self.appended.contains(name);
@@ -462,7 +602,9 @@ impl App {
                 None => return,
             }
         };
-        if self.appended.contains(name) {
+        if self.is_type_mode() {
+            self.set_token(name, token);
+        } else if self.appended.contains(name) {
             if let Some(config) = self.config_mut() {
                 config.remove(name);
             }
@@ -482,17 +624,21 @@ impl App {
     fn build_rows(&self, grouped: bool) -> Vec<Row> {
         let schema = self.schema();
         let config = self.config();
+        let type_mode = self.is_type_mode();
+        let active = if type_mode { self.type_config() } else { config };
         let make = |option: &OptionDef| -> RowData {
-            let present = config.map(|c| c.get(&option.name).is_some()).unwrap_or(false);
+            let present = active.map(|c| c.get(&option.name).is_some()).unwrap_or(false);
+            let uses_global = type_mode && !present;
             let default_token = schema.default_token(option);
             // missing options read as their default, like the web GUI; otherwise the row would
-            // look edited and the editor would be empty
-            let current = config
-                .and_then(|c| c.get(&option.name))
-                .map(|value| value.to_string())
+            // look edited and the editor would be empty. In type mode a missing override reads
+            // the global value.
+            let current = self
+                .current_value(&option.name)
+                .map(str::to_string)
                 .unwrap_or_else(|| default_token.clone());
             let modified = !same_value(&option.kind, &current, &default_token);
-            let pending = config.map(|c| c.changed_of(&option.name)).unwrap_or(false);
+            let pending = active.map(|c| c.changed_of(&option.name)).unwrap_or(false);
             let values = if option.kind == "serverType" {
                 vec![
                     ("SERVER_OFFICIAL".to_string(), 0),
@@ -507,13 +653,10 @@ impl App {
                 default_label: default_label(schema, option),
                 current,
                 present,
+                uses_global,
                 pending,
                 modified,
-                comment: config
-                    .and_then(|c| c.comment_of(&option.name))
-                    .unwrap_or("")
-                    .trim()
-                    .to_string(),
+                comment: self.comment_for(&option.name).unwrap_or("").trim().to_string(),
             }
         };
         let mut rows = Vec::new();
@@ -549,12 +692,11 @@ impl App {
 
     fn modified_count(&self) -> usize {
         let schema = self.schema();
-        let config = self.config();
         schema
             .options
             .iter()
             .filter(|o| {
-                let current = config.and_then(|c| c.get(&o.name)).unwrap_or("");
+                let current = self.current_value(&o.name).unwrap_or("");
                 !same_value(&o.kind, current, &schema.default_token(o))
             })
             .count()
@@ -864,6 +1006,10 @@ impl App {
     fn workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
         self.toolbar(ui, p);
         ui.add_space(6.0);
+        if self.unit == Unit::Homunculus {
+            self.type_selector(ui, p);
+            ui.add_space(6.0);
+        }
         self.category_tabs(ui, p);
         ui.add_space(6.0);
 
@@ -888,6 +1034,67 @@ impl App {
         });
         ui.add_space(4.0);
         self.legend(ui, p, grouped);
+    }
+
+    fn type_selector(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let mut selection: Option<Option<&'static str>> = None;
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Settings for:").color(p.text));
+            egui::ComboBox::from_id_source("settings-for")
+                .width(240.0)
+                .selected_text(self.type_selected.unwrap_or("Global (all homunculi)"))
+                .show_ui(ui, |ui| {
+                    if ui
+                        .selectable_label(self.type_selected.is_none(), "Global (all homunculi)")
+                        .clicked()
+                    {
+                        selection = Some(None);
+                    }
+                    for name in TYPE_NAMES {
+                        if ui
+                            .selectable_label(self.type_selected == Some(name), name)
+                            .clicked()
+                        {
+                            selection = Some(Some(name));
+                        }
+                    }
+                });
+            if let Some(name) = self.type_selected {
+                if ui.button("Use global values").clicked() {
+                    self.clear_type_overrides();
+                }
+                ui.label(
+                    egui::RichText::new(format!(
+                        "Only values that differ from the global settings are saved, in Types/{name}.lua."
+                    ))
+                    .color(p.muted)
+                    .size(11.0),
+                );
+            }
+        });
+        if let Some(selection) = selection {
+            if selection != self.type_selected {
+                self.type_selected = selection;
+                self.drafts.clear();
+                self.appended.clear();
+                self.status = match selection {
+                    Some(name) => format!("editing the {name} overrides (Types/{name}.lua)"),
+                    None => "editing the global settings".into(),
+                };
+            }
+        }
+    }
+
+    fn clear_type_overrides(&mut self) {
+        let Some(name) = self.type_selected else { return };
+        if let Some(config) = self.type_configs.get_mut(name) {
+            let names: Vec<String> = config.assignments().map(|a| a.name.clone()).collect();
+            for name in names {
+                config.remove(&name);
+            }
+        }
+        self.drafts.clear();
+        self.status = format!("{name}: using the global values (saved on Apply)");
     }
 
     fn toolbar(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -1230,7 +1437,9 @@ fn option_row(
             } else if row.modified {
                 tooltip.push_str("  ·  changed from default");
             }
-            if !row.present {
+            if row.uses_global {
+                tooltip.push_str("  ·  uses the global value");
+            } else if !row.present {
                 tooltip.push_str("  ·  not in the file yet");
             }
             if !row.comment.is_empty() {
@@ -1758,6 +1967,52 @@ mod tests {
     }
 
     #[test]
+    fn type_presets_override_only_their_file() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        if !repo.join("Types").join("Dieter.lua").is_file() {
+            return;
+        }
+        let dir = std::env::temp_dir().join(format!("azzy-native-types-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("Types")).unwrap();
+        for file in ["H_Config.lua", "M_Config.lua"] {
+            std::fs::copy(repo.join(file), dir.join(file)).unwrap();
+        }
+        for entry in std::fs::read_dir(repo.join("Types")).unwrap() {
+            let entry = entry.unwrap();
+            std::fs::copy(entry.path(), dir.join("Types").join(entry.file_name())).unwrap();
+        }
+        let mut paths = BTreeMap::new();
+        paths.insert("H", dir.join("H_Config.lua"));
+        paths.insert("M", dir.join("M_Config.lua"));
+        let before_h = std::fs::read_to_string(dir.join("H_Config.lua")).unwrap();
+        let mut app = App::new(&paths, true).unwrap();
+        app.unit = Unit::Homunculus;
+        app.type_selected = Some("Dieter");
+        let global_aggro = app.config().and_then(|config| config.get("AggroHP")).unwrap_or("").to_string();
+
+        app.set_token("AggroHP", "77".to_string());
+        assert_eq!(app.type_configs["Dieter"].get("AggroHP"), Some("77"));
+        assert_eq!(app.current_value("AggroHP"), Some("77"));
+
+        // back to the global value -> the override line disappears
+        app.set_token("AggroHP", global_aggro);
+        assert_eq!(app.type_configs["Dieter"].get("AggroHP"), None);
+
+        // an existing override is changed in place
+        app.set_token("AutoMobCount", "3".to_string());
+        assert_eq!(app.type_configs["Dieter"].get("AutoMobCount"), Some("3"));
+        assert!(app.type_configs["Dieter"].is_modified());
+        app.save();
+        assert_eq!(std::fs::read_to_string(dir.join("H_Config.lua")).unwrap(), before_h);
+        let dieter = std::fs::read_to_string(dir.join("Types").join("Dieter.lua")).unwrap();
+        assert!(dieter.contains("AutoMobCount             = 3"), "{dieter}");
+        assert!(!dieter.contains("AutoMobCount             = 1"), "{dieter}");
+        assert_eq!(app.changed(), 0, "a save must clear the type edits");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn applying_tactics_writes_only_that_file() {
         use azzy_config::tactics::BASIC;
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
@@ -1827,6 +2082,9 @@ mod tests {
         app.category = None;
         app.selected = Some("AutoMobMode".into());
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.type_selected = Some("Dieter");
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.type_selected = None;
         for tab in tactics_ui::Tab::ALL {
             app.page = Page::Tactics(tab);
             let _ = ctx.run(input(), |ctx| app.draw(ctx));

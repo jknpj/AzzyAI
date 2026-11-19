@@ -52,6 +52,8 @@ impl Assignment {
 pub struct Config {
     // line content and the line ending it had ("" for a last line without one)
     lines: Vec<(Line, String)>,
+    // lines were added or removed, even if no value differs from the file on disk
+    touched: bool,
 }
 
 impl Config {
@@ -68,7 +70,7 @@ impl Config {
             let (line, _) = parse_line(body);
             lines.push((line, ending.to_string()));
         }
-        Config { lines }
+        Config { lines, touched: false }
     }
 
     pub fn load(path: &Path) -> std::io::Result<Config> {
@@ -144,6 +146,7 @@ impl Config {
             }),
             eol,
         ));
+        self.touched = true;
         true
     }
 
@@ -151,7 +154,17 @@ impl Config {
     pub fn remove(&mut self, name: &str) -> bool {
         let before = self.lines.len();
         self.lines.retain(|(line, _)| !matches!(line, Line::Assignment(a) if a.name == name));
-        self.lines.len() != before
+        let removed = self.lines.len() != before;
+        if removed {
+            self.touched = true;
+        }
+        removed
+    }
+
+    /// True when the file would differ on disk: a value changed, a line was added, or a line
+    /// was removed. `changed()` alone misses the last two.
+    pub fn is_modified(&self) -> bool {
+        self.touched || self.changed() > 0
     }
 
     /// Replaces the value token of `name`; the rest of the line stays byte for byte.
@@ -388,6 +401,18 @@ mod tests {
         assert_eq!(config.to_text().matches("BossAggro").count(), 1);
         assert!(config.remove("BossAggro"));
         assert_eq!(config.get("BossAggro"), None);
+    }
+
+    #[test]
+    fn line_additions_and_removals_count_as_modifications() {
+        let mut config = Config::parse("AggroHP = 60\n");
+        assert!(!config.is_modified());
+        assert!(config.set_or_append("BossAggro", "2"));
+        assert!(config.is_modified());
+        assert!(config.remove("BossAggro"));
+        assert!(config.is_modified());
+        assert_eq!(config.changed(), 0);
+        assert_eq!(config.to_text(), "AggroHP = 60\n");
     }
 
     #[test]

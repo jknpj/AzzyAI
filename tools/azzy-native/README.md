@@ -52,6 +52,17 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
 - The entry list navigates with **Up/Down** (one row), **PageUp/PageDown** (ten) and **Home/End**
   when no text field or popup has the keyboard, and scrolls the selected row into view.
 
+## Milestone 3 (in progress)
+
+- **Per-homunculus presets**: the Homunculus tab has "Settings for: Global (all homunculi) /
+  Lif / Amistr / Filir / Vanilmirth / Eira / Bayeri / Sera / Dieter / Eleanor". With a type
+  selected the grid shows the merged view (the type override, otherwise the global value) and
+  edits go to `Types/<Name>.lua`; a value equal to the global one removes the override, so only
+  the differences are saved. "Use global values" removes every override of that type. The file
+  keeps its comments/formatting and the footer path follows the selected type.
+- A config now tracks line additions/removals (`is_modified()`), so removing an override or an
+  appended option still enables Apply and rewrites the file.
+
 ## Icons
 
 The window and the navbar use the real `webgui/azzyai.ico`, converted once to
@@ -60,7 +71,6 @@ The remaining icons (skill icons from `webgui/img/skills`, element icons) are pa
 
 ## Still missing for parity with the web GUI
 
-- Per-type presets (`Types/<Name>.lua`, the "Settings for" selector).
 - Import/export dialogs, the update flow (`azzy-gui` already has the zip logic) and the
   diagnostics bundle (the Windows app already has it).
 - UI translations (pt/es) and the option descriptions in those languages (`i18n.desc.*.js`).
