@@ -29,12 +29,7 @@ HPPercent(id)
 SPPercent(id)
 Returns the current hp or sp of id as a percentage. This only works on things which the player can see the hp/sp of, obviously.
 
-Closer(id,x,y)
-Returns coordinants of a location 1 cell closer to actor (id) 
 
-ClosestR(id1,id2,range)
-Returns coordinants of the cell within <range> cells of <id2> that is closest to <id1>.
-Intended for targeting of ranged skills.
 
 BetterMoveToOwner(mercid,range)
 Moves to the closest sell withing range cells of the owner. 
@@ -662,17 +657,6 @@ function IsFriend(id)
 	return 0
 end
 
-function IsPVPFriend(id)
-	if (id==OwnerID) then
-		return 1
-	elseif (id~= MyID) then
-		local friendclass=MyFriends[id]
-		if (friendclass==FRIEND or friendclass==RETAINER or friendclass==NEUTRAL or friendclass==ALLY) then
-			return 1
-		end
-	end
-	return 0
-end
 
 function IsFriendOrSelf(id)
 	if (id==OwnerID or id == MyID) then
@@ -1067,38 +1051,6 @@ function GetBestFASTarget(myid)
 	return target,mincount			
 end
 
-function GetFASDirection(myid,target)
-	local x,y=GetV(V_POSITION,myid)
-	if GetDistanceA(myid,target) < 15 then
-		local mx,my=GetV(V_POSITION,target)
-		local dx=math.abs(x-mx)
-		local dy=math.abs(y-my)
-		if ((dx==0) or (dx==1 and dy>1) or (dx==2 and dy>6) or (dx==3 and dy>9) or (dx==4 and dy>11)) then 
-			if my>=y then
-				return 0,1 --n
-			elseif my<y then
-				return 0,-1 --s
-			end
-		elseif ((dy==0) or (dy==1 and dx>1) or (dy==2 and dx>6) or (dy==3 and dx>9) or (dy==4 and dx>11)) then
-			if mx>x then
-				return 1,0 --e
-			elseif mx<x then
-				return-1,0 --w
-			end
-		-- diagonals
-		elseif mx>x then
-			if my>=y then
-				return 1,1 --ne
-			else
-				return 1,-1 --se
-			end
-		elseif my>=y then
-			return -1,1 --nw
-		else
-			return -1,-1 --sw
-		end
-	end
-end
 
 function GetFASOptions(myid)
 	local x,y=GetV(V_POSITION,myid)
@@ -1256,9 +1208,6 @@ function GetFASTargetCount(myid,directionx,directiony,aggro)
 	return count
 end
 
-function IsHiddenOnScreen(myid) --Currently disabled - assume there is never hidden on screen.
-	return 1
-end
 
 function IsHomun(myid)
 	-- AI.lua and AI_M.lua run in separate Lua states, so our own answer never changes
@@ -2043,25 +1992,6 @@ function AttackRange(myid,skill,level)
 	return a
 end
 
-function Closer(id,ox,oy)
-	local x,y=GetV(V_POSITION,id)
-	local newx,newy=0,0
-	if (ox==x) then
-		newx=x
-	elseif (ox > x) then
-		newx=ox-1
-	else
-		newx=ox+1
-	end
-	if (oy==y) then
-		newy=y
-	elseif (oy > y) then
-		newy=oy-1
-	else
-		newy=oy+1
-	end
-	return newx,newy
-end
 
 
 
@@ -2424,10 +2354,6 @@ function AdjustOpp(x,y,ox,oy)
 	local dy=oy-y
 	return x+2*dx,y+2*dy
 end
-function ClosestR(myid,target,range,alt)
-	local ox,oy=GetV(V_POSITION,target)
-	return Closest(myid,ox,oy,range,alt)
-end
 
 --###############################   ##   ##
 --### LUA 5.1 feature support ###   ##   ##
@@ -2621,12 +2547,6 @@ function GetGrappleSkill(myid)
 				else
 					level=EleanorEQCLevel
 				end
-			elseif EleanorTrustCastDelay == 1 and ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and not IsSkillReady(MH_EQC) then
-				logappend("AAI_SKILLFAIL", string.format("EQC skip: cooldown %d/%d spheres %.1f mode %d",
-					AutoSkillCooldown[MH_EQC] or 0, GetTick(), MySpheres or 0, EleanorMode or -1))
-			elseif EleanorTrustCastDelay == 1 and ComboSVTimeout > GetTick() and EleanorMode == GRAPPLING_MODE then
-				logappend("AAI_SKILLFAIL", string.format("EQC skip: followAt %d/%d useEQC %s ready %s spheres %.1f",
-					GetTick(), ComboFollowAt or 0, tostring(UseEleanorEQC), tostring(IsSkillReady(MH_EQC)), MySpheres or 0))
 			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER)
 				and not (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
 				skill=MH_TINDER_BREAKER
@@ -3177,9 +3097,6 @@ function GetHealingSkill(myid)
 	return skill,level
 end
 
-function GetSnipeSkill(myid)
-	return GetAtkSkill(myid)
-end
 
 -- When several skill types are usable on the same cycle, the higher priority wins.
 -- Types not listed (debuff, combo, grapple, minion) are never overridden by damage skills.
@@ -3691,18 +3608,6 @@ end
 
 
 
--- I SHOULDNT HAVE TO CODE THIS!
-function modulo(a,b)
-	return a-math.floor(a/b)*b
-end
--- OR THIS!
-function len(listin)
-	local length=0
-	for k,v in pairs(listin) do
-		length = length + 1
-	end
-	return length
-end
 
 function absceil(x)
 	if x>0 then
