@@ -145,13 +145,14 @@ jobs:
           built=.artifacts/azzy-native.exe
           test -f "$built" || { echo "::error::the azzy-native artifact is missing"; exit 1; }
           cp "$built" USER_AI/AzzyAIConfig.exe
-          if git diff --quiet -- USER_AI/AzzyAIConfig.exe; then
+          # stage first: on the first run the file is not tracked yet and `git diff` would not see it
+          git add USER_AI/AzzyAIConfig.exe
+          if git diff --cached --quiet -- USER_AI/AzzyAIConfig.exe; then
             echo "USER_AI/AzzyAIConfig.exe already matches the build"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add USER_AI/AzzyAIConfig.exe
           # [skip ci] stops this commit from starting another run; the diff check above stops it
           # from looping even if that marker is ever ignored
           git commit -q -m "build: refresh the committed GUI from CI [skip ci]"
