@@ -26,11 +26,11 @@ client). Put `lua5.1` and `luac5.1` on `PATH`, or set the `LUA` and `LUAC`
 environment variables. Then, from the repository root:
 
 ```
-python tools\harness\run.py                          # syntax check and every scenario
-python tools\harness\run.py dieter bayeri_pferd      # only these scenarios
-python tools\harness\run.py --verbose sera           # also print every cast
-python tools\harness\run.py --profile crowd_dieter   # time and GetV calls per AI tick
-python tools\harness\run.py --globals                # globals assigned inside functions
+cargo run --release -p azzy-harness --                          # syntax check and every scenario
+cargo run --release -p azzy-harness -- dieter bayeri_pferd      # only these scenarios
+cargo run --release -p azzy-harness -- --verbose sera           # also print every cast
+cargo run --release -p azzy-harness -- --profile crowd_dieter   # time and GetV calls per AI tick
+cargo run --release -p azzy-harness -- --globals                # globals assigned inside functions
 ```
 
 The harness mocks the client API, loads the real `USER_AI` files and checks, for
@@ -43,7 +43,7 @@ the Windows app.
 
 - **A behavior change needs a scenario** in `tools\harness\scenarios.lua`
   (`expect`, `forbid`, `checks`). If you fix a bug, add the case that failed.
-- **A new option must be read by the AI**: `run.py` fails when a name in
+- **A new option must be read by the AI**: `azzy-harness` fails when a name in
   `USER_AI\Defaults.lua`, `USER_AI\H_Config.lua` or `USER_AI\M_Config.lua` appears nowhere in
   `USER_AI` (an option that changes nothing is a bug; `KiteParanoid` and `MoveStickyFight` were
   both like that). Add the reader before the default.
@@ -61,7 +61,7 @@ the Windows app.
   bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
   starts a new configuration from them). Copy the file into the `String.raw` body whenever you
   change it; `node tools\webgui_templates_check.js` compares them (Node, like the web GUI) and CI runs the same check.
-- **Keep it Lua 5.1.** Declare variables `local`; `run.py --globals` lists the
+- **Keep it Lua 5.1.** Declare variables `local`; `azzy-harness --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.
 

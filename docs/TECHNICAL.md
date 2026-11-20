@@ -12,8 +12,8 @@ otherwise. The version history is in [CHANGELOG.md](../CHANGELOG.md).
 The AI has its own release number, in [semantic versioning](https://semver.org/)
 form (`MAJOR.MINOR.PATCH`). It is set once, as `CVersion` in `USER_AI/Const_.lua`,
 and shown on the `Release:` line of `AAIStartH.txt` and `AAIStartM.txt` (the startup
-reports), so a bug report can say exactly which version it is about. `python
-tools\harness\run.py` fails if that number and the "Current release" line at the
+reports), so a bug report can say exactly which version it is about. `cargo run
+--release -p azzy-harness --` fails if that number and the "Current release" line at the
 top of [CHANGELOG.md](../CHANGELOG.md) differ.
 
 | Part | Raise it when |
@@ -33,7 +33,7 @@ If one differs, `File version error` is written in the startup report. The three
 (`AzzyUtil.lua`), and each holds just the `MAJOR.MINOR`: `"2.0"` for 2.0.x, `"2.1"` for
 2.1.x. The original AzzyAI used `"1.56"` in all four, so mixing old and new files is
 reported instead of failing in strange ways. Raise the three together when MAJOR or MINOR
-changes, never for a PATCH; `run.py` fails if one does not match `CVersion`.
+changes, never for a PATCH; `azzy-harness` fails if one does not match `CVersion`.
 
 The desktop app shows `CVersion` itself in **Help > About**, read from the loaded USER_AI, so
 there is no second copy to keep in sync. The web page has no number of its own.
@@ -201,13 +201,13 @@ cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync -- --fixtur
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
 ```
-python tools/harness/run.py              # static checks (below) + all scenarios
-python tools/harness/run.py dieter sera  # only some scenarios
-python tools/harness/run.py --verbose --trace bayeri
-python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
+cargo run --release -p azzy-harness --              # static checks (below) + all scenarios
+cargo run --release -p azzy-harness -- dieter sera  # only some scenarios
+cargo run --release -p azzy-harness -- --verbose --trace bayeri
+cargo run --release -p azzy-harness -- --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
-Before the scenarios, `run.py` runs the static checks and fails the run when one of them breaks:
+Before the scenarios, `azzy-harness` runs the static checks and fails the run when one of them breaks:
 syntax of every `.lua` file; the release number against `CHANGELOG.md`; and **every option in
 `Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
 read by some AI file** (`options: N in ..., M unread`). That last one exists because an option
@@ -257,7 +257,7 @@ On private-server scenarios the harness also prices every accepted cast and norm
 
 ```
 set HARNESS_DAMAGE=1                      # PowerShell: $env:HARNESS_DAMAGE='1'
-python tools/harness/run.py --skip-syntax eira_dummy
+cargo run --release -p azzy-harness -- --skip-syntax eira_dummy
 ```
 
 `damage.lua` is a Lua port of rAthena's Renewal pipeline for a homunculus attacking a monster: `status_calc_homunculus_`/`status_calc_misc` (ATK, MATK, hit), `battle_calc_weapon_attack` and `battle_calc_magic_attack` (skill ratio, RES/MRES, DEF/MDEF, element, hit count) and `is_attack_hitting`. The skill ratios come straight from each skill's `calculateSkillRatio()` in `src/map/skills/homunculus/*.cpp` (translated to Lua by `rathena-sync`), and the skill types, elements, hit counts and monster stats from `skill_db.yml` and `mob_db.yml`, all in `fixtures/rathena.lua`. `cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync -- --ref <sha> --fixture-only` regenerates only that file.
@@ -268,7 +268,7 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 
 ### Default preset tuning
 
-`USER_AI/H_Config.lua` was tuned with `python tools/harness/homun_bench.py <homunculus> [--mobs N] [--spregen SP/s] "<overrides>" ...`, which runs the `hbench_*` scenarios (180 s against a zero-defense Neutral dummy, or a pack of up to five) on top of the shipped preset and prints expected DPS, damage per SP and the casts of each configuration. For Eira, Bayeri and Sera the AI scores its enabled attacks (see "Skill choice by score" below); other skills follow the skill-class priority, so the preset turns skills on or off and sets the area threshold. **Read the numbers as a comparison between configurations, not as the DPS you will see in game.** The simulation uses hypothetical homunculus stats (`fixtures/homun_stats.lua`, level 275) and rAthena's skill data, and the real DPS depends on the server: the RO LATAM homunculi are much stronger than rAthena's, so absolute values, SP pools and SP regeneration differ, and a configuration that wins here can lose there when SP or sphere counts change the balance. Each homunculus has its own settings: `USER_AI/H_Config.lua` is the shared base and `USER_AI/Types/<Name>.lua` overrides only what differs. The table is the previous preset (`H_Config.lua` alone) against those current individual settings, with no overrides, expected DPS over 180 s and the change against the previous preset, at 60 SP/s (Eleanor: 22 SP/s). `python tools/harness/preset_report.py --old-ref 0cc1f35` regenerates it (and `docs/preset-tuning/`) in place:
+`USER_AI/H_Config.lua` was tuned with `cargo run --release -p azzy-harness -- bench <homunculus> [--mobs N] [--spregen SP/s] "<overrides>" ...`, which runs the `hbench_*` scenarios (180 s against a zero-defense Neutral dummy, or a pack of up to five) on top of the shipped preset and prints expected DPS, damage per SP and the casts of each configuration. For Eira, Bayeri and Sera the AI scores its enabled attacks (see "Skill choice by score" below); other skills follow the skill-class priority, so the preset turns skills on or off and sets the area threshold. **Read the numbers as a comparison between configurations, not as the DPS you will see in game.** The simulation uses hypothetical homunculus stats (`fixtures/homun_stats.lua`, level 275) and rAthena's skill data, and the real DPS depends on the server: the RO LATAM homunculi are much stronger than rAthena's, so absolute values, SP pools and SP regeneration differ, and a configuration that wins here can lose there when SP or sphere counts change the balance. Each homunculus has its own settings: `USER_AI/H_Config.lua` is the shared base and `USER_AI/Types/<Name>.lua` overrides only what differs. The table is the previous preset (`H_Config.lua` alone) against those current individual settings, with no overrides, expected DPS over 180 s and the change against the previous preset, at 60 SP/s (Eleanor: 22 SP/s). `cargo run --release -p azzy-harness -- preset-report --old-ref 0cc1f35` regenerates it (and `docs/preset-tuning/`) in place:
 
 <!-- preset-table:start -->
 
@@ -288,13 +288,13 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 - **Blast Forge on** is most of Dieter's damage: turning it off costs 82-85% (90,616 → 14,577 DPS against two monsters), since it has its own cooldown next to Lava Slide. Its ground unit is priced as hitting every monster in the area on every tick, so a monster that walks out of the area earns less. Magma Flow is priced as one splash hit per cast and its in-game effect, a buff that triggers on attacks, is not modelled, so its rows (turning it off looks like +4% against three monsters) are not reliable.
 - **Eleanor.** `Types/Eleanor.lua` keeps Blazing And Furious on: the AI only casts it with 6 or more spheres (`ELEANOR_BLAZING_MIN_SPHERES` in `AzzyUtil.lua`), so against one monster it is never cast (identical rows with it off) and against packs it adds 5-7% (213,518 against 199,288 DPS at 22 SP/s against three, 345,750 against 328,535 against five, 300,606 against 283,592 at 40 SP/s against three). The One Fighter Rises is what makes packs worth it: turning it off loses 52% against three monsters and changes nothing against one. `AutoComboSpheres` of 3 or 6 instead of the current 1 is within 1% against one monster and no different against three. Open: against two monsters the current settings are 15% below the previous preset (118,183 against 139,502 DPS); the casts differ (Sonic Claw 37, The One Fighter Rises 28, Blazing And Furious 3, against 14, 28 and 13 before). `AutoMobCount` is not the cause (1 and 2 give identical rows with two monsters). The previous preset also had `AutoComboSpheres` 10 where the current one has 1, which is the likely cause and has not been tested. The 22 SP/s regeneration is the one input measured on a single server.
 
-The complete comparison is in [`docs/preset-tuning/`](preset-tuning/README.md): the previous preset against the current settings (shared preset plus each `Types/` file) for every homunculus with 1, 2, 3 and 5 monsters, and rows with one option changed at a time (DPS, damage per SP, refused casts and the casts of each run). The same data is in two spreadsheets, [preset-before-after.csv](preset-tuning/preset-before-after.csv) and [preset-options.csv](preset-tuning/preset-options.csv). `tools\update-benchmarks.cmd` (or `python tools/harness/preset_report.py --old-ref 0cc1f35`) regenerates all three files and the table above in under a minute (`--old-ref <sha>` selects the preset to compare against; the tables here compare against `0cc1f35`).
+The complete comparison is in [`docs/preset-tuning/`](preset-tuning/README.md): the previous preset against the current settings (shared preset plus each `Types/` file) for every homunculus with 1, 2, 3 and 5 monsters, and rows with one option changed at a time (DPS, damage per SP, refused casts and the casts of each run). The same data is in two spreadsheets, [preset-before-after.csv](preset-tuning/preset-before-after.csv) and [preset-options.csv](preset-tuning/preset-options.csv). `cargo run --release -p azzy-harness -- preset-report --old-ref <sha>` regenerates all three files and the table above in under a minute (`--old-ref` defaults to `HEAD`, which compares the current preset with itself).
 
 What this does not prove: the stats are hypothetical and the real DPS depends on the server (the RO LATAM homunculi are much stronger than rAthena's), so the ranking of two configurations can change with the real stats and SP; the model is validated against measured damage only for Sonic Claw and Xeno Slasher, the SP regeneration of the other homunculi is not measured (their decisions held from 30 to 400 SP/s), `AutoSkillDelay` made no difference in these runs, and none of it was run on an official server, whose skill data differ (`ServerType` stays `SERVER_OFFICIAL`). The GUIs' own defaults and `Defaults.lua` were not changed. Two corrections to the damage model came out of this work: Poison Mist's unit only applies a status (it deals no damage; later corrected: it hits with magic damage every tick) and Tinder Breaker, CBC and EQC add a flat 2,500, 4,000 and 6,000 per level after DEF and element.
 
 ### Eleanor benchmark
 
-`python tools/harness/eleanor_bench.py` runs the `eleanor_bench_*` scenarios (180 simulated seconds on the training dummy, the max-level Eleanor of `fixtures/homun_stats.lua`, 3,381 SP, no refill) for a no-skill baseline, Sonic Claw only, and the matrix of the test server's benchmark: fighting or grappling style crossed with Blazing And Furious and The One Fighter Rises. The runs are deterministic. Scenario options added for it: `swingMs` (the homunculus keeps swinging by itself while the AI asks for the attack), `castPauseMs` (every accepted cast pauses the swinging), `incomingHitMs` (an attacker the AI never sees hits her, which is what feeds grappling spheres) and `startStyle`. Two values are calibrated on the measured Sonic Claw sessions, not taken from the server code: 129 ms per swing (11,500 DPS without skills is about 7.8 swings/s) and 550 ms of swinging lost per cast (with Sonic Claw she swung only about 3.9 times/s). SP regeneration is 22 SP/s (20.2 and 22.8 SP/s measured).
+`cargo run --release -p azzy-harness -- eleanor` runs the `eleanor_bench_*` scenarios (180 simulated seconds on the training dummy, the max-level Eleanor of `fixtures/homun_stats.lua`, 3,381 SP, no refill) for a no-skill baseline, Sonic Claw only, and the matrix of the test server's benchmark: fighting or grappling style crossed with Blazing And Furious and The One Fighter Rises. The runs are deterministic. Scenario options added for it: `swingMs` (the homunculus keeps swinging by itself while the AI asks for the attack), `castPauseMs` (every accepted cast pauses the swinging), `incomingHitMs` (an attacker the AI never sees hits her, which is what feeds grappling spheres) and `startStyle`. Two values are calibrated on the measured Sonic Claw sessions, not taken from the server code: 129 ms per swing (11,500 DPS without skills is about 7.8 swings/s) and 550 ms of swinging lost per cast (with Sonic Claw she swung only about 3.9 times/s). SP regeneration is 22 SP/s (20.2 and 22.8 SP/s measured).
 
 Checked against the measured Sonic Claw sessions, the benchmark is 1.7% above one (75,747 against 74,476 DPS, `AutoSkillDelay` 0) and 10.6% above the other (65,941 against 59,602, `AutoSkillDelay` 200): the simulated client has no latency per cast. Only Sonic Claw alone is validated that way. The combo rows predict casts about twice as often as the earlier measured sessions (61 Sonic Claw > Silvervein Rush > Midnight Frenzy cycles in 180 s against 23), but those ran before the Eleanor sphere and chain fixes and with 200 ms of extra delay, so they say nothing yet about the current AI. Sensitivity of the combo advantage over Sonic Claw alone (+43% by default) to the two calibrated values: +33% without swing pauses at 100 ms per swing, +45% at 200 ms per swing; with a 1,000 ms pause per cast Sonic Claw alone collapses to 12,401 DPS, because her spheres come from her own swings.
 
@@ -402,4 +402,4 @@ they cannot diagnose every server refusal or configuration conflict.
 The client's `TraceAI` calls are developer diagnostics. They are **off by default**
 (`TraceAIEnabled = 0` in `Const_.lua`): the arguments are not even evaluated, which saves a few
 percent in combat. Set `TraceAIEnabled = 1` in `H_Extra.lua` to get them back; in the simulator,
-`python tools/harness/run.py --trace <scenario>` enables them for the run.
+`cargo run --release -p azzy-harness -- --trace <scenario>` enables them for the run.

@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
       # Build 5.1.5 from source first: it is deterministic and independent of the Ubuntu
       # mirrors, which are occasionally unreachable from runners ("Temporary failure
       # resolving azure.archive.ubuntu.com"). apt stays as a fallback, but every apt call
@@ -46,7 +50,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run harness
-        run: python tools/harness/run.py
+        run: cargo run --release --manifest-path tools/Cargo.toml -p azzy-harness --
 
   webgui:
     name: Web GUI syntax
