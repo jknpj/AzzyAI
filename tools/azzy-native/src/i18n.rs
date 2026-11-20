@@ -312,6 +312,19 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "Nueva versión {0} disponible.",
     ),
     ("Dismiss", "Dispensar", "Descartar"),
+    // The web GUI moved its update flow to the host and no longer ships these strings.
+    ("Update", "Atualizar", "Actualizar"),
+    ("Update AI from GitHub", "Atualizar a IA do GitHub", "Actualizar la IA desde GitHub"),
+    (
+        "Update AI from GitHub...",
+        "Atualizar a IA do GitHub...",
+        "Actualizar la IA desde GitHub...",
+    ),
+    (
+        "Download the latest AI from GitHub and apply it here? Files you edited (H_Config.lua, tactics, extra, A_Friends) are kept and the replaced ones are copied to backup/.",
+        "Baixar a IA mais recente do GitHub e aplicar aqui? Os arquivos que você editou (H_Config.lua, táticas, extras, A_Friends) são mantidos e os substituídos vão para backup/.",
+        "¿Descargar la última IA de GitHub y aplicarla aquí? Los archivos que editaste (H_Config.lua, tácticas, extras, A_Friends) se conservan y los reemplazados van a backup/.",
+    ),
     ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
     (
         "update applied; reload to read the new files (unsaved edits kept)",
