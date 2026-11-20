@@ -282,8 +282,8 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "Recarga para leer los archivos nuevos (los cambios sin aplicar se descartarán).",
     ),
     ("Update failed: {0}", "Falha na atualização: {0}", "Error al actualizar: {0}"),
-    ("Update from:", "Baixar de:", "Descargar de:"),
-    ("Default", "Padrão", "Predeterminado"),
+    ("Folder to update:", "Pasta para atualizar:", "Carpeta a actualizar:"),
+    ("Folder not found: {0}", "Pasta não encontrada: {0}", "Carpeta no encontrada: {0}"),
     ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
     (
         "update applied; reload to read the new files (unsaved edits kept)",

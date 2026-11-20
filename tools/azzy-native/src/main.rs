@@ -58,33 +58,8 @@ enum Page {
 
 const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 
-/// The shipped "Update AI from GitHub" source (the `main` branch zip). `AZZY_UPDATE_URL` points it
-/// at another archive, which is how the tests run it against a local zip.
+/// The official source: the update always comes from the repository's `main` branch.
 const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
-
-/// The last custom update URL (a fork, branch or local zip). `AZZY_UPDATE_URL` wins over it.
-fn saved_update_url() -> Option<String> {
-    let path = i18n::config_path("update-url")?;
-    let text = std::fs::read_to_string(path).ok()?;
-    let text = text.trim().to_string();
-    if text.is_empty() {
-        None
-    } else {
-        Some(text)
-    }
-}
-
-fn save_update_url(url: &str) {
-    let Some(path) = i18n::config_path("update-url") else { return };
-    if let Some(dir) = path.parent() {
-        let _ = std::fs::create_dir_all(dir);
-    }
-    if url.trim() == UPDATE_URL {
-        let _ = std::fs::remove_file(path);
-    } else {
-        let _ = std::fs::write(path, format!("{}\n", url.trim()));
-    }
-}
 
 enum UpdateEvent {
     Applying,
@@ -133,7 +108,8 @@ struct App {
     io_status: String,
     update_open: bool,
     update_overwrite_presets: bool,
-    update_url: String,
+    update_dir: String,
+    update_target: PathBuf,
     update_state: UpdateState,
     update_rx: Option<std::sync::mpsc::Receiver<UpdateEvent>>,
     write_in_place: bool,
@@ -409,10 +385,8 @@ impl App {
             io_status: String::new(),
             update_open: false,
             update_overwrite_presets: false,
-            update_url: std::env::var("AZZY_UPDATE_URL")
-                .ok()
-                .or_else(saved_update_url)
-                .unwrap_or_else(|| UPDATE_URL.to_string()),
+            update_dir: String::new(),
+            update_target: PathBuf::new(),
             update_state: UpdateState::Idle,
             update_rx: None,
             write_in_place,
@@ -1560,7 +1534,7 @@ impl App {
                     let staged = !report.staged.is_empty();
                     self.update_state = UpdateState::Done(report);
                     keep = false;
-                    if self.changed() == 0 {
+                    if self.update_target == self.user_ai_dir() && self.changed() == 0 {
                         self.reload();
                         self.status = i18n::tr("updated from GitHub");
                     } else {
@@ -1599,9 +1573,17 @@ impl App {
         if self.update_rx.is_some() {
             return;
         }
-        let dir = self.user_ai_dir();
+        let dir = PathBuf::from(self.update_dir.trim());
+        if !dir.is_dir() {
+            self.update_state = UpdateState::Failed(i18n::tr_args(
+                "Folder not found: {0}",
+                &[&dir.display().to_string()],
+            ));
+            return;
+        }
+        self.update_target = dir.clone();
         let overwrite = self.update_overwrite_presets;
-        let url = self.update_url.clone();
+        let url = UPDATE_URL.to_string();
         let (tx, rx) = std::sync::mpsc::channel();
         self.update_rx = Some(rx);
         self.update_state = UpdateState::Downloading;
@@ -1625,12 +1607,17 @@ impl App {
         if !self.update_open {
             return;
         }
+        if self.update_dir.trim().is_empty() {
+            self.update_dir = self.user_ai_dir().display().to_string();
+        }
         let mut open = self.update_open;
         egui::Window::new(i18n::tr("Update AI from GitHub"))
             .open(&mut open)
             .collapsible(false)
-            .resizable(true)
+            .resizable(false)
             .default_width(560.0)
+            .min_width(560.0)
+            .max_width(560.0)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .show(ctx, |ui| {
                 let busy = matches!(
@@ -1645,28 +1632,14 @@ impl App {
                     .size(12.0),
                 );
                 ui.add_space(4.0);
-                ui.label(
-                    egui::RichText::new(self.user_ai_dir().display().to_string())
-                        .color(p.muted)
-                        .size(11.0),
-                );
-                ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new(i18n::tr("Update from:")).color(p.text));
-                    let width = (ui.available_width() - 80.0).max(160.0);
+                    ui.label(egui::RichText::new(i18n::tr("Folder to update:")).color(p.text));
                     ui.add_enabled(
                         !busy,
-                        egui::TextEdit::singleline(&mut self.update_url)
-                            .desired_width(width)
-                            .hint_text(UPDATE_URL),
+                        egui::TextEdit::singleline(&mut self.update_dir)
+                            .desired_width(400.0)
+                            .id_source("update-dir"),
                     );
-                    if ui
-                        .add_enabled(!busy, egui::Button::new(i18n::tr("Default")))
-                        .clicked()
-                    {
-                        self.update_url = UPDATE_URL.to_string();
-                        save_update_url(&self.update_url);
-                    }
                 });
                 ui.add_space(4.0);
                 ui.checkbox(
@@ -1747,7 +1720,6 @@ impl App {
                         )
                         .clicked()
                     {
-                        save_update_url(&self.update_url);
                         self.start_update(ctx);
                     }
                     if ui.button(i18n::tr("Close")).clicked() {
