@@ -14,9 +14,9 @@ badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied f
 
 - **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: `tools/webgui-data.js`
   dumps `homSchema.js`/`merSchema.js` (263 options with categories, types, enums, defaults,
-  min/max and the English descriptions) to `data/options.json`, and the web GUI's translations to
-  `data/i18n.json`; both are committed and checked for drift in CI
-  (`node tools/webgui-data.js --check`).
+  min/max and the English descriptions) to `data/options.json`, the web GUI's translations to
+  `data/i18n.json` and the skill data to `data/skilldata.json`; all are committed and checked for
+  drift in CI (`node tools/webgui-data.js --check`).
 - Search over names **and** descriptions, category filter, "only non-default" filter, changed
   counter, and a description panel for the selected option (with category, type, range, default).
 - Typed editors: `bool` checkbox, `int`/`double` text field with the same min/max clamp as the web
@@ -93,8 +93,13 @@ The **skill icons** from `webgui/img/skills` (50 PNGs) are packed once into
 homunculus, the names and the same `match` substrings as `webgui/skills.js`. The Homunculus tab
 has the **Homunculus skills** card (grouped by type): click a skill to show only its settings,
 click the chip to clear. The grid also shows the icon before each mapped setting name, and the
-tooltip/description names the skill. Nothing is loaded at runtime: both files are embedded like
-the schema and the monster database.
+tooltip/description names the skill.
+- **Skill card**: for a setting that belongs to a skill, the Description tab shows the same header
+  as the web GUI — the icon, the official name, the numbers at max level (SP, cast, cooldown,
+  duration) and the in-game description from Divine Pride, which lists the values per level. The
+  `^RRGGBB` client colour codes are rendered as coloured text. The data comes from
+  `webgui/skills.js` + `webgui/skilldata.js`, dumped to `data/skilldata.json` by the same script as
+  the schema. Nothing is loaded at runtime: the files are embedded like the monster database.
 
 ## Still missing for parity with the web GUI
 

@@ -161,6 +161,106 @@ fn same_value(kind: &str, a: &str, b: &str) -> bool {
     }
 }
 
+/// Milliseconds as the web GUI shows them: "{0} min" for whole minutes, otherwise "{0} s" with
+/// the decimal separator of the language.
+fn seconds_text(ms: i64) -> String {
+    let seconds = ms as f64 / 1000.0;
+    if seconds >= 60.0 && (seconds % 60.0).abs() < f64::EPSILON {
+        return i18n::tr_args("{0} min", &[&format!("{}", (seconds / 60.0) as i64)]);
+    }
+    let mut text = format!("{}", (seconds * 10.0).round() / 10.0);
+    if i18n::lang() != i18n::Lang::En {
+        text = text.replace('.', ",");
+    }
+    i18n::tr_args("{0} s", &[&text])
+}
+
+/// "Max level 10 · SP 25–70 · Cast 2 s (1,5 s fixed) · Cooldown 3 s · Duration 15 s", same as the
+/// web GUI's skill card.
+fn stats_line(skill: &skills::Skill) -> String {
+    let stats = skill.stats;
+    let mut parts = vec![i18n::tr_args(
+        "Max level {0}",
+        &[&skill.maxlv.to_string()],
+    )];
+    if stats[0] == stats[1] {
+        parts.push(format!("SP {}", stats[0]));
+    } else {
+        parts.push(format!("SP {}\u{2013}{}", stats[0], stats[1]));
+    }
+    if stats[2] != 0 || stats[3] != 0 {
+        let mut cast = i18n::tr_args("Cast {0}", &[&seconds_text(stats[2] + stats[3])]);
+        if stats[2] != 0 && stats[3] != 0 {
+            cast.push_str(&format!(
+                " ({})",
+                i18n::tr_args("{0} fixed", &[&seconds_text(stats[2])])
+            ));
+        } else if stats[2] != 0 {
+            cast.push_str(&format!(" ({})", i18n::tr("fixed")));
+        }
+        parts.push(cast);
+    }
+    if stats[4] != 0 {
+        parts.push(i18n::tr_args("Cooldown {0}", &[&seconds_text(stats[4])]));
+    }
+    if stats[5] != 0 {
+        parts.push(i18n::tr_args("Duration {0}", &[&seconds_text(stats[5])]));
+    }
+    parts.join(" \u{00b7} ")
+}
+
+/// Ragnarok's in-game text: ^RRGGBB switches the colour (^000000 is the normal text colour),
+/// like the web GUI's roText().
+fn ro_text(ui: &mut egui::Ui, text: &str, base: egui::Color32) {
+    fn append(job: &mut egui::text::LayoutJob, chunk: &str, color: egui::Color32) {
+        if chunk.is_empty() {
+            return;
+        }
+        job.append(
+            chunk,
+            0.0,
+            egui::TextFormat {
+                font_id: egui::FontId::proportional(12.0),
+                color,
+                ..Default::default()
+            },
+        );
+    }
+    let mut job = egui::text::LayoutJob::default();
+    job.wrap.max_width = ui.available_width();
+    let bytes = text.as_bytes();
+    let mut color = base;
+    let mut buffer = String::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'^'
+            && i + 7 <= bytes.len()
+            && bytes[i + 1..i + 7].iter().all(u8::is_ascii_hexdigit)
+        {
+            append(&mut job, &buffer, color);
+            buffer.clear();
+            let hex = std::str::from_utf8(&bytes[i + 1..i + 7]).unwrap_or("000000");
+            let value = u32::from_str_radix(hex, 16).unwrap_or(0);
+            color = if value == 0 {
+                base
+            } else {
+                egui::Color32::from_rgb(
+                    ((value >> 16) & 0xff) as u8,
+                    ((value >> 8) & 0xff) as u8,
+                    (value & 0xff) as u8,
+                )
+            };
+            i += 7;
+        } else {
+            let len = text[i..].chars().next().map(char::len_utf8).unwrap_or(1);
+            buffer.push_str(&text[i..i + len]);
+            i += len;
+        }
+    }
+    append(&mut job, &buffer, color);
+    ui.label(job);
+}
+
 /// What the UI shows for an enum/serverType default ("Chasing"), not the raw token ("-1").
 fn default_label(schema: &Schema, option: &OptionDef) -> String {
     match option.kind.as_str() {
@@ -302,6 +402,70 @@ impl App {
             Unit::Mercenary => "mer",
         };
         i18n::desc(scope, &option.name, &option.description)
+    }
+
+    /// The skill header the web GUI shows above a setting's description: icon, official name, the
+    /// numbers at max level and the in-game description (which lists the per-level values).
+    fn skill_card(&self, ui: &mut egui::Ui, p: &Palette, skill: &skills::Skill) {
+        egui::Frame::none()
+            .fill(p.grid)
+            .stroke(egui::Stroke::new(1.0_f32, p.border))
+            .rounding(egui::Rounding::same(4.0))
+            .inner_margin(egui::Margin::same(8.0))
+            .show(ui, |ui| {
+                ui.set_min_width(ui.available_width());
+                ui.horizontal(|ui| {
+                    if let Some(texture) = self.skill_texture.as_ref() {
+                        let (rect, _) =
+                            ui.allocate_exact_size(egui::vec2(26.0, 26.0), egui::Sense::hover());
+                        ui.painter().image(
+                            texture.id(),
+                            rect,
+                            self.skills.icon_uv(skill.icon),
+                            egui::Color32::WHITE,
+                        );
+                    }
+                    ui.vertical(|ui| {
+                        ui.label(
+                            egui::RichText::new(skill.name_for(self.lang))
+                                .color(p.text)
+                                .strong()
+                                .size(13.5),
+                        );
+                        ui.label(
+                            egui::RichText::new(stats_line(skill))
+                                .color(p.muted)
+                                .size(10.5),
+                        );
+                        ui.label(
+                            egui::RichText::new(i18n::tr(
+                                "Official LATAM values at max level.",
+                            ))
+                            .color(p.muted)
+                            .italics()
+                            .size(10.0),
+                        );
+                    });
+                });
+                let description = skill.description_for(self.lang);
+                if description.is_empty() {
+                    return;
+                }
+                ui.add_space(2.0);
+                egui::CollapsingHeader::new(i18n::tr("In-game description"))
+                    .id_source(("skill-description", skill.id))
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ro_text(ui, description, p.text);
+                        ui.hyperlink_to(
+                            format!(
+                                "{} Divine Pride",
+                                i18n::tr("Source:"),
+                            ),
+                            format!("https://www.divine-pride.net/database/skill/{}", skill.id),
+                        );
+                    });
+            });
     }
 
     fn schema(&self) -> &Schema {
@@ -1741,6 +1905,14 @@ impl App {
                     .auto_shrink([false, false])
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
+                        if self.unit == Unit::Homunculus {
+                            if let Some(skill) = self.skills.for_setting(&option.name) {
+                                self.skill_card(ui, p, skill);
+                                ui.add_space(8.0);
+                                ui.separator();
+                                ui.add_space(4.0);
+                            }
+                        }
                         ui.label(
                             egui::RichText::new(self.description(option))
                                 .color(p.text)
@@ -2313,6 +2485,49 @@ mod tests {
         assert!(pos.y > facts_y, "description overlaps the facts line");
         assert!(size.x <= 380.0, "description is wider than the card: {size:?}");
         assert!(size.y > 20.0, "description was not wrapped into lines: {size:?}");
+    }
+
+    #[test]
+    fn the_description_card_shows_the_skill_card() {
+        // Like the web GUI: a setting that belongs to a skill gets the official name, the numbers
+        // at max level and the in-game description (which lists the per-level values).
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        i18n::set_lang(i18n::Lang::En);
+        let mut app = App::new(&paths, false).unwrap();
+        app.selected = Some("UseDieterMagmaFlow".into());
+        let ctx = egui::Context::default();
+        let input = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            ..Default::default()
+        };
+        let output = ctx.run(input, |ctx| app.draw(ctx));
+        let mut texts = Vec::new();
+        for clipped in &output.shapes {
+            if let egui::Shape::Text(text) = &clipped.shape {
+                texts.push((text.pos, text.galley.text().to_string()));
+            }
+        }
+        let find = |needle: &str| texts.iter().find(|(_, text)| text.contains(needle));
+        let title = find("Magma Flow").expect("skill title");
+        let stats = find("Max level 5").expect("skill stats");
+        let in_game = find("Max Lv").expect("in-game description");
+        assert!(stats.0.y > title.0.y, "stats must be under the skill name");
+        assert!(in_game.0.y > stats.0.y, "in-game text must be under the stats");
+        // the setting's own description still comes after the skill card
+        let setting = find("Use the Dieter buff").expect("setting description");
+        assert!(setting.0.y > in_game.0.y, "setting description must follow the skill card");
+        i18n::set_lang(i18n::Lang::En);
     }
 
     #[test]
