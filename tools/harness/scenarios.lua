@@ -1371,6 +1371,67 @@ SCENARIOS = {
 			end,
 		} },
 
+	-- Hero Saga: this client's watcher misses instant Tinder Breaker casts the server accepted (9 of 28
+	-- in the live log). A "failed" Tinder must keep the combo window and the sphere estimate, otherwise
+	-- CBC is never sent and The One Fighter Rises refills 154 SP for nothing.
+	eleanor_hero_unconfirmed_tinder = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = cluster,
+		private = true, startStyle = "grappling", minAttacks = 0, sp = 3203, incomingHitMs = 200,
+		set = { AutoComboMode = 2, AutoComboSpheres = 4, AutoMobCount = 1, AutoMobMode = 2,
+			UseEleanorSonicClaw = 0, UseEleanorTinderBreaker = 1, UseEleanorBlazingAndFurious = 0,
+			UseEleanorTheOneFighterRises = 1, EleanorTrustCastDelay = 1, EleanorComboGap = 1100,
+			EleanorFollowGap = 500, EleanorComboWindow = 3000, EleanorCBCLevel = 1, EleanorEQCLevel = 1 },
+		expect = { "Tinder Breaker", "Continuous Brandishing Combo", "Eternal Quickening Combo" },
+		afterLoad = function()
+			SkillInfo[MH_TINDER_BREAKER][5] = { 0, 0, 0, 0, 0 } -- instant on the Hero Saga client
+			MyTact[0][TACT_SKILLCLASS] = CLASS_GRAPPLE_2
+			FORCED, KEPT_WINDOW, LOST_SPHERES = 0, 0, 0
+			local realAI = AI
+			local pending, seeded = false, false
+			AI = function(id)
+				if DoneInit ~= 0 and not seeded and CastSkill == 0 then
+					seeded = true
+					HarnessServer.style = "grappling"
+					HarnessServer.spheres = 10
+					EleanorMode = GRAPPLING_MODE
+					MySpheres = 10
+				end
+				if not pending and CastSkill == MH_TINDER_BREAKER and CastSkillTime > 0 then
+					-- let the instant-cast watcher give up, and keep the SP watcher from confirming it
+					pending = true
+					CastSkillTime = GetTick() - 5000
+					CastSkillSP = nil
+					MyLastSP = GetV(V_SP, MyID)
+				end
+				realAI(id)
+				if pending then
+					pending = false
+					FORCED = FORCED + 1
+					if ComboSCTimeout > GetTick() then KEPT_WINDOW = KEPT_WINDOW + 1 end
+					if (MySpheres or 0) <= 0 then LOST_SPHERES = LOST_SPHERES + 1 end
+				end
+			end
+		end,
+		checks = {
+			["the watcher missed several Tinder casts"] = function() return FORCED >= 3 end,
+			["a missed Tinder keeps the combo window"] = function() return KEPT_WINDOW == FORCED end,
+			["a missed Tinder keeps the sphere estimate"] = function() return LOST_SPHERES == 0 end,
+			["ToFR never interrupts a Tinder->CBC window"] = function()
+				local openUntil = 0
+				for _, cast in ipairs(HarnessCasts) do
+					if cast.ok then
+						if cast.skill == MH_EQC then
+							openUntil = 0
+						elseif cast.skill == MH_TINDER_BREAKER or cast.skill == MH_CBC then
+							openUntil = cast.t + 2000
+						elseif cast.skill == MH_THE_ONE_FIGHTER_RISES and cast.t < openUntil then
+							return false
+						end
+					end
+				end
+				return true
+			end,
+		} },
+
 	-- many monsters on screen: must keep fighting and not error out
 	crowd_bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = crowd, expect = { "Heilige Stange" } },
 	crowd_sera = { homuntype = 50, skills = SERA_SKILLS, mobs = crowd, expect = { "Poison Mist" } },

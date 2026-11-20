@@ -982,7 +982,7 @@ function OnCHASE_ST()
             local skilltype = v[1]
             if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                 if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                    if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and skilltouse[1] == GRAPPLE_ATK) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                    if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and (skilltouse[1] == GRAPPLE_ATK or ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                         local mobskill_level = skill_level
                         if AoEFixedLevel == 1 then
                             mobskill_level = v[3]
@@ -1032,7 +1032,7 @@ function OnCHASE_ST()
         
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
-        if skilltouse[2] == 0 and MyHomunType == ELEANOR and (EleanorTrustCastDelay ~= 1 or UseEleanorSonicClaw == 1) and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+        if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
             if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
             local fallbackSkill = MH_SONIC_CRAW
             local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -1279,7 +1279,7 @@ function OnATTACK_ST()
                 if TraceAIEnabled ~= 0 then TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3]) end
                 if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                        if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and skilltouse[1] == GRAPPLE_ATK) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                        if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and (skilltouse[1] == GRAPPLE_ATK or ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                             local mobskill_level = skill_level
                             if AoEFixedLevel == 1 then
                                 mobskill_level = v[3]
@@ -1340,7 +1340,7 @@ function OnATTACK_ST()
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
-            if skilltouse[2] == 0 and MyHomunType == ELEANOR and (EleanorTrustCastDelay ~= 1 or UseEleanorSonicClaw == 1) and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
+            if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
                 if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
 				local fallbackSkill = MH_SONIC_CRAW
             	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
@@ -4020,12 +4020,17 @@ function AI(myid)
 		-- hits before the AI tries again.
 		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]
 		if MyHomunType == ELEANOR and CastSkillState == 0 and refusedCost ~= nil and refusedCost > 0 then
-			if CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER then
+			-- Hero Saga: the watcher also misses instant Tinder Breaker casts the server took. Keeping the
+			-- combo window and the sphere estimate here is what lets CBC follow a "failed" Tinder.
+			local trustTinder = EleanorTrustCastDelay == 1 and CastSkill == MH_TINDER_BREAKER
+			if (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER) and not trustTinder then
 				ComboSCTimeout = 0
 				ComboSVTimeout = 0
 			end
 			if modeResynced then
 				MySpheres = math.min(10, MySpheres + refusedCost)
+			elseif trustTinder then
+				-- keep the sphere estimate: DoSkill already took the cost off it
 			elseif CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
 				-- Follow-ups can fail because their combo or target disappeared, not only
 				-- because of spheres. Do not erase the estimate for those failures.
