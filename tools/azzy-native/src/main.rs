@@ -961,6 +961,7 @@ impl App {
 
     fn navbar(&mut self, ctx: &egui::Context, p: &Palette) {
         egui::TopBottomPanel::top("navbar")
+            .exact_height(46.0)
             .frame(egui::Frame::none().fill(p.title1))
             .show(ctx, |ui| {
                 theme::band(ui, 46.0, p.title1, p.title2, |ui| {
@@ -1054,6 +1055,7 @@ impl App {
 
     fn footer(&mut self, ctx: &egui::Context, p: &Palette) {
         egui::TopBottomPanel::bottom("footer")
+            .exact_height(44.0)
             .frame(egui::Frame::none().fill(p.bg1))
             .show(ctx, |ui| {
                 theme::band(ui, 44.0, p.tab2, p.bg1, |ui| {
@@ -1320,7 +1322,13 @@ impl App {
                     self.grid_card(ui, p, grouped, grid_h);
                 },
             );
-            self.description_card(ui, p, grid_h);
+            // Bound the card to the row height: its scroll area is auto_shrink=false and would
+            // otherwise grow to the whole panel, pushing the legend under the footer.
+            ui.allocate_ui_with_layout(
+                egui::vec2(desc_w, grid_h),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| self.description_card(ui, p, grid_h),
+            );
         });
         ui.add_space(4.0);
         self.legend(ui, p, grouped);
@@ -2528,6 +2536,51 @@ mod tests {
         let setting = find("Use the Dieter buff").expect("setting description");
         assert!(setting.0.y > in_game.0.y, "setting description must follow the skill card");
         i18n::set_lang(i18n::Lang::En);
+    }
+
+    #[test]
+    fn the_legend_stays_above_the_footer() {
+        // The footer band is 44 px tall; if the panels do not reserve that (or a card grows past the
+        // row height), the legend is painted under the footer and reads clipped.
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        i18n::set_lang(i18n::Lang::En);
+        let mut app = App::new(&paths, false).unwrap();
+        let ctx = egui::Context::default();
+        let input = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            ..Default::default()
+        };
+        let output = ctx.run(input, |ctx| app.draw(ctx));
+        let mut legend = None;
+        let mut quit = None;
+        for clipped in &output.shapes {
+            if let egui::Shape::Text(text) = &clipped.shape {
+                let content = text.galley.text();
+                if content.contains("changed from default") {
+                    legend = Some(text.pos.y + text.galley.size().y);
+                }
+                if content == "Quit" {
+                    quit = Some(text.pos.y);
+                }
+            }
+        }
+        let legend_bottom = legend.expect("legend line");
+        let quit_top = quit.expect("footer button");
+        assert!(
+            legend_bottom < quit_top,
+            "the legend ({legend_bottom}) overlaps the footer ({quit_top})"
+        );
     }
 
     #[test]
