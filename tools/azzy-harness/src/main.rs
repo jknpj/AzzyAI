@@ -418,6 +418,21 @@ pub(crate) fn run_scenario_output(
     if merc.is_file() {
         let _ = fs::copy(&merc, dst.join("M_Config.lua"));
     }
+    // Branch-specific presets: a file under fixtures/Types overrides the checked-in Types preset for
+    // the run, so the scenarios always exercise the generic AI. run.py did this before the Rust port;
+    // without it a branch whose Types/<homunculus>.lua is tuned (the hero branch's Eleanor) fails
+    // scenarios that assume the default preset.
+    if option("HARNESS_NO_TYPES").is_none() {
+        let fixtures_types = harness.join("fixtures").join("Types");
+        if let Ok(entries) = fs::read_dir(&fixtures_types) {
+            let _ = fs::create_dir_all(dst.join("Types"));
+            for entry in entries.flatten() {
+                if entry.path().is_file() {
+                    let _ = fs::copy(entry.path(), dst.join("Types").join(entry.file_name()));
+                }
+            }
+        }
+    }
     let mut command = Command::new(lua);
     command
         .arg(harness.join("harness.lua"))
