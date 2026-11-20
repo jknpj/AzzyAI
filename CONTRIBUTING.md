@@ -26,11 +26,11 @@ client). Put `lua5.1` and `luac5.1` on `PATH`, or set the `LUA` and `LUAC`
 environment variables. Then, from the repository root:
 
 ```
-python tools\harness\run.py                          # syntax check and every scenario
-python tools\harness\run.py dieter bayeri_pferd      # only these scenarios
-python tools\harness\run.py --verbose sera           # also print every cast
-python tools\harness\run.py --profile crowd_dieter   # time and GetV calls per AI tick
-python tools\harness\run.py --globals                # globals assigned inside functions
+cargo run --release -p azzy-harness --                          # syntax check and every scenario
+cargo run --release -p azzy-harness -- dieter bayeri_pferd      # only these scenarios
+cargo run --release -p azzy-harness -- --verbose sera           # also print every cast
+cargo run --release -p azzy-harness -- --profile crowd_dieter   # time and GetV calls per AI tick
+cargo run --release -p azzy-harness -- --globals                # globals assigned inside functions
 ```
 
 The harness mocks the client API, loads the real `USER_AI` files and checks, for
@@ -43,7 +43,7 @@ the Windows app.
 
 - **A behavior change needs a scenario** in `tools\harness\scenarios.lua`
   (`expect`, `forbid`, `checks`). If you fix a bug, add the case that failed.
-- **A new option must be read by the AI**: `run.py` fails when a name in
+- **A new option must be read by the AI**: `azzy-harness` fails when a name in
   `USER_AI\Defaults.lua`, `USER_AI\H_Config.lua` or `USER_AI\M_Config.lua` appears nowhere in
   `USER_AI` (an option that changes nothing is a bug; `KiteParanoid` and `MoveStickyFight` were
   both like that). Add the reader before the default.
@@ -53,15 +53,15 @@ the Windows app.
   - the web page: `webgui\homSchema.js` (and the `AzzyHomHgOnly` list) or
     `merSchema.js`, plus `i18n.desc.pt.js` and `i18n.desc.es.js`; the native desktop app reads
     that schema (and the descriptions) directly, so there is nothing to add there;
-  - `node tools\webgui-data.js` regenerates `tools\azzy-native\data`, and CI fails if it is
-    stale;
+  - the native app reads the schema and translations from `webgui\data`, generated there by
+    `tools\dump-data.js`; run it after changing the schema and commit the JSON;
   - the manual, in the three languages if you can (say so in the pull request if you cannot).
 
 - **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
   bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
   starts a new configuration from them). Copy the file into the `String.raw` body whenever you
-  change it; `node tools\webgui_templates_check.js` compares them (Node, like the web GUI) and CI runs the same check.
-- **Keep it Lua 5.1.** Declare variables `local`; `run.py --globals` lists the
+  change it; `cargo run --release -p azzy-harness -- templates-check` compares them and CI runs the same check.
+- **Keep it Lua 5.1.** Declare variables `local`; `azzy-harness --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.
 
@@ -71,7 +71,7 @@ Do not edit these by hand. Regenerate them:
 
 | File | How |
 |---|---|
-| `USER_AI\MobInfo.lua`, `tools\harness\fixtures\rathena.lua`, `webgui\mobdata.js` | `python tools\harness\rathena_sync.py` (standard library only; behind a proxy set `HTTPS_PROXY` first). `tools\rathena-sync` is the same tool in Rust: `cargo run --release --manifest-path tools\Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]` (the `tools\Cargo.toml` workspace builds both Rust tools into `tools\target`), 5x faster and byte-identical output (only the generation date differs) |
+| `USER_AI\MobInfo.lua`, `tools\harness\fixtures\rathena.lua`, `webgui\mobdata.js` | `cargo run --release --manifest-path tools\Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]` (behind a proxy set `HTTPS_PROXY` first; only the generation date differs between runs) |
 | `webgui\skilldata.js`, `webgui\img\skills\` | `python skilldata_sync.py` inside `webgui` (needs a free Divine Pride API key in `DIVINEPRIDE_API_KEY`) |
 
 ### Do not commit

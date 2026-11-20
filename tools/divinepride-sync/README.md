@@ -1,6 +1,6 @@
 # divinepride-sync
 
-Rust port of `tools/harness/divinepride_sync.py`: downloads the homunculus skill data AzzyAI uses
+Downloads the homunculus skill data AzzyAI uses
 from the Divine Pride API and writes the same fixture, byte for byte.
 
 Output: `tools/harness/fixtures/divinepride_<server>.json` (raw API answers keyed by skill ID, plus

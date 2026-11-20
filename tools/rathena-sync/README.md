@@ -1,6 +1,6 @@
 # rathena-sync
 
-Rust port of `tools/harness/rathena_sync.py`: regenerates the rAthena-derived data files of
+Regenerates the rAthena-derived data files of
 AzzyAI from the same databases, with the same flags and byte-identical output (only the
 generation date in the header differs).
 

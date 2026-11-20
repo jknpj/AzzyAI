@@ -104,7 +104,7 @@ fn build(enums: &Value, schema: &Value) -> Result<Schema, String> {
 }
 
 pub fn load() -> Result<(Schema, Schema), String> {
-    let text = include_str!("../data/options.json");
+    let text = include_str!("../../../webgui/data/options.json");
     let doc: Value = serde_json::from_str(text).map_err(|e| format!("options.json: {e}"))?;
     let hom = doc.get("hom").ok_or("options.json: no hom")?;
     let mer = doc.get("mer").ok_or("options.json: no mer")?;

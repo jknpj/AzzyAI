@@ -1,0 +1,13 @@
+[package]
+name = "azzy-harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Runs the AzzyAI checks: Lua syntax, version/options and the offline AI scenarios"
+
+[[bin]]
+name = "azzy-harness"
+path = "src/main.rs"
+
+[dependencies]
+regex = "1"

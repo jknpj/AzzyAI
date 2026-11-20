@@ -204,7 +204,7 @@ fn strings(value: Option<&Value>) -> Vec<String> {
 }
 
 pub fn load() -> Result<Mobs, String> {
-    let text = include_str!("../data/mobs.json");
+    let text = include_str!("../../../webgui/data/mobs.json");
     let doc: Value = serde_json::from_str(text).map_err(|e| format!("mobs.json: {e}"))?;
     let elements = strings(doc.get("elements"));
     let races = strings(doc.get("races"));

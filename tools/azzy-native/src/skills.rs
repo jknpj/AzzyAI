@@ -104,7 +104,7 @@ fn string(list: &Value, key: &str) -> String {
 pub fn load() -> Result<Skills, String> {
     let text = include_str!("../data/skills.json");
     let doc: Value = serde_json::from_str(text).map_err(|e| format!("skills.json: {e}"))?;
-    let detail: Value = serde_json::from_str(include_str!("../data/skilldata.json"))
+    let detail: Value = serde_json::from_str(include_str!("../../../webgui/data/skilldata.json"))
         .map_err(|e| format!("skilldata.json: {e}"))?;
     let width = doc.get("width").and_then(Value::as_u64).unwrap_or(0) as u32;
     let height = doc.get("height").and_then(Value::as_u64).unwrap_or(0) as u32;

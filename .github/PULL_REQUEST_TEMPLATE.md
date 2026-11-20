@@ -4,7 +4,7 @@
 
 ## How was it tested?
 
-- [ ] `python tools\harness\run.py` passes
+- [ ] `cargo run --release -p azzy-harness --` passes
 - [ ] I added or updated a scenario in `tools\harness\scenarios.lua` (for a behavior change)
 - [ ] Tested in game: <!-- which server and client, or "not tested in game" -->
 

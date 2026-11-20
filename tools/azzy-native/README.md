@@ -12,11 +12,11 @@ the reset button) and the description card on the right, and the footer with the
 badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied from the
 `--ro-*` variables of the web GUI; the navbar uses Segoe UI when Windows has it.
 
-- **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: `tools/webgui-data.js`
-  dumps `homSchema.js`/`merSchema.js` (263 options with categories, types, enums, defaults,
-  min/max and the English descriptions) to `data/options.json`, the web GUI's translations to
-  `data/i18n.json` and the skill data to `data/skilldata.json`; all are committed and checked for
-  drift in CI (`node tools/webgui-data.js --check`).
+- **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: the web GUI
+  repository publishes `data/options.json` (263 options with categories, types, enums, defaults,
+  min/max and the English descriptions), `data/i18n.json` (its translations) and
+  `data/skilldata.json` (skill names, descriptions and stats); the native window embeds those files
+  from the `webgui` submodule, so the two never drift.
 - Search over names **and** descriptions, category filter, "only non-default" filter, changed
   counter, and a description panel for the selected option (with category, type, range, default).
 - Typed editors: `bool` checkbox, `int`/`double` text field with the same min/max clamp as the web
