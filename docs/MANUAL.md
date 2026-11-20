@@ -44,7 +44,7 @@ Do not overwrite personalized files blindly or replace new code with an old
 full folder. Compare/import settings into the updated installation, save, reload
 and test.
 
-The Windows GUI can do this for you (menu **Update**, section 3). It never
+The desktop app can do this for you (**Update AI from GitHub...**, section 3). It never
 overwrites the files in the table above (nor `Types\*.lua`, unless you tick the
 box) and backs up everything it replaces.
 
@@ -52,9 +52,9 @@ box) and backs up everything it replaces.
 
 ### Windows application
 
-Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits files
-beside its executable, even if launched from a shortcut. Check the displayed
-configuration location before saving.
+Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits the files
+beside its executable, even if launched from a shortcut. Check the configuration
+location shown in the footer before saving.
 
 The app has no code signature yet, so SmartScreen can show "Windows protected your PC"
 for a fresh download (an antivirus may also flag a small, rarely downloaded executable).
@@ -68,39 +68,28 @@ The source is in this repository and CI builds that file from it; to continue, c
 
 Search finds option names and descriptions. Type filters make options easier
 to find; **hiding a setting does not turn it off**. Use **Clear filters** to see
-everything. Click **Apply** to save; **Revert** discards pending edits.
-The desktop labels are in English.
+everything. Click **Apply Settings** to save; **Reload** discards pending edits.
+The interface and the option descriptions are available in English, Português and
+Español; pick the language in the top bar.
 
-**Update menu (Windows application only):**
+**Update AI from GitHub...** (top bar): downloads the official `main` branch zip and
+copies it over the destination folder shown in the window (editable, so you can update
+another installation). Your settings, tactics, extras and avoid lists are kept; with
+*Replace Types/ presets too* ticked, `Types\*.lua` are replaced as well. Replaced files
+are copied to `backup\update-<time>\`. A newer `AzzyAIConfig.exe` is saved as
+`.exe.new`, and **Restart now** closes the window, swaps it and opens the new build.
+Reload the AI in game afterwards. If the window has no pending edits it reloads the
+files itself.
 
-- **Update AI from git...** pulls your local git clone (`git pull --ff-only`) or
-  downloads the `main` branch from GitHub (no git needed) and copies its
-  `USER_AI` over the folder the GUI runs from. Your settings, tactics, extra and
-  avoid lists are kept; with *Also overwrite the homunculus presets* ticked,
-  `Types\*.lua` are replaced too. Replaced files are copied to
-  `backup\update-<time>\`. A newer `AzzyAIConfig.exe` is saved as `.exe.new` and
-  swapped in when you accept the restart. Reload the AI in game afterwards.
-- **Update monster/skill data from rAthena...** runs `tools\harness\rathena_sync.py`
-  in your clone (needs Python 3 and internet) and copies the regenerated
-  `MobInfo.lua` here. The clone also receives the harness fixtures and
-  `webgui\mobdata.js`, which you commit if you maintain the repository.
+At startup the window checks the latest release tag and, when it is newer than the
+installed `CVersion`, shows an **Update** banner.
 
-The clone folder is remembered in `AzzyAIConfig.update.txt`.
-
-**Support menu (Windows application only):**
-
-- **Export diagnostics for a bug report...** writes one file with the startup report
-  (`AAIStartH.txt`/`AAIStartM.txt`), the last lines of `AAI_ERROR.log`, `AAI_SKILLFAIL.log` and
-  `AAI_PROBE.log`, your `H_Config.lua`, `M_Config.lua`, the tactics and extra files, `Types\*.lua`
-  and the `data` files that remember learned skill levels and cooldowns. Owner IDs become
-  `<owner>`, the dialog lists everything before writing, and nothing is sent anywhere. The file goes
-  to your Desktop (`AzzyAI-diag-<date>.zip`, or a `.txt` when PowerShell 5 is missing) and Explorer
-  opens with it selected. Attach it to the issue.
-- **Copy version and startup summary** puts the version and the startup report on the clipboard,
-  ready to paste in Discord.
-- **Report a problem on GitHub** opens the bug report form with the version filled in.
-If the program crashes, the same dialog opens with the error text included and the export ready.
-The window size, position and the open tab are remembered in `AzzyAIConfig.session.txt`.
+**Files** (top bar): export every configuration file (including edits not applied yet),
+import a folder, or export a diagnostics bundle. The bundle has the same contents as the
+browser's: the startup report, the last lines of the AI logs, the configuration, the
+tactics and extra files, `Types\*.lua` and the `data` files, with owner IDs replaced by
+`<owner>`. **Help** shows the version and links to the documentation, the web GUI and the
+issue form.
 
 ### Browser application
 

@@ -35,14 +35,12 @@ If one differs, `File version error` is written in the startup report. The three
 reported instead of failing in strange ways. Raise the three together when MAJOR or MINOR
 changes, never for a PATCH; `run.py` fails if one does not match `CVersion`.
 
-The Windows configuration app has the same number: `AssemblyVersion` and
-`AssemblyFileVersion` in `GUI/AzzyAIConfig/Properties/AssemblyInfo.cs` are set to the
-release, **Help > About** shows it, and `run.py` checks it. The web page has no number
-of its own.
+The desktop app shows `CVersion` itself in **Help > About**, read from the loaded USER_AI, so
+there is no second copy to keep in sync. The web page has no number of its own.
 
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
-changed, the two numbers in `AssemblyInfo.cs` and the "Current release" line in
-`CHANGELOG.md`, add the changes to `CHANGELOG.md`, run the harness, commit, and tag the
+changed, and the "Current release" line in `CHANGELOG.md`, add the changes to
+`CHANGELOG.md`, run the harness, commit, and tag the
 commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
 `USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
 `tools\build-gui.cmd` is only needed to test the app before committing. The tag run builds
@@ -138,76 +136,44 @@ It uses the same limit/pause and is available in both GUIs. With this option
 enabled, a gap between AI
 calls alone is not completion evidence for a cast never observed starting.
 
-### Windows desktop GUI development
+### Native desktop GUI (Rust)
 
-To build the app without PowerShell, run `tools\build-gui.cmd`: it builds the Release
-x86 executable and copies it to `USER_AI\AzzyAIConfig.exe`, the copy that is committed and
-that players run. The PowerShell commands below do the same build and also run and test the app.
-The CI does this too: on a push to `main` a follow-up job commits the freshly built
-`USER_AI/AzzyAIConfig.exe` when it differs, so a C# change never leaves the committed copy
-behind (it commits with `[skip ci]`, and a byte-identical build is not committed). Never write
-`[skip ci]` in the message of a commit that must run CI: GitHub looks for the marker anywhere
-in the message, body included, and silently skips the workflow.
+The desktop configuration app is `tools/azzy-native`, a Rust/egui window that mirrors the web GUI.
+The web page stays the reference for the schema, translations, skill data and preset templates:
+`node tools/webgui-data.js` regenerates `tools/azzy-native/data/*.json` from `webgui/`, and CI runs
+`--check` so the two never drift.
 
-The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
-Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
-cannot build it.
+Build and test from the repository root (Rust stable):
 
-Use an existing Visual Studio 2022 installation with .NET desktop development,
-or install Build Tools with the .NET desktop build tools workload:
-
-```powershell
-winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --source winget --override "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools --includeRecommended"
-code --install-extension ms-dotnettools.csharp
+```
+cargo test -p azzy-config -p azzy-update -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
+cargo build --release -p azzy-native --manifest-path tools/Cargo.toml
 ```
 
-Accept administrator prompts and restart VS Code after installation. The existing
-.NET Framework 4.8 runtime runs this .NET 4.0 app; do not install the obsolete 4.0
-runtime. NuGet restores the pinned 4.0 reference assemblies on the first build
-(internet access to nuget.org is required). If C: is short on space, the installer
-supports `--installPath D:\DevTools\VSBuildTools2022 --path cache=D:\DevTools\VSCache`,
-but shared Windows components still need space on C:.
+The window ships as `USER_AI/AzzyAIConfig.exe`, the name the old C# app used, so existing
+shortcuts keep working; the development build is `tools/target/release/azzy-native.exe`. Run it
+with the USER_AI folder, or put it inside USER_AI and run it without arguments:
 
-From the repository root:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Build
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Test
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Run
+```
+tools\target\release\azzy-native.exe USER_AI
+tools\target\release\azzy-native.exe USER_AI --write
 ```
 
-Use `-Configuration Release` for a release build. Build outputs and intermediate
-files go into ignored `.artifacts\gui`, not the legacy tracked `bin`/`obj` folders.
-Run, Test, and F5 build the app and copy the current `USER_AI` configuration into
-a disposable sandbox. **Each launch refreshes these copies; Apply never writes
-to the source `USER_AI` files.** Close the sandbox GUI before launching again.
-The smoke test opens/closes the form, visits all seven tabs, checks configuration
-bindings, and verifies that startup did not change the copied Lua files.
+Without `--write` the Save button writes `<file>.new` instead of the file, like the previous app's
+sandbox. **Update AI from GitHub...** downloads the official `main` zip, keeps the files the player
+edits, backs up the replaced ones under `USER_AI/backup/update-<time>/` and stages a newer
+executable as `.exe.new`; **Restart now** swaps it. The startup check compares the latest release
+tag with `CVersion` and offers an Update banner.
 
-The Homunculus editor includes official/private server selection, newer
-Homunculus S skills, Eleanor's grappling switches, and inherited Blood Lust/SBR44
-options. Skill selectors support the updated level-10 caps where applicable.
-Search matches names and descriptions; the type filters only hide controls,
-not disable skills. Use **Clear filters** to return to all settings. The layout
-resizes with the window, and the footer shows which configuration is being edited.
-Apply saves changes; Quit or the window close button prompts for unsaved edits.
-The smoke test also checks resizing, filtering, level limits, imports/defaults,
-and saving/reloading settings without changing unedited values.
+CI builds the Windows executable, runs the Rust tests, packages the ZIP (`USER_AI` with the freshly
+built `AzzyAIConfig.exe`, `docs/`, `LICENSES/`, `webgui/` and the READMEs) and, on pushes to
+`main`, commits `USER_AI/AzzyAIConfig.exe` back when it differs (short `build:` commit with
+`[skip ci]`). Never write `[skip ci]` in the message of a commit that must run CI: GitHub looks for
+the marker anywhere in the message and silently skips the workflow.
 
-To test the compiled desktop GUI in a game client, close any existing config
-window and back up its executable, then copy only
-`.artifacts\gui\Release\AzzyAIConfig.exe` into that client's `AI\USER_AI` folder.
-Run it there to edit the installed configuration. The GUI always uses its own
-executable directory, even when launched from a shortcut with another working
-directory. Copying the executable does not replace the client's Lua files;
-clicking Apply does save configuration changes, so back those up before editing.
-
-In VS Code, use **Ctrl+Shift+B** to build, **F5** to debug, or **Tasks: Run Task**
-for `GUI: Run` / `GUI: Smoke test`. The workspace enables OmniSharp for this
-legacy project, using its .NET Framework host so no additional .NET SDK is
-required; C# Dev Kit is not required. WinForms visual designer support
-requires full Visual Studio with .NET desktop development, not VS Code or
-Build Tools. This setup does not add a designer.
+The Rust workspace is `tools/Cargo.toml`: `azzy-config` reads and writes the Lua files preserving
+formatting, `azzy-update` is the updater shared with the local web GUI host, and `azzy-gui` serves
+the web GUI locally for development.
 
 The AI can't run outside the RO client, so `tools/harness/` contains an offline simulator: it mocks the client API (`GetV`, `GetActors`, `SkillObject`, ...), loads the real `USER_AI` files with a fixed config (`tools/harness/fixtures/H_Config.lua`, and `fixtures/M_Config.lua` for the mercenary scenarios) and runs scenarios (`tools/harness/scenarios.lua`) for every homunculus S and for a mercenary, checking that:
 
@@ -242,8 +208,8 @@ python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
 Before the scenarios, `run.py` runs the static checks and fails the run when one of them breaks:
-syntax of every `.lua` file; the release number against `CHANGELOG.md` and the GUI's
-`AssemblyInfo.cs`; and **every option in `Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
+syntax of every `.lua` file; the release number against `CHANGELOG.md`; and **every option in
+`Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
 read by some AI file** (`options: N in ..., M unread`). That last one exists because an option
 nothing reads is a switch the player can change with no effect at all, which happened several
 times (the `Berzerk_*` mis-spelling of the mercenary options, `KiteParanoid`, `MoveStickyFight`).
@@ -363,9 +329,10 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
 - Lua syntax check and simulator;
 - `node --check` on the web GUI (checked out from the `webgui` submodule);
-- build of the .NET 4.0 config GUI and the `AzzyAI` artifact: `USER_AI` (without `.pdb`) with
-  the freshly built `AzzyAIConfig.exe`, plus `docs/`, `LICENSES/`, `webgui/`, the three
-  READMEs, `CHANGELOG.md`, `NOTICE.md`, `SECURITY.md` and `CONTRIBUTING.md`;
+- Rust tests and the Windows build of the native desktop GUI (`azzy-native`), and the `AzzyAI`
+  artifact: `USER_AI` (without `.pdb`) with the freshly built `AzzyAIConfig.exe`, plus `docs/`,
+  `LICENSES/`, `webgui/`, the three READMEs, `CHANGELOG.md`, `NOTICE.md`, `SECURITY.md` and
+  `CONTRIBUTING.md`;
 - on pushes to `main`, a follow-up job commits that build back to
   `USER_AI/AzzyAIConfig.exe` when it changed (short `build:` commit, `[skip ci]`).
 

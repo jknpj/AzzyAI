@@ -4,7 +4,28 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.0.3**
+**Current release: 2.1.0**
+
+## 2.1.0
+
+Minor release: the desktop configuration app is now the **native Rust GUI**, shipped as
+`AzzyAIConfig.exe` (the name players already run), and the C# WinForms application is retired.
+
+- New: native desktop app (Rust/egui) mirroring the web GUI: settings with search and category
+  tabs, translated descriptions (English, Português, Español), tactics and PVP editors with
+  suggestions from the monster database, per-homunculus presets, Extra Options, folder
+  import/export and a diagnostics bundle.
+- New: the skill card shows the official numbers at max level and the in-game description with the
+  values per level, next to the option's own description.
+- New: **Update AI from GitHub...** in the window: downloads the official `main` zip, keeps the
+  files you edited, backs up the replaced ones under `USER_AI/backup/update-<time>/`, stages a
+  newer executable as `.exe.new` and can restart into it. The destination folder is editable.
+- New: startup check for a newer release tag, with an Update banner; offline or rate-limited runs
+  stay silent.
+- Removed: the C# desktop app (`GUI/`, its build scripts and `USER_AI/AzzyAIConfig.exe`). The code
+  is preserved on the `legacy/csharp-gui` branch; the native app keeps the `AzzyAIConfig.exe` name
+  so existing shortcuts keep working.
+- The web GUI (browser) is unchanged and still shipped in `webgui/`.
 
 ## 2.0.3
 

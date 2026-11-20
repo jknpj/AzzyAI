@@ -45,7 +45,7 @@ No sobrescribas archivos personalizados sin revisarlos ni sustituyas el código
 nuevo con la carpeta antigua completa. Compara/importa los ajustes en la
 instalación actualizada, guarda, recarga y prueba.
 
-La GUI de Windows puede hacerlo por ti (menú **Update**, sección 3). Nunca
+La aplicación de escritorio puede hacerlo por ti (**Update AI from GitHub...**, sección 3). Nunca
 sobrescribe los archivos de la tabla anterior (ni `Types\*.lua`, salvo que
 marques la opción) y hace copia de seguridad de todo lo que reemplaza.
 
@@ -53,57 +53,46 @@ marques la opción) y hace copia de seguridad de todo lo que reemplaza.
 
 ### Aplicación Windows
 
-Ejecuta `AzzyAIConfig.exe` en `AI\USER_AI` instalada en el juego. Edita los
-archivos junto al ejecutable, incluso al abrirlo mediante un acceso directo.
-Comprueba la ubicación de la configuración antes de guardar.
+Ejecuta `AzzyAIConfig.exe` desde la carpeta `AI\USER_AI` instalada. Edita los archivos de
+esa carpeta, incluso si se abre desde un acceso directo. Revisa la ruta que muestra el pie
+antes de guardar.
 
-La aplicación aún no tiene firma de código, así que SmartScreen puede mostrar
-"Windows protegió tu PC" en una descarga nueva (un antivirus también puede quejarse
-de un ejecutable pequeño y poco descargado). El código está en este repositorio y el
-CI genera ese archivo a partir de él; para continuar, haz clic en **Más información >
-Ejecutar de todas formas**. La configuración por navegador no necesita descarga, si lo
-prefieres.
+La aplicación aún no tiene firma de código, así que SmartScreen puede mostrar "Windows
+protegió tu PC" en una descarga nueva (un antivirus también puede marcar un ejecutable
+pequeño y poco descargado). El código está en este repositorio y el CI genera ese archivo
+a partir de él; para continuar, haz clic en **Más información > Ejecutar de todos modos**.
+La configuración por el navegador no necesita descarga.
 
 - **Homunculus / Mercenary:** comportamiento general, habilidades y buffs.
-- **Homunculus Tactics / Mercenary Tactics:** comportamiento por monstruo.
+- **Homunculus Tactics / Mercenary Tactics:** comportamiento para cada monstruo.
 - **PVP Tactics / Merc PVP Tactics:** comportamiento para jugadores.
-- **Extra Options:** opciones avanzadas y Lua personalizado; evita editar código si no sabes.
+- **Extra Options:** opciones avanzadas y Lua personalizado; evita tocar el código si no
+  sabes lo que haces.
 
-La búsqueda encuentra nombres y descripciones. Los filtros por tipo ayudan a
-encontrar opciones; **ocultar un ajuste no lo desactiva**. Usa **Clear filters**
-para ver todo. **Apply** guarda; **Revert** descarta cambios pendientes.
-Las etiquetas de la aplicación Windows están en inglés.
+La búsqueda encuentra nombres y descripciones. Los filtros de tipo ayudan a encontrar
+opciones; **ocultar una opción no la desactiva**. Usa **Limpiar filtros** para ver todo.
+Haz clic en **Aplicar configuración** para guardar; **Recargar** descarta los cambios
+pendientes. La interfaz y las descripciones de las opciones están en inglés, portugués y
+español; elige el idioma en la barra superior.
 
-**Menú Update (solo en la aplicación Windows):**
+**Update AI from GitHub...** (barra superior): descarga el zip oficial de la rama `main` y
+lo copia sobre la carpeta de destino que muestra la ventana (editable, así puedes
+actualizar otra instalación). Tu configuración, tácticas, extras y listas de avoid se
+conservan; con *Replace Types/ presets too* marcado, `Types\*.lua` también se reemplaza.
+Los archivos reemplazados van a `backup\update-<hora>\`. Un `AzzyAIConfig.exe` más nuevo
+se guarda como `.exe.new`, y **Restart now** cierra la ventana, lo cambia y abre la nueva
+versión. Recarga la IA en el juego después. Si no hay cambios pendientes, la ventana
+recarga los archivos sola.
 
-- **Update AI from git...** hace `git pull --ff-only` en tu clon local o descarga
-  la rama `main` de GitHub (sin necesitar git) y copia su `USER_AI` sobre la
-  carpeta donde se ejecuta la GUI. Tus ajustes, tactics, extra y listas de avoid
-  se conservan; con *Also overwrite the homunculus presets* marcado, también se
-  reemplazan los `Types\*.lua`. Lo reemplazado se copia a `backup\update-<hora>\`.
-  Un `AzzyAIConfig.exe` más nuevo se guarda como `.exe.new` y se cambia al
-  aceptar el reinicio. Recarga la IA en el juego después.
-- **Update monster/skill data from rAthena...** ejecuta `tools\harness\rathena_sync.py`
-  en tu clon (necesita Python 3 e internet) y copia aquí el `MobInfo.lua`
-  regenerado. El clon también recibe los fixtures del harness y
-  `webgui\mobdata.js`, que haces commit si mantienes el repositorio.
+Al iniciar, la ventana consulta la etiqueta del último release y, si es más nueva que el
+`CVersion` instalado, muestra una barra de **Update**.
 
-La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
-
-**Menú Support (solo en la aplicación de Windows):**
-
-- **Export diagnostics for a bug report...** escribe un archivo con el informe de inicio
-  (`AAIStartH.txt`/`AAIStartM.txt`), las últimas líneas de `AAI_ERROR.log`, `AAI_SKILLFAIL.log` y
-  `AAI_PROBE.log`, tus `H_Config.lua`, `M_Config.lua`, los archivos de tácticas y extras,
-  `Types\*.lua` y los archivos de `data` que guardan niveles aprendidos y recargas. Los IDs de dueño
-  pasan a `<owner>`, la ventana muestra todo antes de escribir y no se envía nada a ningún sitio. El
-  archivo va al Escritorio (`AzzyAI-diag-<fecha>.zip`, o un `.txt` si no hay PowerShell 5) y el
-  Explorador se abre con él seleccionado. Adjúntalo en la incidencia.
-- **Copy version and startup summary** pone la versión y el informe de inicio en el portapapeles,
-  listo para pegar en Discord.
-- **Report a problem on GitHub** abre el formulario de error con la versión ya rellenada.
-Si el programa falla, se abre la misma ventana con el texto del error incluido y la exportación lista.
-El tamaño y la posición de la ventana y la pestaña abierta se guardan en `AzzyAIConfig.session.txt`.
+**Files** (barra superior): exporta todos los archivos de configuración (incluidos los
+cambios sin aplicar), importa una carpeta o exporta un diagnóstico. El diagnóstico tiene
+el mismo contenido que el del navegador: el informe de inicio, las últimas líneas de los
+logs, la configuración, las tácticas y extras, `Types\*.lua` y los archivos de `data`, con
+los IDs de dueño reemplazados por `<owner>`. **Help** muestra la versión y los enlaces a la
+documentación, la web GUI y el formulario de problema.
 
 ### Navegador
 

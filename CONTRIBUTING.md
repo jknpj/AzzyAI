@@ -50,10 +50,11 @@ the Windows app.
 - **A new option** goes in all of these places:
   - `USER_AI\Defaults.lua`, with a one-line comment;
   - `USER_AI\H_Config.lua` or `USER_AI\M_Config.lua`, if the player is meant to see and change it;
-  - the Windows app: `GUI\AzzyAIConfig\HomConf.Additional.cs` (or the matching
-    mercenary file);
   - the web page: `webgui\homSchema.js` (and the `AzzyHomHgOnly` list) or
-    `merSchema.js`, plus `i18n.desc.pt.js` and `i18n.desc.es.js`;
+    `merSchema.js`, plus `i18n.desc.pt.js` and `i18n.desc.es.js`; the native desktop app reads
+    that schema (and the descriptions) directly, so there is nothing to add there;
+  - `node tools\webgui-data.js` regenerates `tools\azzy-native\data`, and CI fails if it is
+    stale;
   - the manual, in the three languages if you can (say so in the pull request if you cannot).
 
 - **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
@@ -85,9 +86,9 @@ The AI's release number lives in one place: `CVersion` in `USER_AI\Const_.lua`.
 Do not change it in a pull request unless asked: a maintainer raises it when a release
 is cut. How the number works, and what to raise, is in
 [docs\TECHNICAL.md](docs/TECHNICAL.md#version). Three other numbers (`Version`,
-`MainVersion`, `AUVersion`, all `"2.0"` today) are a file check, and the Windows app has
-the same release number in `AssemblyInfo.cs`: leave them all alone unless a maintainer
-raises them with the release.
+`MainVersion`, `AUVersion`, all `"2.1"` today) are a file check. The desktop app shows
+`CVersion` itself, so there is no second number to update: leave them all alone unless a
+maintainer raises them with the release.
 
 ## The web page is a separate repository
 
