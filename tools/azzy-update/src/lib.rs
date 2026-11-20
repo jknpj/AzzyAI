@@ -197,6 +197,66 @@ fn timestamp() -> String {
     format!("{secs}")
 }
 
+/// The tag of the latest GitHub release, e.g. `v2.0.1`. Falls back to the newest git tag when the
+/// repository has no releases. `None` when it has neither (404).
+pub fn latest_release_tag(repo: &str) -> Result<Option<String>, String> {
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("azzy-native")
+        .timeout(std::time::Duration::from_secs(20))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let release = format!("https://api.github.com/repos/{repo}/releases/latest");
+    let response = client.get(&release).send().map_err(|e| format!("{release}: {e}"))?;
+    if response.status().is_success() {
+        let body = response.text().map_err(|e| format!("{release}: {e}"))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&body).map_err(|e| format!("{release}: {e}"))?;
+        return Ok(value.get("tag_name").and_then(|v| v.as_str()).map(str::to_string));
+    }
+    if response.status().as_u16() != 404 {
+        return Err(format!("{release}: HTTP {}", response.status().as_u16()));
+    }
+    let tags = format!("https://api.github.com/repos/{repo}/tags?per_page=1");
+    let response = client.get(&tags).send().map_err(|e| format!("{tags}: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("{tags}: HTTP {}", response.status().as_u16()));
+    }
+    let body = response.text().map_err(|e| format!("{tags}: {e}"))?;
+    let value: serde_json::Value = serde_json::from_str(&body).map_err(|e| format!("{tags}: {e}"))?;
+    Ok(value
+        .as_array()
+        .and_then(|list| list.first())
+        .and_then(|entry| entry.get("name"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string))
+}
+
+/// True when `latest` (a tag such as `v2.0.2`) sorts after `installed` (`2.0.1`). Anything that is
+/// not `MAJOR.MINOR.PATCH` numbers falls back to a plain string comparison of the numeric parts.
+pub fn newer_version(latest: &str, installed: &str) -> bool {
+    fn parts(text: &str) -> Vec<u64> {
+        text.trim()
+            .trim_start_matches(['v', 'V'])
+            .split(['.', '-', '+'])
+            .take(3)
+            .map(|part| part.parse::<u64>().unwrap_or(0))
+            .collect()
+    }
+    let latest = parts(latest);
+    let installed = parts(installed);
+    if latest.is_empty() || installed.is_empty() {
+        return false;
+    }
+    for index in 0..3 {
+        let a = latest.get(index).copied().unwrap_or(0);
+        let b = installed.get(index).copied().unwrap_or(0);
+        if a != b {
+            return a > b;
+        }
+    }
+    false
+}
+
 /// A binary from the archive by file name, wherever the archive keeps it: `tools/azzy-native/`
 /// while the native window is still developed next to the C# one, `USER_AI/` once it replaces
 /// `AzzyAIConfig.exe` and ships beside the AI files. `None` when the archive does not ship it.
@@ -348,6 +408,17 @@ mod tests {
         assert_eq!(std::fs::read(&staged).unwrap(), b"new native exe");
         assert!(stage_binary(&bytes, &staged).unwrap().is_none(), "same content is not staged");
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn compares_release_tags() {
+        assert!(newer_version("v2.0.2", "2.0.1"));
+        assert!(newer_version("v2.1", "2.0.9"));
+        assert!(newer_version("3.0.0", "2.9.9"));
+        assert!(!newer_version("v2.0.1", "2.0.1"));
+        assert!(!newer_version("v2.0.0", "2.0.1"));
+        assert!(!newer_version("", "2.0.1"));
+        assert!(newer_version("v2.0.10", "2.0.9"));
     }
 
     #[test]

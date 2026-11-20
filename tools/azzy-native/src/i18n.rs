@@ -306,6 +306,12 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "No se pudo preparar azzy-native.exe: {0}",
     ),
     ("Could not restart: {0}", "Não foi possível reiniciar: {0}", "No se pudo reiniciar: {0}"),
+    (
+        "New version {0} is available.",
+        "Nova versão {0} disponível.",
+        "Nueva versión {0} disponible.",
+    ),
+    ("Dismiss", "Dispensar", "Descartar"),
     ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
     (
         "update applied; reload to read the new files (unsaved edits kept)",

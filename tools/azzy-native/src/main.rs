@@ -125,6 +125,8 @@ struct App {
     update_target: PathBuf,
     update_state: UpdateState,
     update_rx: Option<std::sync::mpsc::Receiver<UpdateEvent>>,
+    version_rx: Option<std::sync::mpsc::Receiver<(Option<String>, Result<Option<String>, String>)>>,
+    new_version: Option<String>,
     write_in_place: bool,
     shown_path: String,
     search: String,
@@ -353,6 +355,19 @@ impl App {
             tact_selected.insert(tab.key(), 0);
             tactics.insert(tab.key(), model);
         }
+        // Startup check for a newer release tag. It runs in the background and is skipped in
+        // tests, so the harness never touches the network.
+        let version_rx = if cfg!(test) {
+            None
+        } else {
+            let installed = installed_version(&base);
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || {
+                let latest = azzy_update::latest_release_tag("jknpj/AzzyAI");
+                let _ = tx.send((installed, latest));
+            });
+            Some(rx)
+        };
         // H_Extra.lua / M_Extra.lua are free-form files: the editor shows the whole text.
         let mut extra = BTreeMap::new();
         let mut extra_original = BTreeMap::new();
@@ -406,6 +421,8 @@ impl App {
             update_target: PathBuf::new(),
             update_state: UpdateState::Idle,
             update_rx: None,
+            version_rx,
+            new_version: None,
             write_in_place,
             shown_path: shown.join("  +  "),
             search: String::new(),
@@ -1540,6 +1557,69 @@ impl App {
         }
     }
 
+    /// Collects the startup version check (the latest GitHub tag is compared with CVersion).
+    fn poll_version(&mut self) {
+        let Some(rx) = self.version_rx.take() else { return };
+        match rx.try_recv() {
+            Ok((Some(installed), Ok(Some(latest)))) => {
+                if azzy_update::newer_version(&latest, &installed) {
+                    self.new_version = Some(latest);
+                }
+            }
+            Ok(_) => {}
+            Err(std::sync::mpsc::TryRecvError::Empty) => self.version_rx = Some(rx),
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+        }
+    }
+
+    /// A slim bar under the navbar when GitHub has a newer release tag.
+    fn version_banner(&mut self, ctx: &egui::Context, p: &Palette) {
+        let Some(latest) = self.new_version.clone() else { return };
+        let mut update = false;
+        let mut dismiss = false;
+        egui::TopBottomPanel::top("version-banner")
+            .frame(egui::Frame::none().fill(p.pending.gamma_multiply(0.15)))
+            .show(ctx, |ui| {
+                theme::band(
+                    ui,
+                    32.0,
+                    p.pending.gamma_multiply(0.18),
+                    p.pending.gamma_multiply(0.08),
+                    |ui| {
+                        ui.label(
+                            egui::RichText::new(i18n::tr_args(
+                                "New version {0} is available.",
+                                &[&latest],
+                            ))
+                            .color(p.text)
+                            .strong()
+                            .size(12.0),
+                        );
+                        ui.with_layout(
+                            egui::Layout::right_to_left(egui::Align::Center),
+                            |ui| {
+                                if ui.small_button(i18n::tr("Dismiss")).clicked() {
+                                    dismiss = true;
+                                }
+                                if ui
+                                    .small_button(i18n::tr("Update"))
+                                    .clicked()
+                                {
+                                    update = true;
+                                }
+                            },
+                        );
+                    },
+                );
+            });
+        if dismiss {
+            self.new_version = None;
+        }
+        if update {
+            self.update_open = true;
+        }
+    }
+
     /// Collects the background update thread's messages (called once per frame).
     fn poll_update(&mut self) {
         let Some(rx) = self.update_rx.take() else { return };
@@ -2404,7 +2484,9 @@ impl App {
         }
 
         self.poll_update();
+        self.poll_version();
         self.navbar(ctx, &p);
+        self.version_banner(ctx, &p);
         self.footer(ctx, &p);
         self.body(ctx, &p);
         self.files_window(ctx, &p);
@@ -2414,6 +2496,9 @@ impl App {
             UpdateState::Downloading | UpdateState::Applying
         ) {
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
+        }
+        if self.version_rx.is_some() {
+            ctx.request_repaint_after(std::time::Duration::from_millis(500));
         }
     }
 }
@@ -2746,6 +2831,24 @@ fn install_fonts(ctx: &egui::Context) {
 
 // Finds USER_AI/<name> without being told, so a double-click works: the working directory, the
 // exe's folder, and up to three levels above it (tools/azzy-native -> repository root).
+/// `CVersion` of the USER_AI being edited: the release number the startup check compares tags
+/// with. Only the uncommented assignment at the top of Const_.lua counts.
+fn installed_version(dir: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(dir.join("Const_.lua")).ok()?;
+    for line in text.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("CVersion=") {
+            let rest = rest.trim().trim_start_matches('"');
+            let end = rest.find('"').unwrap_or(rest.len());
+            let version = rest[..end].trim();
+            if !version.is_empty() {
+                return Some(version.to_string());
+            }
+        }
+    }
+    None
+}
+
 /// Folder the executable lives in. In the shipped layout this is USER_AI itself (the exe sits next
 /// to H_Config.lua, like the old AzzyAIConfig.exe), which makes it the natural update target.
 fn exe_dir() -> Option<PathBuf> {
@@ -3071,6 +3174,16 @@ mod tests {
             app.update_state = state;
             let _ = ctx.run(input.clone(), |ctx| app.draw(ctx));
         }
+    }
+
+    #[test]
+    fn reads_the_release_version_from_const() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        if !root.join("Const_.lua").is_file() {
+            return;
+        }
+        let version = installed_version(&root).expect("CVersion");
+        assert!(version.starts_with("2."), "{version}");
     }
 
     #[test]
@@ -3535,6 +3648,9 @@ mod tests {
         app.suggest.mob = "poring".into();
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.suggest.open = false;
+        app.new_version = Some("v9.9.9".into());
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.new_version = None;
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
 
         // Every language draws the same screens: a missing translation must not break layout.

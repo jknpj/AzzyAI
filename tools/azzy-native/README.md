@@ -101,6 +101,14 @@ tooltip/description names the skill.
   `webgui/skills.js` + `webgui/skilldata.js`, dumped to `data/skilldata.json` by the same script as
   the schema. Nothing is loaded at runtime: the files are embedded like the monster database.
 
+## Update check
+
+On startup the window asks GitHub for the latest release tag (`/releases/latest`, falling back to
+`/tags`) and compares it with the `CVersion` in the loaded USER_AI. When it is newer, a slim bar
+under the navbar says **New version vX.Y.Z is available** and offers **Update** (opens the update
+window) and **Dismiss**. The check runs in the background: offline, rate-limited or without a
+release it stays silent and never blocks the window.
+
 ## Updating from GitHub
 
 The navbar's **Update AI from GitHub...** button runs the same flow as the Windows app and the
