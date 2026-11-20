@@ -171,12 +171,14 @@ for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_
 	AutoSkillCooldown[cdskill]=0
 end
 -- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
--- The Eleanor combo follow-ups are left out on purpose; their chain is timed by ComboSCTimeout/ComboSVTimeout.
+-- The Eleanor chain follow-ups (CBC/EQC) are left out on purpose; their chain is timed by
+-- ComboSCTimeout/ComboSVTimeout. Tinder Breaker is tracked: with no after-cast delay on the private
+-- server the next chain would start inside the 500 ms reuse window and be refused.
 -- Sonic Claw starts the chain but is also cast on its own, so its cooldown is tracked.
 for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIGE_STANGE,MH_NEEDLE_OF_PARALYZE,
 	MH_TWISTER_CUTTER,MH_ABSOLUTE_ZEPHYR,MH_GLANZEN_SPIES,MH_HEILIGE_PFERD,MH_NEEDLE_STINGER,
 	MH_TOXIN_OF_MANDARA,MH_BLAZING_AND_FURIOUS,MH_THE_ONE_FIGHTER_RISES,MH_BLAST_FORGE,
-	MH_SONIC_CRAW,MH_SILENT_BREEZE,MH_GOLDENE_TONE,MH_PAIN_KILLER}) do
+	MH_TINDER_BREAKER,MH_SONIC_CRAW,MH_SILENT_BREEZE,MH_GOLDENE_TONE,MH_PAIN_KILLER}) do
 	AutoSkillCooldown[cdskill]=0
 end
 -----------Config checking----------------
