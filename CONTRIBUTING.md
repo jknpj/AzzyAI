@@ -53,14 +53,14 @@ the Windows app.
   - the web page: `webgui\homSchema.js` (and the `AzzyHomHgOnly` list) or
     `merSchema.js`, plus `i18n.desc.pt.js` and `i18n.desc.es.js`; the native desktop app reads
     that schema (and the descriptions) directly, so there is nothing to add there;
-  - `node tools\webgui-data.js` regenerates `tools\azzy-native\data`, and CI fails if it is
-    stale;
+  - the native app reads the schema and translations from `webgui\data`, generated there by
+    `tools\dump-data.js`; run it after changing the schema and commit the JSON;
   - the manual, in the three languages if you can (say so in the pull request if you cannot).
 
 - **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
   bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
   starts a new configuration from them). Copy the file into the `String.raw` body whenever you
-  change it; `node tools\webgui_templates_check.js` compares them (Node, like the web GUI) and CI runs the same check.
+  change it; `cargo run --release -p azzy-harness -- templates-check` compares them and CI runs the same check.
 - **Keep it Lua 5.1.** Declare variables `local`; `azzy-harness --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.

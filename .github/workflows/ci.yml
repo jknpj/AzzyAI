@@ -62,6 +62,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
       - name: node --check
         shell: bash
         run: |
@@ -71,8 +75,7 @@ jobs:
         shell: bash
         run: |
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
-          node tools/webgui_templates_check.js
-          node tools/webgui-data.js --check
+          cargo run --release --manifest-path tools/Cargo.toml -p azzy-harness -- templates-check
       - name: No generated editor files are tracked
         shell: bash
         run: |

@@ -473,6 +473,71 @@ pub(crate) fn run_scenario_output(
     Some((status.is_some_and(|status| status.success()), text))
 }
 
+/// Checks that webgui/templates.js embeds the shipped H_Config.lua and M_Config.lua (the web page
+/// starts a new configuration from those copies).
+fn check_templates() -> i32 {
+    let repo = match repo_root() {
+        Ok(repo) => repo,
+        Err(error) => {
+            eprintln!("{error}");
+            return 2;
+        }
+    };
+    let templates = repo.join("webgui").join("templates.js");
+    if !templates.is_file() {
+        println!("webgui/templates.js not found (submodule not checked out), skipping");
+        return 0;
+    }
+    let Ok(text) = fs::read_to_string(&templates) else {
+        eprintln!("cannot read {}", templates.display());
+        return 2;
+    };
+    let mut failed = false;
+    for name in ["H_Config.lua", "M_Config.lua"] {
+        let marker = format!("'{name}': String.raw`");
+        let Some(start) = text.find(&marker) else {
+            println!("ERROR: webgui/templates.js has no '{name}' template");
+            failed = true;
+            continue;
+        };
+        let body_start = start + marker.len();
+        let Some(length) = text[body_start..].find('`') else {
+            println!("ERROR: webgui/templates.js has no end of the '{name}' template");
+            failed = true;
+            continue;
+        };
+        let embedded = normalize(&text[body_start..body_start + length]);
+        let shipped = normalize(&read(&repo.join("USER_AI").join(name)));
+        if embedded == shipped {
+            println!("{name}: matches USER_AI/{name}");
+            continue;
+        }
+        failed = true;
+        println!("ERROR: the web GUI copy of {name} differs from USER_AI/{name}");
+        let shipped_lines: Vec<&str> = shipped.split('\n').collect();
+        let embedded_lines: Vec<&str> = embedded.split('\n').collect();
+        for index in 0..shipped_lines.len().max(embedded_lines.len()) {
+            let a = shipped_lines.get(index).copied().unwrap_or("<missing>");
+            let b = embedded_lines.get(index).copied().unwrap_or("<missing>");
+            if a != b {
+                println!("  line {}: USER_AI: {a}", index + 1);
+                println!("  line {}: webgui : {b}", index + 1);
+                break;
+            }
+        }
+        println!("  copy USER_AI/{name} into webgui/templates.js (String.raw body) to fix it");
+    }
+    if failed {
+        1
+    } else {
+        0
+    }
+}
+
+fn normalize(text: &str) -> String {
+    text.replace("\r\n", "\n").trim_matches('\n').to_string()
+}
+
 fn check_globals(luac: &str, user_ai: &Path) {
     let mut found: Vec<(String, Vec<String>)> = Vec::new();
     let mut names: Vec<String> = fs::read_dir(user_ai)
@@ -537,6 +602,7 @@ fn main() {
         Some("bench") => std::process::exit(bench::run_homun(&argv[1..])),
         Some("eleanor") => std::process::exit(bench::run_eleanor(&argv[1..])),
         Some("preset-report") => std::process::exit(bench::run_preset_report(&argv[1..])),
+        Some("templates-check") => std::process::exit(check_templates()),
         Some("globals") => {
             let repo = match repo_root() {
                 Ok(repo) => repo,

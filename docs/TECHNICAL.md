@@ -140,8 +140,9 @@ calls alone is not completion evidence for a cast never observed starting.
 
 The desktop configuration app is `tools/azzy-native`, a Rust/egui window that mirrors the web GUI.
 The web page stays the reference for the schema, translations, skill data and preset templates:
-`node tools/webgui-data.js` regenerates `tools/azzy-native/data/*.json` from `webgui/`, and CI runs
-`--check` so the two never drift.
+The web GUI publishes the schema, translations, skills and monster data as JSON under
+`webgui/data/` (`node tools/dump-data.js` there); the native window embeds those files, so the two
+never drift.
 
 Build and test from the repository root (Rust stable):
 
