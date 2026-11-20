@@ -197,6 +197,38 @@ fn timestamp() -> String {
     format!("{secs}")
 }
 
+/// A file from the archive whose path ends with `suffix`, e.g. the native GUI build committed
+/// under `tools/azzy-native/azzy-native.exe`. `None` when the archive does not ship it.
+pub fn find_in_zip(archive: &[u8], suffix: &str) -> Result<Option<Vec<u8>>, String> {
+    let mut zip =
+        zip::ZipArchive::new(std::io::Cursor::new(archive)).map_err(|e| format!("zip: {e}"))?;
+    for index in 0..zip.len() {
+        let mut entry = zip.by_index(index).map_err(|e| format!("zip entry: {e}"))?;
+        if entry.is_dir() || !entry.name().ends_with(suffix) {
+            continue;
+        }
+        let mut data = Vec::new();
+        entry
+            .read_to_end(&mut data)
+            .map_err(|e| format!("{}: {e}", entry.name()))?;
+        return Ok(Some(data));
+    }
+    Ok(None)
+}
+
+/// Writes `bytes` next to `current` as `<name>.new` when they differ, so a running executable can
+/// be replaced on the next launch. Returns the staged path, or `None` when it is already current.
+pub fn stage_binary(bytes: &[u8], current: &Path) -> Result<Option<PathBuf>, String> {
+    if let Ok(existing) = std::fs::read(current) {
+        if existing == bytes {
+            return Ok(None);
+        }
+    }
+    let target = PathBuf::from(format!("{}.new", current.display()));
+    std::fs::write(&target, bytes).map_err(|e| format!("{}: {e}", target.display()))?;
+    Ok(Some(target))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -262,6 +294,40 @@ mod tests {
         assert_eq!(report.updated, 1, "Types/Dieter.lua is replaced");
         assert_eq!(report.added, 3, "MobInfo.lua, H_Config.lua and the exe did not exist here");
         assert_eq!(std::fs::read_to_string(dir.join("Types").join("Dieter.lua")).unwrap(), "AutoMobCount = 1\n");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn sample_zip_with_binary() -> Vec<u8> {
+        let mut buffer = std::io::Cursor::new(Vec::new());
+        {
+            let mut zip = zip::ZipWriter::new(&mut buffer);
+            let options = zip::write::SimpleFileOptions::default();
+            zip.start_file("AzzyAI-main/USER_AI/MobInfo.lua", options).unwrap();
+            zip.write_all(b"-- new mob info\n").unwrap();
+            zip.start_file("AzzyAI-main/tools/azzy-native/azzy-native.exe", options).unwrap();
+            zip.write_all(b"new native exe").unwrap();
+            zip.finish().unwrap();
+        }
+        buffer.into_inner()
+    }
+
+    #[test]
+    fn finds_and_stages_the_native_binary() {
+        let archive = sample_zip_with_binary();
+        let bytes = find_in_zip(&archive, "tools/azzy-native/azzy-native.exe")
+            .unwrap()
+            .expect("binary in the archive");
+        assert_eq!(bytes, b"new native exe");
+        assert!(find_in_zip(&archive, "tools/azzy-native/azzy-gui.exe").unwrap().is_none());
+
+        let dir = std::env::temp_dir().join(format!("azzy-update-exe-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("azzy-native.exe");
+        std::fs::write(&exe, b"old").unwrap();
+        let staged = stage_binary(&bytes, &exe).unwrap().expect("must stage");
+        assert_eq!(std::fs::read(&staged).unwrap(), b"new native exe");
+        assert!(stage_binary(&bytes, &staged).unwrap().is_none(), "same content is not staged");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

@@ -61,9 +61,22 @@ const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 /// The official source: the update always comes from the repository's `main` branch.
 const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
 
+/// What happened to the running executable itself (the archive ships it under `tools/`).
+enum SelfUpdate {
+    Staged(PathBuf),
+    Unchanged,
+    NotInArchive,
+}
+
+struct UpdateOutcome {
+    report: azzy_update::Report,
+    self_update: SelfUpdate,
+    self_error: Option<String>,
+}
+
 enum UpdateEvent {
     Applying,
-    Done(azzy_update::Report),
+    Done(UpdateOutcome),
     Failed(String),
 }
 
@@ -71,7 +84,7 @@ enum UpdateState {
     Idle,
     Downloading,
     Applying,
-    Done(azzy_update::Report),
+    Done(UpdateOutcome),
     Failed(String),
 }
 
@@ -1534,9 +1547,9 @@ impl App {
         loop {
             match rx.try_recv() {
                 Ok(UpdateEvent::Applying) => self.update_state = UpdateState::Applying,
-                Ok(UpdateEvent::Done(report)) => {
-                    let staged = !report.staged.is_empty();
-                    self.update_state = UpdateState::Done(report);
+                Ok(UpdateEvent::Done(outcome)) => {
+                    let staged = !outcome.report.staged.is_empty();
+                    self.update_state = UpdateState::Done(outcome);
                     keep = false;
                     if self.update_target == self.user_ai_dir() && self.changed() == 0 {
                         self.reload();
@@ -1596,10 +1609,38 @@ impl App {
             let result = azzy_update::download(&url).and_then(|bytes| {
                 let _ = tx.send(UpdateEvent::Applying);
                 repaint.request_repaint();
-                azzy_update::apply_zip(&bytes, &dir, overwrite)
+                let report = azzy_update::apply_zip(&bytes, &dir, overwrite)?;
+                // The native window itself comes from the archive's tools/ folder; a running exe
+                // cannot be replaced, so it is staged as <exe>.new.
+                let mut self_error = None;
+                let self_update = match std::env::current_exe() {
+                    Ok(exe) => match azzy_update::find_in_zip(
+                        &bytes,
+                        "tools/azzy-native/azzy-native.exe",
+                    ) {
+                        Ok(Some(binary)) => match azzy_update::stage_binary(&binary, &exe) {
+                            Ok(Some(path)) => SelfUpdate::Staged(path),
+                            Ok(None) => SelfUpdate::Unchanged,
+                            Err(error) => {
+                                self_error = Some(error);
+                                SelfUpdate::Unchanged
+                            }
+                        },
+                        Ok(None) => SelfUpdate::NotInArchive,
+                        Err(error) => {
+                            self_error = Some(error);
+                            SelfUpdate::NotInArchive
+                        }
+                    },
+                    Err(error) => {
+                        self_error = Some(error.to_string());
+                        SelfUpdate::NotInArchive
+                    }
+                };
+                Ok(UpdateOutcome { report, self_update, self_error })
             });
             let event = match result {
-                Ok(report) => UpdateEvent::Done(report),
+                Ok(outcome) => UpdateEvent::Done(outcome),
                 Err(error) => UpdateEvent::Failed(error),
             };
             let _ = tx.send(event);
@@ -1651,6 +1692,7 @@ impl App {
                     i18n::tr("Replace Types/ presets too"),
                 );
                 ui.add_space(6.0);
+                let mut restart = false;
                 match &self.update_state {
                     UpdateState::Idle => {}
                     UpdateState::Downloading => {
@@ -1665,7 +1707,8 @@ impl App {
                             ui.label(i18n::tr("Applying the update..."));
                         });
                     }
-                    UpdateState::Done(report) => {
+                    UpdateState::Done(outcome) => {
+                        let report = &outcome.report;
                         ui.label(
                             egui::RichText::new(i18n::tr_args(
                                 "Updated {0}, added {1}, kept {2}.",
@@ -1695,6 +1738,52 @@ impl App {
                                 .size(11.0),
                             );
                         }
+                        match &outcome.self_update {
+                            SelfUpdate::Staged(path) => {
+                                ui.label(
+                                    egui::RichText::new(i18n::tr_args(
+                                        "New azzy-native.exe staged as {0}; restart to use it.",
+                                        &[&path.display().to_string()],
+                                    ))
+                                    .color(p.text)
+                                    .size(11.5),
+                                );
+                                if ui
+                                    .button(egui::RichText::new(i18n::tr("Restart now")).strong())
+                                    .clicked()
+                                {
+                                    restart = true;
+                                }
+                            }
+                            SelfUpdate::Unchanged => {
+                                ui.label(
+                                    egui::RichText::new(i18n::tr(
+                                        "azzy-native.exe is already up to date.",
+                                    ))
+                                    .color(p.muted)
+                                    .size(11.0),
+                                );
+                            }
+                            SelfUpdate::NotInArchive => {
+                                ui.label(
+                                    egui::RichText::new(i18n::tr(
+                                        "The archive has no azzy-native.exe build.",
+                                    ))
+                                    .color(p.muted)
+                                    .size(11.0),
+                                );
+                            }
+                        }
+                        if let Some(error) = &outcome.self_error {
+                            ui.label(
+                                egui::RichText::new(i18n::tr_args(
+                                    "Could not stage azzy-native.exe: {0}",
+                                    &[error],
+                                ))
+                                .color(p.pending)
+                                .size(11.0),
+                            );
+                        }
                         if self.changed() > 0 {
                             ui.label(
                                 egui::RichText::new(i18n::tr(
@@ -1712,6 +1801,26 @@ impl App {
                                 .size(11.5)
                                 .strong(),
                         );
+                    }
+                }
+                let staged_path = match &self.update_state {
+                    UpdateState::Done(outcome) => match &outcome.self_update {
+                        SelfUpdate::Staged(path) => Some(path.clone()),
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                if restart {
+                    if let Some(path) = staged_path {
+                        match restart_with_staged_exe(&path) {
+                            Ok(()) => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
+                            Err(error) => {
+                                self.update_state = UpdateState::Failed(i18n::tr_args(
+                                    "Could not restart: {0}",
+                                    &[&error],
+                                ));
+                            }
+                        }
                     }
                 }
                 ui.add_space(4.0);
@@ -2639,6 +2748,34 @@ fn exe_dir() -> Option<PathBuf> {
         .and_then(|exe| exe.parent().map(Path::to_path_buf))
 }
 
+/// Waits for this process to exit, moves `<exe>.new` over the executable and starts it again,
+/// the same way the old Windows app does.
+fn restart_with_staged_exe(staged: &Path) -> Result<(), String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let staged = staged.display().to_string();
+    let exe = exe.display().to_string();
+    #[cfg(windows)]
+    {
+        let command = format!(
+            "ping 127.0.0.1 -n 3 >nul & move /y \"{staged}\" \"{exe}\" & start \"\" \"{exe}\""
+        );
+        std::process::Command::new("cmd")
+            .args(["/C", &command])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(windows))]
+    {
+        let command = format!("sleep 2; mv -- '{staged}' '{exe}'; exec '{exe}' &");
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg(command)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 fn resolve(name: &str) -> Option<PathBuf> {
     let mut roots: Vec<PathBuf> = Vec::new();
     if let Ok(cwd) = std::env::current_dir() {
@@ -2901,11 +3038,28 @@ mod tests {
             staged: vec!["AzzyAIConfig.exe".into()],
             backup: Some("C:\\temp\\backup".into()),
         };
+        let staged = UpdateOutcome {
+            report,
+            self_update: SelfUpdate::Staged(PathBuf::from("C:\\git\\AzzyAI\\tools\\azzy-native\\azzy-native.exe.new")),
+            self_error: None,
+        };
+        let unchanged = UpdateOutcome {
+            report: azzy_update::Report {
+                updated: 0,
+                added: 0,
+                kept: 0,
+                staged: Vec::new(),
+                backup: None,
+            },
+            self_update: SelfUpdate::NotInArchive,
+            self_error: None,
+        };
         for state in [
             UpdateState::Idle,
             UpdateState::Downloading,
             UpdateState::Applying,
-            UpdateState::Done(report),
+            UpdateState::Done(staged),
+            UpdateState::Done(unchanged),
             UpdateState::Failed("HTTP 404".into()),
         ] {
             app.update_state = state;

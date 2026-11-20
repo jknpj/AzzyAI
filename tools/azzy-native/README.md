@@ -112,6 +112,12 @@ cannot be replaced). `Types/*.lua` presets are kept unless **Replace Types/ pres
 checked. The window shows the counts and the backup path; if nothing was edited it reloads the
 files, otherwise it asks for a Reload.
 
+The window can update itself too: the archive's `tools/azzy-native/azzy-native.exe` is compared
+with the running file and, when it differs, staged as `azzy-native.exe.new`. **Restart now** closes
+the window, waits for it to exit, swaps the binary and starts it again (the same trick the old
+Windows app uses, because a running exe cannot be replaced). When the archive does not ship that
+build the window says so and only the AI files are updated.
+
 The update source is fixed to the official repository's `main` zip. The **Folder to update:** field
 is editable and starts at the folder where the executable is when that folder holds
 `H_Config.lua` (the shipped layout, with the exe next to the AI files, replacing the old

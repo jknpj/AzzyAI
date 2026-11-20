@@ -284,6 +284,28 @@ const NATIVE: &[(&str, &str, &str)] = &[
     ("Update failed: {0}", "Falha na atualização: {0}", "Error al actualizar: {0}"),
     ("Folder to update:", "Pasta para atualizar:", "Carpeta a actualizar:"),
     ("Folder not found: {0}", "Pasta não encontrada: {0}", "Carpeta no encontrada: {0}"),
+    (
+        "New azzy-native.exe staged as {0}; restart to use it.",
+        "Novo azzy-native.exe preparado como {0}; reinicie para usar.",
+        "Nuevo azzy-native.exe preparado como {0}; reinicia para usarlo.",
+    ),
+    ("Restart now", "Reiniciar agora", "Reiniciar ahora"),
+    (
+        "azzy-native.exe is already up to date.",
+        "o azzy-native.exe já está atualizado.",
+        "azzy-native.exe ya está actualizado.",
+    ),
+    (
+        "The archive has no azzy-native.exe build.",
+        "O arquivo não tem um build do azzy-native.exe.",
+        "El archivo no tiene una compilación de azzy-native.exe.",
+    ),
+    (
+        "Could not stage azzy-native.exe: {0}",
+        "Não foi possível preparar o azzy-native.exe: {0}",
+        "No se pudo preparar azzy-native.exe: {0}",
+    ),
+    ("Could not restart: {0}", "Não foi possível reiniciar: {0}", "No se pudo reiniciar: {0}"),
     ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
     (
         "update applied; reload to read the new files (unsaved edits kept)",
