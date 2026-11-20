@@ -44,7 +44,7 @@ Do not overwrite personalized files blindly or replace new code with an old
 full folder. Compare/import settings into the updated installation, save, reload
 and test.
 
-The Windows GUI can do this for you (menu **Update**, section 3). It never
+The desktop app can do this for you (**Update AI from GitHub...**, section 3). It never
 overwrites the files in the table above (nor `Types\*.lua`, unless you tick the
 box) and backs up everything it replaces.
 
@@ -52,9 +52,14 @@ box) and backs up everything it replaces.
 
 ### Windows application
 
-Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits files
-beside its executable, even if launched from a shortcut. Check the displayed
-configuration location before saving.
+Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits the files
+beside its executable, even if launched from a shortcut. Check the configuration
+location shown in the footer before saving.
+
+The app has no code signature yet, so SmartScreen can show "Windows protected your PC"
+for a fresh download (an antivirus may also flag a small, rarely downloaded executable).
+The source is in this repository and CI builds that file from it; to continue, click
+**More info > Run anyway**. The browser configuration needs no download if you prefer.
 
 - **Homunculus / Mercenary:** general behavior, skills and buffs.
 - **Homunculus Tactics / Mercenary Tactics:** behavior for each monster.
@@ -63,30 +68,37 @@ configuration location before saving.
 
 Search finds option names and descriptions. Type filters make options easier
 to find; **hiding a setting does not turn it off**. Use **Clear filters** to see
-everything. Click **Apply** to save; **Revert** discards pending edits.
-The desktop labels are in English.
+everything. Click **Apply Settings** to save; **Reload** discards pending edits.
+The interface and the option descriptions are available in English, Português and
+Español; pick the language in the top bar.
 
-**Update menu (Windows application only):**
+**Update AI from GitHub...** (top bar): downloads the official `main` branch zip and
+copies it over the destination folder shown in the window (editable, so you can update
+another installation). Your settings, tactics, extras and avoid lists are kept; with
+*Replace Types/ presets too* ticked, `Types\*.lua` are replaced as well. Replaced files
+are copied to `backup\update-<time>\`. A newer `AzzyAIConfig.exe` is saved as
+`.exe.new`, and **Restart now** closes the window, swaps it and opens the new build.
+Reload the AI in game afterwards. If the window has no pending edits it reloads the
+files itself.
 
-- **Update AI from git...** pulls your local git clone (`git pull --ff-only`) or
-  downloads the `main` branch from GitHub (no git needed) and copies its
-  `USER_AI` over the folder the GUI runs from. Your settings, tactics, extra and
-  avoid lists are kept; with *Also overwrite the homunculus presets* ticked,
-  `Types\*.lua` are replaced too. Replaced files are copied to
-  `backup\update-<time>\`. A newer `AzzyAIConfig.exe` is saved as `.exe.new` and
-  swapped in when you accept the restart. Reload the AI in game afterwards.
-- **Update monster/skill data from rAthena...** runs `tools\harness\rathena_sync.py`
-  in your clone (needs Python 3 and internet) and copies the regenerated
-  `MobInfo.lua` here. The clone also receives the harness fixtures and
-  `webgui\mobdata.js`, which you commit if you maintain the repository.
+At startup the window checks the latest release tag and, when it is newer than the
+installed `CVersion`, shows an **Update** banner.
 
-The clone folder is remembered in `AzzyAIConfig.update.txt`.
+**Files** (top bar): export every configuration file (including edits not applied yet),
+import a folder, or export a diagnostics bundle. The bundle has the same contents as the
+browser's: the startup report, the last lines of the AI logs, the configuration, the
+tactics and extra files, `Types\*.lua` and the `data` files, with owner IDs replaced by
+`<owner>`. **Help** shows the version and links to the documentation, the web GUI and the
+issue form.
 
 ### Browser application
 
 Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Choose **AzzyAI** (not Classic), your language, then **File > Open USER_AI folder** and
-select the folder installed in the game.
+select the folder installed in the game. **Help > Export diagnostics for a bug report...** builds the
+same bundle as the Windows application (a `.zip` with the startup report, the logs, the configuration
+and the learned skill levels, owner IDs replaced by `<owner>`) from the game folder you pick, and
+then opens the GitHub issue form.
 
 - Chrome/Edge can write directly when folder access is supported and permitted.
 - If direct writing is unavailable, use the downloaded/exported configuration
@@ -115,6 +127,8 @@ Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits
 | `UseDamageDanger` | Off by default. If the homunculus loses `DamageDangerDrop`% (30) of its max HP within 3 s while below `DamageDangerHP`% (60) HP, it kites away even with `KiteMonsters` off, and Bayeri casts Stein Wand. It only sees its own HP, not enemy buffs. |
 | `UseDanceAttack` | Enables attack movement. It can affect positioning; it is not a skill-cooldown remover. |
 | `CommandedFightStay` | On by default. A monster you order the homunculus to attack is fought until it dies or you give another order, even if you walk away. Set to 0 to let it give up and return when the target leaves the move bounds or the attack time limit passes. |
+| `StationaryMoveBounds` / `MobileMoveBounds` | How far from you it may go to react (you standing / moving). Both are 14 by default; lower `MobileMoveBounds` if the unit gets left behind while you run. |
+| `AutoSkillLimit` | Cap on offensive skills used against one target (0 = no limit). It applies on top of the monster's skill tactic: the lower of the two wins. The count restarts when the target changes. |
 
 Automatic server detection helps on some private clients, but select your
 server explicitly when troubleshooting. Base-homunculus detection and learned

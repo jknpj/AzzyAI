@@ -1,0 +1,1270 @@
+//! The Tactics tab: a list of `MyTact[...]` entries on the left, the selected entry on the right,
+//! mirroring `renderTact()` in webgui/app.js.
+//!
+//! Field labels and option tokens come from webgui/tactics.js, so an unknown token is shown as
+//! "not supported by the GUI" instead of being silently changed. Edits go straight into the
+//! format-preserving `azzy_config::tactics` model; nothing is written until Apply Settings.
+
+use azzy_config::tactics::{
+    Kind, Tactics, BASIC, CAST, CHASE, CLASS, DEBUFF, KITE, KS, PUSH, RESCUE, SKILL, SNIPE, SP,
+    WEIGHT,
+};
+use eframe::egui;
+
+use crate::i18n::tr;
+use crate::mobs::Mobs;
+use crate::theme::{self, Palette};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tab {
+    Hom,
+    Mer,
+    HomPvp,
+    MerPvp,
+}
+
+impl Tab {
+    pub const ALL: [Tab; 4] = [Tab::Hom, Tab::Mer, Tab::HomPvp, Tab::MerPvp];
+
+    pub fn key(self) -> &'static str {
+        match self {
+            Tab::Hom => "homtact",
+            Tab::Mer => "mertact",
+            Tab::HomPvp => "hompvp",
+            Tab::MerPvp => "merpvp",
+        }
+    }
+
+    pub fn layout(self) -> &'static Layout {
+        match self {
+            Tab::Hom => &HOM,
+            Tab::Mer => &MER,
+            Tab::HomPvp => &HOM_PVP,
+            Tab::MerPvp => &MER_PVP,
+        }
+    }
+}
+
+pub enum FieldKind {
+    Select(&'static [(&'static str, &'static str)]),
+    Skill,
+    Debuff(&'static [(&'static str, Option<&'static str>)]),
+    Snipe,
+    Sp,
+    Weight,
+}
+
+pub struct Field {
+    pub index: usize,
+    pub label: &'static str,
+    pub kind: FieldKind,
+}
+
+pub struct Layout {
+    pub title: &'static str,
+    pub file: &'static str,
+    pub kind: Kind,
+    pub id_label: &'static str,
+    pub name_label: &'static str,
+    pub warning: Option<&'static str>,
+    pub once_level: bool,
+    pub fields: &'static [Field],
+}
+
+#[derive(Default)]
+pub struct ListState {
+    pub offset: f32,
+    pub ensure_visible: bool,
+}
+
+#[derive(Default)]
+pub struct SuggestState {
+    pub open: bool,
+    pub map: String,
+    pub mob: String,
+    pub replace: bool,
+    pub result: String,
+    /// The list should scroll to the selected row on the next frame (a suggestion was added).
+    pub scroll: bool,
+}
+
+// ---------- options, copied from webgui/tactics.js ----------
+
+static BASIC_OPTIONS: &[(&str, &str)] = &[
+    ("Tank", "TACT_TANK"),
+    ("Ignore", "TACT_IGNORE"),
+    ("Attack (low)", "TACT_ATTACK_L"),
+    ("Attack (medium)", "TACT_ATTACK_M"),
+    ("Attack (high)", "TACT_ATTACK_H"),
+    ("React (low)", "TACT_REACT_L"),
+    ("React (medium)", "TACT_REACT_M"),
+    ("React (high)", "TACT_REACT_H"),
+    ("React (self)", "TACT_REACT_SELF"),
+    ("Snipe (low)", "TACT_SNIPE_L"),
+    ("Snipe (medium)", "TACT_SNIPE_M"),
+    ("Snipe (high)", "TACT_SNIPE_H"),
+    ("Attack (low) React (medium)", "TACT_ATK_L_REACT_M"),
+    ("Attack (last)", "TACT_ATTACK_LAST"),
+    ("Attack (top)", "TACT_ATTACK_TOP"),
+];
+static KITE_OPTIONS: &[(&str, &str)] = &[
+    ("Never", "KITE_NEVER"),
+    ("React", "KITE_REACT"),
+    ("Always", "KITE_ALWAYS"),
+];
+static KS_OPTIONS: &[(&str, &str)] = &[
+    ("Never", "KS_NEVER"),
+    ("Always", "KS_ALWAYS"),
+    ("Polite", "KS_POLITE"),
+];
+static CHASE_OPTIONS: &[(&str, &str)] = &[
+    ("Normal", "CHASE_NORMAL"),
+    ("Always", "CHASE_ALWAYS"),
+    ("Never", "CHASE_NEVER"),
+    ("Pause for SP", "CHASE_CLEVER"),
+];
+static PUSH_OPTIONS: &[(&str, &str)] = &[
+    ("Never", "PUSH_NEVER"),
+    ("Off self", "PUSH_SELF"),
+    ("Off self + friend", "PUSH_FRIEND"),
+];
+static HOM_CAST: &[(&str, &str)] = &[
+    ("No", "CAST_PASSIVE"),
+    ("React to casts", "CAST_REACT"),
+    ("React w/Any", "CAST_REACT_ANY"),
+    ("React w/Breeze", "CAST_REACT_BREEZE"),
+    ("React w/Old", "CAST_REACT_MAIN"),
+    ("React w/S", "CAST_REACT_S"),
+    ("React w/Mob", "CAST_REACT_MOB"),
+    ("React w/Debuff", "CAST_REACT_DEBUFF"),
+    ("React w/Minions", "CAST_REACT_MINION"),
+];
+static MER_CAST: &[(&str, &str)] = &[
+    ("No", "CAST_PASSIVE"),
+    ("React to casts", "CAST_REACT"),
+    ("React w/Any", "CAST_REACT_ANY"),
+    ("React w/LexDiv", "CAST_REACT_LEXDIV"),
+    ("React w/Main", "CAST_REACT_MAIN"),
+    ("React w/Mob", "CAST_REACT_MOB"),
+    ("React w/Provoke", "CAST_REACT_PROVOKE"),
+    ("React w/Sandman", "CAST_REACT_SANDMAN"),
+    ("React w/Freeze", "CAST_REACT_FREEZE"),
+    ("React w/DecAgi", "CAST_REACT_DECAGI"),
+    ("React w/Debuff", "CAST_REACT_DEBUFF"),
+    ("React w/Crash", "CAST_REACT_CRASH"),
+];
+static HOM_CLASS: &[(&str, &str)] = &[
+    ("Any skill", "CLASS_BOTH"),
+    ("Non-Homun S skills", "CLASS_OLD"),
+    ("Homun S skills", "CLASS_S"),
+    ("AoE attacks", "CLASS_MOB"),
+    ("Combo (first skill)", "CLASS_COMBO_1"),
+    ("Combo (full combos)", "CLASS_COMBO_2"),
+    ("Summon minions", "CLASS_MINION"),
+    ("Grapple (Tinder Breaker)", "CLASS_GRAPPLE"),
+    ("Grapple (CBC)", "CLASS_GRAPPLE_1"),
+    ("Grapple (EQC)", "CLASS_GRAPPLE_2"),
+    ("Minions + Pre-S skill", "CLASS_MIN_OLD"),
+    ("Minions + Homun S", "CLASS_MIN_S"),
+];
+static MER_CLASS: &[(&str, &str)] = &[("All skills", "CLASS_BOTH"), ("Mob skills", "CLASS_MOB")];
+static HOM_RESCUE: &[(&str, &str)] = &[
+    ("Never", "RESCUE_NEVER"),
+    ("Friends", "RESCUE_FRIEND"),
+    ("Owner's merc", "RESCUE_RETAINER"),
+    ("Self (homunculus)", "RESCUE_SELF"),
+    ("Owner", "RESCUE_OWNER"),
+    ("All of the above", "RESCUE_ALL"),
+];
+static MER_RESCUE: &[(&str, &str)] = &[
+    ("Never", "RESCUE_NEVER"),
+    ("Friends", "RESCUE_FRIEND"),
+    ("Owner's homunculus", "RESCUE_RETAINER"),
+    ("Self (mercenary)", "RESCUE_SELF"),
+    ("Owner", "RESCUE_OWNER"),
+    ("All of the above", "RESCUE_ALL"),
+];
+static HOM_DEBUFF: &[(&str, Option<&str>)] = &[
+    ("Never", None),
+    ("Any", Some("ANY")),
+    ("Silent Breeze", Some("BREEZE")),
+    ("Volcanic Ash", Some("ASH")),
+];
+static MER_DEBUFF: &[(&str, Option<&str>)] = &[
+    ("Never", None),
+    ("Any", Some("ANY")),
+    ("Crash", Some("CRASH")),
+    ("Provoke", Some("PROVOKE")),
+    ("Sandman", Some("SANDMAN")),
+    ("Freeze Trap", Some("FREEZE")),
+    ("Decrease Agi", Some("DECAGI")),
+    ("Lex Divina", Some("LEXDIV")),
+];
+
+// The field order follows the web GUI; the form lays them out in two columns.
+static HOM_FIELDS: &[Field] = &[
+    Field { index: BASIC, label: "Basic Behavior", kind: FieldKind::Select(BASIC_OPTIONS) },
+    Field { index: DEBUFF, label: "Debuff", kind: FieldKind::Debuff(HOM_DEBUFF) },
+    Field { index: SKILL, label: "Use Attack Skills", kind: FieldKind::Skill },
+    Field { index: KITE, label: "Kiting", kind: FieldKind::Select(KITE_OPTIONS) },
+    Field { index: CAST, label: "React", kind: FieldKind::Select(HOM_CAST) },
+    Field { index: CLASS, label: "Skill Class", kind: FieldKind::Select(HOM_CLASS) },
+    Field { index: SNIPE, label: "Snipe OK", kind: FieldKind::Snipe },
+    Field { index: RESCUE, label: "Rescue", kind: FieldKind::Select(HOM_RESCUE) },
+    Field { index: SP, label: "SP", kind: FieldKind::Sp },
+    Field { index: KS, label: "Kill-steal", kind: FieldKind::Select(KS_OPTIONS) },
+    Field { index: WEIGHT, label: "Weight", kind: FieldKind::Weight },
+    Field { index: CHASE, label: "Chase", kind: FieldKind::Select(CHASE_OPTIONS) },
+];
+static MER_FIELDS: &[Field] = &[
+    Field { index: BASIC, label: "Basic Behavior", kind: FieldKind::Select(BASIC_OPTIONS) },
+    Field { index: DEBUFF, label: "Use Debuffs", kind: FieldKind::Debuff(MER_DEBUFF) },
+    Field { index: SKILL, label: "Use Attack Skills", kind: FieldKind::Skill },
+    Field { index: KITE, label: "Kiting", kind: FieldKind::Select(KITE_OPTIONS) },
+    Field { index: CAST, label: "React", kind: FieldKind::Select(MER_CAST) },
+    Field { index: CLASS, label: "Skill Class", kind: FieldKind::Select(MER_CLASS) },
+    Field { index: SNIPE, label: "Snipe OK", kind: FieldKind::Snipe },
+    Field { index: PUSH, label: "Push", kind: FieldKind::Select(PUSH_OPTIONS) },
+    Field { index: RESCUE, label: "Rescue", kind: FieldKind::Select(MER_RESCUE) },
+    Field { index: SP, label: "SP", kind: FieldKind::Sp },
+    Field { index: KS, label: "Kill Steal", kind: FieldKind::Select(KS_OPTIONS) },
+    Field { index: WEIGHT, label: "Weight", kind: FieldKind::Weight },
+    Field { index: CHASE, label: "Chase", kind: FieldKind::Select(CHASE_OPTIONS) },
+];
+static HOM_PVP_FIELDS: &[Field] = &[
+    Field { index: BASIC, label: "Basic Behavior", kind: FieldKind::Select(BASIC_OPTIONS) },
+    Field { index: CAST, label: "React", kind: FieldKind::Select(HOM_CAST) },
+    Field { index: DEBUFF, label: "Use Debuffs", kind: FieldKind::Debuff(HOM_DEBUFF) },
+    Field { index: SKILL, label: "Use Attack Skills", kind: FieldKind::Skill },
+    Field { index: KITE, label: "Kiting", kind: FieldKind::Select(KITE_OPTIONS) },
+    Field { index: CLASS, label: "Skill Class", kind: FieldKind::Select(HOM_CLASS) },
+    Field { index: RESCUE, label: "Rescue", kind: FieldKind::Select(HOM_RESCUE) },
+];
+static MER_PVP_FIELDS: &[Field] = &[
+    Field { index: BASIC, label: "Basic Behavior", kind: FieldKind::Select(BASIC_OPTIONS) },
+    Field { index: CAST, label: "React", kind: FieldKind::Select(MER_CAST) },
+    Field { index: DEBUFF, label: "Use Debuffs", kind: FieldKind::Debuff(MER_DEBUFF) },
+    Field { index: SKILL, label: "Use Attack Skills", kind: FieldKind::Skill },
+    Field { index: PUSH, label: "Use Pushback", kind: FieldKind::Select(PUSH_OPTIONS) },
+    Field { index: KITE, label: "Kiting", kind: FieldKind::Select(KITE_OPTIONS) },
+    Field { index: CLASS, label: "Skill Class", kind: FieldKind::Select(MER_CLASS) },
+    Field { index: RESCUE, label: "Rescue", kind: FieldKind::Select(MER_RESCUE) },
+];
+
+static HOM: Layout = Layout {
+    title: "Homunculus Tactics",
+    file: "H_Tactics.lua",
+    kind: Kind::Tactics,
+    id_label: "Monster ID",
+    name_label: "Monster Name",
+    warning: None,
+    once_level: true,
+    fields: HOM_FIELDS,
+};
+static MER: Layout = Layout {
+    title: "Mercenary Tactics",
+    file: "M_Tactics.lua",
+    kind: Kind::Tactics,
+    id_label: "Monster ID",
+    name_label: "Monster Name",
+    warning: Some(
+        "WARNING: In order for non-default tactics to work, you must create a MobID file. \
+         These must be re-generated after each maintenance. If you do not know what this \
+         means, you don't have it.",
+    ),
+    once_level: false,
+    fields: MER_FIELDS,
+};
+static HOM_PVP: Layout = Layout {
+    title: "PVP Tactics",
+    file: "H_PVP_Tact.lua",
+    kind: Kind::Pvp,
+    id_label: "Player ID or Friend Class",
+    name_label: "Monster Name",
+    warning: None,
+    once_level: true,
+    fields: HOM_PVP_FIELDS,
+};
+static MER_PVP: Layout = Layout {
+    title: "Merc PVP Tactics",
+    file: "M_PVP_Tact.lua",
+    kind: Kind::Pvp,
+    id_label: "Player ID or Friend Class",
+    name_label: "Monster Name",
+    warning: None,
+    once_level: false,
+    fields: MER_PVP_FIELDS,
+};
+
+// ---------- drawing ----------
+
+/// Draws the whole tab. Returns true when something was added/removed (the caller may want to
+/// refresh a summary in the same frame).
+pub fn draw(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    tab: Tab,
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    filter: &mut String,
+    suggest: &mut SuggestState,
+    list_state: &mut ListState,
+    mobs: &Mobs,
+) {
+    let layout = tab.layout();
+    if let Some(warning) = layout.warning {
+        warning_box(ui, p, &tr(warning));
+        ui.add_space(6.0);
+    }
+    let height = (ui.available_height() - 22.0).max(320.0);
+    let total = ui.available_width();
+    let left_w = (total * 0.30).clamp(230.0, 340.0);
+    let right_w = (total - left_w - 8.0).max(240.0);
+    ui.horizontal_top(|ui| {
+        // child_ui + advance_cursor_after_rect instead of allocate_ui_with_layout: the latter
+        // registers a hover interaction over the whole column AFTER its contents, which sits on
+        // top of the rows and made their hover/click responses false (egui only sees the column).
+        let left_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(left_w, height));
+        let mut list_ui = ui.child_ui(left_rect, egui::Layout::top_down(egui::Align::Min), None);
+        list_panel(
+            &mut list_ui,
+            p,
+            tab,
+            tactics,
+            selected,
+            filter,
+            suggest,
+            list_state,
+            mobs,
+            height,
+        );
+        ui.advance_cursor_after_rect(left_rect);
+        ui.add_space(8.0);
+        let right_rect = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(right_w, height));
+        let mut form_ui = ui.child_ui(right_rect, egui::Layout::top_down(egui::Align::Min), None);
+        form_panel(&mut form_ui, p, layout, tab.key(), tactics, *selected, mobs, height);
+        ui.advance_cursor_after_rect(right_rect);
+    });
+    suggest_window(ui.ctx(), p, tactics, selected, filter, suggest, mobs);
+    ui.add_space(4.0);
+    let visible = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
+    ui.label(
+        egui::RichText::new(crate::i18n::tr_args(
+            "{0} entries  ·  {1} changed  ·  Apply Settings writes {2}",
+            &[&visible.to_string(), &tactics.changed().to_string(), layout.file],
+        ))
+        .color(p.muted)
+        .size(11.0),
+    );
+}
+
+fn warning_box(ui: &mut egui::Ui, p: &Palette, text: &str) {
+    egui::Frame::none()
+        .fill(p.pending.gamma_multiply(0.12))
+        .stroke(egui::Stroke::new(1.0_f32, p.pending.gamma_multiply(0.7)))
+        .rounding(egui::Rounding::same(5.0))
+        .inner_margin(egui::Margin::symmetric(10.0, 6.0))
+        .show(ui, |ui| {
+            ui.set_min_width(ui.available_width().max(0.0));
+            ui.label(egui::RichText::new(text).color(p.text).size(11.5));
+        });
+}
+
+fn entry_label(layout: &Layout, tactics: &Tactics, index: usize, mobs: &Mobs) -> String {
+    let entry = &tactics.entries[index];
+    if layout.kind.is_pvp() {
+        return entry.id.clone();
+    }
+    if !entry.name.is_empty() {
+        return entry.name.clone();
+    }
+    if let Some(name) = mobs.name(&entry.id) {
+        return format!("{name} (#{})", entry.id);
+    }
+    format!("(unnamed) #{}", entry.id)
+}
+
+fn list_panel(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    tab: Tab,
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    filter: &mut String,
+    suggest: &mut SuggestState,
+    list_state: &mut ListState,
+    mobs: &Mobs,
+    height: f32,
+) {
+    let layout = tab.layout();
+    let mut select_first = false;
+    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new(tr("Find:")).color(p.muted).size(11.0));
+        let width = (ui.available_width() - 50.0).max(80.0);
+        let response = ui.add_sized(
+            [width, 20.0],
+            egui::TextEdit::singleline(filter)
+                .hint_text(tr("type a name or id, Enter picks the first match"))
+                .id_source(format!("tact-filter:{}", tab.key())),
+        );
+        if response.lost_focus() && !response.changed() {
+            select_first = true;
+        }
+        if ui.small_button(tr("Clear")).clicked() {
+            filter.clear();
+        }
+    });
+    ui.add_space(4.0);
+    let needle = filter.trim().to_lowercase();
+    let visible: Vec<usize> = tactics
+        .entries
+        .iter()
+        .enumerate()
+        .filter(|(_, entry)| !entry.is_removed())
+        .filter(|(index, entry)| {
+            if needle.is_empty() {
+                return true;
+            }
+            entry_label(layout, tactics, *index, mobs).to_lowercase().contains(&needle)
+                || entry.id.to_lowercase().contains(&needle)
+                || entry.name.to_lowercase().contains(&needle)
+        })
+        .map(|(index, _)| index)
+        .collect();
+    let visible_count = visible.len();
+    let mut ensure_visible =
+        std::mem::take(&mut suggest.scroll) || std::mem::take(&mut list_state.ensure_visible);
+    if select_first {
+        if let Some(first) = visible.first() {
+            *selected = *first;
+            ensure_visible = true;
+        }
+    } else if !visible.is_empty() && !visible.contains(selected) {
+        *selected = visible[0];
+        ensure_visible = true;
+    }
+    // Arrow keys navigate the list when no text field or popup has the keyboard. The Find box
+    // and the form controls keep their usual keys.
+    let keyboard_free = ui
+        .ctx()
+        .memory(|memory| memory.focused().is_none() && !memory.any_popup_open());
+    if keyboard_free && !visible.is_empty() {
+        let current = visible.iter().position(|index| *index == *selected);
+        let mut target = None;
+        ui.input(|input| {
+            if input.key_pressed(egui::Key::ArrowDown) {
+                target = Some(current.map(|i| (i + 1).min(visible.len() - 1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::ArrowUp) {
+                target = Some(current.map(|i| i.saturating_sub(1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::PageDown) {
+                target = Some(current.map(|i| (i + 10).min(visible.len() - 1)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::PageUp) {
+                target = Some(current.map(|i| i.saturating_sub(10)).unwrap_or(0));
+            } else if input.key_pressed(egui::Key::Home) {
+                target = Some(0);
+            } else if input.key_pressed(egui::Key::End) {
+                target = Some(visible.len() - 1);
+            }
+        });
+        if let Some(position) = target {
+            *selected = visible[position];
+            ensure_visible = true;
+        }
+    }
+
+    let row_h = 26.0;
+    let list_height = (height - 80.0).max(140.0);
+    // A fixed rectangle + manual row drawing: no ScrollArea, so the wheel and the keys cannot
+    // be stolen by an invisible interaction area, and nothing paints outside the card.
+    let (list_rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width().max(0.0), list_height),
+        egui::Sense::hover(),
+    );
+    let content_rect = list_rect.shrink(3.0);
+    let track_w = 9.0;
+    let rows_rect = egui::Rect::from_min_max(
+        content_rect.min,
+        egui::pos2(content_rect.right() - track_w, content_rect.bottom()),
+    );
+    let viewport_h = rows_rect.height().max(1.0);
+    let content_h = visible.len() as f32 * row_h;
+    let max_offset = (content_h - viewport_h).max(0.0);
+    list_state.offset = list_state.offset.clamp(0.0, max_offset);
+
+    // Wheel: the pointer over the list scrolls it, with no ScrollArea in between.
+    if ui.rect_contains_pointer(list_rect) {
+        let delta = ui.input(|input| input.raw_scroll_delta.y);
+        if delta != 0.0 {
+            list_state.offset = (list_state.offset - delta).clamp(0.0, max_offset);
+        }
+    }
+
+    if ensure_visible {
+        if let Some(position) = visible.iter().position(|index| *index == *selected) {
+            let top = position as f32 * row_h;
+            let bottom = top + row_h;
+            if top < list_state.offset {
+                list_state.offset = top;
+            }
+            if bottom > list_state.offset + viewport_h {
+                list_state.offset = bottom - viewport_h;
+            }
+            list_state.offset = list_state.offset.clamp(0.0, max_offset);
+        }
+    }
+
+    ui.painter().rect_filled(list_rect, egui::Rounding::same(4.0), p.grid);
+    ui.painter().rect_stroke(
+        list_rect,
+        egui::Rounding::same(4.0),
+        egui::Stroke::new(1.0_f32, p.border),
+    );
+
+    let first = (list_state.offset / row_h).floor() as usize;
+    let count = (viewport_h / row_h).ceil() as usize + 1;
+    for (position, index) in visible.iter().enumerate().skip(first).take(count) {
+        let y = rows_rect.top() + position as f32 * row_h - list_state.offset;
+        let rect = egui::Rect::from_min_size(
+            egui::pos2(rows_rect.left(), y),
+            egui::vec2(rows_rect.width(), row_h),
+        );
+        if !rect.intersects(rows_rect) {
+            continue;
+        }
+        let text = entry_label(layout, tactics, *index, mobs);
+        let active = *index == *selected;
+        let response = ui.interact(
+            rect,
+            egui::Id::new(("tact-row", tab.key(), *index)),
+            egui::Sense::click(),
+        );
+        let fill = if active {
+            p.primary
+        } else if response.hovered() {
+            p.panel2
+        } else {
+            egui::Color32::TRANSPARENT
+        };
+        ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
+        let clip = rect.intersect(rows_rect);
+        ui.painter().with_clip_rect(clip).text(
+            rect.left_center() + egui::vec2(6.0, 0.0),
+            egui::Align2::LEFT_CENTER,
+            &text,
+            egui::FontId::proportional(12.0),
+            if active { egui::Color32::WHITE } else { p.text },
+        );
+        ui.ctx().data_mut(|data| {
+            data.insert_temp(egui::Id::new(("tact-row", tab.key(), *index)), rect);
+        });
+        if response.clicked() {
+            *selected = *index;
+        }
+        response.on_hover_cursor(egui::CursorIcon::PointingHand);
+    }
+
+    if visible.is_empty() {
+        ui.painter().text(
+            rows_rect.center(),
+            egui::Align2::CENTER_CENTER,
+            &tr("No entries yet. Use Add."),
+            egui::FontId::proportional(12.0),
+            p.muted,
+        );
+    }
+
+    if max_offset > 0.0 {
+        let track = egui::Rect::from_min_max(
+            egui::pos2(content_rect.right() - track_w, content_rect.top()),
+            content_rect.max,
+        );
+        ui.painter().rect_filled(track, egui::Rounding::same(4.0), p.panel2);
+        let handle_h = (viewport_h * viewport_h / content_h).clamp(24.0, viewport_h);
+        let travel = (track.height() - handle_h).max(1.0);
+        let handle_y = track.top() + (list_state.offset / max_offset) * travel;
+        let handle = egui::Rect::from_min_size(
+            egui::pos2(track.left() + 1.0, handle_y),
+            egui::vec2(track.width() - 2.0, handle_h),
+        );
+        ui.painter().rect_filled(handle, egui::Rounding::same(3.0), p.tab_text);
+        let bar = ui.interact(
+            track,
+            egui::Id::new(("tact-scrollbar", tab.key())),
+            egui::Sense::click_and_drag(),
+        );
+        if bar.dragged() || bar.clicked() {
+            if let Some(pos) = bar.interact_pointer_pos() {
+                let t = ((pos.y - track.top() - handle_h / 2.0) / travel).clamp(0.0, 1.0);
+                list_state.offset = t * max_offset;
+            }
+        }
+        bar.on_hover_cursor(egui::CursorIcon::PointingHand);
+    }
+
+    ui.ctx().data_mut(|data| {
+        data.insert_temp(
+            egui::Id::new(("tact-scroll", tab.key())),
+            (content_h, viewport_h, list_state.offset),
+        );
+    });
+
+    ui.add_space(6.0);
+    ui.horizontal(|ui| {
+        if ui
+            .add(
+                egui::Button::new(egui::RichText::new(tr("Add")).color(p.btn_text))
+                    .fill(p.btn1)
+                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+            )
+            .clicked()
+        {
+            let id = if layout.kind.is_pvp() {
+                let mut candidate = "new".to_string();
+                let mut suffix = 1;
+                while tactics.entries.iter().any(|entry| entry.id == candidate && !entry.is_removed()) {
+                    candidate = format!("new{suffix}");
+                    suffix += 1;
+                }
+                candidate
+            } else {
+                tactics.next_numeric_id()
+            };
+            *selected = tactics.add(id, "");
+            list_state.ensure_visible = true;
+        }
+        let can_remove = tactics
+            .entries
+            .get(*selected)
+            .map(|entry| !entry.is_zero() && !entry.is_removed())
+            .unwrap_or(false);
+        if ui
+            .add_enabled(
+                can_remove,
+                egui::Button::new(egui::RichText::new(tr("Remove")).color(p.btn_text))
+                    .fill(p.btn1)
+                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+            )
+            .clicked()
+        {
+            if tactics.remove(*selected) {
+                *selected = 0;
+                list_state.ensure_visible = true;
+            }
+        }
+        if !layout.kind.is_pvp() && ui.small_button(tr("Suggest...")).clicked() {
+            suggest.open = true;
+        }
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            let total = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
+            ui.label(
+                egui::RichText::new(crate::i18n::tr_args("{0} of {1}", &[&visible_count.to_string(), &total.to_string()]))
+                    .color(p.muted)
+                    .size(11.0),
+            );
+        });
+    });
+}
+
+#[allow(clippy::too_many_arguments)]
+fn form_panel(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    layout: &Layout,
+    tab_key: &str,
+    tactics: &mut Tactics,
+    selected: usize,
+    mobs: &Mobs,
+    height: f32,
+) {
+    theme::card(p).show(ui, |ui| {
+        ui.set_min_size(egui::vec2(ui.available_width().max(0.0), (height - 12.0).max(200.0)));
+        // ids of the other entries, for the duplicate validation below (before the mutable borrow)
+        let others: Vec<String> = tactics
+            .entries
+            .iter()
+            .enumerate()
+            .filter(|(index, other)| *index != selected && !other.is_removed())
+            .map(|(_, other)| other.id.clone())
+            .collect();
+        let Some(entry) = tactics.entry_mut(selected) else {
+            ui.label(egui::RichText::new(tr("Select an entry on the left.")).color(p.muted));
+            return;
+        };
+        if entry.is_removed() {
+            ui.label(egui::RichText::new(tr("This entry was removed.")).color(p.muted));
+            return;
+        }
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .drag_to_scroll(false)
+            .show(ui, |ui| {
+                ui.set_min_width(ui.available_width().max(0.0));
+                ui.spacing_mut().item_spacing.y = 6.0;
+                ui.horizontal_top(|ui| {
+                    if !layout.kind.is_pvp() {
+                        let width = (ui.available_width() * 0.62).max(160.0);
+                        ui.allocate_ui_with_layout(
+                            egui::vec2(width, 44.0),
+                            egui::Layout::top_down(egui::Align::Min),
+                            |ui| {
+                                ui.label(
+                                    egui::RichText::new(layout.name_label).color(p.muted).size(11.0),
+                                );
+                                ui.add_enabled_ui(!entry.is_zero(), |ui| {
+                                    ui.add_sized(
+                                        [ui.available_width().max(60.0), 22.0],
+                                        egui::TextEdit::singleline(&mut entry.name)
+                                            .id_source(format!("{tab_key}:name")),
+                                    );
+                                });
+                            },
+                        );
+                    }
+                    let id_width = if layout.kind.is_pvp() {
+                        ui.available_width()
+                    } else {
+                        ui.available_width().max(120.0)
+                    };
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(id_width, 44.0),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            ui.label(egui::RichText::new(layout.id_label).color(p.muted).size(11.0));
+                            let zero = entry.is_zero();
+                            ui.add_enabled_ui(!zero, |ui| {
+                                ui.add_sized(
+                                    [ui.available_width().max(60.0), 22.0],
+                                    egui::TextEdit::singleline(&mut entry.id)
+                                        .id_source(format!("{tab_key}:id")),
+                                );
+                            });
+                        },
+                    );
+                });
+                let duplicate = others.iter().any(|id| id == &entry.id);
+                let invalid = if layout.kind.is_pvp() {
+                    entry.id.trim().is_empty() || entry.id == "new" || duplicate
+                } else {
+                    entry.id.trim().parse::<i64>().is_err() || duplicate
+                };
+                if invalid {
+                    let message = tr(if duplicate {
+                        "This id is already used by another entry."
+                    } else if layout.kind.is_pvp() {
+                        "You must enter a name."
+                    } else {
+                        "You must enter a numeric monster id."
+                    });
+                    ui.label(egui::RichText::new(message).color(p.pending).size(11.0));
+                }
+                if !layout.kind.is_pvp() {
+                    if let Some(mob) = mobs.get(&entry.id) {
+                        let mut line = format!(
+                            "#{} {}  ·  Lv {}  ·  {} {}  ·  {}",
+                            mob.id,
+                            mob.name,
+                            mob.level,
+                            mobs.element_name(mob),
+                            mob.element_level,
+                            mobs.race_name(mob)
+                        );
+                        if mob.flags & 2 != 0 {
+                            line.push_str("  ·  MVP");
+                        } else if mob.flags & 1 != 0 {
+                            line.push_str("  ·  Boss");
+                        }
+                        ui.label(egui::RichText::new(line).color(p.muted).size(11.0));
+                    }
+                }
+                ui.add_space(2.0);
+                egui::Frame::none()
+                    .stroke(egui::Stroke::new(1.0_f32, p.border))
+                    .rounding(egui::Rounding::same(5.0))
+                    .inner_margin(egui::Margin::same(8.0))
+                    .show(ui, |ui| {
+                        ui.set_min_width(ui.available_width().max(0.0));
+                        ui.label(
+                            egui::RichText::new(tr("Overall Tactics")).color(p.tab_text).strong(),
+                        );
+                        ui.add_space(2.0);
+                        ui.columns(2, |columns| {
+                            for (index, field) in layout.fields.iter().enumerate() {
+                                let column = &mut columns[index % 2];
+                                field_ui(column, p, layout, tab_key, field, entry);
+                            }
+                        });
+                    });
+            });
+    });
+}
+
+fn field_ui(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    layout: &Layout,
+    tab_key: &str,
+    field: &Field,
+    entry: &mut azzy_config::tactics::Entry,
+) {
+    ui.add_space(3.0);
+    ui.label(egui::RichText::new(tr(field.label)).color(p.muted).size(11.0));
+    let id = format!("tact:{tab_key}:{}", field.index);
+    match &field.kind {
+        FieldKind::Select(options) => {
+            let current = entry.values[field.index].clone();
+            let selected = options
+                .iter()
+                .find(|(_, token)| *token == current)
+                .map(|(label, _)| tr(label))
+                .unwrap_or_else(|| unsupported(&current));
+            let mut chosen = selected.clone();
+            egui::ComboBox::from_id_source(&id)
+                .width(ui.available_width().max(80.0))
+                .selected_text(selected)
+                .show_ui(ui, |ui| {
+                    for (label, token) in options.iter() {
+                        if ui.selectable_value(&mut chosen, tr(label), tr(label)).clicked() {
+                            entry.values[field.index] = (*token).to_string();
+                        }
+                    }
+                });
+        }
+        FieldKind::Skill => skill_ui(ui, &id, layout.once_level, entry),
+        FieldKind::Debuff(options) => debuff_ui(ui, p, &id, options, entry),
+        FieldKind::Snipe => {
+            let mut on = entry.values[field.index] != "SNIPE_DISABLE";
+            if ui.checkbox(&mut on, tr("Snipe OK")).changed() {
+                entry.values[field.index] = if on { "SNIPE_OK" } else { "SNIPE_DISABLE" }.to_string();
+            }
+        }
+        FieldKind::Sp => {
+            let mut value = entry.values[field.index].parse::<f64>().unwrap_or(-1.0);
+            let response = ui.add(
+                egui::DragValue::new(&mut value)
+                    .range(-1.0..=1000.0)
+                    .speed(1.0)
+                    .max_decimals(0),
+            );
+            if response.changed() {
+                entry.values[field.index] = format!("{}", value as i64);
+            }
+        }
+        FieldKind::Weight => {
+            let mut value = entry.values[field.index].parse::<f64>().unwrap_or(1.0);
+            let response = ui.add(
+                egui::DragValue::new(&mut value)
+                    .range(0.0..=20.0)
+                    .speed(0.1)
+                    .max_decimals(1),
+            );
+            if response.changed() {
+                entry.values[field.index] = format_weight(value);
+            }
+        }
+    }
+}
+
+fn unsupported(current: &str) -> String {
+    format!("{current} ({})", tr("not supported by the GUI"))
+}
+
+fn format_weight(value: f64) -> String {
+    let rounded = (value * 10.0).round() / 10.0;
+    if rounded.fract() == 0.0 {
+        format!("{}", rounded as i64)
+    } else {
+        format!("{rounded}")
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SkillMode {
+    Always,
+    Never,
+    Times,
+    Once,
+    Raw,
+}
+
+fn skill_ui(
+    ui: &mut egui::Ui,
+    id: &str,
+    once_level: bool,
+    entry: &mut azzy_config::tactics::Entry,
+) {
+    let current = entry.values[SKILL].clone();
+    let (mut mode, mut number) = match current.as_str() {
+        "SKILL_ALWAYS" => (SkillMode::Always, 100.0),
+        "SKILL_NEVER" => (SkillMode::Never, 0.0),
+        _ => match current.trim().parse::<i64>() {
+            Ok(value) if value < 0 && once_level => (SkillMode::Once, (-value).min(5) as f64),
+            Ok(value) => (SkillMode::Times, value.clamp(0, 100) as f64),
+            Err(_) => (SkillMode::Raw, 0.0),
+        },
+    };
+    let before_mode = mode;
+    let selected = tr(match mode {
+        SkillMode::Always => "Always",
+        SkillMode::Never => "Never",
+        SkillMode::Times => "This many times",
+        SkillMode::Once => "Once; level",
+        SkillMode::Raw => "Custom",
+    });
+    let mut chosen = selected.to_string();
+    ui.horizontal(|ui| {
+        egui::ComboBox::from_id_source(format!("{id}:mode"))
+            .width((ui.available_width() - 70.0).max(90.0))
+            .selected_text(if mode == SkillMode::Raw {
+                unsupported(&current)
+            } else {
+                selected.clone()
+            })
+            .show_ui(ui, |ui| {
+                if ui.selectable_value(&mut chosen, tr("Always"), tr("Always")).clicked() {
+                    mode = SkillMode::Always;
+                }
+                if ui.selectable_value(&mut chosen, tr("Never"), tr("Never")).clicked() {
+                    mode = SkillMode::Never;
+                }
+                if ui.selectable_value(&mut chosen, tr("This many times"), tr("This many times")).clicked() {
+                    mode = SkillMode::Times;
+                }
+                if once_level
+                    && ui.selectable_value(&mut chosen, tr("Once; level"), tr("Once; level")).clicked()
+                {
+                    mode = SkillMode::Once;
+                }
+                if mode == SkillMode::Raw {
+                    ui.selectable_value(&mut chosen, tr("Custom"), unsupported(&current));
+                }
+            });
+        ui.add_enabled_ui(mode == SkillMode::Times || mode == SkillMode::Once, |ui| {
+            let response = ui.add(
+                egui::DragValue::new(&mut number)
+                    .range(if mode == SkillMode::Once { 1.0..=5.0 } else { 0.0..=100.0 })
+                    .speed(1.0)
+                    .max_decimals(0),
+            );
+            if response.changed() {
+                number = number.clamp(
+                    if mode == SkillMode::Once { 1.0 } else { 0.0 },
+                    if mode == SkillMode::Once { 5.0 } else { 100.0 },
+                );
+                entry.values[SKILL] = match mode {
+                    SkillMode::Once => format!("-{}", number as i64),
+                    _ => format!("{}", number as i64),
+                };
+            }
+        });
+        if mode != before_mode {
+            entry.values[SKILL] = match mode {
+                SkillMode::Always => "SKILL_ALWAYS".to_string(),
+                SkillMode::Never => "SKILL_NEVER".to_string(),
+                SkillMode::Times => format!("{}", number as i64),
+                SkillMode::Once => format!("-{}", number.max(1.0) as i64),
+                SkillMode::Raw => current.clone(),
+            };
+        }
+    });
+}
+
+fn debuff_ui(
+    ui: &mut egui::Ui,
+    p: &Palette,
+    id: &str,
+    options: &'static [(&'static str, Option<&'static str>)],
+    entry: &mut azzy_config::tactics::Entry,
+) {
+    let current = entry.values[DEBUFF].clone();
+    let mut kind: Option<&str> = None;
+    let mut phase = "C";
+    let mut known = current == "DEBUFF_NEVER";
+    if let Some(rest) = current.strip_prefix("DEBUFF_") {
+        if let Some((name, ending)) = rest.rsplit_once('_') {
+            if ending == "C" || ending == "A" {
+                if options.iter().any(|(_, token)| *token == Some(name)) {
+                    kind = Some(name);
+                    phase = ending;
+                    known = true;
+                }
+            }
+        }
+    }
+    let mut touched = false;
+    ui.horizontal(|ui| {
+        let selected = if known {
+            options
+                .iter()
+                .find(|(_, token)| *token == kind)
+                .map(|(label, _)| tr(label))
+                .unwrap_or_else(|| tr("Never"))
+        } else {
+            unsupported(&current)
+        };
+        let mut chosen = selected.clone();
+        egui::ComboBox::from_id_source(format!("{id}:kind"))
+            .width((ui.available_width() * 0.52).max(100.0))
+            .selected_text(selected)
+            .show_ui(ui, |ui| {
+                for (label, token) in options {
+                    if ui.selectable_value(&mut chosen, tr(label), tr(label)).clicked() {
+                        kind = *token;
+                        known = true;
+                        touched = true;
+                    }
+                }
+            });
+        ui.label(egui::RichText::new(tr("While")).color(p.muted).size(11.0));
+        let mut chasing = phase == "C";
+        ui.add_enabled_ui(kind.is_some(), |ui| {
+            egui::ComboBox::from_id_source(format!("{id}:phase"))
+                .width(86.0)
+                .selected_text(if chasing { tr("Chasing") } else { tr("Attacking") })
+                .show_ui(ui, |ui| {
+                    if ui.selectable_value(&mut chasing, true, tr("Chasing")).clicked() {
+                        phase = "C";
+                        touched = true;
+                    }
+                    if ui.selectable_value(&mut chasing, false, tr("Attacking")).clicked() {
+                        phase = "A";
+                        touched = true;
+                    }
+                });
+        });
+    });
+    // Only write when the user picked something: an unknown token must survive a redraw.
+    if touched {
+        entry.values[DEBUFF] = match kind {
+            None => "DEBUFF_NEVER".to_string(),
+            Some(kind) => format!("DEBUFF_{kind}_{phase}"),
+        };
+    }
+}
+
+fn add_suggested(
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    ids: &[u32],
+    replace: bool,
+    mobs: &Mobs,
+) -> String {
+    let mut added = 0;
+    let mut kept = 0;
+    let mut first_new = None;
+    for id in ids {
+        let Some(suggested) = mobs.suggest(*id) else { continue };
+        let existing = tactics
+            .entries
+            .iter()
+            .position(|entry| !entry.is_removed() && entry.id == suggested.id);
+        if let Some(index) = existing {
+            if !replace {
+                kept += 1;
+                continue;
+            }
+            if let Some(entry) = tactics.entry_mut(index) {
+                entry.name = suggested.name;
+                entry.values = suggested.values;
+                added += 1;
+            }
+        } else {
+            let index = tactics.add_with_values(suggested.id, suggested.name, suggested.values);
+            if first_new.is_none() {
+                first_new = Some(index);
+            }
+            added += 1;
+        }
+    }
+    if let Some(index) = first_new {
+        *selected = index;
+    }
+    crate::i18n::tr_args(
+        "Added {0} monster(s), {1} already had a row.",
+        &[&added.to_string(), &kept.to_string()],
+    )
+}
+
+fn suggest_window(
+    ctx: &egui::Context,
+    p: &Palette,
+    tactics: &mut Tactics,
+    selected: &mut usize,
+    filter: &mut String,
+    suggest: &mut SuggestState,
+    mobs: &Mobs,
+) {
+    if !suggest.open {
+        return;
+    }
+    let mut open = suggest.open;
+    let mut close_after = false;
+    egui::Window::new(tr("Suggest tactics from the monster database"))
+        .open(&mut open)
+        .collapsible(false)
+        .resizable(true)
+        .default_width(560.0)
+        .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 58.0))
+        .show(ctx, |ui| {
+            ui.label(
+                egui::RichText::new(
+                    tr("Build rows from what the monster is (plant, boss, MVP, aggressive, immobile)."),
+                )
+                .color(p.muted)
+                .size(11.0),
+            );
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label(tr("Map:"));
+                ui.add_sized(
+                    [220.0, 20.0],
+                    egui::TextEdit::singleline(&mut suggest.map)
+                        .hint_text(tr("e.g. prt_fild08"))
+                        .id_source("suggest:map"),
+                );
+                if ui
+                    .button(tr("Add the monsters of this map"))
+                    .on_hover_text(tr("Adds every monster that spawns on the map"))
+                    .clicked()
+                {
+                    let name = suggest.map.trim().to_string();
+                    match mobs.map_mobs(&name) {
+                        Some(ids) => {
+                            let ids = ids.clone();
+                            suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                            close_after = true;
+                        }
+                        None => suggest.result = format!("{} {name}", tr("Unknown map:")),
+                    }
+                }
+            });
+            if !suggest.map.trim().is_empty() {
+                let needle = suggest.map.trim().to_lowercase();
+                let names: Vec<String> = mobs
+                    .map_names()
+                    .into_iter()
+                    .filter(|name| name.to_lowercase().contains(&needle))
+                    .take(8)
+                    .map(str::to_string)
+                    .collect();
+                if !names.is_empty() {
+                    ui.horizontal_wrapped(|ui| {
+                        for name in names {
+                            if ui.small_button(&name).clicked() {
+                                suggest.map = name;
+                            }
+                        }
+                    });
+                }
+            }
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label(tr("Monster:"));
+                ui.add_sized(
+                    [220.0, 20.0],
+                    egui::TextEdit::singleline(&mut suggest.mob)
+                        .hint_text(tr("name or ID"))
+                        .id_source("suggest:mob"),
+                );
+                if ui.button(tr("Add monster")).clicked() {
+                    match Mobs::parse_mob(&suggest.mob) {
+                        Some(id) if mobs.mob(id).is_some() => {
+                            suggest.result = add_suggested(tactics, selected, &[id], suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                            close_after = true;
+                        }
+                        _ => suggest.result = format!("{} {}", tr("Unknown monster:"), suggest.mob.trim()),
+                    }
+                }
+            });
+            if !suggest.mob.trim().is_empty() {
+                ui.horizontal_wrapped(|ui| {
+                    for mob in mobs.search(&suggest.mob, 8) {
+                        if ui.small_button(mobs.label(mob)).clicked() {
+                            suggest.result =
+                                add_suggested(tactics, selected, &[mob.id], suggest.replace, mobs);
+                            suggest.scroll = true;
+                            filter.clear();
+                            close_after = true;
+                        }
+                    }
+                });
+            }
+            ui.add_space(6.0);
+            ui.horizontal(|ui| {
+                if ui
+                    .button(tr("Add all plants and mushrooms"))
+                    .clicked()
+                {
+                    let ids = mobs.plants();
+                    suggest.result = add_suggested(tactics, selected, &ids, suggest.replace, mobs);
+                    suggest.scroll = true;
+                    filter.clear();
+                    close_after = true;
+                }
+                ui.checkbox(&mut suggest.replace, tr("Replace rows that already exist"));
+            });
+            if !suggest.result.is_empty() {
+                ui.label(
+                    egui::RichText::new(&suggest.result)
+                        .color(p.pending)
+                        .strong()
+                        .size(11.5),
+                );
+            }
+            ui.separator();
+            ui.label(
+                egui::RichText::new(tr("Suggested rows (edit them afterwards as you like):"))
+                    .color(p.text)
+                    .size(11.5),
+            );
+            for rule in Mobs::rules() {
+                ui.label(egui::RichText::new(format!("• {}", tr(rule))).color(p.muted).size(11.0));
+            }
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new(
+                    tr("Monster and spawn data: rAthena Renewal. Spawns on your server may differ."),
+                )
+                .color(p.muted)
+                .italics()
+                .size(10.5),
+            );
+        });
+    suggest.open = open && !close_after;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn suggestions_add_and_replace_rows() {
+        let mobs = crate::mobs::load().unwrap();
+        let mut tactics = Tactics::parse("MyTact={}\r\n", Kind::Tactics);
+        let mut selected = 0;
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], false, &mobs);
+        assert!(result.contains("Added 1"), "{result}");
+        assert_eq!(tactics.entries[selected].id, "1002");
+        assert_eq!(tactics.entries[selected].name, "Poring (Water 1)");
+        assert_eq!(tactics.entries[selected].values[0], "TACT_ATTACK_M");
+
+        let count = tactics.entries.len();
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], false, &mobs);
+        assert!(result.contains("0 already had a row") || result.contains("1 already had a row"), "{result}");
+        assert_eq!(tactics.entries.len(), count);
+
+        let result = add_suggested(&mut tactics, &mut selected, &[1002], true, &mobs);
+        assert!(result.contains("Added 1"), "{result}");
+        assert_eq!(tactics.entries.len(), count);
+    }
+
+    #[test]
+    fn unknown_maps_and_monsters_are_reported() {
+        let mobs = crate::mobs::load().unwrap();
+        assert!(mobs.map_mobs("not_a_map").is_none());
+        assert!(Mobs::parse_mob("Unknown").is_none());
+    }
+}

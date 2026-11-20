@@ -45,7 +45,7 @@ No sobrescribas archivos personalizados sin revisarlos ni sustituyas el código
 nuevo con la carpeta antigua completa. Compara/importa los ajustes en la
 instalación actualizada, guarda, recarga y prueba.
 
-La GUI de Windows puede hacerlo por ti (menú **Update**, sección 3). Nunca
+La aplicación de escritorio puede hacerlo por ti (**Update AI from GitHub...**, sección 3). Nunca
 sobrescribe los archivos de la tabla anterior (ni `Types\*.lua`, salvo que
 marques la opción) y hace copia de seguridad de todo lo que reemplaza.
 
@@ -53,41 +53,55 @@ marques la opción) y hace copia de seguridad de todo lo que reemplaza.
 
 ### Aplicación Windows
 
-Ejecuta `AzzyAIConfig.exe` en `AI\USER_AI` instalada en el juego. Edita los
-archivos junto al ejecutable, incluso al abrirlo mediante un acceso directo.
-Comprueba la ubicación de la configuración antes de guardar.
+Ejecuta `AzzyAIConfig.exe` desde la carpeta `AI\USER_AI` instalada. Edita los archivos de
+esa carpeta, incluso si se abre desde un acceso directo. Revisa la ruta que muestra el pie
+antes de guardar.
+
+La aplicación aún no tiene firma de código, así que SmartScreen puede mostrar "Windows
+protegió tu PC" en una descarga nueva (un antivirus también puede marcar un ejecutable
+pequeño y poco descargado). El código está en este repositorio y el CI genera ese archivo
+a partir de él; para continuar, haz clic en **Más información > Ejecutar de todos modos**.
+La configuración por el navegador no necesita descarga.
 
 - **Homunculus / Mercenary:** comportamiento general, habilidades y buffs.
-- **Homunculus Tactics / Mercenary Tactics:** comportamiento por monstruo.
+- **Homunculus Tactics / Mercenary Tactics:** comportamiento para cada monstruo.
 - **PVP Tactics / Merc PVP Tactics:** comportamiento para jugadores.
-- **Extra Options:** opciones avanzadas y Lua personalizado; evita editar código si no sabes.
+- **Extra Options:** opciones avanzadas y Lua personalizado; evita tocar el código si no
+  sabes lo que haces.
 
-La búsqueda encuentra nombres y descripciones. Los filtros por tipo ayudan a
-encontrar opciones; **ocultar un ajuste no lo desactiva**. Usa **Clear filters**
-para ver todo. **Apply** guarda; **Revert** descarta cambios pendientes.
-Las etiquetas de la aplicación Windows están en inglés.
+La búsqueda encuentra nombres y descripciones. Los filtros de tipo ayudan a encontrar
+opciones; **ocultar una opción no la desactiva**. Usa **Limpiar filtros** para ver todo.
+Haz clic en **Aplicar configuración** para guardar; **Recargar** descarta los cambios
+pendientes. La interfaz y las descripciones de las opciones están en inglés, portugués y
+español; elige el idioma en la barra superior.
 
-**Menú Update (solo en la aplicación Windows):**
+**Update AI from GitHub...** (barra superior): descarga el zip oficial de la rama `main` y
+lo copia sobre la carpeta de destino que muestra la ventana (editable, así puedes
+actualizar otra instalación). Tu configuración, tácticas, extras y listas de avoid se
+conservan; con *Replace Types/ presets too* marcado, `Types\*.lua` también se reemplaza.
+Los archivos reemplazados van a `backup\update-<hora>\`. Un `AzzyAIConfig.exe` más nuevo
+se guarda como `.exe.new`, y **Restart now** cierra la ventana, lo cambia y abre la nueva
+versión. Recarga la IA en el juego después. Si no hay cambios pendientes, la ventana
+recarga los archivos sola.
 
-- **Update AI from git...** hace `git pull --ff-only` en tu clon local o descarga
-  la rama `main` de GitHub (sin necesitar git) y copia su `USER_AI` sobre la
-  carpeta donde se ejecuta la GUI. Tus ajustes, tactics, extra y listas de avoid
-  se conservan; con *Also overwrite the homunculus presets* marcado, también se
-  reemplazan los `Types\*.lua`. Lo reemplazado se copia a `backup\update-<hora>\`.
-  Un `AzzyAIConfig.exe` más nuevo se guarda como `.exe.new` y se cambia al
-  aceptar el reinicio. Recarga la IA en el juego después.
-- **Update monster/skill data from rAthena...** ejecuta `tools\harness\rathena_sync.py`
-  en tu clon (necesita Python 3 e internet) y copia aquí el `MobInfo.lua`
-  regenerado. El clon también recibe los fixtures del harness y
-  `webgui\mobdata.js`, que haces commit si mantienes el repositorio.
+Al iniciar, la ventana consulta la etiqueta del último release y, si es más nueva que el
+`CVersion` instalado, muestra una barra de **Update**.
 
-La carpeta del clon se guarda en `AzzyAIConfig.update.txt`.
+**Files** (barra superior): exporta todos los archivos de configuración (incluidos los
+cambios sin aplicar), importa una carpeta o exporta un diagnóstico. El diagnóstico tiene
+el mismo contenido que el del navegador: el informe de inicio, las últimas líneas de los
+logs, la configuración, las tácticas y extras, `Types\*.lua` y los archivos de `data`, con
+los IDs de dueño reemplazados por `<owner>`. **Help** muestra la versión y los enlaces a la
+documentación, la web GUI y el formulario de problema.
 
 ### Navegador
 
 Abre [la web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Elige **AzzyAI** (no el Classic), tu idioma y **File > Open USER_AI folder** para abrir la
-carpeta instalada en el juego.
+carpeta instalada en el juego. **Help > Export diagnostics for a bug report...** arma el mismo paquete
+que la aplicación de Windows (un `.zip` con el informe de inicio, los logs, la configuración y los
+niveles de habilidad aprendidos, IDs de dueño cambiados por `<owner>`) desde la carpeta del juego que
+elijas, y luego abre el formulario de incidencia en GitHub.
 
 - Chrome/Edge pueden escribir directamente si el acceso a carpetas está admitido y autorizado.
 - Sin escritura directa, usa el ZIP descargado/exportado y extrae los archivos
@@ -116,6 +130,8 @@ Ambas GUIs tienen el selector **Configuración de** en la pestaña Homúnculo. *
 | `UseDamageDanger` | Desactivado por defecto. Si el homúnculo pierde `DamageDangerDrop`% (30) de su HP máximo en 3 s con HP por debajo de `DamageDangerHP`% (60), kitea aunque `KiteMonsters` esté desactivado, y Bayeri usa Stein Wand. Solo ve su propio HP, no los buffs de los enemigos. |
 | `UseDanceAttack` | Activa movimiento durante ataques. Puede cambiar la posición; no elimina cooldowns. |
 | `CommandedFightStay` | Activado por defecto. Un monstruo que ordenas atacar al homúnculo se combate hasta que muera o des otra orden, aunque te alejes. Usa 0 para que desista y vuelva cuando el objetivo salga de los límites de movimiento o pase el tiempo límite de ataque. |
+| `StationaryMoveBounds` / `MobileMoveBounds` | Hasta qué distancia de ti puede ir para reaccionar (estando tú quieto / en movimiento). Ambos vienen en 14; reduce `MobileMoveBounds` si la unidad se queda atrás cuando corres. |
+| `AutoSkillLimit` | Tope de habilidades ofensivas usadas contra un objetivo (0 = sin límite). Se aplica sobre la táctica de habilidad del monstruo: gana el número menor de los dos. La cuenta se reinicia cuando cambia el objetivo. |
 
 La detección automática ayuda en algunos clientes privados, pero elige el tipo
 de servidor explícitamente al investigar problemas. La detección del tipo

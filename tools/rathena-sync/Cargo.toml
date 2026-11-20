@@ -1,0 +1,16 @@
+[package]
+name = "rathena-sync"
+version.workspace = true
+edition.workspace = true
+description = "Regenerates fixtures/rathena.lua, USER_AI/MobInfo.lua and webgui/mobdata.js from the rAthena Renewal databases"
+license.workspace = true
+
+[[bin]]
+name = "rathena-sync"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+reqwest = { version = "0.12", features = ["blocking", "rustls-tls"], default-features = false }
+regex = "1"
+

@@ -10,6 +10,10 @@ extra software: open a chat, attach your files and paste the request below.
 
 ## 1. Attach these files
 
+The Windows application can collect them for you: **Support > Export diagnostics for a bug
+report...** writes one file with the startup report, the logs, your configuration and the learned
+skill levels (owner IDs replaced by `<owner>`). Attach that file instead of picking these by hand.
+
 From your game's `AI\USER_AI` folder, or from the game folder for the logs:
 
 - `H_Config.lua`, your homunculus settings. For a type preset, also `Types\<Name>.lua`.

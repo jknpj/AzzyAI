@@ -11,6 +11,11 @@ pedido abaixo.
 
 ## 1. Anexe estes arquivos
 
+O aplicativo Windows pode juntar isso para você: **Support > Export diagnostics for a bug
+report...** grava um arquivo com o relatório de inicialização, os logs, a sua configuração e os
+níveis de skill aprendidos (IDs de dono trocados por `<owner>`). Anexe esse arquivo em vez de
+escolher os arquivos na mão.
+
 Da pasta `AI\USER_AI` do jogo, ou da pasta do jogo para os logs:
 
 - `H_Config.lua`, as configurações do seu homúnculo. Se usar um preset por tipo, também `Types\<Nome>.lua`.

@@ -35,16 +35,18 @@ If one differs, `File version error` is written in the startup report. The three
 reported instead of failing in strange ways. Raise the three together when MAJOR or MINOR
 changes, never for a PATCH; `run.py` fails if one does not match `CVersion`.
 
-The Windows configuration app has the same number: `AssemblyVersion` and
-`AssemblyFileVersion` in `GUI/AzzyAIConfig/Properties/AssemblyInfo.cs` are set to the
-release, **Help > About** shows it, and `run.py` checks it. The web page has no number
-of its own.
+The desktop app shows `CVersion` itself in **Help > About**, read from the loaded USER_AI, so
+there is no second copy to keep in sync. The web page has no number of its own.
 
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
-changed, the two numbers in `AssemblyInfo.cs` and the "Current release" line in
-`CHANGELOG.md`, add the changes to `CHANGELOG.md`, run the harness, rebuild the app
-(`tools\build-gui.cmd`), commit, and tag the commit
-`v<number>` (for example `v2.0.0`). The CI builds the ZIP for tags that start with `v`.
+changed, and the "Current release" line in `CHANGELOG.md`, add the changes to
+`CHANGELOG.md`, run the harness, commit, and tag the
+commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
+`USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
+`tools\build-gui.cmd` is only needed to test the app before committing. The tag run builds
+`AzzyAI.zip` and publishes it as a release, using the matching `## <version>` section of
+`CHANGELOG.md` as the release body — that section is the release note, so write it for
+the player.
 
 ## Project and compatibility background
 
@@ -53,7 +55,9 @@ Original project website: [drazzy.com](http://drazzy.com/ro/ai).
 
 ## Organization
 
-* `DEFAULT` contains the default AI
+* `DEFAULT` is the stock (original client) AI, kept to compare against what this version
+  changes. It is **not** in the release ZIP: the game client already has those files in `AI\`,
+  and the install only copies into `AI\USER_AI`.
 * `USER_AI` contains AzzyAI
 * `webgui` is a git submodule with the browser configuration GUI ([jknpj/AzzyAI-webgui](https://github.com/jknpj/AzzyAI-webgui)). Clone with `git clone --recursive`, or run `git submodule update --init` in an existing clone.
 
@@ -95,7 +99,7 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
     * Light of Regenerate (optional autobuff, off by default: `UseEiraLightOfRegene`, `EiraLightOfRegeneLevel`, `EiraLightOfRegeneOwnerHP`). Attempts to maintain the resurrection buff; successful resurrection still depends on server conditions. It needs Loyal intimacy and lowers intimacy on every cast.
 * **Eleanor**
     * Blazing And Furious
-    * The One Fighter Rise
+    * The One Fighter Rises
 * **Sera**
     * Toxin Of Mandara
     * Needle Stinger
@@ -132,74 +136,44 @@ It uses the same limit/pause and is available in both GUIs. With this option
 enabled, a gap between AI
 calls alone is not completion evidence for a cast never observed starting.
 
-### Windows desktop GUI development
+### Native desktop GUI (Rust)
 
-To build the app without PowerShell, run `tools\build-gui.cmd`: it builds the Release
-x86 executable and copies it to `USER_AI\AzzyAIConfig.exe`, the copy that is committed and
-that players run. The PowerShell commands below do the same build and also run and test the app.
-The CI does this too: on a push to `main` a follow-up job commits the freshly built
-`USER_AI/AzzyAIConfig.exe` when it differs, so a C# change never leaves the committed copy
-behind (it commits with `[skip ci]`, and a byte-identical build is not committed).
+The desktop configuration app is `tools/azzy-native`, a Rust/egui window that mirrors the web GUI.
+The web page stays the reference for the schema, translations, skill data and preset templates:
+`node tools/webgui-data.js` regenerates `tools/azzy-native/data/*.json` from `webgui/`, and CI runs
+`--check` so the two never drift.
 
-The desktop app is a C# WinForms project targeting **.NET Framework 4.0 Client
-Profile, x86**. Keep that target for compatibility; a modern .NET SDK alone
-cannot build it.
+Build and test from the repository root (Rust stable):
 
-Use an existing Visual Studio 2022 installation with .NET desktop development,
-or install Build Tools with the .NET desktop build tools workload:
-
-```powershell
-winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --source winget --override "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools --includeRecommended"
-code --install-extension ms-dotnettools.csharp
+```
+cargo test -p azzy-config -p azzy-update -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
+cargo build --release -p azzy-native --manifest-path tools/Cargo.toml
 ```
 
-Accept administrator prompts and restart VS Code after installation. The existing
-.NET Framework 4.8 runtime runs this .NET 4.0 app; do not install the obsolete 4.0
-runtime. NuGet restores the pinned 4.0 reference assemblies on the first build
-(internet access to nuget.org is required). If C: is short on space, the installer
-supports `--installPath D:\DevTools\VSBuildTools2022 --path cache=D:\DevTools\VSCache`,
-but shared Windows components still need space on C:.
+The window ships as `USER_AI/AzzyAIConfig.exe`, the name the old C# app used, so existing
+shortcuts keep working; the development build is `tools/target/release/azzy-native.exe`. Run it
+with the USER_AI folder, or put it inside USER_AI and run it without arguments:
 
-From the repository root:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Build
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Test
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\gui.ps1 -Action Run
+```
+tools\target\release\azzy-native.exe USER_AI
+tools\target\release\azzy-native.exe USER_AI --write
 ```
 
-Use `-Configuration Release` for a release build. Build outputs and intermediate
-files go into ignored `.artifacts\gui`, not the legacy tracked `bin`/`obj` folders.
-Run, Test, and F5 build the app and copy the current `USER_AI` configuration into
-a disposable sandbox. **Each launch refreshes these copies; Apply never writes
-to the source `USER_AI` files.** Close the sandbox GUI before launching again.
-The smoke test opens/closes the form, visits all seven tabs, checks configuration
-bindings, and verifies that startup did not change the copied Lua files.
+Without `--write` the Save button writes `<file>.new` instead of the file, like the previous app's
+sandbox. **Update AI from GitHub...** downloads the official `main` zip, keeps the files the player
+edits, backs up the replaced ones under `USER_AI/backup/update-<time>/` and stages a newer
+executable as `.exe.new`; **Restart now** swaps it. The startup check compares the latest release
+tag with `CVersion` and offers an Update banner.
 
-The Homunculus editor includes official/private server selection, newer
-Homunculus S skills, Eleanor's grappling switches, and inherited Blood Lust/SBR44
-options. Skill selectors support the updated level-10 caps where applicable.
-Search matches names and descriptions; the type filters only hide controls,
-not disable skills. Use **Clear filters** to return to all settings. The layout
-resizes with the window, and the footer shows which configuration is being edited.
-Apply saves changes; Quit or the window close button prompts for unsaved edits.
-The smoke test also checks resizing, filtering, level limits, imports/defaults,
-and saving/reloading settings without changing unedited values.
+CI builds the Windows executable, runs the Rust tests, packages the ZIP (`USER_AI` with the freshly
+built `AzzyAIConfig.exe`, `docs/`, `LICENSES/`, `webgui/` and the READMEs) and, on pushes to
+`main`, commits `USER_AI/AzzyAIConfig.exe` back when it differs (short `build:` commit with
+`[skip ci]`). Never write `[skip ci]` in the message of a commit that must run CI: GitHub looks for
+the marker anywhere in the message and silently skips the workflow.
 
-To test the compiled desktop GUI in a game client, close any existing config
-window and back up its executable, then copy only
-`.artifacts\gui\Release\AzzyAIConfig.exe` into that client's `AI\USER_AI` folder.
-Run it there to edit the installed configuration. The GUI always uses its own
-executable directory, even when launched from a shortcut with another working
-directory. Copying the executable does not replace the client's Lua files;
-clicking Apply does save configuration changes, so back those up before editing.
-
-In VS Code, use **Ctrl+Shift+B** to build, **F5** to debug, or **Tasks: Run Task**
-for `GUI: Run` / `GUI: Smoke test`. The workspace enables OmniSharp for this
-legacy project, using its .NET Framework host so no additional .NET SDK is
-required; C# Dev Kit is not required. WinForms visual designer support
-requires full Visual Studio with .NET desktop development, not VS Code or
-Build Tools. This setup does not add a designer.
+The Rust workspace is `tools/Cargo.toml`: `azzy-config` reads and writes the Lua files preserving
+formatting, `azzy-update` is the updater shared with the local web GUI host, and `azzy-gui` serves
+the web GUI locally for development.
 
 The AI can't run outside the RO client, so `tools/harness/` contains an offline simulator: it mocks the client API (`GetV`, `GetActors`, `SkillObject`, ...), loads the real `USER_AI` files with a fixed config (`tools/harness/fixtures/H_Config.lua`, and `fixtures/M_Config.lua` for the mercenary scenarios) and runs scenarios (`tools/harness/scenarios.lua`) for every homunculus S and for a mercenary, checking that:
 
@@ -212,7 +186,7 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 When automatic Eleanor combos are enabled, their starters wait for `AutoComboSpheres`, so Sonic Claw does not spend the spheres needed for its follow-ups. With automatic combos disabled, starters only require their normal sphere cost. New skills retain their priority and can consume spheres before a combo starts.
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.
 Confirmed Style Change casts update the tracked style whether requested manually or automatically; `eleanor_manual_style` verifies a manual switch followed by the grapple chain.
-`SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the default remains 400 ms.
+`SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the built-in default remains 400 ms (the shipped `H_Config.lua` uses 200 and `M_Config.lua` uses 400).
 
 The simulated server follows rAthena's rules (`skill_isNotOk_hom`, `unit_skilluse_id2`, `skill_check_condition_mercenary`): a cast is refused when the level isn't learned, the skill is still in cooldown (counted from the end of the cast), the target is beyond the skill range (square distance, the homunculus doesn't walk into range), Goldene Ferse and Angriffs Modus overlap, or Eleanor lacks the style, combo or spirit spheres (one sphere every second hit dealt in fighting style or taken in grappling style, at most 10; the homunculus swings once per 800 ms, however often the AI asks for an attack; costs from `SkillSphereCost`, or rAthena's on private scenarios). Eleanor's fighting-style sphere estimate credits at most one normal attack attempt per 800 ms, scaled by `SphereTrackFactor`; it does not require the client to expose her attack animation. This is an estimate, not a read of the server's sphere count; refused sphere skills correct it downward. `eleanor_hidden_motion` tests a client that hides those animations. On `SERVER_PRIVATE` scenarios its SP costs, cast times, delays, cooldowns and ranges come from rAthena's `db/re/skill_db.yml`; on official ones from AzzyAI's official profile. The rAthena data lives in `tools/harness/fixtures/rathena.lua`, generated from a pinned rAthena commit and committed so the harness needs no network. It also gives scenarios real monsters (`{ x, y, mobId }`: aggressive ones attack the owner, passive ones fight back, plants never move) and lets `rathena_skill_tree` check `SkillList`/`SkillInfo` against `db/re/homunculus_db.yml`. To move to a newer rAthena (standard library only; behind a proxy set `HTTPS_PROXY` first):
 
@@ -221,6 +195,8 @@ python tools/harness/rathena_sync.py              # latest master
 python tools/harness/rathena_sync.py --ref <sha>  # a specific commit
 python tools/harness/rathena_sync.py --fixture-only  # only fixtures/rathena.lua (no MobInfo.lua / mobdata.js)
 ```
+
+`tools/rathena-sync` is the same regeneration in Rust (no Python needed): `cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]`; the two Rust tool crates share the `tools/Cargo.toml` workspace and `tools/target/`. Same flags, same three outputs, and the files are byte-identical to the Python run for the same rAthena commit (only the generation date differs). It parses the databases, walks the spawn scripts and writes the ~2.7k-monster files about 5x faster (12 s against 69 s from here, most of it network); the Python script stays the reference implementation and the one CI depends on.
 
 Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars, and Python 3):
 
@@ -232,8 +208,8 @@ python tools/harness/run.py --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
 Before the scenarios, `run.py` runs the static checks and fails the run when one of them breaks:
-syntax of every `.lua` file; the release number against `CHANGELOG.md` and the GUI's
-`AssemblyInfo.cs`; and **every option in `Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
+syntax of every `.lua` file; the release number against `CHANGELOG.md`; and **every option in
+`Defaults.lua`, `H_Config.lua` and `M_Config.lua` must be
 read by some AI file** (`options: N in ..., M unread`). That last one exists because an option
 nothing reads is a switch the player can change with no effect at all, which happened several
 times (the `Berzerk_*` mis-spelling of the mercenary options, `KiteParanoid`, `MoveStickyFight`).
@@ -322,7 +298,7 @@ What this does not prove: the stats are hypothetical and the real DPS depends on
 
 Checked against the measured Sonic Claw sessions, the benchmark is 1.7% above one (75,747 against 74,476 DPS, `AutoSkillDelay` 0) and 10.6% above the other (65,941 against 59,602, `AutoSkillDelay` 200): the simulated client has no latency per cast. Only Sonic Claw alone is validated that way. The combo rows predict casts about twice as often as the earlier measured sessions (61 Sonic Claw > Silvervein Rush > Midnight Frenzy cycles in 180 s against 23), but those ran before the Eleanor sphere and chain fixes and with 200 ms of extra delay, so they say nothing yet about the current AI. Sensitivity of the combo advantage over Sonic Claw alone (+43% by default) to the two calibrated values: +33% without swing pauses at 100 ms per swing, +45% at 200 ms per swing; with a 1,000 ms pause per cast Sonic Claw alone collapses to 12,401 DPS, because her spheres come from her own swings.
 
-In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level.
+In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level. `probeFiller = { "MH_LAVA_SLIDE" }` makes the simulated client answer the "not learned" filler for that skill (range + 1) and keeps `TrustSkillProbe` at the official default, which is how `dieter_official_probe_filler` reproduces the LATAM report.
 
 ### Learned skill levels
 
@@ -333,6 +309,18 @@ The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACK
 - saves that level in `data/H_<owner>Skills.lua`, so map changes don't start over;
 - tries one level higher at most once per hour (`LEARNED_SKILL_RECHECK_SECONDS`), in case the skill was levelled.
 
+The official client answers the probe in its own way: a learned skill reports its table range, an
+unlearned one reports range + 1 (or a flat 8 where the table range is off), and the client's value
+can differ from the AI's table. The LATAM client answered 8 for every level of Lava Slide, which
+the AI read as "not learned": `LintSkillOptions` disabled `UseDieterLavaSlide` at startup and
+`DoSkill` skipped the skill, so the Dieter never cast it. With `TrustSkillProbe = -1` on
+`SERVER_OFFICIAL` the probe is not trusted to rule a skill out: an enabled skill starts at the
+configured level and the step-down above is what finds the real level, so the server is the only
+authority. The level is saved, so the walk down happens once per owner. A skill that the server
+keeps refusing at every level ends at 0 and is reported as "the server refused every level" in the
+startup report; `TrustSkillProbe = 1` trusts the probe again (the behavior before 2.0.1), `0`
+distrusts it on private servers too.
+
 Skill cooldowns are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change, including short cooldowns such as Toxin of Mandara.
 
 The simulator follows rAthena's rules (`clif_parse_UseSkillToId_homun`, `skill_check_condition_mercenary`): homunculus/mercenary skills need **more** SP than their cost, so `DoSkill` never sends a skill at exactly its SP cost. rAthena silently lowers a level above the learned one, so the level step-down above only matters on servers that refuse such casts.
@@ -341,13 +329,15 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
 
 - Lua syntax check and simulator;
 - `node --check` on the web GUI (checked out from the `webgui` submodule);
-- build of the .NET 4.0 config GUI, packaging `USER_AI` + `AzzyAIConfig.exe`,
-  the three READMEs, manuals, technical notes and historical changelog as the
-  `AzzyAI` artifact;
+- Rust tests and the Windows build of the native desktop GUI (`azzy-native`), and the `AzzyAI`
+  artifact: `USER_AI` (without `.pdb`) with the freshly built `AzzyAIConfig.exe`, plus `docs/`,
+  `LICENSES/`, `webgui/`, the three READMEs, `CHANGELOG.md`, `NOTICE.md`, `SECURITY.md` and
+  `CONTRIBUTING.md`;
 - on pushes to `main`, a follow-up job commits that build back to
   `USER_AI/AzzyAIConfig.exe` when it changed (short `build:` commit, `[skip ci]`).
 
-Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release.
+Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release, with the matching
+`## <version>` section of `CHANGELOG.md` as the release body.
 
 ## Configuration Guide
 
@@ -358,7 +348,7 @@ To ensure the AI functions correctly on your server, set the `ServerType` variab
 
 With the wrong value on a private server every monster looks like a player and the homunculus never attacks. To avoid that, `AutoDetectServerType = 1` (default) switches to `SERVER_PRIVATE` by itself as soon as it sees a monster with an rAthena/Hercules ID (110000000 or more) and logs it in `AAI_ERROR`. It is skipped if the config sets `MagicNumber`/`MagicNumber2`/`MagicNumber3`.
 
-`ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026): cast times, after-cast delays, cooldowns, durations, AoE sizes and sphere costs come from the LATAM client data on Divine Pride (`tools/harness/divinepride_sync.py`, needs a free API key in `DIVINEPRIDE_API_KEY`; its output is git-ignored), with kRO's client text and bROWiki filling the few gaps. `ServerSkillOverrides` lists only the rAthena Renewal values that differ (a few ranges, cooldowns, durations, AoE sizes and CBC's sphere cost) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
+`ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026): cast times, after-cast delays, cooldowns, durations, AoE sizes and sphere costs come from the LATAM client data on Divine Pride (`tools/harness/divinepride_sync.py`, or `tools/divinepride-sync` for the same download in Rust: `cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- [--server LATAM] [--refresh]`; both need a free API key in `DIVINEPRIDE_API_KEY` and write a git-ignored file, byte-identical JSON), with kRO's client text and bROWiki filling the few gaps. `ServerSkillOverrides` lists only the rAthena Renewal values that differ (a few ranges, cooldowns, durations, AoE sizes and CBC's sphere cost) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
 
 ### Monster Database
 `USER_AI/MobInfo.lua` lists the race, element, element level, size, boss/MVP/plant/immobile flags and attack range of every monster, the element damage table and the element of each homunculus attack skill. It is generated from rAthena Renewal (`db/re/mob_db.yml`, `attr_fix.yml`, `skill_db.yml`) by `tools/harness/rathena_sync.py`. The homunculus reads a monster's ID with `GetV(V_HOMUNTYPE)`, so it uses the database without any setup; mercenaries only know monster IDs from MobID files and are not affected.

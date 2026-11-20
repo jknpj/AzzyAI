@@ -1,0 +1,13 @@
+Native configuration GUI for AzzyAI (Rust + egui), mirroring the web GUI.
+
+Usage:
+    azzy-native [USER_AI folder] [--write]
+
+    USER_AI folder   folder with H_Config.lua and M_Config.lua
+                     (default: ./USER_AI, ../USER_AI, ../../USER_AI next to the exe)
+    --write          Save writes the files themselves; without it, Save writes <file>.new
+
+Tabs: Homunculus and Mercenary. The left panel filters by category, the top bar has
+a search over names and descriptions, "only non-default" and the changed counter.
+Click an option to read its description (English) at the bottom. Save writes only the
+files whose values changed; Reload discards the edits and reads the disk again.

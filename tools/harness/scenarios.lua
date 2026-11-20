@@ -13,6 +13,9 @@
 --   startTick  client uptime in milliseconds (default 1000)
 --   dropTactics monster classes whose H_Tactics.lua row is removed (tests the defaults for unknown monsters)
 --   tactics    { [monster class] = { [tactic index] = value } } replaces those entries of the default row
+--   probeFiller skill names the simulated client answers with the "not learned" filler (range + 1)
+--              even though they are in `skills`, and distrusted (`TrustSkillProbe = -1`): the
+--              official-client behavior that used to disable the skill at startup
 --   afterLoad  function run after every AI load, to patch the AI's tables or wrap its functions
 --   onTick     function(world, now, OWNER, HOMUN) run before every AI() call
 --   reloadAt   tick that simulates a map change: the client reloads every AI file
@@ -34,6 +37,9 @@ for i = 0, 39 do crowd[#crowd + 1] = { 100 + (i % 8) * 2 - 7, 100 + math.floor(i
 local BAYERI_SKILLS = { "MH_STAHL_HORN", "MH_HEILIGE_STANGE", "MH_GOLDENE_FERSE", "MH_ANGRIFFS_MODUS",
 	"MH_STEINWAND", "MH_GLANZEN_SPIES", "MH_HEILIGE_PFERD", "MH_GOLDENE_TONE" }
 local DIETER_SKILLS = { "MH_MAGMA_FLOW", "MH_GRANITIC_ARMOR", "MH_LAVA_SLIDE", "MH_PYROCLASTIC",
+	"MH_VOLCANIC_ASH", "MH_BLAST_FORGE", "MH_TEMPERING" }
+-- the same Dieter for a homunculus that never learned Lava Slide
+local DIETER_SKILLS_NO_LAVA = { "MH_MAGMA_FLOW", "MH_GRANITIC_ARMOR", "MH_PYROCLASTIC",
 	"MH_VOLCANIC_ASH", "MH_BLAST_FORGE", "MH_TEMPERING" }
 local SERA_SKILLS = { "MH_SUMMON_LEGION", "MH_NEEDLE_OF_PARALYZE", "MH_POISON_MIST", "MH_PAIN_KILLER",
 	"MH_TOXIN_OF_MANDARA", "MH_NEEDLE_STINGER" }
@@ -646,6 +652,70 @@ SCENARIOS = {
 				return GetSkillAoESize(MH_LAVA_SLIDE, 1) == 7 and GetSkillAoESize(MH_LAVA_SLIDE, 10) == 7
 			end,
 		} },
+	-- The official client answers some learned skills with the "not learned" filler (see
+	-- ProbeAnswerPlausible). On LATAM that came back for Lava Slide: the startup lint disabled
+	-- UseDieterLavaSlide and DoSkill skipped it, so the Dieter never cast it. The enabled skill has
+	-- to be tried; the server is the only authority on its level. OldHomunType 0 keeps inherited
+	-- base-homunculus skills (which this Dieter has not learned either) out of the run.
+	dieter_official_probe_filler = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster, minAttacks = 0,
+		sp = 4000, spregen = 100,
+		set = { LavaSlideMode = 0, UseDieterLavaSlide = 1, AutoMobCount = 1, OldHomunType = 0 },
+		probeFiller = { "MH_LAVA_SLIDE" },
+		expect = { "Lava Slide" },
+		checks = {
+			["the enabled option survives the probe"] = function() return UseDieterLavaSlide == 1 end,
+			["a refusal lowers the level only until the skill works"] = function()
+				local skill = MH_LAVA_SLIDE
+				local saved = LearnedSkill[skill]
+				-- never cast: two refusals at the same level lower it by one
+				LearnedSkill[skill] = { cap = 10, upper = 10, exact = false, ok = 0, rejects = 0,
+					probeUp = false, unproven = true }
+				SkillCastResult(skill, 10, false)
+				SkillCastResult(skill, 10, false)
+				local stepped = LearnedSkill[skill].cap == 9
+				-- already cast once: the level is proven, refusals are range/interrupt problems
+				LearnedSkill[skill] = { cap = 10, upper = 10, exact = false, ok = 10, rejects = 0,
+					probeUp = false }
+				SkillCastResult(skill, 10, false)
+				SkillCastResult(skill, 10, false)
+				local kept = LearnedSkill[skill].cap == 10
+				LearnedSkill[skill] = saved
+				return stepped and kept
+			end,
+		} },
+	-- the same client answer for a skill the homunculus never learned: the ladder ends at 0, so the
+	-- AI stops requesting a cast the server refuses instead of resending it forever
+	dieter_official_probe_unlearned = { homuntype = 51, skills = DIETER_SKILLS_NO_LAVA, mobs = cluster,
+		minAttacks = 0, sp = 4000, spregen = 100,
+		set = { LavaSlideMode = 0, UseDieterLavaSlide = 1, AutoMobCount = 1, OldHomunType = 0 },
+		probeFiller = { "MH_LAVA_SLIDE" },
+		forbid = { "Lava Slide" },
+		maxRefused = 8, -- the refused casts are the level ladder doing its job
+		checks = {
+			["refusals take an unlearned skill down to level 0"] = function()
+				local skill = MH_LAVA_SLIDE
+				local saved = LearnedSkill[skill]
+				LearnedSkill[skill] = { cap = 10, upper = 10, exact = false, ok = 0, rejects = 0,
+					probeUp = false, unproven = true }
+				for _ = 1, 10 * SKILL_REJECTS_TO_STEP_DOWN do
+					SkillCastResult(skill, LearnedSkill[skill].cap, false)
+				end
+				local zero = LearnedSkill[skill].cap == 0
+				LearnedSkill[skill] = saved
+				return zero
+			end,
+			["the startup lint disables it only after the level reached 0"] = function()
+				local saved = LearnedSkill[MH_LAVA_SLIDE]
+				UseDieterLavaSlide = 1
+				LearnedSkill[MH_LAVA_SLIDE] = { cap = 0, upper = 0, exact = false, ok = 0, rejects = 0,
+					probeUp = false, unproven = true }
+				local log = LintSkillOptions(MyID, "")
+				local disabled = UseDieterLavaSlide == 0
+				local explained = log:find("refused every level", 1, true) ~= nil
+				LearnedSkill[MH_LAVA_SLIDE] = saved
+				return disabled and explained
+			end,
+		} },
 	dieter_tempering_refusal = { homuntype = 51, skills = DIETER_SKILLS, mobs = cluster,
 		private = true, minAttacks = 20,
 		set = { UseDieterPyroclastic = 3, UseDieterTempering = 3 },
@@ -1128,10 +1198,19 @@ SCENARIOS = {
 					eqc = UseEleanorEQC,
 					tinderBreaker = UseEleanorTinderBreaker,
 				}
+				-- a chain in progress (the timeouts are in the future) only offers its follow-up
+				local function comboInProgress()
+					ComboSCTimeout = GetTick() + 1000
+					ComboSVTimeout = GetTick() + 1000
+				end
+				local function comboExpired()
+					ComboSCTimeout = GetTick() - 1
+					ComboSVTimeout = GetTick() - 1
+				end
+
 				EleanorMode = GRAPPLING_MODE
 				MySpheres = AutoComboSpheres
-				ComboSCTimeout = GetTick() + 1000
-				ComboSVTimeout = GetTick() + 1000
+				comboInProgress()
 
 				UseEleanorCBC = 0
 				UseEleanorEQC = 1
@@ -1142,9 +1221,15 @@ SCENARIOS = {
 				UseEleanorEQC = 0
 				local cbc = GetGrappleSkill(MyID)
 
+				-- Tinder Breaker must not restart a running chain: that reset ComboFollowAt and
+				-- the chain never reached CBC/EQC
 				UseEleanorCBC = 0
 				UseEleanorEQC = 0
 				UseEleanorTinderBreaker = 1
+				local duringCombo = GetGrappleSkill(MyID)
+
+				-- with the chain over, the same switches start a new one
+				comboExpired()
 				local tinderBreaker = GetGrappleSkill(MyID)
 
 				UseEleanorTinderBreaker = 0
@@ -1158,7 +1243,8 @@ SCENARIOS = {
 				UseEleanorEQC = previous.eqc
 				UseEleanorTinderBreaker = previous.tinderBreaker
 
-				return eqc == MH_EQC and cbc == MH_CBC and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
+				return eqc == MH_EQC and cbc == MH_CBC and duringCombo == 0
+					and tinderBreaker == MH_TINDER_BREAKER and disabled == 0
 			end,
 		} },
 	eleanor_manual_style_recovery = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
@@ -1349,6 +1435,12 @@ SCENARIOS = {
 				return HarnessServer.style == "fighting" and EleanorMode == FIGHTING_MODE
 			end,
 		} },
+	-- UseEleanorSonicClaw=0 must also stop the grapple fallback: it used to cast Sonic Claw to
+	-- recover spheres and switched her to fighting style against the preset
+	eleanor_sonic_claw_disabled = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
+		tactics = { [0] = { [7] = 6 } },
+		set = { AutoComboMode = 0, UseEleanorSonicClaw = 0 },
+		forbid = { "Sonic Claw" } },
 	eleanor_aoe_single = { homuntype = 52, skills = ELEANOR_SKILLS, mobs = single,
 		set = { AutoMobCount = 2, AutoComboMode = 0, UseEleanorBlazingAndFurious = 1,
 			UseEleanorTheOneFighterRises = 1, UseEleanorSonicClaw = 0 },

@@ -12,8 +12,8 @@ ventana o en el navegador, sin código que editar.
 
 **En el juego, eso significa:**
 
-- Conoce a cada monstruo: Dieter no lanza Lava Slide contra un monstruo de Fuego
-  y no se gasta SP en plantas.
+- Conoce a los monstruos de su base de datos (unos 2.700), así que Dieter no lanza
+  Lava Slide contra un monstruo de Fuego y no se gasta SP en plantas.
 - No despierta a un MVP sin querer, pero igual te defiende si uno ataca.
 - Un monstruo al que le ordenas atacar se combate hasta que muera, aunque te alejes.
 - Las habilidades de área apuntan al grupo más grande de monstruos que realmente
@@ -41,6 +41,13 @@ monstruo fácil. Respeta las reglas de tu servidor sobre IA personalizada.
 4. En el juego, escribe **`/hoai`** hasta que el mensaje diga que la IA
    personalizada del homúnculo está activa (para un mercenario, **`/merai`**).
 5. Invoca de nuevo al homúnculo, o reconéctate, para que el juego cargue los archivos nuevos.
+
+**Si Windows avisa sobre `AzzyAIConfig.exe`:** la aplicación aún no tiene firma de código,
+así que SmartScreen puede mostrar "Windows protegió tu PC", o un antivirus puede quejarse de
+un ejecutable pequeño y poco descargado. El código está en este repositorio y es el CI el que
+genera ese archivo a partir de él; para continuar, haz clic en **Más información > Ejecutar de
+todas formas**. Si prefieres evitarlo, usa la configuración del navegador de abajo: no requiere
+descargar nada.
 
 **¿Ya usas AzzyAI?** Copiar archivos encima de los tuyos reemplaza tus ajustes,
 tácticas y lista de amigos. Lee antes el

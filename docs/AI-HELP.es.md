@@ -11,6 +11,11 @@ la solicitud de abajo.
 
 ## 1. Adjunta estos archivos
 
+La aplicación de Windows puede reunirlos por ti: **Support > Export diagnostics for a bug
+report...** escribe un archivo con el informe de inicio, los logs, tu configuración y los niveles de
+habilidad aprendidos (IDs de dueño cambiados por `<owner>`). Adjunta ese archivo en vez de elegir
+los archivos a mano.
+
 De la carpeta `AI\USER_AI` del juego, o de la carpeta del juego para los logs:
 
 - `H_Config.lua`, los ajustes de tu homúnculo. Si usas un preset por tipo, también `Types\<Nombre>.lua`.

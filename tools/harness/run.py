@@ -54,9 +54,10 @@ def check_syntax(luac):
 
 
 def check_version():
-    """CVersion (USER_AI/Const_.lua) is the release number: CHANGELOG.md and the Windows app's
-    AssemblyInfo.cs must say the same, and the three file-check numbers (AI.lua and AI_M.lua Version,
-    AI_main.lua MainVersion, AzzyUtil.lua AUVersion) must be its MAJOR.MINOR, e.g. 2.0.0 -> "2.0"."""
+    """CVersion (USER_AI/Const_.lua) is the release number: CHANGELOG.md must say the same, and the
+    three file-check numbers (AI.lua and AI_M.lua Version, AI_main.lua MainVersion,
+    AzzyUtil.lua AUVersion) must be its MAJOR.MINOR, e.g. 2.0.0 -> "2.0". The desktop GUI shows
+    CVersion itself, so there is no second copy to keep in sync."""
     def read(name, pattern):
         with open(os.path.join(USER_AI, name), encoding="utf-8", errors="replace") as f:
             return re.search(pattern, f.read(), re.M)
@@ -68,14 +69,6 @@ def check_version():
     major, minor, patch = (int(g) for g in code.groups())
     release = f"{major}.{minor}.{patch}"
     ok = True
-    with open(os.path.join(REPO, "GUI", "AzzyAIConfig", "Properties", "AssemblyInfo.cs"),
-              encoding="utf-8-sig", errors="replace") as f:
-        asm = f.read()
-    for attr in ("AssemblyVersion", "AssemblyFileVersion"):
-        m = re.search(r'^\[assembly: %s\("([^"]*)"\)\]' % attr, asm, re.M)
-        if not m or m.group(1) != release:
-            print(f'VERSION ERROR: GUI AssemblyInfo.cs {attr} is {m.group(1) if m else "missing"}, release is {release}')
-            ok = False
     with open(os.path.join(REPO, "CHANGELOG.md"), encoding="utf-8") as f:
         notes = re.search(r"Current release:\s*\**(\d+\.\d+\.\d+)", f.read())
     if not notes or notes.group(1) != release:

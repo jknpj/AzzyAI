@@ -12,8 +12,8 @@ or in your browser, with no code to edit.
 
 **In game, that means:**
 
-- It knows every monster, so Dieter does not throw Lava Slide at a Fire monster
-  and no SP is wasted on plants.
+- It knows the monsters in its database (about 2,700), so Dieter does not throw
+  Lava Slide at a Fire monster and no SP is wasted on plants.
 - It does not wake up an MVP by accident, but still defends you if one attacks.
 - A monster you order it to attack is fought until it dies, even if you walk away.
 - Area skills are aimed at the biggest group of monsters that would really be hurt.
@@ -40,6 +40,12 @@ Follow your server's rules for custom AI.
 4. In the game, type **`/hoai`** until the message says custom homunculus AI is on
    (for a mercenary, **`/merai`**).
 5. Summon the homunculus again, or reconnect, so the game loads the new files.
+
+**If Windows warns about `AzzyAIConfig.exe`:** the app has no code signature yet, so
+SmartScreen may show "Windows protected your PC", or an antivirus may flag a small,
+rarely downloaded executable. The source is in this repository and CI builds that file
+from it; to continue, click **More info > Run anyway**. If you would rather not, use the
+browser configuration below - it needs no download.
 
 **Already using AzzyAI?** Copying files over yours replaces your settings, tactics
 and friend list. Read the [update checklist](docs/MANUAL.md#updates-and-backups) first.

@@ -4,11 +4,75 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.0.1**
+**Current release: 2.1.0**
+
+## 2.1.0
+
+Minor release: the desktop configuration app is now the **native Rust GUI**, shipped as
+`AzzyAIConfig.exe` (the name players already run), and the C# WinForms application is retired.
+
+- New: native desktop app (Rust/egui) mirroring the web GUI: settings with search and category
+  tabs, translated descriptions (English, Português, Español), tactics and PVP editors with
+  suggestions from the monster database, per-homunculus presets, Extra Options, folder
+  import/export and a diagnostics bundle.
+- New: the skill card shows the official numbers at max level and the in-game description with the
+  values per level, next to the option's own description.
+- New: **Update AI from GitHub...** in the window: downloads the official `main` zip, keeps the
+  files you edited, backs up the replaced ones under `USER_AI/backup/update-<time>/`, stages a
+  newer executable as `.exe.new` and can restart into it. The destination folder is editable.
+- New: startup check for a newer release tag, with an Update banner; offline or rate-limited runs
+  stay silent.
+- Removed: the C# desktop app (`GUI/`, its build scripts and `USER_AI/AzzyAIConfig.exe`). The code
+  is preserved on the `legacy/csharp-gui` branch; the native app keeps the `AzzyAIConfig.exe` name
+  so existing shortcuts keep working.
+- The web GUI (browser) is unchanged and still shipped in `webgui/`.
+
+## 2.0.3
+
+Patch release: the diagnostics bundle reaches the web GUI, and the Windows app uses it for crashes.
+
+- New: **Help > Export diagnostics for a bug report...** in the web GUI builds the same bundle as the
+  Windows application (a `.zip` with the startup report, the last lines of the AI logs, the
+  configuration, `Types/*.lua` and the `data` files that remember learned skill levels and
+  cooldowns) from the game folder the player picks, with owner IDs replaced by `<owner>`, and then
+  opens the issue form.
+- New: an unhandled exception in the Windows app opens the export dialog with the error in the
+  bundle (`crash.txt`) instead of a bare stack trace; **Support > Copy version and startup summary**
+  puts the version and the startup report on the clipboard for a Discord message; the window size,
+  position and open tab are remembered in `AzzyAIConfig.session.txt`; About shows the version and
+  the repository, issues and web GUI links.
+
+## 2.0.2
+
+Patch release: skill-level detection on the official server, and the web GUI's embedded preset.
+
+- Fix: an enabled skill is no longer disabled at startup because of the official client's learned
+  level answers. On LATAM the client answered the "not learned" filler (range + 1) for every level
+  of Lava Slide, so `LintSkillOptions` disabled `UseDieterLavaSlide` and `DoSkill` skipped the cast:
+  the Dieter never used Lava Slide while every other skill worked. With `TrustSkillProbe = -1` on
+  `SERVER_OFFICIAL` the skill now starts at the configured level, and the level steps down only
+  while it has never succeeded, so the server decides the real level. A skill the server refuses at
+  every level ends at 0, and the startup report says it was "refused every level" instead of
+  silently turning the option off. Covered by `dieter_official_probe_filler` and
+  `dieter_official_probe_unlearned`.
+- Fix: the web GUI's embedded `H_Config.lua` and `M_Config.lua` were a copy of an old saved
+  configuration (July 2025), not of the shipped preset: `LavaSlideMode` and `PoisonMistMode` were
+  1 instead of 0, `UseDieterMagmaFlow` and `UseDieterPyroclastic` were 1 instead of 3,
+  `UseDanceAttack` was off and 32 options were missing, so a configuration created in the web page
+  behaved differently from the shipped one (the Dieter cast Lava Slide at the owner's feet and only
+  while idle). The page now starts from `USER_AI/H_Config.lua` and `USER_AI/M_Config.lua`, and the
+  CI fails when the copy drifts (`tools/webgui_templates_check.js`).
+- New: **Support > Export diagnostics for a bug report...** in the Windows app writes one file with
+  the startup report, the last lines of the AI logs, the configuration, `Types\*.lua` and the `data`
+  files that remember learned skill levels and cooldowns, with owner IDs replaced by `<owner>`.
+  **Report a problem on GitHub** opens the bug report form with the version filled in, and an
+  unhandled exception opens the same dialog with the error already in the bundle (`crash.txt`). The
+  app sends nothing by itself: the file stays on the Desktop until the player attaches it.
 
 ## 2.0.1
 
 Patch release: performance, targeting and command fixes, removal of options that did nothing, and test coverage.
+
 
 - Performance: the IDLE target acquisition builds `FriendTargets` inside the actor loop (no
   second walk over the actors), caches the target-priority context and the AoE cluster weights

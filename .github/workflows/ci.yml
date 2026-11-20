@@ -63,30 +63,52 @@ jobs:
         run: |
           if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
           find webgui -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+      - name: Embedded config templates match the shipped preset
+        shell: bash
+        run: |
+          if [ ! -d webgui ]; then echo "webgui/ not in repo, skipping"; exit 0; fi
+          node tools/webgui_templates_check.js
+          node tools/webgui-data.js --check
+      - name: No generated editor files are tracked
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked="$(git ls-files '*.lua.new' '*.new' 'tools/azzy-native/azzy-native.log')"
+          if [ -n "$tracked" ]; then
+            echo "::error::generated files must not be committed:"
+            printf '%s\n' "$tracked"
+            exit 1
+          fi
 
-  gui:
-    name: Build config GUI (.NET 4.0)
+  native-gui:
+    name: Build native GUI (Rust)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: microsoft/setup-msbuild@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
+      - name: Test
+        run: cargo test -p azzy-config -p azzy-update -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - name: Build
-        run: .\tools\gui.ps1 -Action Build -Configuration Release
-      # the commit job below needs only the binary, not the whole ZIP
+        run: cargo build --release -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - uses: actions/upload-artifact@v4
         with:
-          name: AzzyAIConfig.exe
-          path: .artifacts/gui/Release/AzzyAIConfig.exe
+          name: azzy-native
+          path: tools/target/release/azzy-native.exe
           if-no-files-found: error
+      # The desktop app ships as USER_AI/AzzyAIConfig.exe, so existing shortcuts keep working.
       - name: Package
         run: |
           $pkgRoot = "$env:RUNNER_TEMP\pkg"
           $pkg = "$pkgRoot\USER_AI"
           New-Item -ItemType Directory -Force $pkg | Out-Null
           Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
-          Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
+          Remove-Item "$pkg\AzzyAIConfig.exe" -Force -ErrorAction SilentlyContinue
+          Copy-Item "tools\target\release\azzy-native.exe" "$pkg\AzzyAIConfig.exe" -Force
           Copy-Item docs "$pkgRoot\docs" -Recurse
           Copy-Item LICENSES "$pkgRoot\LICENSES" -Recurse
           # browser configuration tool: static files, works from file:// or any host
@@ -100,36 +122,37 @@ jobs:
           name: AzzyAI
           path: AzzyAI.zip
 
-  commit-gui:
-    name: Refresh the committed GUI
+  commit-native:
+    name: Refresh the committed desktop app
     # only real pushes to main: PRs and tags build but do not write back
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [gui]
+    needs: [native-gui]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     concurrency:
-      group: commit-gui-${{ github.ref }}
+      group: commit-native-${{ github.ref }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: AzzyAIConfig.exe
-          path: .artifacts/gui
+          name: azzy-native
+          path: .artifacts
       - name: Commit USER_AI/AzzyAIConfig.exe when the build differs
         run: |
           set -euo pipefail
-          built=.artifacts/gui/AzzyAIConfig.exe
-          test -f "$built" || { echo "::error::the GUI artifact is missing"; exit 1; }
+          built=.artifacts/azzy-native.exe
+          test -f "$built" || { echo "::error::the azzy-native artifact is missing"; exit 1; }
           cp "$built" USER_AI/AzzyAIConfig.exe
-          if git diff --quiet -- USER_AI/AzzyAIConfig.exe; then
+          # stage first: on the first run the file is not tracked yet and `git diff` would not see it
+          git add USER_AI/AzzyAIConfig.exe
+          if git diff --cached --quiet -- USER_AI/AzzyAIConfig.exe; then
             echo "USER_AI/AzzyAIConfig.exe already matches the build"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add USER_AI/AzzyAIConfig.exe
           # [skip ci] stops this commit from starting another run; the diff check above stops it
           # from looping even if that marker is ever ignored
           git commit -q -m "build: refresh the committed GUI from CI [skip ci]"
@@ -143,7 +166,7 @@ jobs:
   release:
     name: GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [lua, webgui, gui]
+    needs: [lua, webgui, native-gui]
     runs-on: ubuntu-latest
     permissions:
       contents: write
