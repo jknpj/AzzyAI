@@ -2623,7 +2623,7 @@ function GetGrappleSkill(myid)
 				logappend("AAI_SKILLFAIL", string.format("EQC skip: followAt %d/%d useEQC %s ready %s spheres %.1f",
 					GetTick(), ComboFollowAt or 0, tostring(UseEleanorEQC), tostring(IsSkillReady(MH_EQC)), MySpheres or 0))
 			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER)
-				and EleanorTrustCastDelay ~= 1 then
+				and (EleanorTrustCastDelay ~= 1 or not (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick())) then
 				skill=MH_TINDER_BREAKER
 				if EleanorTinderBreakerLevel==nil then
 					level=SkillList[ELEANOR][MH_TINDER_BREAKER]

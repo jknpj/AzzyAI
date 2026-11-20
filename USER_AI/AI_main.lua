@@ -982,7 +982,7 @@ function OnCHASE_ST()
             local skilltype = v[1]
             if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                 if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                    if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                    if (IsMobSkillType(skilltype) and UseHomunSSkillChase == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and skilltouse[1] == GRAPPLE_ATK) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                         local mobskill_level = skill_level
                         if AoEFixedLevel == 1 then
                             mobskill_level = v[3]
@@ -1279,7 +1279,7 @@ function OnATTACK_ST()
                 if TraceAIEnabled ~= 0 then TraceAI("skilltype "..skilltype.." MySkillUsedCount "..MySkillUsedCount.." tact_skill "..tact_skill.." tact_skillclass"..tact_skillclass.."v"..v[1].." "..v[2].." "..v[3]) end
                 if v[2] ~= 0 and SkillElementOKFor(v[2], MyEnemy) then
                     if IsInAttackSight(MyID, MyEnemy, v[2], v[3]) == true then
-                        if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
+                        if (IsMobSkillType(skilltype) and UseHomunSSkillAttack == 1 and AutoMobMode ~= 0 and not (EleanorTrustCastDelay == 1 and MyHomunType == ELEANOR and skilltouse[1] == GRAPPLE_ATK) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1))) then
                             local mobskill_level = skill_level
                             if AoEFixedLevel == 1 then
                                 mobskill_level = v[3]
