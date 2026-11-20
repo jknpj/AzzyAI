@@ -129,6 +129,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: tools
+      - name: Test
+        run: cargo test -p azzy-config -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - name: Build
         run: cargo build --release -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - uses: actions/upload-artifact@v4

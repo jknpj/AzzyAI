@@ -11,6 +11,7 @@ use azzy_config::tactics::{
 };
 use eframe::egui;
 
+use crate::i18n::tr;
 use crate::mobs::Mobs;
 use crate::theme::{self, Palette};
 
@@ -178,7 +179,7 @@ static HOM_RESCUE: &[(&str, &str)] = &[
 static MER_RESCUE: &[(&str, &str)] = &[
     ("Never", "RESCUE_NEVER"),
     ("Friends", "RESCUE_FRIEND"),
-    ("Owner's homun", "RESCUE_RETAINER"),
+    ("Owner's homunculus", "RESCUE_RETAINER"),
     ("Self (mercenary)", "RESCUE_SELF"),
     ("Owner", "RESCUE_OWNER"),
     ("All of the above", "RESCUE_ALL"),
@@ -267,8 +268,9 @@ static MER: Layout = Layout {
     id_label: "Monster ID",
     name_label: "Monster Name",
     warning: Some(
-        "WARNING: non-default mercenary tactics require a MobID file. It must be regenerated \
-         after each maintenance. If you do not know what this means, you don't have it.",
+        "WARNING: In order for non-default tactics to work, you must create a MobID file. \
+         These must be re-generated after each maintenance. If you do not know what this \
+         means, you don't have it.",
     ),
     once_level: false,
     fields: MER_FIELDS,
@@ -311,7 +313,7 @@ pub fn draw(
 ) {
     let layout = tab.layout();
     if let Some(warning) = layout.warning {
-        warning_box(ui, p, warning);
+        warning_box(ui, p, &tr(warning));
         ui.add_space(6.0);
     }
     let height = (ui.available_height() - 22.0).max(320.0);
@@ -347,10 +349,9 @@ pub fn draw(
     ui.add_space(4.0);
     let visible = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
     ui.label(
-        egui::RichText::new(format!(
-            "{visible} entries  ·  {} changed  ·  Apply Settings writes {}",
-            tactics.changed(),
-            layout.file
+        egui::RichText::new(crate::i18n::tr_args(
+            "{0} entries  ·  {1} changed  ·  Apply Settings writes {2}",
+            &[&visible.to_string(), &tactics.changed().to_string(), layout.file],
         ))
         .color(p.muted)
         .size(11.0),
@@ -398,18 +399,18 @@ fn list_panel(
     let layout = tab.layout();
     let mut select_first = false;
     ui.horizontal(|ui| {
-        ui.label(egui::RichText::new("Find:").color(p.muted).size(11.0));
+        ui.label(egui::RichText::new(tr("Find:")).color(p.muted).size(11.0));
         let width = (ui.available_width() - 50.0).max(80.0);
         let response = ui.add_sized(
             [width, 20.0],
             egui::TextEdit::singleline(filter)
-                .hint_text("type a name or id, Enter picks the first match")
+                .hint_text(tr("type a name or id, Enter picks the first match"))
                 .id_source(format!("tact-filter:{}", tab.key())),
         );
         if response.lost_focus() && !response.changed() {
             select_first = true;
         }
-        if ui.small_button("Clear").clicked() {
+        if ui.small_button(tr("Clear")).clicked() {
             filter.clear();
         }
     });
@@ -566,7 +567,7 @@ fn list_panel(
         ui.painter().text(
             rows_rect.center(),
             egui::Align2::CENTER_CENTER,
-            "No entries yet. Use Add.",
+            &tr("No entries yet. Use Add."),
             egui::FontId::proportional(12.0),
             p.muted,
         );
@@ -611,7 +612,7 @@ fn list_panel(
     ui.horizontal(|ui| {
         if ui
             .add(
-                egui::Button::new(egui::RichText::new("Add").color(p.btn_text))
+                egui::Button::new(egui::RichText::new(tr("Add")).color(p.btn_text))
                     .fill(p.btn1)
                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
             )
@@ -639,7 +640,7 @@ fn list_panel(
         if ui
             .add_enabled(
                 can_remove,
-                egui::Button::new(egui::RichText::new("Remove").color(p.btn_text))
+                egui::Button::new(egui::RichText::new(tr("Remove")).color(p.btn_text))
                     .fill(p.btn1)
                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
             )
@@ -650,13 +651,13 @@ fn list_panel(
                 list_state.ensure_visible = true;
             }
         }
-        if !layout.kind.is_pvp() && ui.small_button("Suggest...").clicked() {
+        if !layout.kind.is_pvp() && ui.small_button(tr("Suggest...")).clicked() {
             suggest.open = true;
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let total = tactics.entries.iter().filter(|entry| !entry.is_removed()).count();
             ui.label(
-                egui::RichText::new(format!("{visible_count} of {total}"))
+                egui::RichText::new(crate::i18n::tr_args("{0} of {1}", &[&visible_count.to_string(), &total.to_string()]))
                     .color(p.muted)
                     .size(11.0),
             );
@@ -686,11 +687,11 @@ fn form_panel(
             .map(|(_, other)| other.id.clone())
             .collect();
         let Some(entry) = tactics.entry_mut(selected) else {
-            ui.label(egui::RichText::new("Select an entry on the left.").color(p.muted));
+            ui.label(egui::RichText::new(tr("Select an entry on the left.")).color(p.muted));
             return;
         };
         if entry.is_removed() {
-            ui.label(egui::RichText::new("This entry was removed.").color(p.muted));
+            ui.label(egui::RichText::new(tr("This entry was removed.")).color(p.muted));
             return;
         }
         egui::ScrollArea::vertical()
@@ -747,13 +748,13 @@ fn form_panel(
                     entry.id.trim().parse::<i64>().is_err() || duplicate
                 };
                 if invalid {
-                    let message = if duplicate {
+                    let message = tr(if duplicate {
                         "This id is already used by another entry."
                     } else if layout.kind.is_pvp() {
                         "You must enter a name."
                     } else {
                         "You must enter a numeric monster id."
-                    };
+                    });
                     ui.label(egui::RichText::new(message).color(p.pending).size(11.0));
                 }
                 if !layout.kind.is_pvp() {
@@ -783,7 +784,7 @@ fn form_panel(
                     .show(ui, |ui| {
                         ui.set_min_width(ui.available_width().max(0.0));
                         ui.label(
-                            egui::RichText::new("Overall Tactics").color(p.tab_text).strong(),
+                            egui::RichText::new(tr("Overall Tactics")).color(p.tab_text).strong(),
                         );
                         ui.add_space(2.0);
                         ui.columns(2, |columns| {
@@ -806,7 +807,7 @@ fn field_ui(
     entry: &mut azzy_config::tactics::Entry,
 ) {
     ui.add_space(3.0);
-    ui.label(egui::RichText::new(field.label).color(p.muted).size(11.0));
+    ui.label(egui::RichText::new(tr(field.label)).color(p.muted).size(11.0));
     let id = format!("tact:{tab_key}:{}", field.index);
     match &field.kind {
         FieldKind::Select(options) => {
@@ -814,7 +815,7 @@ fn field_ui(
             let selected = options
                 .iter()
                 .find(|(_, token)| *token == current)
-                .map(|(label, _)| (*label).to_string())
+                .map(|(label, _)| tr(label))
                 .unwrap_or_else(|| unsupported(&current));
             let mut chosen = selected.clone();
             egui::ComboBox::from_id_source(&id)
@@ -822,7 +823,7 @@ fn field_ui(
                 .selected_text(selected)
                 .show_ui(ui, |ui| {
                     for (label, token) in options.iter() {
-                        if ui.selectable_value(&mut chosen, (*label).to_string(), *label).clicked() {
+                        if ui.selectable_value(&mut chosen, tr(label), tr(label)).clicked() {
                             entry.values[field.index] = (*token).to_string();
                         }
                     }
@@ -832,7 +833,7 @@ fn field_ui(
         FieldKind::Debuff(options) => debuff_ui(ui, p, &id, options, entry),
         FieldKind::Snipe => {
             let mut on = entry.values[field.index] != "SNIPE_DISABLE";
-            if ui.checkbox(&mut on, "Snipe OK").changed() {
+            if ui.checkbox(&mut on, tr("Snipe OK")).changed() {
                 entry.values[field.index] = if on { "SNIPE_OK" } else { "SNIPE_DISABLE" }.to_string();
             }
         }
@@ -864,7 +865,7 @@ fn field_ui(
 }
 
 fn unsupported(current: &str) -> String {
-    format!("{current} (not supported by the GUI)")
+    format!("{current} ({})", tr("not supported by the GUI"))
 }
 
 fn format_weight(value: f64) -> String {
@@ -902,13 +903,13 @@ fn skill_ui(
         },
     };
     let before_mode = mode;
-    let selected = match mode {
+    let selected = tr(match mode {
         SkillMode::Always => "Always",
         SkillMode::Never => "Never",
         SkillMode::Times => "This many times",
         SkillMode::Once => "Once; level",
         SkillMode::Raw => "Custom",
-    };
+    });
     let mut chosen = selected.to_string();
     ui.horizontal(|ui| {
         egui::ComboBox::from_id_source(format!("{id}:mode"))
@@ -916,25 +917,25 @@ fn skill_ui(
             .selected_text(if mode == SkillMode::Raw {
                 unsupported(&current)
             } else {
-                selected.to_string()
+                selected.clone()
             })
             .show_ui(ui, |ui| {
-                if ui.selectable_value(&mut chosen, "Always".to_string(), "Always").clicked() {
+                if ui.selectable_value(&mut chosen, tr("Always"), tr("Always")).clicked() {
                     mode = SkillMode::Always;
                 }
-                if ui.selectable_value(&mut chosen, "Never".to_string(), "Never").clicked() {
+                if ui.selectable_value(&mut chosen, tr("Never"), tr("Never")).clicked() {
                     mode = SkillMode::Never;
                 }
-                if ui.selectable_value(&mut chosen, "This many times".to_string(), "This many times").clicked() {
+                if ui.selectable_value(&mut chosen, tr("This many times"), tr("This many times")).clicked() {
                     mode = SkillMode::Times;
                 }
                 if once_level
-                    && ui.selectable_value(&mut chosen, "Once; level".to_string(), "Once; level").clicked()
+                    && ui.selectable_value(&mut chosen, tr("Once; level"), tr("Once; level")).clicked()
                 {
                     mode = SkillMode::Once;
                 }
                 if mode == SkillMode::Raw {
-                    ui.selectable_value(&mut chosen, "Custom".to_string(), unsupported(&current));
+                    ui.selectable_value(&mut chosen, tr("Custom"), unsupported(&current));
                 }
             });
         ui.add_enabled_ui(mode == SkillMode::Times || mode == SkillMode::Once, |ui| {
@@ -995,8 +996,8 @@ fn debuff_ui(
             options
                 .iter()
                 .find(|(_, token)| *token == kind)
-                .map(|(label, _)| (*label).to_string())
-                .unwrap_or_else(|| "Never".to_string())
+                .map(|(label, _)| tr(label))
+                .unwrap_or_else(|| tr("Never"))
         } else {
             unsupported(&current)
         };
@@ -1006,25 +1007,25 @@ fn debuff_ui(
             .selected_text(selected)
             .show_ui(ui, |ui| {
                 for (label, token) in options {
-                    if ui.selectable_value(&mut chosen, (*label).to_string(), *label).clicked() {
+                    if ui.selectable_value(&mut chosen, tr(label), tr(label)).clicked() {
                         kind = *token;
                         known = true;
                         touched = true;
                     }
                 }
             });
-        ui.label(egui::RichText::new("While").color(p.muted).size(11.0));
+        ui.label(egui::RichText::new(tr("While")).color(p.muted).size(11.0));
         let mut chasing = phase == "C";
         ui.add_enabled_ui(kind.is_some(), |ui| {
             egui::ComboBox::from_id_source(format!("{id}:phase"))
                 .width(86.0)
-                .selected_text(if chasing { "Chasing" } else { "Attacking" })
+                .selected_text(if chasing { tr("Chasing") } else { tr("Attacking") })
                 .show_ui(ui, |ui| {
-                    if ui.selectable_value(&mut chasing, true, "Chasing").clicked() {
+                    if ui.selectable_value(&mut chasing, true, tr("Chasing")).clicked() {
                         phase = "C";
                         touched = true;
                     }
-                    if ui.selectable_value(&mut chasing, false, "Attacking").clicked() {
+                    if ui.selectable_value(&mut chasing, false, tr("Attacking")).clicked() {
                         phase = "A";
                         touched = true;
                     }
@@ -1077,7 +1078,10 @@ fn add_suggested(
     if let Some(index) = first_new {
         *selected = index;
     }
-    format!("Added {added} monster(s), {kept} already had a row.")
+    crate::i18n::tr_args(
+        "Added {0} monster(s), {1} already had a row.",
+        &[&added.to_string(), &kept.to_string()],
+    )
 }
 
 fn suggest_window(
@@ -1094,7 +1098,7 @@ fn suggest_window(
     }
     let mut open = suggest.open;
     let mut close_after = false;
-    egui::Window::new("Suggest tactics from the monster database")
+    egui::Window::new(tr("Suggest tactics from the monster database"))
         .open(&mut open)
         .collapsible(false)
         .resizable(true)
@@ -1103,23 +1107,23 @@ fn suggest_window(
         .show(ctx, |ui| {
             ui.label(
                 egui::RichText::new(
-                    "Build rows from what the monster is (plant, boss, MVP, aggressive, immobile).",
+                    tr("Build rows from what the monster is (plant, boss, MVP, aggressive, immobile)."),
                 )
                 .color(p.muted)
                 .size(11.0),
             );
             ui.add_space(4.0);
             ui.horizontal(|ui| {
-                ui.label("Map:");
+                ui.label(tr("Map:"));
                 ui.add_sized(
                     [220.0, 20.0],
                     egui::TextEdit::singleline(&mut suggest.map)
-                        .hint_text("e.g. prt_fild08")
+                        .hint_text(tr("e.g. prt_fild08"))
                         .id_source("suggest:map"),
                 );
                 if ui
-                    .button("Add the monsters of this map")
-                    .on_hover_text("Adds every monster that spawns on the map")
+                    .button(tr("Add the monsters of this map"))
+                    .on_hover_text(tr("Adds every monster that spawns on the map"))
                     .clicked()
                 {
                     let name = suggest.map.trim().to_string();
@@ -1131,7 +1135,7 @@ fn suggest_window(
                             filter.clear();
                             close_after = true;
                         }
-                        None => suggest.result = format!("Unknown map: {name}"),
+                        None => suggest.result = format!("{} {name}", tr("Unknown map:")),
                     }
                 }
             });
@@ -1156,14 +1160,14 @@ fn suggest_window(
             }
             ui.add_space(4.0);
             ui.horizontal(|ui| {
-                ui.label("Monster:");
+                ui.label(tr("Monster:"));
                 ui.add_sized(
                     [220.0, 20.0],
                     egui::TextEdit::singleline(&mut suggest.mob)
-                        .hint_text("name or ID")
+                        .hint_text(tr("name or ID"))
                         .id_source("suggest:mob"),
                 );
-                if ui.button("Add monster").clicked() {
+                if ui.button(tr("Add monster")).clicked() {
                     match Mobs::parse_mob(&suggest.mob) {
                         Some(id) if mobs.mob(id).is_some() => {
                             suggest.result = add_suggested(tactics, selected, &[id], suggest.replace, mobs);
@@ -1171,7 +1175,7 @@ fn suggest_window(
                             filter.clear();
                             close_after = true;
                         }
-                        _ => suggest.result = format!("Unknown monster: {}", suggest.mob.trim()),
+                        _ => suggest.result = format!("{} {}", tr("Unknown monster:"), suggest.mob.trim()),
                     }
                 }
             });
@@ -1191,7 +1195,7 @@ fn suggest_window(
             ui.add_space(6.0);
             ui.horizontal(|ui| {
                 if ui
-                    .button("Add all plants and mushrooms")
+                    .button(tr("Add all plants and mushrooms"))
                     .clicked()
                 {
                     let ids = mobs.plants();
@@ -1200,7 +1204,7 @@ fn suggest_window(
                     filter.clear();
                     close_after = true;
                 }
-                ui.checkbox(&mut suggest.replace, "Replace rows that already exist");
+                ui.checkbox(&mut suggest.replace, tr("Replace rows that already exist"));
             });
             if !suggest.result.is_empty() {
                 ui.label(
@@ -1212,17 +1216,17 @@ fn suggest_window(
             }
             ui.separator();
             ui.label(
-                egui::RichText::new("Suggested rows (edit them afterwards as you like):")
+                egui::RichText::new(tr("Suggested rows (edit them afterwards as you like):"))
                     .color(p.text)
                     .size(11.5),
             );
             for rule in Mobs::rules() {
-                ui.label(egui::RichText::new(format!("• {rule}")).color(p.muted).size(11.0));
+                ui.label(egui::RichText::new(format!("• {}", tr(rule))).color(p.muted).size(11.0));
             }
             ui.add_space(4.0);
             ui.label(
                 egui::RichText::new(
-                    "Monster and spawn data: rAthena Renewal. Spawns on your server may differ.",
+                    tr("Monster and spawn data: rAthena Renewal. Spawns on your server may differ."),
                 )
                 .color(p.muted)
                 .italics()

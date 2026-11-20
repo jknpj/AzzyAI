@@ -11,6 +11,7 @@
 // translations are the next milestones (see README).
 
 mod data;
+mod i18n;
 mod mobs;
 mod skills;
 mod tactics_ui;
@@ -118,6 +119,7 @@ struct App {
     extra_paths: BTreeMap<&'static str, PathBuf>,
     extra_selected: &'static str,
     logo: Option<egui::TextureHandle>,
+    lang: i18n::Lang,
 }
 
 /// Everything a grid row needs, copied out of the schema/config so the UI can mutate them.
@@ -185,6 +187,8 @@ impl App {
     fn new(paths: &BTreeMap<&'static str, PathBuf>, write_in_place: bool) -> Result<App, String> {
         let (hom, mer) = data::load()?;
         let mobs = mobs::load()?;
+        let lang = i18n::load_pref();
+        i18n::set_lang(lang);
         let skills = skills::load()?;
         let mut configs = BTreeMap::new();
         let mut shown = Vec::new();
@@ -287,7 +291,17 @@ impl App {
             extra_paths,
             extra_selected: "H_Extra.lua",
             logo: None,
+            lang,
         })
+    }
+
+    /// Description shown for an option: the web GUI's translation when there is one.
+    fn description(&self, option: &OptionDef) -> String {
+        let scope = match self.unit {
+            Unit::Homunculus => "hom",
+            Unit::Mercenary => "mer",
+        };
+        i18n::desc(scope, &option.name, &option.description)
     }
 
     fn schema(&self) -> &Schema {
@@ -446,9 +460,9 @@ impl App {
         self.dirty_tactics.clear();
         self.dirty_extra.clear();
         self.status = if errors.is_empty() {
-            "reloaded from disk".into()
+            i18n::tr("reloaded from disk")
         } else {
-            format!("reload failed: {}", errors.join("; "))
+            i18n::tr_args("reload failed: {0}", &[&errors.join("; ")])
         };
     }
 
@@ -553,15 +567,19 @@ impl App {
         self.dirty_tactics.clear();
         self.dirty_extra.clear();
         if !errors.is_empty() {
-            self.status = format!("save failed: {}", errors.join("; "));
+            self.status = i18n::tr_args("save failed: {0}", &[&errors.join("; ")]);
         } else if written.is_empty() {
-            self.status = "nothing to apply".into();
+            self.status = i18n::tr("nothing to apply");
         } else {
-            self.status = format!(
-                "applied {total} change(s) to {}{}",
-                written.join(", "),
-                if self.write_in_place { "" } else { " (pass --write to edit the files themselves)" }
+            let mut message = i18n::tr_args(
+                "applied {0} change(s) to {1}",
+                &[&total.to_string(), &written.join(", ")],
             );
+            if !self.write_in_place {
+                message.push(' ');
+                message.push_str(&i18n::tr("(pass --write to edit the files themselves)"));
+            }
+            self.status = message;
         }
     }
 
@@ -582,7 +600,13 @@ impl App {
         }
         if !self.search.trim().is_empty() {
             let needle = self.search.to_lowercase();
-            let haystack = format!("{} {}", option.name, option.description).to_lowercase();
+            let haystack = format!(
+                "{} {} {}",
+                option.name,
+                option.description,
+                self.description(option)
+            )
+            .to_lowercase();
             if !haystack.contains(&needle) {
                 return false;
             }
@@ -663,7 +687,7 @@ impl App {
         } else {
             self.set_token(name, token);
         }
-        self.status = format!("{name} reset to its default");
+        self.status = i18n::tr_args("{0} reset to its default", &[name]);
     }
 
     fn is_searching(&self) -> bool {
@@ -796,16 +820,34 @@ impl App {
                     }
                     ui.add_space(4.0);
                     ui.label(
-                        egui::RichText::new("AzzyAI Configuration")
+                        egui::RichText::new(i18n::tr("AzzyAI Configuration"))
                             .color(p.title_text)
                             .size(18.0)
                             .strong(),
                     );
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let label = match self.mode {
-                            theme::Mode::Dark => "Light theme",
-                            theme::Mode::Light => "Dark theme",
+                            theme::Mode::Dark => i18n::tr("Light theme"),
+                            theme::Mode::Light => i18n::tr("Dark theme"),
                         };
+                        // Language first: it is the rightmost control in the bar.
+                        egui::ComboBox::from_id_source("lang")
+                            .selected_text(self.lang.label())
+                            .width(140.0)
+                            .show_ui(ui, |ui| {
+                                for lang in i18n::Lang::ALL {
+                                    if ui
+                                        .selectable_label(self.lang == lang, lang.label())
+                                        .clicked()
+                                        && self.lang != lang
+                                    {
+                                        self.lang = lang;
+                                        i18n::set_lang(lang);
+                                        i18n::save_pref(lang);
+                                    }
+                                }
+                            });
+                        ui.add_space(6.0);
                         if ui
                             .add(
                                 egui::Button::new(egui::RichText::new(label).color(p.btn_text))
@@ -818,22 +860,22 @@ impl App {
                         }
                         if ui
                             .add(
-                                egui::Button::new(egui::RichText::new("Reload").color(p.btn_text))
+                                egui::Button::new(egui::RichText::new(i18n::tr("Reload")).color(p.btn_text))
                                     .fill(p.btn1)
                                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
                             )
-                            .on_hover_text("Discard the edits and read the files again (Ctrl+R)")
+                            .on_hover_text(i18n::tr("Discard the edits and read the files again (Ctrl+R)"))
                             .clicked()
                         {
                             self.reload();
                         }
                         if ui
                             .add(
-                                egui::Button::new(egui::RichText::new("Files").color(p.btn_text))
+                                egui::Button::new(egui::RichText::new(i18n::tr("Files")).color(p.btn_text))
                                     .fill(p.btn1)
                                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
                             )
-                            .on_hover_text("Import, export and diagnostics")
+                            .on_hover_text(i18n::tr("Import, export and diagnostics"))
                             .clicked()
                         {
                             self.io_open = true;
@@ -854,7 +896,7 @@ impl App {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui
                             .add(
-                                egui::Button::new(egui::RichText::new("Quit").color(p.btn_text))
+                                egui::Button::new(egui::RichText::new(i18n::tr("Quit")).color(p.btn_text))
                                     .fill(p.btn1)
                                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
                             )
@@ -864,7 +906,7 @@ impl App {
                         }
                         let changed = self.changed();
                         let apply = egui::Button::new(
-                            egui::RichText::new("Apply Settings")
+                            egui::RichText::new(i18n::tr("Apply Settings"))
                                 .color(egui::Color32::WHITE)
                                 .strong(),
                         )
@@ -874,9 +916,9 @@ impl App {
                         if ui
                             .add_enabled(changed > 0, apply)
                             .on_hover_text(if changed > 0 {
-                                "Write the edited files (Ctrl+S)"
+                                i18n::tr("Write the edited files (Ctrl+S)")
                             } else {
-                                "No changes to apply"
+                                i18n::tr("No changes to apply")
                             })
                             .clicked()
                         {
@@ -884,7 +926,7 @@ impl App {
                         }
                         if ui
                             .add(
-                                egui::Button::new(egui::RichText::new("Reload").color(p.btn_text))
+                                egui::Button::new(egui::RichText::new(i18n::tr("Reload")).color(p.btn_text))
                                     .fill(p.btn1)
                                     .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
                             )
@@ -895,7 +937,7 @@ impl App {
                         if changed > 0 {
                             theme::badge(
                                 ui,
-                                &format!("{changed} not applied"),
+                                &i18n::tr_args("{0} not applied", &[&changed.to_string()]),
                                 p.pending,
                                 egui::Color32::BLACK,
                             );
@@ -933,7 +975,7 @@ impl App {
             ui.horizontal(|ui| {
                 for unit in [Unit::Homunculus, Unit::Mercenary] {
                     let active = self.page == Page::Settings && self.unit == unit;
-                    let response = theme::tab(ui, p, unit.label(), active);
+                    let response = theme::tab(ui, p, &i18n::tr(unit.label()), active);
                     if active {
                         active_tab = Some(response.rect);
                     }
@@ -951,7 +993,7 @@ impl App {
                 }
                 for tab in tactics_ui::Tab::ALL {
                     let active = self.page == Page::Tactics(tab);
-                    let response = theme::tab(ui, p, tab.layout().title, active);
+                    let response = theme::tab(ui, p, &i18n::tr(tab.layout().title), active);
                     if active {
                         active_tab = Some(response.rect);
                     }
@@ -965,7 +1007,7 @@ impl App {
                     }
                 }
                 let active = self.page == Page::Extra;
-                let response = theme::tab(ui, p, "Extra Options", active);
+                let response = theme::tab(ui, p, &i18n::tr("Extra Options"), active);
                 if active {
                     active_tab = Some(response.rect);
                 }
@@ -1025,10 +1067,11 @@ impl App {
 
     fn extra_workspace(&mut self, ui: &mut egui::Ui, p: &Palette) {
         ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("Extra options file:").color(p.text));
+            ui.label(egui::RichText::new(i18n::tr("Extra options file:")).color(p.text));
             for (file, label) in [("H_Extra.lua", "Homunculus"), ("M_Extra.lua", "Mercenary")] {
+                let label = i18n::tr(label);
                 let active = self.extra_selected == file;
-                if theme::tab(ui, p, label, active).clicked() {
+                if theme::tab(ui, p, &label, active).clicked() {
                     self.extra_selected = file;
                 }
             }
@@ -1041,12 +1084,12 @@ impl App {
                 != self.extra_original.get(self.extra_selected);
             if changed {
                 ui.add_space(6.0);
-                theme::badge(ui, "not applied", p.pending, egui::Color32::BLACK);
+                theme::badge(ui, &i18n::tr("Not applied"), p.pending, egui::Color32::BLACK);
             }
         });
         ui.label(
             egui::RichText::new(
-                "Here you can modify configurations that are not supported by the GUI.",
+                i18n::tr("Here you can modify configurations that are not supported by the GUI."),
             )
             .color(p.muted)
             .size(11.0),
@@ -1273,7 +1316,7 @@ impl App {
             return;
         }
         let mut open = self.io_open;
-        egui::Window::new("Import / Export")
+        egui::Window::new(i18n::tr("Import / Export"))
             .open(&mut open)
             .collapsible(false)
             .resizable(true)
@@ -1282,20 +1325,20 @@ impl App {
             .show(ctx, |ui| {
                 ui.label(
                     egui::RichText::new(
-                        "All exports use the current editor state, including changes not applied yet.",
+                        i18n::tr("All exports use the current editor state, including changes not applied yet."),
                     )
                     .color(p.muted)
                     .size(11.0),
                 );
                 ui.add_space(4.0);
-                ui.label(egui::RichText::new("Export to folder").strong().color(p.text));
+                ui.label(egui::RichText::new(i18n::tr("Export to folder")).strong().color(p.text));
                 ui.add_sized(
                     [ui.available_width(), 20.0],
                     egui::TextEdit::singleline(&mut self.io_export_dir)
                         .id_source("io-export-dir"),
                 );
                 ui.horizontal(|ui| {
-                    if ui.button("Export all files").clicked() {
+                    if ui.button(i18n::tr("Export all files")).clicked() {
                         let dir = PathBuf::from(self.io_export_dir.trim());
                         self.io_status = match self.export_all(&dir) {
                             Ok(count) => format!("exported {count} file(s) to {}", dir.display()),
@@ -1303,7 +1346,7 @@ impl App {
                         };
                     }
                     if ui
-                        .button("Export diagnostics")
+                        .button(i18n::tr("Export diagnostics"))
                         .on_hover_text("Configurations, paths and the tail of azzy-native.log")
                         .clicked()
                     {
@@ -1316,10 +1359,10 @@ impl App {
                 ui.add_space(6.0);
                 ui.separator();
                 ui.add_space(4.0);
-                ui.label(egui::RichText::new("Import from folder").strong().color(p.text));
+                ui.label(egui::RichText::new(i18n::tr("Import from folder")).strong().color(p.text));
                 ui.label(
                     egui::RichText::new(
-                        "Folder with H_Config.lua, M_Config.lua, the tactics files and/or Types/.",
+                        i18n::tr("Folder with H_Config.lua, M_Config.lua, the tactics files and/or Types/."),
                     )
                     .color(p.muted)
                     .size(11.0),
@@ -1327,10 +1370,10 @@ impl App {
                 ui.add_sized(
                     [ui.available_width(), 20.0],
                     egui::TextEdit::singleline(&mut self.io_import_dir)
-                        .hint_text("path to a USER_AI folder or an exported folder")
+                        .hint_text(i18n::tr("path to a USER_AI folder or an exported folder"))
                         .id_source("io-import-dir"),
                 );
-                if ui.button("Import into the editor").clicked() {
+                if ui.button(i18n::tr("Import into the editor")).clicked() {
                     let dir = PathBuf::from(self.io_import_dir.trim());
                     self.io_status = match self.import_folder(&dir) {
                         Ok(files) => format!(
@@ -1358,26 +1401,26 @@ impl App {
         let mut clicked: Option<Option<u32>> = None;
         theme::card(p).show(ui, |ui| {
             ui.set_min_width(ui.available_width());
-            theme::title_bar(p, ui, "Homunculus skills");
+            theme::title_bar(p, ui, &i18n::tr("Homunculus skills"));
             ui.horizontal(|ui| {
                 if let Some(id) = self.skill_filter {
                     if let Some(skill) = self.skills.get(id) {
                         if ui
                             .small_button(format!("{}  ×", skill.name))
-                            .on_hover_text("Show all settings")
+                            .on_hover_text(i18n::tr("Show all settings"))
                             .clicked()
                         {
                             clicked = Some(None);
                         }
                         ui.label(
-                            egui::RichText::new("Showing only this skill's settings.")
+                            egui::RichText::new(i18n::tr("Showing only this skill's settings."))
                                 .color(p.muted)
                                 .size(11.0),
                         );
                     }
                 } else {
                     ui.label(
-                        egui::RichText::new("Click a skill to show only its settings.")
+                        egui::RichText::new(i18n::tr("Click a skill to see only its settings."))
                             .color(p.muted)
                             .size(11.0),
                     );
@@ -1465,13 +1508,16 @@ impl App {
     fn type_selector(&mut self, ui: &mut egui::Ui, p: &Palette) {
         let mut selection: Option<Option<&'static str>> = None;
         ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("Settings for:").color(p.text));
+            ui.label(egui::RichText::new(i18n::tr("Settings for:")).color(p.text));
             egui::ComboBox::from_id_source("settings-for")
                 .width(240.0)
-                .selected_text(self.type_selected.unwrap_or("Global (all homunculi)"))
+                .selected_text(match self.type_selected {
+                    Some(name) => name.to_string(),
+                    None => i18n::tr("Global (all homunculi)"),
+                })
                 .show_ui(ui, |ui| {
                     if ui
-                        .selectable_label(self.type_selected.is_none(), "Global (all homunculi)")
+                        .selectable_label(self.type_selected.is_none(), i18n::tr("Global (all homunculi)"))
                         .clicked()
                     {
                         selection = Some(None);
@@ -1486,12 +1532,13 @@ impl App {
                     }
                 });
             if let Some(name) = self.type_selected {
-                if ui.button("Use global values").clicked() {
+                if ui.button(i18n::tr("Use global values")).clicked() {
                     self.clear_type_overrides();
                 }
                 ui.label(
-                    egui::RichText::new(format!(
-                        "Only values that differ from the global settings are saved, in Types/{name}.lua."
+                    egui::RichText::new(i18n::tr_args(
+                        "Only values that differ from the global settings are saved, in Types/{0}.lua.",
+                        &[name],
                     ))
                     .color(p.muted)
                     .size(11.0),
@@ -1504,8 +1551,10 @@ impl App {
                 self.drafts.clear();
                 self.appended.clear();
                 self.status = match selection {
-                    Some(name) => format!("editing the {name} overrides (Types/{name}.lua)"),
-                    None => "editing the global settings".into(),
+                    Some(name) => {
+                        i18n::tr_args("editing the {0} overrides (Types/{0}.lua)", &[name])
+                    }
+                    None => i18n::tr("editing the global settings"),
                 };
             }
         }
@@ -1520,25 +1569,26 @@ impl App {
             }
         }
         self.drafts.clear();
-        self.status = format!("{name}: using the global values (saved on Apply)");
+        self.status =
+            i18n::tr_args("{0}: using the global values (saved on Apply)", &[name]);
     }
 
     fn toolbar(&mut self, ui: &mut egui::Ui, p: &Palette) {
         ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("Search settings:").color(p.text));
+            ui.label(egui::RichText::new(i18n::tr("Search settings:")).color(p.text));
             let reserve = 350.0;
             let width = (ui.available_width() - reserve).max(160.0);
             let response = ui.add_sized(
                 [width, 22.0],
                 egui::TextEdit::singleline(&mut self.search)
-                    .hint_text("Name or description (Ctrl+F)")
+                    .hint_text(i18n::tr("Name or description (Ctrl+F)"))
                     .id_source("search"),
             );
             if std::mem::take(&mut self.focus_search) {
                 response.request_focus();
             }
-            ui.checkbox(&mut self.only_changed, "Only changed from default");
-            if ui.button("Clear filters").clicked() {
+            ui.checkbox(&mut self.only_changed, i18n::tr("Only changed from default"));
+            if ui.button(i18n::tr("Clear filters")).clicked() {
                 self.search.clear();
                 self.only_changed = false;
                 self.category = None;
@@ -1569,14 +1619,14 @@ impl App {
         let mut selection: Option<Option<String>> = None;
         ui.horizontal_wrapped(|ui| {
             ui.spacing_mut().item_spacing = egui::vec2(2.0, 2.0);
-            if theme::tab(ui, p, &format!("All ({total})"), !searching && self.category.is_none())
+            if theme::tab(ui, p, &i18n::tr_args("All ({0})", &[&total.to_string()]), !searching && self.category.is_none())
                 .clicked()
             {
                 selection = Some(None);
             }
             for (category, count) in categories {
                 let active = !searching && self.category.as_deref() == Some(category.as_str());
-                if theme::tab(ui, p, &format!("{category} ({count})"), active).clicked() {
+                if theme::tab(ui, p, &format!("{} ({count})", i18n::tr(&category)), active).clicked() {
                     selection = Some(Some(category));
                 }
             }
@@ -1618,7 +1668,7 @@ impl App {
         let mut clicked: Option<String> = None;
         for row in rows {
             match row {
-                Row::Group { name, count } => group_header(ui, p, &name, count),
+                Row::Group { name, count } => group_header(ui, p, &i18n::tr(&name), count),
                 Row::Option(data) => {
                     let is_selected = selected.as_deref() == Some(data.option.name.as_str());
                     let (select, edit, do_reset) = option_row(
@@ -1656,27 +1706,27 @@ impl App {
     fn description_card(&self, ui: &mut egui::Ui, p: &Palette, height: f32) {
         theme::card(p).show(ui, |ui| {
                 ui.set_min_size(egui::vec2(ui.available_width(), (height - 12.0).max(100.0)));
-                theme::title_bar(p, ui, "Description");
+                theme::title_bar(p, ui, &i18n::tr("Description"));
                 ui.add_space(6.0);
                 let Some(option) = self.selected.as_deref().and_then(|name| self.schema().get(name)) else {
                     ui.label(
-                        egui::RichText::new("Click a setting to read its description.")
+                        egui::RichText::new(i18n::tr("Click a setting to read its description."))
                             .color(p.muted)
                             .size(12.0),
                     );
                     return;
                 };
                 ui.label(egui::RichText::new(&option.name).color(p.text).strong().size(15.0));
-                let mut facts = format!("{}  ·  {}", option.category, option.kind);
+                let mut facts = format!("{}  ·  {}", i18n::tr(&option.category), option.kind);
                 if let (Some(min), Some(max)) = (option.min, option.max) {
                     facts.push_str(&format!("  ·  {min}..{max}"));
                 }
                 facts.push_str(&format!(
-                    "  ·  default {}",
-                    default_label(self.schema(), option)
+                    "  ·  {}",
+                    i18n::tr_args("default {0}", &[&default_label(self.schema(), option)])
                 ));
                 if let Some(skill) = self.skills.for_setting(&option.name) {
-                    facts.push_str(&format!("  ·  skill {}", skill.name));
+                    facts.push_str(&format!("  ·  {}", i18n::tr_args("Skill: {0}", &[&skill.name])));
                 }
                 ui.label(egui::RichText::new(facts).color(p.muted).size(11.0));
                 ui.add_space(4.0);
@@ -1687,7 +1737,7 @@ impl App {
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
                         ui.label(
-                            egui::RichText::new(&option.description)
+                            egui::RichText::new(self.description(option))
                                 .color(p.text)
                                 .size(12.5),
                         );
@@ -1696,7 +1746,7 @@ impl App {
                             if !comment.is_empty() {
                                 ui.add_space(6.0);
                                 ui.label(
-                                    egui::RichText::new("In the file:")
+                                    egui::RichText::new(i18n::tr("In the file:"))
                                         .color(p.muted)
                                         .size(11.0)
                                         .strong(),
@@ -1726,18 +1776,19 @@ impl App {
         let modified = self.modified_count();
         ui.horizontal(|ui| {
             ui.label(
-                egui::RichText::new(format!(
-                    "{shown} settings  ·  {modified} changed from default"
+                egui::RichText::new(i18n::tr_args(
+                    "{0} settings  ·  {1} changed from default",
+                    &[&shown.to_string(), &modified.to_string()],
                 ))
                 .color(p.muted)
                 .size(11.0),
             );
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(egui::RichText::new("Not applied yet").color(p.muted).size(11.0));
+                ui.label(egui::RichText::new(i18n::tr("Not applied yet")).color(p.muted).size(11.0));
                 theme::swatch(ui, p.pending);
                 ui.add_space(10.0);
                 ui.label(
-                    egui::RichText::new("Changed from default")
+                    egui::RichText::new(i18n::tr("Changed from default"))
                         .color(p.muted)
                         .size(11.0),
                 );
@@ -1894,19 +1945,19 @@ fn option_row(
             if row.modified {
                 name = name.strong();
             }
-            let mut tooltip = format!("{}  ·  {}", row.option.category, row.option.kind);
+            let mut tooltip = format!("{}  ·  {}", i18n::tr(&row.option.category), row.option.kind);
             if row.pending {
-                tooltip.push_str("  ·  not applied yet");
+                tooltip.push_str(&format!("  ·  {}", i18n::tr("not applied yet")));
             } else if row.modified {
-                tooltip.push_str("  ·  changed from default");
+                tooltip.push_str(&format!("  ·  {}", i18n::tr("changed from default")));
             }
             if row.uses_global {
-                tooltip.push_str("  ·  uses the global value");
+                tooltip.push_str(&format!("  ·  {}", i18n::tr("uses the global value")));
             } else if !row.present {
-                tooltip.push_str("  ·  not in the file yet");
+                tooltip.push_str(&format!("  ·  {}", i18n::tr("not in the file yet")));
             }
             if !row.skill_name.is_empty() {
-                tooltip.push_str(&format!("\nSkill: {}", row.skill_name));
+                tooltip.push_str(&format!("\n{}", i18n::tr_args("Skill: {0}", &[&row.skill_name])));
             }
             if !row.comment.is_empty() {
                 tooltip.push_str(&format!("\n{}", row.comment));
@@ -1943,10 +1994,10 @@ fn option_row(
                     let before = on;
                     egui::ComboBox::from_id_source(format!("bool:{}", row.option.name))
                         .width(82.0)
-                        .selected_text(if on { "True" } else { "False" })
+                        .selected_text(if on { i18n::tr("True") } else { i18n::tr("False") })
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut on, true, "True");
-                            ui.selectable_value(&mut on, false, "False");
+                            ui.selectable_value(&mut on, true, i18n::tr("True"));
+                            ui.selectable_value(&mut on, false, i18n::tr("False"));
                         });
                     if on != before {
                         token_out = Some(if on { "1" } else { "0" }.to_string());
@@ -2675,5 +2726,20 @@ mod tests {
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.suggest.open = false;
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
+
+        // Every language draws the same screens: a missing translation must not break layout.
+        for lang in i18n::Lang::ALL {
+            app.lang = lang;
+            i18n::set_lang(lang);
+            app.page = Page::Settings;
+            app.unit = Unit::Homunculus;
+            app.selected = Some("AggroHP".into());
+            let _ = ctx.run(input(), |ctx| app.draw(ctx));
+            app.page = Page::Tactics(tactics_ui::Tab::Hom);
+            let _ = ctx.run(input(), |ctx| app.draw(ctx));
+            app.page = Page::Extra;
+            let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        }
+        i18n::set_lang(i18n::Lang::En);
     }
 }

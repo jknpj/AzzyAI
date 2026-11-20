@@ -1,7 +1,7 @@
 // webgui-data.js
-// Dumps the web GUI's option schema (enums + options, with descriptions) and the monster/map
-// database to JSON for the Rust GUI, so the two front ends share one source of truth instead of a
-// hand-copied schema.
+// Dumps the web GUI's option schema (enums + options, with descriptions), its pt/es translations
+// (UI strings and setting descriptions) and the monster/map database to JSON for the Rust GUI, so
+// the two front ends share one source of truth instead of hand-copied data.
 //
 //   node tools/webgui-data.js            # write tools/azzy-native/data/
 //   node tools/webgui-data.js --check    # compare without writing (CI)
@@ -15,6 +15,7 @@ const REPO = path.join(__dirname, '..');
 const WEBGUI = path.join(REPO, 'webgui');
 const OUT_DIR = path.join(REPO, 'tools', 'azzy-native', 'data');
 const FILES = ['homSchema.js', 'merSchema.js', 'mobdata.js'];
+const I18N = ['i18n.strings.js', 'i18n.desc.pt.js', 'i18n.desc.es.js'];
 
 function load() {
   const window = {};
@@ -24,10 +25,17 @@ function load() {
     const file = path.join(WEBGUI, name);
     vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
   }
+  // The translations are plain objects on window, like the schema.
+  for (const name of I18N) {
+    const file = path.join(WEBGUI, name);
+    if (!fs.existsSync(file)) throw new Error(`${name} not found in webgui/`);
+    vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
+  }
   return {
     hom: { enums: window.AzzyHomEnums || {}, schema: window.AzzyHomSchema || [] },
     mer: { enums: window.AzzyMerEnums || {}, schema: window.AzzyMerSchema || [] },
-    mobs: window.AzzyMobData || null
+    mobs: window.AzzyMobData || null,
+    i18n: { strings: window.AzzyI18nStrings || {}, desc: window.AzzyI18nDesc || {} }
   };
 }
 
@@ -52,7 +60,8 @@ function main() {
   }
   const data = load();
   const outputs = [
-    ['options.json', dump({ hom: data.hom, mer: data.mer }), `${data.hom.schema.length} homunculus, ${data.mer.schema.length} mercenary options`]
+    ['options.json', dump({ hom: data.hom, mer: data.mer }), `${data.hom.schema.length} homunculus, ${data.mer.schema.length} mercenary options`],
+    ['i18n.json', dump(data.i18n), `${Object.keys(data.i18n.strings).join('/')} UI strings and setting descriptions`]
   ];
   if (data.mobs) {
     const count = Object.keys(data.mobs.mobs || {}).length;

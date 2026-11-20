@@ -14,8 +14,9 @@ badge, Apply Settings, Reload and Quit. The palette (dark and light) is copied f
 
 - **Homunculus and Mercenary tabs** driven by the *same schema the web GUI uses*: `tools/webgui-data.js`
   dumps `homSchema.js`/`merSchema.js` (263 options with categories, types, enums, defaults,
-  min/max and the English descriptions) to `data/options.json`, which is committed and checked for
-  drift in CI (`node tools/webgui-data.js --check`).
+  min/max and the English descriptions) to `data/options.json`, and the web GUI's translations to
+  `data/i18n.json`; both are committed and checked for drift in CI
+  (`node tools/webgui-data.js --check`).
 - Search over names **and** descriptions, category filter, "only non-default" filter, changed
   counter, and a description panel for the selected option (with category, type, range, default).
 - Typed editors: `bool` checkbox, `int`/`double` text field with the same min/max clamp as the web
@@ -67,6 +68,22 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
   verbatim), and export a diagnostics folder with the paths, counts and the tail of
   `azzy-native.log`. It is folder-based, so no native file-dialog dependency is needed.
 
+## Languages
+
+The language selector in the navbar offers **English**, **Português (BR)** and **Español (LatAm)**,
+the same three choices as the web GUI, and the choice is remembered between runs (in
+`%APPDATA%\azzy-native\lang` on Windows, `$XDG_CONFIG_HOME/azzy-native/lang` or
+`~/.config/azzy-native/lang` elsewhere; on the first run the system locale decides, English
+otherwise). It never writes anything into USER_AI.
+
+- UI strings are translated through `data/i18n.json`, generated from the web GUI's
+  `i18n.strings.js` and keyed by the English text, so a label the web GUI translates is translated
+  here too.
+- Setting descriptions come from `i18n.desc.pt.js`/`i18n.desc.es.js` for all 263 options; search
+  matches both the English and the translated description.
+- Labels that only this window has (Reload, Files, the language list, the suggestion window) live
+  in `src/i18n.rs`; anything without a translation stays English.
+
 ## Icons
 
 The window and the navbar use the real `webgui/azzyai.ico`, converted once to
@@ -82,7 +99,6 @@ the schema and the monster database.
 ## Still missing for parity with the web GUI
 
 - The update flow from GitHub (`azzy-gui` already has the zip logic).
-- UI translations (pt/es) and the option descriptions in those languages (`i18n.desc.*.js`).
 
 `cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
 editor (including a simulated row click and the suggestion rules) and a real save into a temporary
