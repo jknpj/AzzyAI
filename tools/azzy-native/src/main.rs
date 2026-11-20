@@ -62,6 +62,30 @@ const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 /// at another archive, which is how the tests run it against a local zip.
 const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
 
+/// The last custom update URL (a fork, branch or local zip). `AZZY_UPDATE_URL` wins over it.
+fn saved_update_url() -> Option<String> {
+    let path = i18n::config_path("update-url")?;
+    let text = std::fs::read_to_string(path).ok()?;
+    let text = text.trim().to_string();
+    if text.is_empty() {
+        None
+    } else {
+        Some(text)
+    }
+}
+
+fn save_update_url(url: &str) {
+    let Some(path) = i18n::config_path("update-url") else { return };
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    if url.trim() == UPDATE_URL {
+        let _ = std::fs::remove_file(path);
+    } else {
+        let _ = std::fs::write(path, format!("{}\n", url.trim()));
+    }
+}
+
 enum UpdateEvent {
     Applying,
     Done(azzy_update::Report),
@@ -385,7 +409,10 @@ impl App {
             io_status: String::new(),
             update_open: false,
             update_overwrite_presets: false,
-            update_url: std::env::var("AZZY_UPDATE_URL").unwrap_or_else(|_| UPDATE_URL.to_string()),
+            update_url: std::env::var("AZZY_UPDATE_URL")
+                .ok()
+                .or_else(saved_update_url)
+                .unwrap_or_else(|| UPDATE_URL.to_string()),
             update_state: UpdateState::Idle,
             update_rx: None,
             write_in_place,
@@ -1606,6 +1633,10 @@ impl App {
             .default_width(560.0)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .show(ctx, |ui| {
+                let busy = matches!(
+                    &self.update_state,
+                    UpdateState::Downloading | UpdateState::Applying
+                );
                 ui.label(
                     egui::RichText::new(i18n::tr(
                         "Download the latest AI from GitHub and apply it here? Files you edited (H_Config.lua, tactics, extra, A_Friends) are kept and the replaced ones are copied to backup/.",
@@ -1619,15 +1650,30 @@ impl App {
                         .color(p.muted)
                         .size(11.0),
                 );
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new(i18n::tr("Update from:")).color(p.text));
+                    let width = (ui.available_width() - 80.0).max(160.0);
+                    ui.add_enabled(
+                        !busy,
+                        egui::TextEdit::singleline(&mut self.update_url)
+                            .desired_width(width)
+                            .hint_text(UPDATE_URL),
+                    );
+                    if ui
+                        .add_enabled(!busy, egui::Button::new(i18n::tr("Default")))
+                        .clicked()
+                    {
+                        self.update_url = UPDATE_URL.to_string();
+                        save_update_url(&self.update_url);
+                    }
+                });
+                ui.add_space(4.0);
                 ui.checkbox(
                     &mut self.update_overwrite_presets,
                     i18n::tr("Replace Types/ presets too"),
                 );
                 ui.add_space(6.0);
-                let busy = matches!(
-                    &self.update_state,
-                    UpdateState::Downloading | UpdateState::Applying
-                );
                 match &self.update_state {
                     UpdateState::Idle => {}
                     UpdateState::Downloading => {
@@ -1701,6 +1747,7 @@ impl App {
                         )
                         .clicked()
                     {
+                        save_update_url(&self.update_url);
                         self.start_update(ctx);
                     }
                     if ui.button(i18n::tr("Close")).clicked() {

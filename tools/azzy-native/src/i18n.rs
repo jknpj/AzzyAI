@@ -282,6 +282,8 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "Recarga para leer los archivos nuevos (los cambios sin aplicar se descartarán).",
     ),
     ("Update failed: {0}", "Falha na atualização: {0}", "Error al actualizar: {0}"),
+    ("Update from:", "Baixar de:", "Descargar de:"),
+    ("Default", "Padrão", "Predeterminado"),
     ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
     (
         "update applied; reload to read the new files (unsaved edits kept)",
@@ -357,7 +359,9 @@ fn desc_for(lang: Lang, scope: &str, name: &str, english: &str) -> String {
 
 // ---------- preference file ----------
 
-fn prefs_path() -> Option<PathBuf> {
+/// A file in the per-user azzy-native folder (`%APPDATA%\azzy-native` on Windows,
+/// `$XDG_CONFIG_HOME`/`~/.config/azzy-native` elsewhere). Never inside USER_AI.
+pub fn config_path(name: &str) -> Option<PathBuf> {
     let dir = if cfg!(windows) {
         std::env::var_os("APPDATA").map(PathBuf::from)
     } else {
@@ -365,12 +369,12 @@ fn prefs_path() -> Option<PathBuf> {
             .map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
     }?;
-    Some(dir.join("azzy-native").join("lang"))
+    Some(dir.join("azzy-native").join(name))
 }
 
 /// The saved language, the system locale when it is pt/es, or English.
 pub fn load_pref() -> Lang {
-    if let Some(path) = prefs_path() {
+    if let Some(path) = config_path("lang") {
         if let Ok(text) = std::fs::read_to_string(path) {
             if let Some(lang) = Lang::from_code(&text) {
                 return lang;
@@ -389,7 +393,7 @@ pub fn load_pref() -> Lang {
 
 /// Best effort: a read-only profile must not stop the GUI from switching language.
 pub fn save_pref(lang: Lang) {
-    let Some(path) = prefs_path() else { return };
+    let Some(path) = config_path("lang") else { return };
     if let Some(dir) = path.parent() {
         let _ = std::fs::create_dir_all(dir);
     }

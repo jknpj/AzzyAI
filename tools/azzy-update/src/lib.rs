@@ -9,9 +9,16 @@ use std::io::Read;
 
 use std::path::{Path, PathBuf};
 
-/// Downloads an update archive. The caller decides the URL (the shipped one is the `main` branch
-/// zip of the repository).
+/// Loads an update archive. The caller decides the source (the shipped one is the `main` branch
+/// zip of the repository). A plain path to a local zip also works, which is handy for testing a
+/// packaged build without publishing it.
 pub fn download(url: &str) -> Result<Vec<u8>, String> {
+    let trimmed = url.trim();
+    if !trimmed.starts_with("http://") && !trimmed.starts_with("https://") {
+        let path = Path::new(trimmed);
+        return std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()));
+    }
+    let url = trimmed;
     let client = reqwest::blocking::Client::builder()
         .user_agent("azzy-update")
         .timeout(std::time::Duration::from_secs(120))
@@ -30,10 +37,19 @@ pub fn download(url: &str) -> Result<Vec<u8>, String> {
 #[cfg(test)]
 mod download_tests {
     #[test]
-    fn rejects_a_local_url_that_is_not_http() {
+    fn a_local_zip_path_is_read_directly() {
+        let path = std::env::temp_dir().join(format!("azzy-update-local-{}.zip", std::process::id()));
+        std::fs::write(&path, b"PK fake").unwrap();
+        assert_eq!(super::download(path.to_str().unwrap()).unwrap(), b"PK fake");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn a_missing_path_or_bad_url_is_an_error() {
         // The network path itself is covered by the host/binaries by hand; here we only pin that a
-        // bad URL comes back as an error instead of panicking.
+        // bad source comes back as an error instead of panicking.
         assert!(super::download("not a url").is_err());
+        assert!(super::download("/nonexistent/azzy-update.zip").is_err());
     }
 }
 

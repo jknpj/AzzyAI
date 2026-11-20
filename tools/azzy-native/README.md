@@ -112,7 +112,11 @@ cannot be replaced). `Types/*.lua` presets are kept unless **Replace Types/ pres
 checked. The window shows the counts and the backup path; if nothing was edited it reloads the
 files, otherwise it asks for a Reload.
 
-`AZZY_UPDATE_URL` points the flow at another archive (used by the tests with a local zip).
+The **Update from:** field is editable: it accepts another GitHub archive URL, a fork/branch, or a
+plain path to a local zip (handy to test a packaged build offline). The value is remembered in
+`%APPDATA%\azzy-native\update-url` (or `$XDG_CONFIG_HOME`/`~/.config`) and **Default** clears it;
+`AZZY_UPDATE_URL` still wins on startup for scripted runs. The folder being updated is the USER_AI
+folder the window was opened with (the first command-line argument).
 
 `cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
 editor (including a simulated row click and the suggestion rules) and a real save into a temporary
