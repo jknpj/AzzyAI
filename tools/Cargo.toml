@@ -6,9 +6,9 @@
 #     cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- --refresh
 [workspace]
 resolver = "2"
-members = ["rathena-sync", "divinepride-sync", "azzy-gui", "azzy-config", "azzy-native"]
+members = ["rathena-sync", "divinepride-sync", "azzy-gui", "azzy-config", "azzy-native", "azzy-update"]
 # a plain `cargo build` builds everything except the egui prototype, which pulls ~200 crates
-default-members = ["rathena-sync", "divinepride-sync", "azzy-gui", "azzy-config"]
+default-members = ["rathena-sync", "divinepride-sync", "azzy-gui", "azzy-config", "azzy-update"]
 
 [workspace.package]
 version = "0.1.0"

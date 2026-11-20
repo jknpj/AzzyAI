@@ -130,7 +130,7 @@ jobs:
         with:
           workspaces: tools
       - name: Test
-        run: cargo test -p azzy-config -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
+        run: cargo test -p azzy-config -p azzy-update -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - name: Build
         run: cargo build --release -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - uses: actions/upload-artifact@v4

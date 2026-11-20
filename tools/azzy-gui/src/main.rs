@@ -16,7 +16,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-mod update;
 
 fn main() -> ExitCode {
     let mut port: u16 = 0;
@@ -284,8 +283,8 @@ fn handle(mut stream: TcpStream, root: &Path, state: &State) -> Result<(), Strin
             }
             return respond(&mut stream, 200, "application/json", b"{\"ok\":true}");
         }
-        let body = match download(&state.update_url) {
-            Ok(bytes) => match update::apply_zip(&bytes, dir, state.overwrite_presets) {
+        let body = match azzy_update::download(&state.update_url) {
+            Ok(bytes) => match azzy_update::apply_zip(&bytes, dir, state.overwrite_presets) {
                 Ok(report) => report.to_json(),
                 Err(e) => format!("{{\"error\":\"{}\"}}", e.replace('"', "'")),
             },
@@ -485,19 +484,6 @@ fn reason(status: u16) -> &'static str {
         405 => "Method Not Allowed",
         _ => "Error",
     }
-}
-
-fn download(url: &str) -> Result<Vec<u8>, String> {
-    let client = reqwest::blocking::Client::builder()
-        .user_agent("azzy-gui")
-        .timeout(Duration::from_secs(120))
-        .build()
-        .map_err(|e| e.to_string())?;
-    let response = client.get(url).send().map_err(|e| format!("{url}: {e}"))?;
-    if !response.status().is_success() {
-        return Err(format!("{url}: HTTP {}", response.status().as_u16()));
-    }
-    response.bytes().map(|b| b.to_vec()).map_err(|e| format!("{url}: {e}"))
 }
 
 fn open_browser(url: &str) -> Result<(), String> {

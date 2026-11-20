@@ -7,8 +7,8 @@
 // description, search, category tabs, "only changed from default" filter, typed editors (int,
 // double, bool, enum, server type) and Apply/Revert through azzy-config, which preserves the file
 // byte for byte. The look (navbar, nav-tabs, cards, footer, row markers) comes from theme.rs, which
-// copies webgui/index.html. Tactics/PVP grids, per-type presets, Extra Options, the update flow and
-// translations are the next milestones (see README).
+// copies webgui/index.html. Tactics/PVP grids, per-type presets, Extra Options, translations and the
+// "Update AI from GitHub" flow are implemented (see README).
 
 mod data;
 mod i18n;
@@ -58,6 +58,24 @@ enum Page {
 
 const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 
+/// The shipped "Update AI from GitHub" source (the `main` branch zip). `AZZY_UPDATE_URL` points it
+/// at another archive, which is how the tests run it against a local zip.
+const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
+
+enum UpdateEvent {
+    Applying,
+    Done(azzy_update::Report),
+    Failed(String),
+}
+
+enum UpdateState {
+    Idle,
+    Downloading,
+    Applying,
+    Done(azzy_update::Report),
+    Failed(String),
+}
+
 /// Per-homunculus overrides in USER_AI/Types/<Name>.lua (webgui/app.js TYPE_NAMES).
 const TYPE_NAMES: [&str; 9] = [
     "Lif",
@@ -89,6 +107,11 @@ struct App {
     io_export_dir: String,
     io_import_dir: String,
     io_status: String,
+    update_open: bool,
+    update_overwrite_presets: bool,
+    update_url: String,
+    update_state: UpdateState,
+    update_rx: Option<std::sync::mpsc::Receiver<UpdateEvent>>,
     write_in_place: bool,
     shown_path: String,
     search: String,
@@ -360,6 +383,11 @@ impl App {
             io_export_dir: String::new(),
             io_import_dir: String::new(),
             io_status: String::new(),
+            update_open: false,
+            update_overwrite_presets: false,
+            update_url: std::env::var("AZZY_UPDATE_URL").unwrap_or_else(|_| UPDATE_URL.to_string()),
+            update_state: UpdateState::Idle,
+            update_rx: None,
             write_in_place,
             shown_path: shown.join("  +  "),
             search: String::new(),
@@ -1049,6 +1077,16 @@ impl App {
                                 self.io_export_dir = self.default_export_dir();
                             }
                         }
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new(i18n::tr("Update AI from GitHub...")).color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .clicked()
+                        {
+                            self.update_open = true;
+                        }
                     });
                 });
             });
@@ -1482,6 +1520,195 @@ impl App {
         } else {
             Ok(imported)
         }
+    }
+
+    /// Collects the background update thread's messages (called once per frame).
+    fn poll_update(&mut self) {
+        let Some(rx) = self.update_rx.take() else { return };
+        let mut keep = true;
+        loop {
+            match rx.try_recv() {
+                Ok(UpdateEvent::Applying) => self.update_state = UpdateState::Applying,
+                Ok(UpdateEvent::Done(report)) => {
+                    let staged = !report.staged.is_empty();
+                    self.update_state = UpdateState::Done(report);
+                    keep = false;
+                    if self.changed() == 0 {
+                        self.reload();
+                        self.status = i18n::tr("updated from GitHub");
+                    } else {
+                        self.status = i18n::tr(
+                            "update applied; reload to read the new files (unsaved edits kept)",
+                        );
+                    }
+                    if staged {
+                        self.status.push_str(" · ");
+                        self.status.push_str(&i18n::tr("a new executable was staged as .exe.new"));
+                    }
+                    break;
+                }
+                Ok(UpdateEvent::Failed(error)) => {
+                    self.update_state = UpdateState::Failed(error);
+                    keep = false;
+                    break;
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    if !matches!(&self.update_state, UpdateState::Done(_) | UpdateState::Failed(_)) {
+                        self.update_state = UpdateState::Failed("the update stopped".into());
+                    }
+                    keep = false;
+                    break;
+                }
+            }
+        }
+        if keep {
+            self.update_rx = Some(rx);
+        }
+    }
+
+    /// Downloads the archive and applies it on a worker thread, so the window keeps drawing.
+    fn start_update(&mut self, ctx: &egui::Context) {
+        if self.update_rx.is_some() {
+            return;
+        }
+        let dir = self.user_ai_dir();
+        let overwrite = self.update_overwrite_presets;
+        let url = self.update_url.clone();
+        let (tx, rx) = std::sync::mpsc::channel();
+        self.update_rx = Some(rx);
+        self.update_state = UpdateState::Downloading;
+        let repaint = ctx.clone();
+        std::thread::spawn(move || {
+            let result = azzy_update::download(&url).and_then(|bytes| {
+                let _ = tx.send(UpdateEvent::Applying);
+                repaint.request_repaint();
+                azzy_update::apply_zip(&bytes, &dir, overwrite)
+            });
+            let event = match result {
+                Ok(report) => UpdateEvent::Done(report),
+                Err(error) => UpdateEvent::Failed(error),
+            };
+            let _ = tx.send(event);
+            repaint.request_repaint();
+        });
+    }
+
+    fn update_window(&mut self, ctx: &egui::Context, p: &Palette) {
+        if !self.update_open {
+            return;
+        }
+        let mut open = self.update_open;
+        egui::Window::new(i18n::tr("Update AI from GitHub"))
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(true)
+            .default_width(560.0)
+            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+            .show(ctx, |ui| {
+                ui.label(
+                    egui::RichText::new(i18n::tr(
+                        "Download the latest AI from GitHub and apply it here? Files you edited (H_Config.lua, tactics, extra, A_Friends) are kept and the replaced ones are copied to backup/.",
+                    ))
+                    .color(p.text)
+                    .size(12.0),
+                );
+                ui.add_space(4.0);
+                ui.label(
+                    egui::RichText::new(self.user_ai_dir().display().to_string())
+                        .color(p.muted)
+                        .size(11.0),
+                );
+                ui.checkbox(
+                    &mut self.update_overwrite_presets,
+                    i18n::tr("Replace Types/ presets too"),
+                );
+                ui.add_space(6.0);
+                let busy = matches!(
+                    &self.update_state,
+                    UpdateState::Downloading | UpdateState::Applying
+                );
+                match &self.update_state {
+                    UpdateState::Idle => {}
+                    UpdateState::Downloading => {
+                        ui.horizontal(|ui| {
+                            ui.spinner();
+                            ui.label(i18n::tr("Downloading the update..."));
+                        });
+                    }
+                    UpdateState::Applying => {
+                        ui.horizontal(|ui| {
+                            ui.spinner();
+                            ui.label(i18n::tr("Applying the update..."));
+                        });
+                    }
+                    UpdateState::Done(report) => {
+                        ui.label(
+                            egui::RichText::new(i18n::tr_args(
+                                "Updated {0}, added {1}, kept {2}.",
+                                &[
+                                    &report.updated.to_string(),
+                                    &report.added.to_string(),
+                                    &report.kept.to_string(),
+                                ],
+                            ))
+                            .color(p.text)
+                            .size(12.0),
+                        );
+                        if let Some(backup) = &report.backup {
+                            ui.label(
+                                egui::RichText::new(i18n::tr_args("Backup: {0}", &[backup]))
+                                    .color(p.muted)
+                                    .size(11.0),
+                            );
+                        }
+                        if !report.staged.is_empty() {
+                            ui.label(
+                                egui::RichText::new(i18n::tr_args(
+                                    "New executable staged as {0}; the next launch uses it.",
+                                    &[&report.staged.join(", ")],
+                                ))
+                                .color(p.muted)
+                                .size(11.0),
+                            );
+                        }
+                        if self.changed() > 0 {
+                            ui.label(
+                                egui::RichText::new(i18n::tr(
+                                    "Reload to read the new files (unsaved edits will be discarded).",
+                                ))
+                                .color(p.pending)
+                                .size(11.0),
+                            );
+                        }
+                    }
+                    UpdateState::Failed(error) => {
+                        ui.label(
+                            egui::RichText::new(i18n::tr_args("Update failed: {0}", &[error]))
+                                .color(p.pending)
+                                .size(11.5)
+                                .strong(),
+                        );
+                    }
+                }
+                ui.add_space(4.0);
+                ui.separator();
+                ui.horizontal(|ui| {
+                    if ui
+                        .add_enabled(
+                            !busy,
+                            egui::Button::new(egui::RichText::new(i18n::tr("Update")).strong()),
+                        )
+                        .clicked()
+                    {
+                        self.start_update(ctx);
+                    }
+                    if ui.button(i18n::tr("Close")).clicked() {
+                        self.update_open = false;
+                    }
+                });
+            });
+        self.update_open = open;
     }
 
     fn files_window(&mut self, ctx: &egui::Context, p: &Palette) {
@@ -2038,10 +2265,18 @@ impl App {
             self.reload();
         }
 
+        self.poll_update();
         self.navbar(ctx, &p);
         self.footer(ctx, &p);
         self.body(ctx, &p);
         self.files_window(ctx, &p);
+        self.update_window(ctx, &p);
+        if matches!(
+            &self.update_state,
+            UpdateState::Downloading | UpdateState::Applying
+        ) {
+            ctx.request_repaint_after(std::time::Duration::from_millis(100));
+        }
     }
 }
 
@@ -2601,6 +2836,46 @@ mod tests {
             legend_bottom < quit_top,
             "the legend ({legend_bottom}) overlaps the footer ({quit_top})"
         );
+    }
+
+    #[test]
+    fn the_update_window_draws_in_every_state() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        app.update_open = true;
+        let ctx = egui::Context::default();
+        let input = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            ..Default::default()
+        };
+        let report = azzy_update::Report {
+            updated: 2,
+            added: 1,
+            kept: 3,
+            staged: vec!["AzzyAIConfig.exe".into()],
+            backup: Some("C:\\temp\\backup".into()),
+        };
+        for state in [
+            UpdateState::Idle,
+            UpdateState::Downloading,
+            UpdateState::Applying,
+            UpdateState::Done(report),
+            UpdateState::Failed("HTTP 404".into()),
+        ] {
+            app.update_state = state;
+            let _ = ctx.run(input.clone(), |ctx| app.draw(ctx));
+        }
     }
 
     #[test]

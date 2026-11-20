@@ -1,13 +1,41 @@
-// update.rs: the "Update AI from GitHub" flow of the Windows app, for the local host.
-//
-// Downloads the main-branch zip, keeps the files the player edits, replaces the rest, backs up
-// what it replaces and stages a newer executable as .exe.new (a running exe cannot be overwritten
-// on Windows).
+//! The "Update AI from GitHub" flow shared by the native GUIs and the local web GUI host.
+//!
+//! Downloads the main-branch zip, keeps the files the player edits, replaces the rest, backs up
+//! what it replaces and stages a newer executable as `.exe.new` (a running exe cannot be
+//! overwritten on Windows).
 
 use std::collections::BTreeSet;
 use std::io::Read;
 
 use std::path::{Path, PathBuf};
+
+/// Downloads an update archive. The caller decides the URL (the shipped one is the `main` branch
+/// zip of the repository).
+pub fn download(url: &str) -> Result<Vec<u8>, String> {
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("azzy-update")
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client.get(url).send().map_err(|e| format!("{url}: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("{url}: HTTP {}", response.status().as_u16()));
+    }
+    response
+        .bytes()
+        .map(|bytes| bytes.to_vec())
+        .map_err(|e| format!("{url}: {e}"))
+}
+
+#[cfg(test)]
+mod download_tests {
+    #[test]
+    fn rejects_a_local_url_that_is_not_http() {
+        // The network path itself is covered by the host/binaries by hand; here we only pin that a
+        // bad URL comes back as an error instead of panicking.
+        assert!(super::download("not a url").is_err());
+    }
+}
 
 /// Files the player edits: never overwritten, only created when missing.
 const USER_FILES: [&str; 11] = [

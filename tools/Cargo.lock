@@ -125,9 +125,8 @@ version = "0.1.0"
 name = "azzy-gui"
 version = "0.1.0"
 dependencies = [
- "reqwest",
+ "azzy-update",
  "serde_json",
- "zip",
 ]
 
 [[package]]
@@ -135,8 +134,17 @@ name = "azzy-native"
 version = "0.1.0"
 dependencies = [
  "azzy-config",
+ "azzy-update",
  "eframe",
  "serde_json",
+]
+
+[[package]]
+name = "azzy-update"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "zip",
 ]
 
 [[package]]

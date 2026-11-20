@@ -101,9 +101,18 @@ tooltip/description names the skill.
   `webgui/skills.js` + `webgui/skilldata.js`, dumped to `data/skilldata.json` by the same script as
   the schema. Nothing is loaded at runtime: the files are embedded like the monster database.
 
-## Still missing for parity with the web GUI
+## Updating from GitHub
 
-- The update flow from GitHub (`azzy-gui` already has the zip logic).
+The navbar's **Update AI from GitHub...** button runs the same flow as the Windows app and the
+`azzy-gui` host (`tools/azzy-update`, shared by both): it downloads the `main` branch zip, keeps
+the files the player edits (`H_Config.lua`, `M_Config.lua`, the tactics/extra files, `H_Avoid.lua`,
+`A_Friends.lua`, `Mob_ID.lua`), replaces the shipped ones after copying them to
+`USER_AI/backup/update-<timestamp>/`, and stages a newer executable as `.exe.new` (a running exe
+cannot be replaced). `Types/*.lua` presets are kept unless **Replace Types/ presets too** is
+checked. The window shows the counts and the backup path; if nothing was edited it reloads the
+files, otherwise it asks for a Reload.
+
+`AZZY_UPDATE_URL` points the flow at another archive (used by the tests with a local zip).
 
 `cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
 editor (including a simulated row click and the suggestion rules) and a real save into a temporary

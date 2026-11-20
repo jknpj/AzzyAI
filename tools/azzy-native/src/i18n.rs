@@ -257,6 +257,42 @@ const NATIVE: &[(&str, &str, &str)] = &[
     ("{0} not applied", "{0} não aplicado", "{0} no aplicado"),
     ("Unknown map:", "Mapa desconhecido:", "Mapa desconocido:"),
     ("Unknown monster:", "Monstro desconhecido:", "Monstruo desconocido:"),
+    // Update flow
+    (
+        "Replace Types/ presets too",
+        "Substituir também as predefinições de Types/",
+        "Reemplazar también las predefiniciones de Types/",
+    ),
+    ("Downloading the update...", "Baixando a atualização...", "Descargando la actualización..."),
+    ("Applying the update...", "Aplicando a atualização...", "Aplicando la actualización..."),
+    (
+        "Updated {0}, added {1}, kept {2}.",
+        "Atualizados {0}, adicionados {1}, mantidos {2}.",
+        "Actualizados {0}, agregados {1}, mantenidos {2}.",
+    ),
+    ("Backup: {0}", "Backup: {0}", "Copia de seguridad: {0}"),
+    (
+        "New executable staged as {0}; the next launch uses it.",
+        "Novo executável preparado como {0}; a próxima execução usa ele.",
+        "Nuevo ejecutable preparado como {0}; la próxima ejecución lo usa.",
+    ),
+    (
+        "Reload to read the new files (unsaved edits will be discarded).",
+        "Recarregue para ler os arquivos novos (as alterações não aplicadas serão descartadas).",
+        "Recarga para leer los archivos nuevos (los cambios sin aplicar se descartarán).",
+    ),
+    ("Update failed: {0}", "Falha na atualização: {0}", "Error al actualizar: {0}"),
+    ("updated from GitHub", "atualizado do GitHub", "actualizado desde GitHub"),
+    (
+        "update applied; reload to read the new files (unsaved edits kept)",
+        "atualização aplicada; recarregue para ler os arquivos novos (alterações não aplicadas mantidas)",
+        "actualización aplicada; recarga para leer los archivos nuevos (cambios sin aplicar conservados)",
+    ),
+    (
+        "a new executable was staged as .exe.new",
+        "um novo executável foi preparado como .exe.new",
+        "un nuevo ejecutable se preparó como .exe.new",
+    ),
     ("reloaded from disk", "recarregado do disco", "recargado desde el disco"),
     ("reload failed: {0}", "falha ao recarregar: {0}", "error al recargar: {0}"),
     ("save failed: {0}", "falha ao gravar: {0}", "error al escribir: {0}"),

@@ -1,0 +1,10 @@
+[package]
+name = "azzy-update"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The Update AI from GitHub flow shared by the native GUIs"
+
+[dependencies]
+zip = { version = "2", default-features = false, features = ["deflate"] }
+reqwest = { version = "0.12", features = ["blocking", "rustls-tls"], default-features = false }
