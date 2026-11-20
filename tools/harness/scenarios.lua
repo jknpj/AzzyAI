@@ -513,7 +513,12 @@ SCENARIOS = {
 			end,
 		} },
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
-		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
+		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" },
+		checks = {
+			["official servers score skills with base level 250"] = function()
+				return SkillDamageBaseLevel == 250
+			end,
+		} },
 	-- damage-aware defence: HP drops inside the 3 s window trigger it only below DamageDangerHP;
 	-- heals and old samples do not count
 	damage_danger = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseDamageDanger = 1 },
@@ -1530,6 +1535,9 @@ SCENARIOS = {
 		end,
 		expect = { "Style Change", "Tinder Breaker", "Continuous Brandishing Combo", "Eternal Quickening Combo" },
 		checks = {
+			["private servers score skills with base level 275"] = function()
+				return SkillDamageBaseLevel == 275
+			end,
 			["manual style change updates both server and AI"] = function()
 				assert(HarnessServer.style == "grappling" and EleanorMode == GRAPPLING_MODE,
 					"manual style change was not tracked")

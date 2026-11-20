@@ -523,6 +523,11 @@ function ApplyServerType()
 		MagicNumber2 = MagicNumber2 or 100000
 	end
 	ApplyServerSkillOverrides()
+	-- Damage ratios in H_SkillList scale with the caster's base level. The official (LATAM) cap is 250;
+	-- the private servers we play on (Hero Saga) reach 275.
+	if SkillDamageBaseLevel ~= nil then
+		SkillDamageBaseLevel = ServerType == SERVER_PRIVATE and 275 or 250
+	end
 end
 
 -- Called for every actor in sight while ServerType is official (see AI()).
