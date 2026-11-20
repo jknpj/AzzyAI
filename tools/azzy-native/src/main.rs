@@ -1614,24 +1614,30 @@ impl App {
                 // cannot be replaced, so it is staged as <exe>.new.
                 let mut self_error = None;
                 let self_update = match std::env::current_exe() {
-                    Ok(exe) => match azzy_update::find_in_zip(
-                        &bytes,
-                        "tools/azzy-native/azzy-native.exe",
-                    ) {
-                        Ok(Some(binary)) => match azzy_update::stage_binary(&binary, &exe) {
-                            Ok(Some(path)) => SelfUpdate::Staged(path),
-                            Ok(None) => SelfUpdate::Unchanged,
+                    Ok(exe) => {
+                        // Find our own build by file name, wherever the archive keeps it: the dev
+                        // tree today, USER_AI once this window replaces the C# GUI. No path is
+                        // baked in, so moving the binary needs no code change.
+                        let name = exe
+                            .file_name()
+                            .and_then(|name| name.to_str())
+                            .unwrap_or("azzy-native.exe");
+                        match azzy_update::find_binary(&bytes, name) {
+                            Ok(Some(binary)) => match azzy_update::stage_binary(&binary, &exe) {
+                                Ok(Some(path)) => SelfUpdate::Staged(path),
+                                Ok(None) => SelfUpdate::Unchanged,
+                                Err(error) => {
+                                    self_error = Some(error);
+                                    SelfUpdate::Unchanged
+                                }
+                            },
+                            Ok(None) => SelfUpdate::NotInArchive,
                             Err(error) => {
                                 self_error = Some(error);
-                                SelfUpdate::Unchanged
+                                SelfUpdate::NotInArchive
                             }
-                        },
-                        Ok(None) => SelfUpdate::NotInArchive,
-                        Err(error) => {
-                            self_error = Some(error);
-                            SelfUpdate::NotInArchive
                         }
-                    },
+                    }
                     Err(error) => {
                         self_error = Some(error.to_string());
                         SelfUpdate::NotInArchive

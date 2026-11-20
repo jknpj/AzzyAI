@@ -112,8 +112,10 @@ cannot be replaced). `Types/*.lua` presets are kept unless **Replace Types/ pres
 checked. The window shows the counts and the backup path; if nothing was edited it reloads the
 files, otherwise it asks for a Reload.
 
-The window can update itself too: the archive's `tools/azzy-native/azzy-native.exe` is compared
-with the running file and, when it differs, staged as `azzy-native.exe.new`. **Restart now** closes
+The window can update itself too: the archive is searched for a binary with the running
+executable's file name, wherever it is kept (`tools/azzy-native/` while it is developed next to the
+C# GUI, `USER_AI/` once it replaces `AzzyAIConfig.exe`), and when the bytes differ it is staged as
+`azzy-native.exe.new` next to the running file. **Restart now** closes
 the window, waits for it to exit, swaps the binary and starts it again (the same trick the old
 Windows app uses, because a running exe cannot be replaced). When the archive does not ship that
 build the window says so and only the AI files are updated.

@@ -197,14 +197,19 @@ fn timestamp() -> String {
     format!("{secs}")
 }
 
-/// A file from the archive whose path ends with `suffix`, e.g. the native GUI build committed
-/// under `tools/azzy-native/azzy-native.exe`. `None` when the archive does not ship it.
-pub fn find_in_zip(archive: &[u8], suffix: &str) -> Result<Option<Vec<u8>>, String> {
+/// A binary from the archive by file name, wherever the archive keeps it: `tools/azzy-native/`
+/// while the native window is still developed next to the C# one, `USER_AI/` once it replaces
+/// `AzzyAIConfig.exe` and ships beside the AI files. `None` when the archive does not ship it.
+pub fn find_binary(archive: &[u8], file_name: &str) -> Result<Option<Vec<u8>>, String> {
     let mut zip =
         zip::ZipArchive::new(std::io::Cursor::new(archive)).map_err(|e| format!("zip: {e}"))?;
     for index in 0..zip.len() {
         let mut entry = zip.by_index(index).map_err(|e| format!("zip entry: {e}"))?;
-        if entry.is_dir() || !entry.name().ends_with(suffix) {
+        if entry.is_dir() {
+            continue;
+        }
+        let name = entry.name().rsplit('/').next().unwrap_or(entry.name());
+        if !name.eq_ignore_ascii_case(file_name) {
             continue;
         }
         let mut data = Vec::new();
@@ -297,14 +302,14 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    fn sample_zip_with_binary() -> Vec<u8> {
+    fn sample_zip_with_binary(path: &str) -> Vec<u8> {
         let mut buffer = std::io::Cursor::new(Vec::new());
         {
             let mut zip = zip::ZipWriter::new(&mut buffer);
             let options = zip::write::SimpleFileOptions::default();
             zip.start_file("AzzyAI-main/USER_AI/MobInfo.lua", options).unwrap();
             zip.write_all(b"-- new mob info\n").unwrap();
-            zip.start_file("AzzyAI-main/tools/azzy-native/azzy-native.exe", options).unwrap();
+            zip.start_file(path, options).unwrap();
             zip.write_all(b"new native exe").unwrap();
             zip.finish().unwrap();
         }
@@ -312,13 +317,27 @@ mod tests {
     }
 
     #[test]
-    fn finds_and_stages_the_native_binary() {
-        let archive = sample_zip_with_binary();
-        let bytes = find_in_zip(&archive, "tools/azzy-native/azzy-native.exe")
+    fn finds_the_binary_by_name_in_either_layout() {
+        // development layout, next to the C# one
+        let archive = sample_zip_with_binary("AzzyAI-main/tools/azzy-native/azzy-native.exe");
+        let bytes = find_binary(&archive, "azzy-native.exe")
             .unwrap()
             .expect("binary in the archive");
         assert_eq!(bytes, b"new native exe");
-        assert!(find_in_zip(&archive, "tools/azzy-native/azzy-gui.exe").unwrap().is_none());
+        assert!(find_binary(&archive, "azzy-gui.exe").unwrap().is_none());
+
+        // shipped layout: the native window replaces the C# GUI inside USER_AI
+        let archive = sample_zip_with_binary("AzzyAI-main/USER_AI/azzy-native.exe");
+        let bytes = find_binary(&archive, "AZZY-NATIVE.EXE")
+            .unwrap()
+            .expect("the lookup is case-insensitive, like Windows");
+        assert_eq!(bytes, b"new native exe");
+    }
+
+    #[test]
+    fn stages_a_binary_next_to_the_running_one() {
+        let archive = sample_zip_with_binary("AzzyAI-main/USER_AI/azzy-native.exe");
+        let bytes = find_binary(&archive, "azzy-native.exe").unwrap().unwrap();
 
         let dir = std::env::temp_dir().join(format!("azzy-update-exe-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
