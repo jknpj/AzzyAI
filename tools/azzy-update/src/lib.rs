@@ -422,6 +422,13 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "network"]
+    fn reads_the_latest_release_tag_from_github() {
+        let tag = latest_release_tag("jknpj/AzzyAI").unwrap();
+        assert!(tag.is_some(), "the repository has releases");
+    }
+
+    #[test]
     fn archive_without_user_ai_is_rejected() {
         let mut buffer = std::io::Cursor::new(Vec::new());
         {

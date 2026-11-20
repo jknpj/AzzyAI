@@ -364,6 +364,14 @@ impl App {
             let (tx, rx) = std::sync::mpsc::channel();
             std::thread::spawn(move || {
                 let latest = azzy_update::latest_release_tag("jknpj/AzzyAI");
+                match (&installed, &latest) {
+                    (Some(installed), Ok(latest)) => crate::log(&format!(
+                        "version check: installed {installed}, latest release {latest:?}"
+                    )),
+                    (installed, latest) => crate::log(&format!(
+                        "version check: installed {installed:?}, latest {latest:?}"
+                    )),
+                }
                 let _ = tx.send((installed, latest));
             });
             Some(rx)
@@ -1563,7 +1571,10 @@ impl App {
         match rx.try_recv() {
             Ok((Some(installed), Ok(Some(latest)))) => {
                 if azzy_update::newer_version(&latest, &installed) {
+                    crate::log(&format!("version check: {latest} is newer than {installed}"));
                     self.new_version = Some(latest);
+                } else {
+                    crate::log(&format!("version check: {installed} is up to date"));
                 }
             }
             Ok(_) => {}
@@ -3174,6 +3185,34 @@ mod tests {
             app.update_state = state;
             let _ = ctx.run(input.clone(), |ctx| app.draw(ctx));
         }
+    }
+
+    #[test]
+    fn a_newer_tag_sets_the_banner() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        let (tx, rx) = std::sync::mpsc::channel();
+        tx.send((Some("2.0.1".to_string()), Ok(Some("v2.0.3".to_string()))))
+            .unwrap();
+        app.version_rx = Some(rx);
+        app.poll_version();
+        assert_eq!(app.new_version.as_deref(), Some("v2.0.3"));
+
+        app.new_version = None;
+        let (tx, rx) = std::sync::mpsc::channel();
+        tx.send((Some("2.0.3".to_string()), Ok(Some("v2.0.3".to_string()))))
+            .unwrap();
+        app.version_rx = Some(rx);
+        app.poll_version();
+        assert!(app.new_version.is_none(), "same version must not show the banner");
     }
 
     #[test]
