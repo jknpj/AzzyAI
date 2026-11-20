@@ -91,6 +91,8 @@ otherwise). It never writes anything into USER_AI.
 
 The window and the navbar use the real `webgui/azzyai.ico`, converted once to
 `data/azzyai-48.rgba` (48x48, raw RGBA) so egui can use it without an image-loading dependency.
+The executable also carries the same `.ico` as a Windows resource (`build.rs`/`winres`), so Explorer
+and the file's properties show the AzzyAI icon and version instead of a blank document.
 The **skill icons** from `webgui/img/skills` (50 PNGs) are packed once into
 `data/skill-icons.rgba` (20x20 tiles, 8 columns) with `data/skills.json` holding the ids, the
 homunculus, the names and the same `match` substrings as `webgui/skills.js`. The Homunculus tab
