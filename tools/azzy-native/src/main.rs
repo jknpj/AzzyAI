@@ -1705,6 +1705,10 @@ impl App {
 
     fn description_card(&self, ui: &mut egui::Ui, p: &Palette, height: f32) {
         theme::card(p).show(ui, |ui| {
+            // The card is drawn next to the grid, inside a horizontal row, and Frame::show
+            // inherits that layout: without this the name, facts and text would be laid out
+            // side by side and the description would never get any width.
+            ui.vertical(|ui| {
                 ui.set_min_size(egui::vec2(ui.available_width(), (height - 12.0).max(100.0)));
                 theme::title_bar(p, ui, &i18n::tr("Description"));
                 ui.add_space(6.0);
@@ -1733,6 +1737,7 @@ impl App {
                 ui.separator();
                 ui.add_space(4.0);
                 egui::ScrollArea::vertical()
+                    .id_source("description-scroll")
                     .auto_shrink([false, false])
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
@@ -1758,6 +1763,7 @@ impl App {
                         }
                     });
             });
+        });
     }
 
     fn legend(&self, ui: &mut egui::Ui, p: &Palette, grouped: bool) {
@@ -2262,6 +2268,52 @@ fn main() -> eframe::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_description_card_lays_its_text_out_vertically() {
+        // The card sits next to the grid, inside a horizontal row; a Frame inherits that layout.
+        // Without the explicit vertical layout the name/facts/text were drawn side by side and the
+        // description never got any width (it was clipped out of the card).
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        i18n::set_lang(i18n::Lang::En);
+        let mut app = App::new(&paths, false).unwrap();
+        app.selected = Some("AggroHP".into());
+        let ctx = egui::Context::default();
+        let input = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(1180.0, 800.0),
+            )),
+            ..Default::default()
+        };
+        let output = ctx.run(input, |ctx| app.draw(ctx));
+        let mut facts_y = None;
+        let mut description = None;
+        for clipped in &output.shapes {
+            if let egui::Shape::Text(text) = &clipped.shape {
+                let content = text.galley.text();
+                if content.contains("0..100") {
+                    facts_y = Some(text.pos.y);
+                }
+                if content.contains("seek out and attack monsters") {
+                    description = Some((text.pos, text.galley.size()));
+                }
+            }
+        }
+        let facts_y = facts_y.expect("facts line");
+        let (pos, size) = description.expect("description text was not drawn");
+        assert!(pos.y > facts_y, "description overlaps the facts line");
+        assert!(size.x <= 380.0, "description is wider than the card: {size:?}");
+        assert!(size.y > 20.0, "description was not wrapped into lines: {size:?}");
+    }
 
     #[test]
     fn values_compare_like_the_web_gui() {

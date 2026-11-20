@@ -317,6 +317,7 @@ fn desc_for(lang: Lang, scope: &str, name: &str, english: &str) -> String {
         Some(slot) => table().desc[slot]
             .get(scope)
             .and_then(|table| table.get(name))
+            .filter(|text| !text.trim().is_empty()) // an empty entry is a missing one
             .cloned()
             .unwrap_or_else(|| english.to_string()),
         None => english.to_string(),
@@ -392,6 +393,8 @@ mod tests {
             desc_for(Lang::Pt, "mer", "NoSuchSetting", "english"),
             "english"
         );
+        // an empty translation entry must fall back instead of blanking the card
+        assert_eq!(desc_for(Lang::Pt, "hom", "StandbyFriending", "english"), "english");
     }
 
     #[test]
