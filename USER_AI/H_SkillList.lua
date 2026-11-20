@@ -305,10 +305,11 @@ ServerSkillOverrides[SERVER_PRIVATE]={
 	[MH_SONIC_CRAW]={info={[2]={3,3,3,3,3}}},
 	[MH_SILVERVEIN_RUSH]={info={[2]={3,3,3,3,3,3,3,3,3,3}}},
 	[MH_MIDNIGHT_FRENZY]={info={[2]={3,3,3,3,3,3,3,3,3,3}}},
-	-- rAthena: grappling-chain cooldowns (none on LATAM); CBC takes 1 sphere (LATAM 2)
+	-- rAthena: grappling-chain cooldowns (none on LATAM); CBC takes 1 sphere (LATAM 2) and EQC has no
+	-- after-cast delay either (LATAM keeps 1s, the same difference as the new Homunculus S attacks below)
 	[MH_TINDER_BREAKER]={info={[9]={500,500,500,500,500}}},
 	[MH_CBC]={info={[9]={300,300,300,300,300}},spheres=1},
-	[MH_EQC]={info={[9]={300,300,300,300,300}}},
+	[MH_EQC]={info={[9]={300,300,300,300,300},[6]={0,0,0,0,0,0,0,0,0,0}}},
 	-- rAthena: 12-20s ash duration (LATAM 8-40s)
 	[MH_VOLCANIC_ASH]={info={[8]={12000,14000,16000,18000,20000}}},
 	-- rAthena: enemy-targeted, range 2, splash centered on the target
