@@ -113,8 +113,10 @@ checked. The window shows the counts and the backup path; if nothing was edited 
 files, otherwise it asks for a Reload.
 
 The update source is fixed to the official repository's `main` zip. The **Folder to update:** field
-is editable and starts at the USER_AI folder the window was opened with (the first command-line
-argument), so the window can update another installation without restarting.
+is editable and starts at the folder where the executable is when that folder holds
+`H_Config.lua` (the shipped layout, with the exe next to the AI files, replacing the old
+`AzzyAIConfig.exe`); otherwise it starts at the USER_AI the window was opened with. The exe also
+finds the configuration next to itself, so in that layout no command-line argument is needed.
 
 `cargo test -p azzy-native` covers the schema load (185+78 options, enums, defaults), the tactics
 editor (including a simulated row click and the suggestion rules) and a real save into a temporary

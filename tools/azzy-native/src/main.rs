@@ -385,7 +385,11 @@ impl App {
             io_status: String::new(),
             update_open: false,
             update_overwrite_presets: false,
-            update_dir: String::new(),
+            update_dir: exe_dir()
+                .filter(|dir| dir.join("H_Config.lua").is_file())
+                .unwrap_or_else(|| base.clone())
+                .display()
+                .to_string(),
             update_target: PathBuf::new(),
             update_state: UpdateState::Idle,
             update_rx: None,
@@ -2627,12 +2631,24 @@ fn install_fonts(ctx: &egui::Context) {
 
 // Finds USER_AI/<name> without being told, so a double-click works: the working directory, the
 // exe's folder, and up to three levels above it (tools/azzy-native -> repository root).
+/// Folder the executable lives in. In the shipped layout this is USER_AI itself (the exe sits next
+/// to H_Config.lua, like the old AzzyAIConfig.exe), which makes it the natural update target.
+fn exe_dir() -> Option<PathBuf> {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+}
+
 fn resolve(name: &str) -> Option<PathBuf> {
     let mut roots: Vec<PathBuf> = Vec::new();
     if let Ok(cwd) = std::env::current_dir() {
         roots.push(cwd.join("USER_AI"));
     }
     if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            // the exe was copied into USER_AI (shipped layout): read the files next to it
+            roots.push(dir.to_path_buf());
+        }
         let mut dir = exe;
         for _ in 0..4 {
             if !dir.pop() {
