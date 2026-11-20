@@ -1,7 +1,7 @@
 // yaml.rs: block-style YAML as used by rAthena's databases - nested mappings and sequences,
 // plain/quoted scalars and comments. No anchors, flow collections or multi-line strings; anything
 // outside that shape is an error instead of a wrong model. A port of the parser in
-// tools/harness/rathena_sync.py.
+// tools/rathena-sync.
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq)]

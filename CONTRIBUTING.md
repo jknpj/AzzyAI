@@ -71,7 +71,7 @@ Do not edit these by hand. Regenerate them:
 
 | File | How |
 |---|---|
-| `USER_AI\MobInfo.lua`, `tools\harness\fixtures\rathena.lua`, `webgui\mobdata.js` | `python tools\harness\rathena_sync.py` (standard library only; behind a proxy set `HTTPS_PROXY` first). `tools\rathena-sync` is the same tool in Rust: `cargo run --release --manifest-path tools\Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]` (the `tools\Cargo.toml` workspace builds both Rust tools into `tools\target`), 5x faster and byte-identical output (only the generation date differs) |
+| `USER_AI\MobInfo.lua`, `tools\harness\fixtures\rathena.lua`, `webgui\mobdata.js` | `cargo run --release --manifest-path tools\Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]` (behind a proxy set `HTTPS_PROXY` first; only the generation date differs between runs) |
 | `webgui\skilldata.js`, `webgui\img\skills\` | `python skilldata_sync.py` inside `webgui` (needs a free Divine Pride API key in `DIVINEPRIDE_API_KEY`) |
 
 ### Do not commit

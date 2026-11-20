@@ -25,10 +25,9 @@ the sources above.
 Anything that could let someone run code, read or overwrite files they should
 not, or learn private information through AzzyAI. For example:
 
-- **The Update menu** of the Windows app (it downloads and copies files, can run
-  `rathena_sync.py` and stages a new `AzzyAIConfig.exe`): a downloaded archive
-  that writes outside `USER_AI`, a missing integrity check, or an update that
-  replaces your settings, tactics or friend list.
+- **The Update button** of the desktop app (it downloads and copies files and stages a
+  new `AzzyAIConfig.exe`): a downloaded archive that writes outside `USER_AI`, a missing
+  integrity check, or an update that replaces your settings, tactics or friend list.
 - **Lua loading**: the AI reads settings, `H_Extra.lua` and files in `data\`. A
   way to make it run code you did not put there.
 - **The web page**: a configuration, tactics or ZIP file that makes the page

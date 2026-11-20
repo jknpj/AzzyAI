@@ -1,7 +1,7 @@
 // divinepride-sync: downloads the homunculus skill data AzzyAI uses from the Divine Pride API.
 //
-// Rust port of tools/harness/divinepride_sync.py: same flags, same output path and byte-identical
-// JSON (the Python writer uses json.dump(indent=1, sort_keys=True, ensure_ascii=False)).
+// Same flags, output path and byte-identical JSON as the tool it replaced
+// (indent=1, sorted keys, UTF-8, like the Python writer).
 //
 // Usage (needs a free API key from your divine-pride.net profile page):
 //     set DIVINEPRIDE_API_KEY=<your key>
