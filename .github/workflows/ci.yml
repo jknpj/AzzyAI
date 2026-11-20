@@ -80,46 +80,8 @@ jobs:
             exit 1
           fi
 
-  gui:
-    name: Build config GUI (.NET 4.0)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - uses: microsoft/setup-msbuild@v2
-      - name: Build
-        run: .\tools\gui.ps1 -Action Build -Configuration Release
-      # the commit job below needs only the binary, not the whole ZIP
-      - uses: actions/upload-artifact@v4
-        with:
-          name: AzzyAIConfig.exe
-          path: .artifacts/gui/Release/AzzyAIConfig.exe
-          if-no-files-found: error
-      - name: Package
-        run: |
-          $pkgRoot = "$env:RUNNER_TEMP\pkg"
-          $pkg = "$pkgRoot\USER_AI"
-          New-Item -ItemType Directory -Force $pkg | Out-Null
-          Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
-          Copy-Item ".artifacts\gui\Release\AzzyAIConfig.exe" $pkg -Force
-          Copy-Item docs "$pkgRoot\docs" -Recurse
-          Copy-Item LICENSES "$pkgRoot\LICENSES" -Recurse
-          # browser configuration tool: static files, works from file:// or any host
-          Copy-Item webgui "$pkgRoot\webgui" -Recurse
-          Remove-Item "$pkgRoot\webgui\.git" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item "$pkgRoot\webgui\.github" -Recurse -Force -ErrorAction SilentlyContinue
-          Copy-Item README.md, README.pt-BR.md, README.es.md, CHANGELOG.md, NOTICE.md, SECURITY.md, CONTRIBUTING.md $pkgRoot
-          Compress-Archive -Path "$pkgRoot\*" -DestinationPath AzzyAI.zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: AzzyAI
-          path: AzzyAI.zip
-
-  gui-rust:
-    name: Build azzy-gui (Rust, spike)
-    # branch spike/gui-rust: builds the local host so it can be tested without a Rust toolchain
-    if: github.ref == 'refs/heads/spike/gui-rust'
+  native-gui:
+    name: Build native GUI (Rust)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -135,85 +97,53 @@ jobs:
         run: cargo build --release -p azzy-gui -p azzy-native --manifest-path tools/Cargo.toml
       - uses: actions/upload-artifact@v4
         with:
-          name: azzy-gui
-          path: tools/target/release/azzy-gui.exe
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
           name: azzy-native
           path: tools/target/release/azzy-native.exe
           if-no-files-found: error
+      # The desktop app ships as USER_AI/AzzyAIConfig.exe, so existing shortcuts keep working.
+      - name: Package
+        run: |
+          $pkgRoot = "$env:RUNNER_TEMP\pkg"
+          $pkg = "$pkgRoot\USER_AI"
+          New-Item -ItemType Directory -Force $pkg | Out-Null
+          Copy-Item USER_AI\* $pkg -Recurse -Exclude *.pdb
+          Remove-Item "$pkg\AzzyAIConfig.exe" -Force -ErrorAction SilentlyContinue
+          Copy-Item "tools\target\release\azzy-native.exe" "$pkg\AzzyAIConfig.exe" -Force
+          Copy-Item docs "$pkgRoot\docs" -Recurse
+          Copy-Item LICENSES "$pkgRoot\LICENSES" -Recurse
+          # browser configuration tool: static files, works from file:// or any host
+          Copy-Item webgui "$pkgRoot\webgui" -Recurse
+          Remove-Item "$pkgRoot\webgui\.git" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item "$pkgRoot\webgui\.github" -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item README.md, README.pt-BR.md, README.es.md, CHANGELOG.md, NOTICE.md, SECURITY.md, CONTRIBUTING.md $pkgRoot
+          Compress-Archive -Path "$pkgRoot\*" -DestinationPath AzzyAI.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AzzyAI
+          path: AzzyAI.zip
 
-  commit-gui-rust:
-    name: Commit azzy-gui.exe on the spike branch
-    # so testing the host is a plain `git pull`: the artifact is committed on the branch, the same
-    # way commit-gui keeps USER_AI/AzzyAIConfig.exe current on main
-    if: github.event_name == 'push' && github.ref == 'refs/heads/spike/gui-rust'
-    needs: [gui-rust]
+  commit-native:
+    name: Refresh the committed desktop app
+    # only real pushes to main: PRs and tags build but do not write back
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [native-gui]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     concurrency:
-      group: commit-gui-rust-${{ github.ref }}
+      group: commit-native-${{ github.ref }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: azzy-gui
-          path: .artifacts
       - uses: actions/download-artifact@v4
         with:
           name: azzy-native
           path: .artifacts
-      - name: Commit the Windows binaries when the build differs
-        run: |
-          set -euo pipefail
-          test -f .artifacts/azzy-gui.exe || { echo "::error::the azzy-gui artifact is missing"; exit 1; }
-          test -f .artifacts/azzy-native.exe || { echo "::error::the azzy-native artifact is missing"; exit 1; }
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Another push can land between checkout and here, and rebasing two different builds of a
-          # binary conflicts; rebuild the commit from the current tip on every attempt instead.
-          for attempt in 1 2 3; do
-            git fetch -q origin spike/gui-rust
-            git reset -q --hard FETCH_HEAD
-            cp .artifacts/azzy-gui.exe tools/azzy-gui/azzy-gui.exe
-            cp .artifacts/azzy-native.exe tools/azzy-native/azzy-native.exe
-            if [ -z "$(git status --porcelain -- tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe)" ]; then
-              echo "both Windows binaries already match the build"
-              exit 0
-            fi
-            git add tools/azzy-gui/azzy-gui.exe tools/azzy-native/azzy-native.exe
-            git commit -q -m "build: refresh the Windows binaries from CI [skip ci]"
-            if git push origin HEAD:spike/gui-rust; then exit 0; fi
-            echo "push rejected, retrying from the new tip"
-          done
-          echo "::error::could not push the refreshed binaries"
-          exit 1
-
-  commit-gui:
-    name: Refresh the committed GUI
-    # only real pushes to main: PRs and tags build but do not write back
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [gui]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    concurrency:
-      group: commit-gui-${{ github.ref }}
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: AzzyAIConfig.exe
-          path: .artifacts/gui
       - name: Commit USER_AI/AzzyAIConfig.exe when the build differs
         run: |
           set -euo pipefail
-          built=.artifacts/gui/AzzyAIConfig.exe
-          test -f "$built" || { echo "::error::the GUI artifact is missing"; exit 1; }
+          built=.artifacts/azzy-native.exe
+          test -f "$built" || { echo "::error::the azzy-native artifact is missing"; exit 1; }
           cp "$built" USER_AI/AzzyAIConfig.exe
           if git diff --quiet -- USER_AI/AzzyAIConfig.exe; then
             echo "USER_AI/AzzyAIConfig.exe already matches the build"
@@ -235,7 +165,7 @@ jobs:
   release:
     name: GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [lua, webgui, gui]
+    needs: [lua, webgui, native-gui]
     runs-on: ubuntu-latest
     permissions:
       contents: write

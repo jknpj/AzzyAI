@@ -119,6 +119,8 @@ struct App {
     io_export_dir: String,
     io_import_dir: String,
     io_status: String,
+    help_open: bool,
+    version: Option<String>,
     update_open: bool,
     update_overwrite_presets: bool,
     update_dir: String,
@@ -419,6 +421,8 @@ impl App {
             io_export_dir: String::new(),
             io_import_dir: String::new(),
             io_status: String::new(),
+            help_open: false,
+            version: installed_version(&base),
             update_open: false,
             update_overwrite_presets: false,
             update_dir: exe_dir()
@@ -1130,6 +1134,16 @@ impl App {
                         {
                             self.update_open = true;
                         }
+                        if ui
+                            .add(
+                                egui::Button::new(egui::RichText::new(i18n::tr("Help")).color(p.btn_text))
+                                    .fill(p.btn1)
+                                    .stroke(egui::Stroke::new(1.0_f32, p.btn_border)),
+                            )
+                            .clicked()
+                        {
+                            self.help_open = true;
+                        }
                     });
                 });
             });
@@ -1743,6 +1757,68 @@ impl App {
             let _ = tx.send(event);
             repaint.request_repaint();
         });
+    }
+
+    fn help_window(&mut self, ctx: &egui::Context, p: &Palette) {
+        if !self.help_open {
+            return;
+        }
+        let mut open = self.help_open;
+        egui::Window::new(i18n::tr("About"))
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(false)
+            .default_width(420.0)
+            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+            .show(ctx, |ui| {
+                ui.label(
+                    egui::RichText::new("AzzyAI")
+                        .color(p.text)
+                        .strong()
+                        .size(20.0),
+                );
+                ui.label(
+                    egui::RichText::new(format!(
+                        "{}: {}",
+                        i18n::tr("AzzyAI version"),
+                        self.version.as_deref().unwrap_or("?")
+                    ))
+                    .color(p.muted)
+                    .size(12.0),
+                );
+                ui.add_space(6.0);
+                ui.label(
+                    egui::RichText::new(i18n::tr(
+                        "Native desktop configuration for AzzyAI, written in Rust; it replaces the C# application.",
+                    ))
+                    .color(p.text)
+                    .size(12.0),
+                );
+                ui.add_space(8.0);
+                let mut url = None;
+                ui.horizontal(|ui| {
+                    if ui.button(i18n::tr("Documentation")).clicked() {
+                        url = Some("https://github.com/jknpj/AzzyAI");
+                    }
+                    if ui.button(i18n::tr("Web GUI")).clicked() {
+                        url = Some("https://jknpj.github.io/AzzyAI-webgui/");
+                    }
+                    if ui.button(i18n::tr("Report an issue")).clicked() {
+                        url = Some("https://github.com/jknpj/AzzyAI/issues/new");
+                    }
+                });
+                if let Some(url) = url {
+                    if let Err(error) = open_url(url) {
+                        self.status = error;
+                    }
+                }
+                ui.add_space(6.0);
+                ui.separator();
+                if ui.button(i18n::tr("Close")).clicked() {
+                    self.help_open = false;
+                }
+            });
+        self.help_open = open;
     }
 
     fn update_window(&mut self, ctx: &egui::Context, p: &Palette) {
@@ -2502,6 +2578,7 @@ impl App {
         self.body(ctx, &p);
         self.files_window(ctx, &p);
         self.update_window(ctx, &p);
+        self.help_window(ctx, &p);
         if matches!(
             &self.update_state,
             UpdateState::Downloading | UpdateState::Applying
@@ -2866,6 +2943,21 @@ fn exe_dir() -> Option<PathBuf> {
     std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(Path::to_path_buf))
+}
+
+/// Opens a link in the default browser.
+fn open_url(url: &str) -> Result<(), String> {
+    #[cfg(windows)]
+    let (program, args) = ("cmd", vec!["/C", "start", "", url]);
+    #[cfg(target_os = "macos")]
+    let (program, args) = ("open", vec![url]);
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let (program, args) = ("xdg-open", vec![url]);
+    std::process::Command::new(program)
+        .args(args)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("{url}: {e}"))
 }
 
 /// Waits for this process to exit, moves `<exe>.new` over the executable and starts it again,
@@ -3690,6 +3782,9 @@ mod tests {
         app.new_version = Some("v9.9.9".into());
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.new_version = None;
+        app.help_open = true;
+        let _ = ctx.run(input(), |ctx| app.draw(ctx));
+        app.help_open = false;
         assert_eq!(app.changed(), 0, "drawing must not edit the configuration");
 
         // Every language draws the same screens: a missing translation must not break layout.

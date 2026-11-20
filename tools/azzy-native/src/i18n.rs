@@ -312,6 +312,13 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "Nueva versión {0} disponible.",
     ),
     ("Dismiss", "Dispensar", "Descartar"),
+    ("Web GUI", "Web GUI", "Web GUI"),
+    ("Report an issue", "Relatar um problema", "Informar un problema"),
+    (
+        "Native desktop configuration for AzzyAI, written in Rust; it replaces the C# application.",
+        "Configuração desktop do AzzyAI, escrita em Rust; substitui o aplicativo em C#.",
+        "Configuración de escritorio de AzzyAI, escrita en Rust; reemplaza la aplicación en C#.",
+    ),
     // The web GUI moved its update flow to the host and no longer ships these strings.
     ("Update", "Atualizar", "Actualizar"),
     ("Update AI from GitHub", "Atualizar a IA do GitHub", "Actualizar la IA desde GitHub"),

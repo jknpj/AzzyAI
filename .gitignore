@@ -9,10 +9,7 @@ graphify-out/
 # local working context, not part of the repository
 context.md
 
-# Visual Studio build output, artifacts and per-user files
-GUI/AzzyAIConfig/[Bb]in/
-GUI/AzzyAIConfig/[Oo]bj/
-GUI/AzzyAIConfig/publish/
+# per-user files of the old C# GUI (kept on the legacy/csharp-gui branch)
 *.suo
 *.user
 *.pdb
@@ -24,8 +21,11 @@ tools/target/
 tools/rathena-sync/target/
 tools/divinepride-sync/target/
 
-# runtime log of the native prototype (written next to the exe)
+# runtime log of the native GUI (written next to the exe)
 tools/azzy-native/azzy-native.log
+# development builds of the Rust tools; CI ships the desktop app as USER_AI/AzzyAIConfig.exe
+tools/azzy-native/azzy-native.exe
+tools/azzy-gui/azzy-gui.exe
 
 # files the native app writes instead of editing when --write is not passed
 *.lua.new
