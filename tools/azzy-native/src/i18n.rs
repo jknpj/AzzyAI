@@ -166,11 +166,6 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "Descarta los cambios y vuelve a leer los archivos (Ctrl+R)",
     ),
     ("Import, export and diagnostics", "Importar, exportar e diagnóstico", "Importar, exportar y diagnóstico"),
-    (
-        "Click a setting to read its description.",
-        "Clique em uma configuração para ler a descrição.",
-        "Haz clic en una opción para leer su descripción.",
-    ),
     ("In the file:", "No arquivo:", "En el archivo:"),
     ("Write the edited files (Ctrl+S)", "Gravar os arquivos alterados (Ctrl+S)", "Escribir los archivos modificados (Ctrl+S)"),
     ("No changes to apply", "Nada para aplicar", "Nada que aplicar"),

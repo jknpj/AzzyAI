@@ -453,8 +453,9 @@ impl App {
                 }
                 ui.add_space(2.0);
                 egui::CollapsingHeader::new(i18n::tr("In-game description"))
-                    .id_source(("skill-description", skill.id))
-                    .default_open(true)
+                    // One state for every skill card, like the web GUI's skillDescOpen.
+                    .id_source("skill-description")
+                    .default_open(false)
                     .show(ui, |ui| {
                         ro_text(ui, description, p.text);
                         ui.hyperlink_to(
@@ -1882,17 +1883,25 @@ impl App {
             // side by side and the description would never get any width.
             ui.vertical(|ui| {
                 ui.set_min_size(egui::vec2(ui.available_width(), (height - 12.0).max(100.0)));
-                theme::title_bar(p, ui, &i18n::tr("Description"));
+                // The web GUI puts the selected setting's name in the card header, and
+                // "Description" while nothing is selected.
+                let option = self.selected.as_deref().and_then(|name| self.schema().get(name));
+                let title = match option {
+                    Some(option) => option.name.clone(),
+                    None => i18n::tr("Description"),
+                };
+                theme::title_bar(p, ui, &title);
                 ui.add_space(6.0);
-                let Some(option) = self.selected.as_deref().and_then(|name| self.schema().get(name)) else {
+                let Some(option) = option else {
                     ui.label(
-                        egui::RichText::new(i18n::tr("Click a setting to read its description."))
-                            .color(p.muted)
-                            .size(12.0),
+                        egui::RichText::new(i18n::tr(
+                            "Select a setting to see its description here.",
+                        ))
+                        .color(p.muted)
+                        .size(12.0),
                     );
                     return;
                 };
-                ui.label(egui::RichText::new(&option.name).color(p.text).strong().size(15.0));
                 let mut facts = format!("{}  ·  {}", i18n::tr(&option.category), option.kind);
                 if let (Some(min), Some(max)) = (option.min, option.max) {
                     facts.push_str(&format!("  ·  {min}..{max}"));
@@ -1921,11 +1930,20 @@ impl App {
                                 ui.add_space(4.0);
                             }
                         }
-                        ui.label(
-                            egui::RichText::new(self.description(option))
-                                .color(p.text)
-                                .size(12.5),
-                        );
+                        let description = self.description(option);
+                        if description.trim().is_empty() {
+                            ui.label(
+                                egui::RichText::new(i18n::tr(
+                                    "No description available for this property.",
+                                ))
+                                .color(p.muted)
+                                .size(12.0),
+                            );
+                        } else {
+                            ui.label(
+                                egui::RichText::new(description).color(p.text).size(12.5),
+                            );
+                        }
                         if let Some(comment) = self.config().and_then(|c| c.comment_of(&option.name)) {
                             let comment = comment.trim();
                             if !comment.is_empty() {
@@ -2529,12 +2547,14 @@ mod tests {
         let find = |needle: &str| texts.iter().find(|(_, text)| text.contains(needle));
         let title = find("Magma Flow").expect("skill title");
         let stats = find("Max level 5").expect("skill stats");
-        let in_game = find("Max Lv").expect("in-game description");
         assert!(stats.0.y > title.0.y, "stats must be under the skill name");
-        assert!(in_game.0.y > stats.0.y, "in-game text must be under the stats");
-        // the setting's own description still comes after the skill card
+        // Like the web GUI's <details>, the in-game text starts collapsed...
+        let summary = find("In-game description").expect("in-game summary");
+        assert!(summary.0.y > stats.0.y, "summary must be under the stats");
+        assert!(find("Max Lv").is_none(), "in-game text must start collapsed");
+        // ...and the setting's own description still comes after the skill card.
         let setting = find("Use the Dieter buff").expect("setting description");
-        assert!(setting.0.y > in_game.0.y, "setting description must follow the skill card");
+        assert!(setting.0.y > summary.0.y, "setting description must follow the skill card");
         i18n::set_lang(i18n::Lang::En);
     }
 
