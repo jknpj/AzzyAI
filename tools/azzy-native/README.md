@@ -61,6 +61,9 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
   edits go to `Types/<Name>.lua`; a value equal to the global one removes the override, so only
   the differences are saved. "Use global values" removes every override of that type. The file
   keeps its comments/formatting and the footer path follows the selected type.
+- The same selector **filters the grid like the web GUI**: choosing a Homunculus S lists its own
+  settings plus every base homunculus's, a base homunculus lists only its own (every S hidden),
+  and Global lists everything.
 - A config now tracks line additions/removals (`is_modified()`), so removing an override or an
   appended option still enables Apply and rewrites the file.
 - **Files** (navbar): export every configuration file (including unapplied edits) to a folder,
