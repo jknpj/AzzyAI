@@ -227,26 +227,12 @@ local COMBO_WINDOW = 2000
 -- skill.cpp skill_isNotOk_hom; filled in once the AI has defined the skill constants
 local ELEANOR_STYLE, ELEANOR_COMBO, EXCLUSIVE, COMBO_SKILLS = {}, {}, {}, {}
 local function serverRules()
-	ELEANOR_STYLE = {
-		[MH_SONIC_CRAW] = "fighting", [MH_SILVERVEIN_RUSH] = "fighting", [MH_MIDNIGHT_FRENZY] = "fighting",
-		[MH_TINDER_BREAKER] = "grappling", [MH_CBC] = "grappling", [MH_EQC] = "grappling",
-	}
 	-- skill -> the skill whose SC_COMBO it needs
-	ELEANOR_COMBO = {
-		[MH_SILVERVEIN_RUSH] = MH_SONIC_CRAW, [MH_MIDNIGHT_FRENZY] = MH_SILVERVEIN_RUSH,
-		[MH_CBC] = MH_TINDER_BREAKER, [MH_EQC] = MH_CBC,
-	}
 	-- skill_combo: these open a 2 s combo window while at least one sphere is left
-	COMBO_SKILLS = { [MH_SONIC_CRAW] = true, [MH_SILVERVEIN_RUSH] = true, [MH_TINDER_BREAKER] = true, [MH_CBC] = true }
 	EXCLUSIVE = { [MH_GOLDENE_FERSE] = MH_ANGRIFFS_MODUS, [MH_ANGRIFFS_MODUS] = MH_GOLDENE_FERSE }
 end
 
 -- sphere costs: rAthena's on private servers, AzzyAI's official SkillSphereCost (LATAM) otherwise
-local function sphereCost(skill, lvl)
-	local ra = serverRathena and RA_SKILL and RA_SKILL[skill]
-	if ra then return ra.spheres[math.min(lvl, #ra.spheres)] or 0 end
-	return (SkillSphereCost and SkillSphereCost[skill]) or 0
-end
 
 -- battle.cpp: 50% chance per hit dealt (fighting) or taken (grappling); the harness gives
 -- one sphere every second hit so runs stay reproducible
