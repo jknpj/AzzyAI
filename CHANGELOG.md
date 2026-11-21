@@ -22,6 +22,9 @@ skills are not shipped at all.
 - The web GUI lives on its own `prerenewal` branch of the `webgui` submodule:
   105 homunculus options (was 186), 13 skills (was 50), Pre-Renewal monsters.
 - Harness: 57 scenarios (Renewal-only ones removed), all passing; native tests 30/30.
+- Pre-Renewal monkey-work finished: the S options, 29 if/elseif chains, 10 helper
+  functions and the skill-id constants are gone from the engine; the harness lost
+  its sphere/style simulation and the S skill tables.
 
 
 ## 2.1.1
