@@ -4075,28 +4075,6 @@ function LintSkillOptions(myid, logstring)
     -- A master list of all homunculus-specific skill options, grouped by type.
     -- { "Use" option, "Level" option (or nil), skill_constant, friendly_skill_name }
     local allSkillOptions = {
-        [SERA] = {
-            { "UseSeraParalyze", "SeraParalyzeLevel", MH_NEEDLE_OF_PARALYZE, "Needle of Paralyze" },
-            { "UseSeraPoisonMist", "SeraPoisonMistLevel", MH_POISON_MIST, "Poison Mist" },
-            { "UseSeraPainkiller", nil, MH_PAIN_KILLER, "Pain Killer" },
-            { "UseSeraCallLegion", "SeraCallLegionLevel", MH_SUMMON_LEGION, "Summon Legion" },
-            { "UseSeraToxinOfMandara", "SeraToxinOfMandaraLevel", MH_TOXIN_OF_MANDARA, "Toxin of Mandara" },
-            { "UseSeraNeedleStinger", "SeraNeedleStingerLevel", MH_NEEDLE_STINGER, "Needle Stinger" }
-        },
-        [DIETER] = {
-            { "UseDieterLavaSlide", "DieterLavaSlideLevel", MH_LAVA_SLIDE, "Lava Slide" },
-            { "UseDieterVolcanicAsh", nil, MH_VOLCANIC_ASH, "Volcanic Ash" },
-            { "UseDieterMagmaFlow", nil, MH_MAGMA_FLOW, "Magma Flow" },
-            { "UseDieterGraniticArmor", nil, MH_GRANITIC_ARMOR, "Granitic Armor" },
-            { "UseDieterPyroclastic", "DieterPyroclasticLevel", MH_PYROCLASTIC, "Pyroclastic" },
-            { "UseDieterTempering", nil, MH_TEMPERING, "Tempering" },
-            { "UseDieterBlastForge", nil, MH_BLAST_FORGE, "Blast Forge" }
-        },
-        [ELEANOR] = {
-            { "UseEleanorSonicClaw", "EleanorSonicClawLevel", MH_SONIC_CRAW, "Sonic Claw" },
-            { "UseEleanorBlazingAndFurious", "EleanorBlazingAndFuriousLevel", MH_BLAZING_AND_FURIOUS, "Blazing and Furious" },
-            { "UseEleanorTheOneFighterRises", "EleanorTheOneFighterRisesLevel", MH_THE_ONE_FIGHTER_RISES, "The One Fighter Rises" }
-        }
     }
 
     -- Stage 1: Disable all options for homunculus types that we are NOT.
