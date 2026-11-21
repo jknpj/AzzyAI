@@ -173,7 +173,6 @@ FastChange_I2C		=0
 FastChange_F2I		=0
 
 FastChangeLimit		=1
-AttackDebuffLimit	=1
 
 -- 1 = on startup, disable skill options for skills the homunculus has not learned
 -- and clamp configured levels to the learned level (see LintSkillOptions in AzzyUtil).
