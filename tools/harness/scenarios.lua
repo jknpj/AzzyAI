@@ -532,7 +532,6 @@ SCENARIOS = {
 				SkillLevelProbing = saved
 				return cap == SkillList[BAYERI][MH_STAHL_HORN] and level == 3
 			end,
-			end,
 		} },
 	-- damage-aware defence: HP drops inside the 3 s window trigger it only below DamageDangerHP;
 	-- heals and old samples do not count
