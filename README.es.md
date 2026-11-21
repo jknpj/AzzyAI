@@ -55,12 +55,17 @@ tácticas y lista de amigos. Lee antes el
 
 ## Configurar
 
-Abre la [configuración en el navegador](https://jknpj.github.io/AzzyAI-webgui/),
-elige **AzzyAI** (no el Classic), luego **File > Open USER_AI folder** y selecciona la carpeta
-`AI\USER_AI` de tu juego. Cambia lo que quieras y haz clic en **Apply**. (¿Prefieres
-una aplicación Windows? Ejecuta [AzzyAIConfig.exe](USER_AI/AzzyAIConfig.exe) desde
-esa misma carpeta.) La descarga también incluye una copia sin conexión en
-`webgui/` (abre `webgui/index.html`). Después, recarga la IA en el juego.
+Ejecuta **`AzzyAIConfig.exe`** desde la carpeta `AI\USER_AI` de tu juego: viene
+incluido en la descarga. Cambia lo que quieras y haz clic en **Apply Settings**;
+los archivos se escriben directamente.
+
+![La ventana de configuración de AzzyAI](docs/native-gui.png)
+
+**¿Sin Windows?** Usa la [configuración en el navegador](https://jknpj.github.io/AzzyAI-webgui/)
+en cualquier navegador (Linux, macOS, Android...): elige **AzzyAI** (no el Classic),
+luego **File > Open USER_AI folder**, selecciona la carpeta `AI\USER_AI` de tu juego
+y haz clic en **Apply**. Sin conexión, la misma página va incluida en `webgui/`
+(abre `webgui/index.html`). Después, recarga la IA en el juego.
 
 **Empieza por estos:**
 
@@ -69,7 +74,7 @@ esa misma carpeta.) La descarga también incluye una copia sin conexión en
 - Cambia una cosa por vez y recarga la IA entre pruebas.
 
 El juego lee los ajustes instalados en su propia carpeta, no una copia en la
-carpeta de descargas. La página está en English, Português y Español; los
+carpeta de descargas. La ventana y la página están en English, Português y Español; los
 nombres de las opciones siguen en inglés.
 
 ## Ayuda
