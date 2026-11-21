@@ -8,6 +8,10 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## Unreleased
 
+- New: `SkillLevelProbing` (AutoSkill Options in both GUIs, `Probe` / `Never probe`). `0` turns the
+  learned-level probe off: the AI always requests the level set in the options, capped to the
+  skill's maximum, and never lowers it when the server refuses. Use it on a server whose probe
+  answers cannot be trusted.
 - Fixed: Eternal Quick Combo has no after-cast delay on rAthena/private servers, but the
   AI waited 1.2 s per cycle. The private-server skill override now matches rAthena, and
   Tinder Breaker's 500 ms reuse is tracked so the chain restart is not refused.
