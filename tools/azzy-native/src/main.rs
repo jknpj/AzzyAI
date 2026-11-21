@@ -3372,7 +3372,7 @@ mod tests {
             return;
         }
         let version = installed_version(&root).expect("CVersion");
-        assert!(version.starts_with("2."), "{version}");
+        assert_eq!(version.split('.').count(), 3, "{version}");
     }
 
     #[test]

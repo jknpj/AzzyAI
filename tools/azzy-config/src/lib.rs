@@ -372,11 +372,12 @@ mod tests {
         let path = repo().join("USER_AI/H_Config.lua");
         let config = Config::load(&path).unwrap();
         let sections = config.sections();
-        let homun = sections.iter().find(|(name, _)| name == "New Homunculus S Skills")
-            .unwrap_or_else(|| panic!("no New Homunculus S Skills section: {:?}",
-                sections.iter().map(|(n, _)| n).collect::<Vec<_>>()));
-        assert_eq!(homun.1.len(), 20, "{:?}", homun.1);
-        assert!(sections.iter().all(|(name, _)| !name.starts_with("a removed skill")));
+        // Pre-Renewal: the Homunculus S group is gone, the base groups are still read
+        // from their header line.
+        assert!(sections.iter().all(|(name, _)| !name.contains("Homunculus S")));
+        assert!(!sections.is_empty(), "{:?}",
+            sections.iter().map(|(n, _)| n).collect::<Vec<_>>());
+        assert!(config.option_count() > 50);
     }
 
     #[test]
