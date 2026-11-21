@@ -507,7 +507,7 @@ mod tests {
     #[test]
     fn only_page_files_and_presets_are_writable() {
         assert!(allowed_path("H_Config.lua"));
-        assert!(allowed_path("Types/Dieter.lua"));
+        assert!(allowed_path("Types/Amistr.lua"));
         for bad in ["", "../H_Config.lua", "Types/../H_Config.lua", "MobInfo.lua",
                     "A_Friends.lua.bak", "Types/.hidden.lua", "/etc/passwd", "data/H_1Skills.lua"] {
             assert!(!allowed_path(bad), "{bad:?} must be refused");
@@ -520,10 +520,10 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Types")).unwrap();
         std::fs::write(dir.join("H_Config.lua"), "LavaSlideMode = 0\n").unwrap();
-        std::fs::write(dir.join("Types").join("Dieter.lua"), "AutoMobCount = 1\n").unwrap();
+        std::fs::write(dir.join("Types").join("Amistr.lua"), "AutoMobCount = 1\n").unwrap();
         let json = read_files(&dir).unwrap();
         assert!(json.contains("\"H_Config.lua\":\"LavaSlideMode = 0\\n\""), "{json}");
-        assert!(json.contains("\"Types/Dieter.lua\""), "{json}");
+        assert!(json.contains("\"Types/Amistr.lua\""), "{json}");
         assert!(!json.contains("MobInfo"), "{json}");
         let _ = std::fs::remove_dir_all(&dir);
     }

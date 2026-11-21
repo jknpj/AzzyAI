@@ -103,7 +103,6 @@ end
 
 -- hits per use: HitCount (a negative count only splits the total into that many displayed hits);
 -- Sonic Claw and Blazing And Furious set it to the spheres the homunculus has
-local SPHERE_HITS = { MH_SONIC_CRAW = true, MH_BLAZING_AND_FURIOUS = true }
 local function hitCount(ra, skill, lvl, ctx)
 	if SPHERE_HITS[ra.name] then return math.max(ctx and ctx.spheres or 1, 1) end
 	return ra.hits[math.min(lvl, #ra.hits)] or 1
@@ -142,12 +141,10 @@ end
 -- flat damage battle_calc_weapon_attack adds after DEF and element (battle.cpp, the switch after
 -- battle_calc_element_damage): Tinder Breaker, CBC and EQC are otherwise a normal attack
 local FLAT_AFTER_ELEMENT = {
-	MH_TINDER_BREAKER = 2500, MH_CBC = 4000, MH_EQC = 6000,
 }
 
 -- Expected damage of one use of `skill` on one monster (all hits, one unit tick).
 -- ctx.targets = monsters hit together (splash damage that is split among them),
--- ctx.spheres = spirit spheres at the moment of the hit (Eleanor)
 function Damage.skill(hs, skill, lvl, mob, ctx)
 	local why = Damage.unmodelled(skill)
 	if why then return nil, why end
