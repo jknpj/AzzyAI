@@ -101,3 +101,17 @@ This branch only receives what we write for it: AI fixes that are not about
 Renewal (targeting, movement, tactics, cast handling, logging). Renewal-only
 work stays on `main` and is not merged here. The `main` branch has no Pre-Renewal
 code: it is the Renewal product.
+
+## Current state of this branch
+
+- The four original homunculi, the pre-re monster database and the classic
+  element table: done.
+- Homunculus S: no data, no options, no constants, no GUI entries. The branches
+  that named its skill ids are unreachable (if false then) and are being
+  deleted in small steps; none of them runs.
+- The harness has no S scenario, no sphere/style simulation and no S benchmark;
+  57 scenarios pass.
+- The GUI is its own prerenewal branch of the webgui submodule: 105 options
+  and 13 skills.
+- Still open: the last unreachable branches, the Renewal damage fixture used by
+  the private-server scenarios, and a pre-re audit of the skill timings.
