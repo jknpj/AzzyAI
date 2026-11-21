@@ -868,7 +868,10 @@ impl App {
         }
         if self.unit == Unit::Homunculus {
             if let Some(id) = self.skill_filter {
-                if self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id) {
+                // A skill without settings of its own leaves the grid alone.
+                if self.skill_has_settings(id)
+                    && self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id)
+                {
                     return false;
                 }
             }
@@ -976,6 +979,8 @@ impl App {
             || (self.unit == Unit::Homunculus && self.skill_filter.is_some())
     }
 
+    /// True when at least one setting drives this skill. The panel lists every skill of the
+    /// type, but only the ones with settings can filter the grid.
     fn skill_has_settings(&self, id: u32) -> bool {
         self.schema()
             .options
@@ -2181,7 +2186,7 @@ impl App {
                             .skills
                             .iter()
                             .filter(|skill| {
-                                skill.homun == key && self.skill_has_settings(skill.id)
+                                skill.homun == key 
                             })
                             .collect();
                         if list.is_empty() {
