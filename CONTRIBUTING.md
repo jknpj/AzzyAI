@@ -21,16 +21,17 @@ results, translations and clearer docs are all welcome.
 
 Work from the **main** branch and open the pull request against it.
 
-You need Python 3 and a **Lua 5.1** interpreter (the version inside the RO
-client). Put `lua5.1` and `luac5.1` on `PATH`, or set the `LUA` and `LUAC`
-environment variables. Then, from the repository root:
+You need **Rust stable** (the harness and the repository tools are Rust) and a
+**Lua 5.1** interpreter (the version inside the RO client). Put `lua5.1` and
+`luac5.1` on `PATH`, or set the `LUA` and `LUAC` environment variables. Then,
+from the repository root:
 
 ```
-cargo run --release -p azzy-harness --                          # syntax check and every scenario
-cargo run --release -p azzy-harness -- dieter bayeri_pferd      # only these scenarios
-cargo run --release -p azzy-harness -- --verbose sera           # also print every cast
-cargo run --release -p azzy-harness -- --profile crowd_dieter   # time and GetV calls per AI tick
-cargo run --release -p azzy-harness -- --globals                # globals assigned inside functions
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml --                          # syntax check and every scenario
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- dieter bayeri_pferd      # only these scenarios
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose sera           # also print every cast
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --profile crowd_dieter   # time and GetV calls per AI tick
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --globals                # globals assigned inside functions
 ```
 
 The harness mocks the client API, loads the real `USER_AI` files and checks, for
@@ -60,7 +61,7 @@ the Windows app.
 - **`webgui\templates.js` embeds the shipped preset**: its `H_Config.lua` and `M_Config.lua`
   bodies are verbatim copies of `USER_AI\H_Config.lua` and `USER_AI\M_Config.lua` (the web page
   starts a new configuration from them). Copy the file into the `String.raw` body whenever you
-  change it; `cargo run --release -p azzy-harness -- templates-check` compares them and CI runs the same check.
+  change it; `cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- templates-check` compares them and CI runs the same check.
 - **Keep it Lua 5.1.** Declare variables `local`; `azzy-harness --globals` lists the
   ones that leak. Keep diffs small and comment only what needs it.
 - **Say what you tested**: offline harness only, or also in game, and on which server.
@@ -72,7 +73,7 @@ Do not edit these by hand. Regenerate them:
 | File | How |
 |---|---|
 | `USER_AI\MobInfo.lua`, `tools\harness\fixtures\rathena.lua`, `webgui\mobdata.js` | `cargo run --release --manifest-path tools\Cargo.toml -p rathena-sync -- [--ref <sha>] [--fixture-only]` (behind a proxy set `HTTPS_PROXY` first; only the generation date differs between runs) |
-| `webgui\skilldata.js`, `webgui\img\skills\` | `python skilldata_sync.py` inside `webgui` (needs a free Divine Pride API key in `DIVINEPRIDE_API_KEY`) |
+| `webgui\skilldata.js`, `webgui\img\skills\` | `python skilldata_sync.py` inside `webgui` (needs a free Divine Pride API key in `DIVINEPRIDE_API_KEY`); that submodule is the only place Python is needed |
 
 ### Do not commit
 
