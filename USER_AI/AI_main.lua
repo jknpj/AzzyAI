@@ -128,7 +128,6 @@ function doInit(myid)
 	AdjustCapriceLevel()
 	UpdateTimeoutFile()
 	DoneInit=1
-	eleanorPreferredStylePending = MyHomunType == ELEANOR
 end
 function AdjustCapriceLevel()
 	local msp=GetV(V_MAXSP,MyID)

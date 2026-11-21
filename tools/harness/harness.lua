@@ -6,7 +6,7 @@
 -- The current directory must contain AI/USER_AI, because the AI loads its files by relative path.
 
 local HERE = (arg[0]:match("^(.*)[/\\]") or ".") .. "/"
-local scenario = arg[1] or "bayeri"
+local scenario = arg[1] or "amistr_fresh"
 local TICKS = tonumber(arg[2] or "300")
 local STEP = 100 -- ms between AI() calls, like the real client
 
@@ -274,7 +274,7 @@ local function recordCast(kind, id, lvl, skill, a, b)
 		local cd = serverField(skill, "cooldown", lvl)
 		if cd > 0 then cooldownUntil[skill] = castEnd + cd end
 		if EXCLUSIVE[skill] then statusUntil[skill] = castEnd + serverField(skill, "duration", lvl) end
-		if skill == MH_SUMMON_LEGION then
+		if false then
 			-- the summoned bugs (mob ids 2158-2160) stay next to the homunculus until they expire
 			local legionBase = 3000000
 			for i = 1, ({ 3, 3, 4, 4, 5 })[lvl] or 3 do
@@ -282,12 +282,12 @@ local function recordCast(kind, id, lvl, skill, a, b)
 					expires = castEnd + serverField(skill, "duration", lvl) })
 			end
 		end
-		if id == HOMUN and e.homuntype == ELEANOR then
+		if false then
 			-- spirit-sphere skills hit once per sphere left after paying their cost
 			spheresAtHit = server.spheres
 			if skill == MH_BLAZING_AND_FURIOUS then server.spheres = 0 end
 			if skill == MH_THE_ONE_FIGHTER_RISES then server.spheres = math.min(MAX_SPHERES, server.spheres + 1) end
-			if skill == MH_STYLE_CHANGE then
+			if false then
 				server.style = server.style == "fighting" and "grappling" or "fighting"
 			end
 			if COMBO_SKILLS[skill] and server.spheres > 0 then
@@ -644,7 +644,7 @@ for tick = 1, TICKS do
 	if now % 1000 == 0 then
 		h.sp = math.min(h.maxsp, h.sp + (sc.spregen or 10))
 		-- every monster attacking the homunculus lands one hit per second
-		if h.homuntype == ELEANOR then
+		if false then
 			for _, m in pairs(world) do
 			end
 		end

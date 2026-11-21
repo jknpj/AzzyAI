@@ -2567,7 +2567,7 @@ end
 
 -- The default tactic class (CLASS_S) never selected the minion classes, so Summon Legion was never cast
 function LegionClassOK(tactClass)
-	return MyHomunType==SERA and UseSeraCallLegion==1
+	return false
 end
 
 function GetMinionSkill(myid)
@@ -3288,7 +3288,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		-- the server allows a single active ground unit of these (ActiveInstance: 1): a new cast
 		-- is refused until the previous one has expired
 		-- Summon Legion refuses (harness) or wastes the cast (server) while its bugs are alive
-		if skill==MH_LAVA_SLIDE or skill==MH_POISON_MIST or skill==MH_SUMMON_LEGION then
+		if false then
 			reuse = math.max(reuse, GetSkillInfo(skill,8,level))
 		end
 		AutoSkillCooldown[skill]=t+reuse+delay
@@ -3606,7 +3606,7 @@ function GetLearnedSkillLevel(myid, skillID)
     if IsHomun(myid) == 1 then
         -- For homunculi, we need to determine which type to use for the lookup.
         local htype = MyHomunType
-        local typeForLookup = htype -- Default to the current type (EIRA, BAYERI, etc.)
+        local typeForLookup = htype
 
         -- Check if the skill belongs to one of the original four homunculi.
         if SkillList[LIF][skillID] or SkillList[AMISTR][skillID] or SkillList[FILIR][skillID] or SkillList[VANILMIRTH][skillID] then
