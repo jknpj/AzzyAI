@@ -36,7 +36,6 @@ for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_
 	AutoSkillCooldown[cdskill]=0
 end
 -- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
--- The Eleanor chain follow-ups (CBC/EQC) are left out on purpose; their chain is timed by
 -- ComboSCTimeout/ComboSVTimeout. Tinder Breaker is tracked: with no after-cast delay on the private
 -- server the next chain would start inside the 500 ms reuse window and be refused.
 -- Sonic Claw starts the chain but is also cast on its own, so its cooldown is tracked.
@@ -886,9 +885,7 @@ function OnCHASE_ST()
         end
         
         -- #################################################################
-        -- ### Eleanor Grapple Tactic Fallback - START ###
         
-        -- ### Eleanor Grapple Tactic Fallback - END ###
         -- #################################################################
 
         if skilltouse[2] ~= 0 then
@@ -1128,7 +1125,6 @@ function OnATTACK_ST()
                                 mobskill_level = v[3]
                             end
                             mobskill_level = math.min(v[3], mobskill_level)
-                            -- Eleanor: when a pack is worth her AoE but SP is short, don't start a Sonic Claw chain (its small costs keep SP under the AoE's price)
                             
                             if PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
@@ -1179,9 +1175,7 @@ function OnATTACK_ST()
             if TraceAIEnabled ~= 0 then TraceAI("skill selected "..skilltouse[2]) end
 
             -- #################################################################
-            -- ### Eleanor Grapple Tactic Fallback - START ###
             
-            -- ### Eleanor Grapple Tactic Fallback - END ###
             -- #################################################################
             if false then
                 if TraceAIEnabled ~= 0 then TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style") end
@@ -2633,7 +2627,6 @@ function UpdateTimeoutFile()
 	return
 end
 
--- For frequent, low-value updates (Eleanor's sphere estimate): any write made within the last
 -- TIMEOUT_FILE_MIN_INTERVAL ms already saved the current values, so skip this one.
 TIMEOUT_FILE_MIN_INTERVAL = 1000
 NextTimeoutFileWrite = 0
@@ -3703,7 +3696,6 @@ function AI(myid)
 			RecordOffensiveCastResult(CastSkill, CastSkillLevel, true, false)
 		end
 		-- Style Change went through (any watcher branch: it has no cast time, so the instant
-		-- branch is the usual one): the server flipped Eleanor's style
 		if CastSkill==MH_STYLE_CHANGE then
 			if EleanorMode==GRAPPLING_MODE then
 				EleanorMode=FIGHTING_MODE

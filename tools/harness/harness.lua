@@ -536,7 +536,6 @@ HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
 -- like the test server's benchmark after a manual Style Change
 for _, entry in ipairs(sc.skills) do
-	-- "MH_TOXIN_OF_MANDARA:3" = learned at level 3; no suffix = every level
 	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
 	assert(_G[name], "unknown skill constant " .. name)
 	skillKnown[_G[name]] = tonumber(lvl) or 99

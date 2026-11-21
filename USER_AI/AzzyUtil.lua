@@ -3135,7 +3135,6 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 	if count < needed then
 		return false
 	end
-	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
 	-- monsters when their DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win
 	return true
 end
@@ -4172,12 +4171,10 @@ function PickReadySkill(htype,candidates)
 	return 0,0
 end
 
--- Bayeri: Heilige Stange/Pferd ignore DEF but only beat Stahl Horn on a pair of monsters when their
 -- DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win. Glanzen Spies vs Stahl Horn is
 -- left to SkillPickScore (SkillDamage), which reproduces the benchmark's break-even.
 BAYERI_PAIR_MIN_DEF = 110
 BAYERI_PACK_SKILL_FULL_COUNT = 3
--- Eleanor: The One Fighter Rises ignores DEF while her Sonic Claw combos do not. On a lone target it
 -- breaks even near DEF 210 and wins from there (homun_bench.py: +3% at DEF 250, +21% at DEF 500,
 -- +51% at DEF 1000, -17% at DEF 0).
 ELEANOR_LONE_TOFR_MIN_DEF = 220
