@@ -155,17 +155,14 @@ static MER_CAST: &[(&str, &str)] = &[
 ];
 static HOM_CLASS: &[(&str, &str)] = &[
     ("Any skill", "CLASS_BOTH"),
-    ("Non-Homun S skills", "CLASS_OLD"),
-    ("Homun S skills", "CLASS_S"),
+    ("Base skills", "CLASS_OLD"),
     ("AoE attacks", "CLASS_MOB"),
     ("Combo (first skill)", "CLASS_COMBO_1"),
     ("Combo (full combos)", "CLASS_COMBO_2"),
-    ("Summon minions", "CLASS_MINION"),
     ("Grapple (Tinder Breaker)", "CLASS_GRAPPLE"),
     ("Grapple (CBC)", "CLASS_GRAPPLE_1"),
     ("Grapple (EQC)", "CLASS_GRAPPLE_2"),
     ("Minions + Pre-S skill", "CLASS_MIN_OLD"),
-    ("Minions + Homun S", "CLASS_MIN_S"),
 ];
 static MER_CLASS: &[(&str, &str)] = &[("All skills", "CLASS_BOTH"), ("Mob skills", "CLASS_MOB")];
 static HOM_RESCUE: &[(&str, &str)] = &[
