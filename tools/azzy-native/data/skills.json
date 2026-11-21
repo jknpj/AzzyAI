@@ -115,7 +115,9 @@
    "name": "Caprice",
    "name_pt": "Capricho",
    "name_es": "Capricho",
-   "match": [],
+   "match": [
+    "vanilcaprice"
+   ],
    "icon": 10
   },
   {
