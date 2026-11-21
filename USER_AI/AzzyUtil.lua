@@ -3948,7 +3948,27 @@ function SkillProbeUntrusted()
 	return ServerType ~= SERVER_PRIVATE
 end
 
+-- Highest level of `skill` in this unit's catalog (nil when the unit has no catalog for it).
+function GetSkillMaxLevel(skill)
+	if IsHomun(MyID) == 1 then
+		local typeForLookup = MyHomunType
+		if SkillList[LIF][skill] or SkillList[AMISTR][skill] or SkillList[FILIR][skill] or SkillList[VANILMIRTH][skill] then
+			typeForLookup = GetHomunBaseType(MyID)
+		end
+		if SkillList[typeForLookup] == nil then return nil end
+		return SkillList[typeForLookup][skill] or 0
+	end
+	local mtype = GetMerType(MyID)
+	if not (SkillListM and SkillListM[mtype]) then return nil end
+	return SkillListM[mtype][skill] or 0
+end
+
 function GetSkillLevelCap(skill)
+	-- SkillLevelProbing = 0: do not ask the client at all; the configured level is used as-is
+	-- (capped to the catalog), so nothing steps down or up behind the player's back.
+	if SkillLevelProbing == 0 then
+		return GetSkillMaxLevel(skill)
+	end
 	local info = LearnedSkill[skill]
 	if info == nil then
 		local cap, exact, maxLevel, filler = nil, false, 0, false
@@ -4009,6 +4029,9 @@ end
 
 -- Called by the skill watcher once it knows whether a cast went through.
 function SkillCastResult(skill, level, success)
+	if SkillLevelProbing == 0 then
+		return
+	end
 	local info = LearnedSkill[skill]
 	-- Hero Saga: combo follow-ups (CBC/EQC) have unreliable SP/motion confirmation on this client;
 	-- watcher "failures" are not server refusals of the level, so never step their level down.
@@ -4262,6 +4285,11 @@ function LintSkillOptions(myid, logstring)
                 end
             end
         end
+    end
+
+    -- Stage 2 only makes sense with the probe: without it there is no learned level to compare.
+    if SkillLevelProbing == 0 then
+        return logstring
     end
 
     -- Stage 2: For our current homunculus type, check skills and adjust levels.

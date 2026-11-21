@@ -524,6 +524,15 @@ SCENARIOS = {
 			["official servers score skills with base level 250"] = function()
 				return SkillDamageBaseLevel == 250
 			end,
+			["skill level probing can be turned off"] = function()
+				local saved = SkillLevelProbing
+				SkillLevelProbing = 0
+				local cap = GetSkillLevelCap(MH_STAHL_HORN)
+				local level = GetCastableSkillLevel(MH_STAHL_HORN, 3)
+				SkillLevelProbing = saved
+				return cap == SkillList[BAYERI][MH_STAHL_HORN] and level == 3
+			end,
+			end,
 		} },
 	-- damage-aware defence: HP drops inside the 3 s window trigger it only below DamageDangerHP;
 	-- heals and old samples do not count

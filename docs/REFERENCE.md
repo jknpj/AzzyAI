@@ -177,6 +177,7 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 | `UseVanilCaprice` | 1 | Vanilmirth: use Caprice. |
 | `LintUserOptions` | 1 | **New.** At startup, turns off skill options for skills the homunculus has not learned and lowers levels to the learned level. |
 | `TrustSkillProbe` | -1 | **New.** Whether to believe the client's answer about learned skill levels. -1 = automatic (not on the official server, yes on private servers). With the probe distrusted, a skill the client reports as not learned is still tried at the configured level and the level steps down when the server refuses it, instead of the option being disabled at startup. |
+| `SkillLevelProbing` | 1 | **New.** 1 = ask the client which skill levels are learned and adapt. 0 = never probe: always request the level set in the options (capped to the skill's maximum), and never step it down when the server refuses. Use it on a server whose probe answers cannot be trusted. |
 | `ServerType`, `AutoDetectServerType` | official, 1 | **New.** Official server or rAthena/Hercules. See the [manual](MANUAL.md#4-basic-behavior). |
 
 **Skill switches and levels.** Each skill has `Use<Type><Skill>` (1 = on) and `<Type><Skill>Level`.
