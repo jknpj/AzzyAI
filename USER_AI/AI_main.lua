@@ -349,22 +349,7 @@ function	OnSKILL_OBJECT_CMD (level,skill,id)
 
 	if TraceAIEnabled ~= 0 then TraceAI ("OnSKILL_OBJECT_CMD"..skill.." "..id.." "..level) end
 	ResetCounters()
-	if skill==MH_PAIN_KILLER and IsPlayer(id)==1 and PainkillerFriends~=0 and id~=OwnerID then
-		MyPState = MyState
-		MyState = PROVOKE_ST
-		MyPEnemy = id
-		MyPSkill = skill
-		MyPSkillLevel = level
-		MyPMode = id
-		if MyFriends[id]~=FRIEND then
-			MyFriends[id]=PKFRIEND
-			if PainkillerFriendsSave==1 then
-				UpdateFriends()
-			end
-		end
-		return OnPROVOKE_ST()
-	else
-		MySkillLevel = level
+	MySkillLevel = level
 		MySkill = skill
 		MyEnemy = id
 		if IsMonster(id)==1 and SuperPassive~=1 then
@@ -377,7 +362,7 @@ function	OnSKILL_OBJECT_CMD (level,skill,id)
 		else
 			MyState = SKILL_OBJECT_CMD_ST
 		end
-	end
+	
 end
 
 function	OnSKILL_AREA_CMD (level,skill,x,y)
@@ -788,15 +773,6 @@ function OnCHASE_ST()
             EnemyPosX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             EnemyPosY = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         end
-    elseif ((MySkill == MH_TINDER_BREAKER or MySkill == MH_EQC or MySkill == MH_CBC) and EleanorMode == FIGHTING_MODE) or ((MySkill == MH_SONIC_CRAW or MySkill == MH_SILVERVEIN_RUSH or MySkill == MH_MIDNIGHT_FRENZY) and EleanorMode == GRAPPLING_MODE) then
-        if EleanorDoNotSwitchMode == 1 then
-            if TraceAIEnabled ~= 0 then TraceAI("Was told to use "..FormatSkill(MySkill, MySkillLevel).." but am in wrong mode for it, and EleanorDoNotSwitchMode==1") end
-            logappend("AAI_ERROR", "Was told to use "..FormatSkill(MySkill, MySkillLevel).." but am in wrong mode for it, and EleanorDoNotSwitchMode==1")
-        else
-            if AutoSkillTimeout < GetTick() then
-                DoSkill(MH_STYLE_CHANGE, 1, MyID, 8)
-            end
-        end
     end
     if (true == IsInAttackSight(MyID, MyEnemy, skill, level)) then -- ENEMY_INATTACKSIGHT_IN
         MyState = ATTACK_ST
@@ -850,18 +826,6 @@ function OnCHASE_ST()
                             or (BerserkMode == 1 and Berserk_SkillAlways == 1))
                         and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD
                             or IsVanilCapriceForS(v[2]))) then
-                        if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                            skilltouse = v
-                        end
-                    elseif (skilltype == S_ATK and UseHomunSSkillChase == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_MIN_S or ((tact_skillclass == CLASS_COMBO_1 or tact_skillclass == CLASS_COMBO_2) and v[2] == MH_SONIC_CLAW))) then
-                        if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                            skilltouse = v
-                        end
-                    elseif (skilltype == COMBO_ATK and UseHomunSSkillChase == 1 and (AutoComboMode == 2 or (AutoComboMode == 1 and (tact_skillclass == CLASS_COMBO_1 or tact_skillclass == CLASS_COMBO_2)) or Berserk_ComboAlways == 1) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (v[2] == MH_SILVERVEIN_RUSH or tact_skillclass ~= CLASS_COMBO_1)) then
-                        if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                            skilltouse = v
-                        end
-                    elseif (skilltype == GRAPPLE_ATK and UseHomunSSkillChase == 1 and (AutoComboMode == 2 or (AutoComboMode == 1 and tact_skillclass > 5) or Berserk_ComboAlways == 1) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (v[2] == MH_TINDER_BREAKER or (v[2] == MH_CBC and tact_skillclass ~= CLASS_GRAPPLE) or tact_skillclass == CLASS_GRAPPLE_2)) then
                         if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                             skilltouse = v
                         end
@@ -1123,31 +1087,11 @@ function OnATTACK_ST()
                             if PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
                             end
-                        elseif (skilltype == DEBUFF_ATK and not (v[2] == MH_VOLCANIC_ASH and skilltouse[2] == MH_LAVA_SLIDE) and AttackDebuffUsed < AttackDebuffLimit and (IsFriendOrSelf(GetV(V_TARGET, MyEnemy)) == 1 or AttackDebuffWhenAttacked ~= 1)) then
-                            if (tact_debuff == v[2] or (tact_debuff == 1 and BasicDebuffs[v[2]] ~= nil)
-                                or (v[2] == MH_VOLCANIC_ASH and UseDieterAshAsAttack == 1 and tact_skill ~= SKILL_NEVER
-                                    and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)))) then
-                                if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                                    skilltouse = v
-                                end
-                            end
                         elseif (skilltype == MAIN_ATK
                             and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS
                                 or (BerserkMode == 1 and Berserk_SkillAlways == 1))
                             and (tact_skillclass < 1 or tact_skillclass == CLASS_MIN_OLD
                                 or IsVanilCapriceForS(v[2]))) then
-                            if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                                skilltouse = v
-                            end
-                        elseif (skilltype == S_ATK and UseHomunSSkillAttack == 1 and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (tact_skillclass == CLASS_S or tact_skillclass == CLASS_BOTH or tact_skillclass == CLASS_MIN_S or ((tact_skillclass == CLASS_COMBO_1 or tact_skillclass == CLASS_COMBO_2) and v[2] == MH_SONIC_CLAW))) then
-                            if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                                skilltouse = v
-                            end
-                        elseif (skilltype == COMBO_ATK and UseHomunSSkillAttack == 1 and (AutoComboMode == 2 or (AutoComboMode == 1 and (tact_skillclass == CLASS_COMBO_1 or tact_skillclass == CLASS_COMBO_2)) or Berserk_ComboAlways == 1) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (v[2] == MH_SILVERVEIN_RUSH or tact_skillclass ~= CLASS_COMBO_1)) then
-                            if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
-                                skilltouse = v
-                            end
-                        elseif (skilltype == GRAPPLE_ATK and UseHomunSSkillAttack == 1 and (AutoComboMode == 2 or (AutoComboMode == 1 and tact_skillclass > 5) or Berserk_ComboAlways == 1) and (MySkillUsedCount < tact_skill or tact_skill == SKILL_ALWAYS or (BerserkMode == 1 and Berserk_SkillAlways == 1)) and (v[2] == MH_TINDER_BREAKER or (v[2] == MH_CBC and tact_skillclass ~= CLASS_GRAPPLE) or tact_skillclass == CLASS_GRAPPLE_2)) then
                             if (availsp - ReserveSP >= GetSkillInfo(v[2], 3, math.min(v[3], skill_level))) then
                                 skilltouse = v
                             end
@@ -1216,18 +1160,6 @@ function OnATTACK_ST()
             target = GetBestBrandishTarget(MyID)
             if target ~= -1 then
                 SkillTarget = target
-            end
-            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy) end
-        elseif (MySkill == MH_HEILIGE_STANGE or MySkill == MS_BOWLINGBASH or (MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 1 and not IsCasterCenteredAoE(MySkill))) and (AoEMaximizeTargets == 1 or elementAim) then
-            target = GetBestAoETarget(MyID, MySkill, MySkillLevel)
-            if target ~= -1 then
-                SkillTarget = target
-            end
-            if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (aoe target) target: "..SkillTarget.." enemy: "..MyEnemy) end
-        elseif ((MySkill ~= 0 and SkillAOEInfo[MySkill] ~= nil and GetSkillInfo(MySkill, 7) == 2 and MySkill ~= MH_VOLCANIC_ASH and (AoEMaximizeTargets == 1 or elementAim)) or (MySkill == MH_VOLCANIC_ASH and AshMaximizeTargets == 1)) then
-            targx, targy = GetBestAoECoord(MyID, MySkill, MySkillLevel)
-            if targx ~= -1 then
-                SkillTargetX, SkillTargetY = targx, targy
             end
             if TraceAIEnabled ~= 0 then TraceAI("Skill Attack: "..MySkill.." (brandish) target: "..SkillTarget.." enemy: "..MyEnemy) end
         end
@@ -2485,8 +2417,6 @@ function DoAutoBuffs(buffmode)
 		if skill <=0 then 
 			--logappend("AAI_PKF","Painkiller friends disabled, don't have skill")
 			PainkillerFriends=0
-		elseif skill ~= MH_PAIN_KILLER then
-			-- Goldene Tone only buffs the master, it can't be cast on friends
 		elseif level==0 or opt~=buffmode then
 			--logappend("AAI_PKF","not time to use it")
 			-- skill in cooldown
@@ -3112,11 +3042,8 @@ function FailSkillUse(mode)
 			SDefensiveTimeout=1
 		elseif mode==6 then
 			-- These buffs share a watcher mode, but a refusal must only retry its own slot.
-			if CastSkill == MH_TEMPERING or CastSkill == MH_LIGHT_OF_REGENE then
-				SOwner2ndBuffTimeout=1
-			else
-				SOwnerBuffTimeout=1
-			end
+			SOwnerBuffTimeout=1
+			
 		elseif mode==7 then
 			SightTimeout=1
 		elseif mode==9 then
@@ -3682,22 +3609,11 @@ function AI(myid)
 			RecordOffensiveCastResult(CastSkill, CastSkillLevel, true, false)
 		end
 		-- Style Change went through (any watcher branch: it has no cast time, so the instant
-		if CastSkill==MH_STYLE_CHANGE then
-			if EleanorMode==GRAPPLING_MODE then
-				EleanorMode=FIGHTING_MODE
-			else
-				EleanorMode=GRAPPLING_MODE
-			end
-			EleanorModeResyncPending=0
-			EleanorModeChangedTick=GetTick()
-			UpdateTimeoutFile()
-		end
+		
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
 		--LavaSlideMode=constant
-		if (LavaSlideMode==4 and CastSkill==MH_LAVA_SLIDE) then
-			SightTimeout=GetTick()+500
-		end
+		
 		local confirmedBuff = CastSkillMode ~= 0
 		CastSkill=0
 		CastSkillLevel=0

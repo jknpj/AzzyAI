@@ -3122,14 +3122,7 @@ function GetTargetedSkills(myid)
     NewMobatk={CLASS_NEW_MOB,s,l}
 	local result={Mainatk,Satk,ComboAtk,GrappleAtk,Mobatk,Debuffatk,Minionatk,NewSAtk,NewMobatk}
 	for _, candidate in ipairs(result) do
-		if candidate[2] ~= 0 and candidate[2] ~= MH_SONIC_CRAW and candidate[2] ~= MH_TINDER_BREAKER
-			and (candidate[1] == MAIN_ATK or candidate[1] == S_ATK
-			or IsMobSkillType(candidate[1]) or candidate[1] == CLASS_NEW_S) then
-			offensiveCastSkills[candidate[2]] = true
-			if IsOffensiveCastPaused(candidate[2]) then
-				candidate[2], candidate[3] = 0, 0
-			end
-		end
+		
 	end
 	return result
 end
@@ -3304,16 +3297,6 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		if GetSkillInfo(skill,9,level) > 0 then
 			UpdateTimeoutFile()
 		end
-	elseif (skill==MH_VOLCANIC_ASH) then --handle the three ash timeouts
-		-- a slot is busy until that ash disappears ([8]), not just until the reuse delay ends
-		local ashBusy = math.max(GetSkillInfo(skill,8,level), GetSkillInfo(skill,9,level)) + delay
-		if (AshTimeout[1] < t) then
-			AshTimeout[1]=t+ashBusy
-		elseif (AshTimeout[2] < t) then
-			AshTimeout[2]=t+ashBusy
-		else 
-			AshTimeout[3]=t+ashBusy
-		end
 	end
 	delay = delay + GetSkillInfo(skill,6,level)
 	AutoSkillTimeout=t+delay
@@ -3329,40 +3312,9 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	end
 	-- the official server refuses a combo follow-up sent while the previous skill is still playing
 	ComboFollowAt=GetTick()+(EleanorComboGap or 0)
-	if skill==MH_MIDNIGHT_FRENZY then
+	ComboSCTimeout=0
 		ComboSVTimeout=0
-		UpdateTimeoutFile()
-	elseif skill==MH_SILVERVEIN_RUSH then
-		ComboSVTimeout=GetTick()+2000
-		ComboSCTimeout=0
-		UpdateTimeoutFile()
-	elseif skill==MH_SONIC_CRAW then
-		ComboSCTimeout=GetTick()+2000
-		ComboSVTimeout=0
-	elseif skill==MH_TINDER_BREAKER then
-		ComboSCTimeout=GetTick()+2000
-		ComboSVTimeout=0
-	elseif skill==MH_CBC then
-		ComboSVTimeout=GetTick()+2000
-		ComboSCTimeout=0
-	elseif skill==MH_EQC then
-		ComboSVTimeout=0
-		ComboSCTimeout=0
-	elseif skill==MH_BLAZING_AND_FURIOUS then
-		-- the server uses up every sphere after counting the hits
-		MySpheres=0
-		ComboSCTimeout=0
-		ComboSVTimeout=0
-		UpdateTimeoutFile()
-	elseif skill==MH_THE_ONE_FIGHTER_RISES then
-		MySpheres = math.min(10,MySpheres + 1)
-		ComboSCTimeout=0
-		ComboSVTimeout=0
-		UpdateTimeoutFile()
-	else --Combo wasn't used, so kill the timeouts
-		ComboSCTimeout=0
-		ComboSVTimeout=0
-	end
+	
 
 	if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay) end
 	logappend("AAI_SKILLFAIL", "DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay)
