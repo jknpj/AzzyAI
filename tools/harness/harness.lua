@@ -214,6 +214,7 @@ local function runSwings(e)
 end
 
 local cooldownUntil, statusUntil = {}, {}
+local skillDelayUntil = {}
 local server = {}
 HarnessServer = server
 local MAX_SPHERES = 10
@@ -229,6 +230,9 @@ local EXCLUSIVE, COMBO_SKILLS = {}, {}
 local function refusal(e, id, kind, skill, lvl, a, b)
 	if id ~= HOMUN then return nil end
 	if not (skillKnown[skill] and lvl <= skillKnown[skill]) then return "not learned" end
+	if skillDelayUntil[skill] and now < skillDelayUntil[skill] then
+		return ("after-cast delay, %d ms left"):format(skillDelayUntil[skill] - now)
+	end
 	if cooldownUntil[skill] and now < cooldownUntil[skill] then
 		return ("cooldown, %d ms left"):format(cooldownUntil[skill] - now)
 	end
@@ -263,7 +267,9 @@ local function recordCast(kind, id, lvl, skill, a, b)
 		local castTime = serverCastTime(skill, lvl)
 		local castEnd = now + castTime
 		-- the client stops calling AI() while casting and during after-cast delay
-		e.busyUntil = castEnd + serverField(skill, "delay", lvl)
+	e.busyUntil = castEnd + 200
+	local skillDelay = serverField(skill, "delay", lvl)
+	if skillDelay > 0 then skillDelayUntil[skill] = castEnd + skillDelay end
 		-- rAthena starts the cooldown when the skill goes off (skill_castend_*)
 		local cd = serverField(skill, "cooldown", lvl)
 		if cd > 0 then cooldownUntil[skill] = castEnd + cd end
