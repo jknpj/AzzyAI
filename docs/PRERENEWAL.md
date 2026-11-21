@@ -115,3 +115,10 @@ code: it is the Renewal product.
   and 13 skills.
 - Still open: the last unreachable branches, the Renewal damage fixture used by
   the private-server scenarios, and a pre-re audit of the skill timings.
+
+## Version
+
+The version number follows the AzzyAI it was forked from (2.1.1), so this is
+**AzzyAI Pre-Renewal 2.2.0**: the 2.x line of *this* product, not an upgrade of
+the Renewal AI. Releases are tagged `prere-vX.Y.Z` to keep the two apart; the
+`main` branch keeps the plain `vX.Y.Z` tags.
