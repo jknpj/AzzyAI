@@ -118,7 +118,6 @@ code: it is the Renewal product.
 
 ## Version
 
-The version number follows the AzzyAI it was forked from (2.1.1), so this is
-**AzzyAI Pre-Renewal 2.2.0**: the 2.x line of *this* product, not an upgrade of
-the Renewal AI. Releases are tagged `prere-vX.Y.Z` to keep the two apart; the
+This is **AzzyAI Pre-Renewal 1.0.0**, its own version line: not an upgrade of the
+Renewal AI (which stays on 2.x). Releases are tagged `pre-revX.Y.Z` to keep the two apart; the
 `main` branch keeps the plain `vX.Y.Z` tags.

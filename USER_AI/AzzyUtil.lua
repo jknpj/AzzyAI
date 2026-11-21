@@ -4,7 +4,7 @@
 -- it is reccomended that you use the seperately available
 -- version, which does not utilize AAI-specific systems. 
 -- Written by Dr. Azzy of iRO Chaos
-AUVersion="2.2"
+AUVersion="1.0"
 -------------------------------
 
 -- Empties a per-tick table without allocating a new one (keeps GC pressure down).

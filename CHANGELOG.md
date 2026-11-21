@@ -4,11 +4,12 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.2.0**
+**Current release: 1.0.0**
 
-## 2.2.0
+## 1.0.0
 
-**AzzyAI Pre-Renewal 2.2.0**
+**AzzyAI Pre-Renewal 1.0.0** — first release of this branch. The 2.x
+sections below are the history of the AI it was forked from.
 
 Pre-Renewal release. This branch is the Pre-Renewal build of AzzyAI: the four
 original homunculi, the Pre-Renewal database, no Homunculus S and no Renewal

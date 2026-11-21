@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: ["**"]
-    tags: ["v*", "prere-v*"]
+    tags: ["v*", "pre-rev*"]
   pull_request:
   workflow_dispatch:
 
