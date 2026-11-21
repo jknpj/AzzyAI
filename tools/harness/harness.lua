@@ -285,8 +285,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 		if false then
 			-- spirit-sphere skills hit once per sphere left after paying their cost
 			spheresAtHit = server.spheres
-			if skill == MH_BLAZING_AND_FURIOUS then server.spheres = 0 end
-			if skill == MH_THE_ONE_FIGHTER_RISES then server.spheres = math.min(MAX_SPHERES, server.spheres + 1) end
 			if false then
 				server.style = server.style == "fighting" and "grappling" or "fighting"
 			end

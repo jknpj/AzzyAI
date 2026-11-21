@@ -3481,8 +3481,7 @@ function AI(myid)
 	if CastSkill~=0 then
 		local castskillold = CastSkill
 		local castskilloldlvl = CastSkillLevel -- remember these for the SP watcher down below. 
-		local needsExplicitConfirmation = MyHomunType == ELEANOR
-			and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER or CastSkill == MH_STYLE_CHANGE)
+		local needsExplicitConfirmation = false
 		local skillcastingtime = GetSkillInfo(CastSkill,4,CastSkillLevel)+GetSkillInfo(CastSkill,5,CastSkillLevel)*CastTimeRatio
 		logappend("AAI_SKILLFAIL", "Skillfail Watcher active: "..FormatSkill(CastSkill,CastSkillLevel).."mode"..CastSkillMode.."delay "..LastAIDelay.." motion "..GetV(V_MOTION,MyID))
 		-- the client doesn't call AI() while casting, so the first call after a pause is when the cast
