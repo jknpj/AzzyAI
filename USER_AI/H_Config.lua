@@ -87,7 +87,6 @@ PVPmode                  = 0
 DefensiveBuffOwnerMobbed = 0
 LastSavedDate            = "Default Configuration LATAM"
 LagReduction             = 0
-HealOwnerBreeze          = 0
 DoNotAttackMoving        = 0
 UseSmartBulwark          = 0
 

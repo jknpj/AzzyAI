@@ -61,7 +61,6 @@ UseVanilCaprice 		= 1
 AutoSkillDelay          	= 400 
 AoEMaximizeTargets					=  0
 CastTimeRatio				= .5
-HealOwnerBreeze				=0
 
 -- Monster database (MobInfo.lua)
 UseMobInfo					=1	-- 0 = ignore the monster database
