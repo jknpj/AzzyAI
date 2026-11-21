@@ -57,6 +57,8 @@ Ejecuta `AzzyAIConfig.exe` desde la carpeta `AI\USER_AI` instalada. Edita los ar
 esa carpeta, incluso si se abre desde un acceso directo. Revisa la ruta que muestra el pie
 antes de guardar.
 
+![La ventana de configuración de AzzyAI](native-gui.png)
+
 La aplicación aún no tiene firma de código, así que SmartScreen puede mostrar "Windows
 protegió tu PC" en una descarga nueva (un antivirus también puede marcar un ejecutable
 pequeño y poco descargado). El código está en este repositorio y el CI genera ese archivo
@@ -94,9 +96,9 @@ logs, la configuración, las tácticas y extras, `Types\*.lua` y los archivos de
 los IDs de dueño reemplazados por `<owner>`. **Help** muestra la versión y los enlaces a la
 documentación, la web GUI y el formulario de problema.
 
-### Navegador
+### Navegador (sin Windows)
 
-Abre [la web GUI](https://jknpj.github.io/AzzyAI-webgui/).
+¿Sin Windows, o prefieres el navegador? Abre [la web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Elige **AzzyAI** (no el Classic), tu idioma y **File > Open USER_AI folder** para abrir la
 carpeta instalada en el juego. **Help > Export diagnostics for a bug report...** arma el mismo paquete
 que la aplicación de Windows (un `.zip` con el informe de inicio, los logs, la configuración y los

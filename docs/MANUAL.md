@@ -56,6 +56,8 @@ Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits the file
 beside its executable, even if launched from a shortcut. Check the configuration
 location shown in the footer before saving.
 
+![The AzzyAI Configuration window](native-gui.png)
+
 The app has no code signature yet, so SmartScreen can show "Windows protected your PC"
 for a fresh download (an antivirus may also flag a small, rarely downloaded executable).
 The source is in this repository and CI builds that file from it; to continue, click
@@ -91,9 +93,9 @@ tactics and extra files, `Types\*.lua` and the `data` files, with owner IDs repl
 `<owner>`. **Help** shows the version and links to the documentation, the web GUI and the
 issue form.
 
-### Browser application
+### Browser application (no Windows)
 
-Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).
+No Windows, or prefer a browser? Open [the web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Choose **AzzyAI** (not Classic), your language, then **File > Open USER_AI folder** and
 select the folder installed in the game. **Help > Export diagnostics for a bug report...** builds the
 same bundle as the Windows application (a `.zip` with the startup report, the logs, the configuration
