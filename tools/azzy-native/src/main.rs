@@ -892,7 +892,14 @@ impl App {
         }
         if self.unit == Unit::Homunculus {
             if let Some(id) = self.skill_filter {
-                if self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id) {
+                let names = Self::skill_settings(id);
+                if !names.is_empty() {
+                    if !names.contains(&option.name.as_str()) {
+                        return false;
+                    }
+                } else if self.skill_has_settings(id)
+                    && self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id)
+                {
                     return false;
                 }
             }
@@ -1000,7 +1007,22 @@ impl App {
             || (self.unit == Unit::Homunculus && self.skill_filter.is_some())
     }
 
+    /// Settings that drive this skill, including options shared by several skills
+    /// (Healing Hands and Chaotic Blessing both come from UseAutoHeal, for example).
+    fn skill_settings(id: u32) -> &'static [&'static str] {
+        match id {
+            8001 | 8014 => &["UseAutoHeal"],
+            8004 => &["UseOffensiveBuff"],
+            8009 => &["UseFilirMoon"],
+            8016 => &["UseVanilSelfDestruct"],
+            _ => &[],
+        }
+    }
+
     fn skill_has_settings(&self, id: u32) -> bool {
+        if !Self::skill_settings(id).is_empty() {
+            return true;
+        }
         self.schema()
             .options
             .iter()
