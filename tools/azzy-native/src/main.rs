@@ -869,7 +869,12 @@ impl App {
         if self.unit == Unit::Homunculus {
             if let Some(id) = self.skill_filter {
                 // A skill without settings of its own leaves the grid alone.
-                if self.skill_has_settings(id)
+                let names = Self::skill_settings(id);
+                if !names.is_empty() {
+                    if !names.contains(&option.name.as_str()) {
+                        return false;
+                    }
+                } else if self.skill_has_settings(id)
                     && self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id)
                 {
                     return false;
@@ -981,7 +986,22 @@ impl App {
 
     /// True when at least one setting drives this skill. The panel lists every skill of the
     /// type, but only the ones with settings can filter the grid.
+    /// Settings that drive this skill, including options shared by several skills
+    /// (Healing Hands and Chaotic Blessing both come from UseAutoHeal, for example).
+    fn skill_settings(id: u32) -> &'static [&'static str] {
+        match id {
+            8001 | 8014 => &["UseAutoHeal"],
+            8004 => &["UseOffensiveBuff"],
+            8009 => &["UseFilirMoon"],
+            8016 => &["UseVanilSelfDestruct"],
+            _ => &[],
+        }
+    }
+
     fn skill_has_settings(&self, id: u32) -> bool {
+        if !Self::skill_settings(id).is_empty() {
+            return true;
+        }
         self.schema()
             .options
             .iter()
