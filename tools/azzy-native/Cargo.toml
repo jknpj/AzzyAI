@@ -9,6 +9,9 @@ description = "Prototype of the AzzyAI configuration GUI in Rust (egui)"
 name = "azzy-native"
 path = "src/main.rs"
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
 [dependencies]
 serde_json = "1"
 azzy-config = { path = "../azzy-config" }

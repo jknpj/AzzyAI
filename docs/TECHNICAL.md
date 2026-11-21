@@ -43,8 +43,8 @@ changed, and the "Current release" line in `CHANGELOG.md`, add the changes to
 `CHANGELOG.md`, run the harness, commit, and tag the
 commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
 `USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
-`cargo build --release -p azzy-native --manifest-path tools/Cargo.toml` is only needed to
-test the app before committing. The tag run builds
+`cargo build --release -p azzy-native --manifest-path tools/Cargo.toml` is only needed to test the app before committing. The tag run builds
+
 `AzzyAI.zip` and publishes it as a release, using the matching `## <version>` section of
 `CHANGELOG.md` as the release body - that section is the release note, so write it for
 the player.
@@ -186,6 +186,7 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 - casts the server would refuse stay within `maxRefused`, also across a simulated map change (`reloadAt`).
 
 A file under `fixtures/Types/` replaces the matching `Types/<homunculus>.lua` in the sandbox, so the scenarios always exercise the generic presets even when a branch ships a tuned one (the `hero` branch's Eleanor preset).
+
 
 When automatic Eleanor combos are enabled, their starters wait for `AutoComboSpheres`, so Sonic Claw does not spend the spheres needed for its follow-ups. With automatic combos disabled, starters only require their normal sphere cost. New skills retain their priority and can consume spheres before a combo starts.
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.

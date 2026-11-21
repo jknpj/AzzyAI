@@ -88,6 +88,48 @@ enum UpdateState {
     Failed(String),
 }
 
+/// Which type-specific settings belong to each Homunculus S and base homunculus, copied from
+/// webgui/app.js (S_TYPES/BASE_TYPES). The "Settings for" selector filters the grid with them, the
+/// same way the web GUI does: an S shows its own settings plus every base homunculus's, a base
+/// homunculus shows only its own, and Global shows everything.
+const S_TYPES: [(&str, &[&str]); 5] = [
+    ("sera", &["paralyze", "poisonmist", "painkiller", "calllegion"]),
+    (
+        "eira",
+        &["silentbreeze", "healownerbreeze", "xenoslasher", "erasercutter", "overedboost", "regene"],
+    ),
+    (
+        "eleanor",
+        &["sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode", "spheretrackinterval"],
+    ),
+    ("bayeri", &["stahlhorn", "hailege", "goldene", "steinwand", "angriffs"]),
+    ("dieter", &["lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic"]),
+];
+const BASE_TYPES: [(&str, &[&str]); 4] = [
+    ("lif", &["escape"]),
+    ("amistr", &["bulwark", "castle", "bloodlust", "provokeowner"]),
+    ("filir", &["flit", "accel", "moon", "speed", "sbr44"]),
+    ("vanilmirth", &["caprice", "chaotic", "selfdestruct"]),
+];
+
+fn classify(
+    name: &str,
+    table: &'static [(&'static str, &'static [&'static str])],
+) -> Option<&'static str> {
+    let lower = name.to_lowercase();
+    for (key, needles) in table {
+        if lower.contains(key) {
+            return Some(key);
+        }
+        for needle in *needles {
+            if lower.contains(needle) {
+                return Some(*key);
+            }
+        }
+    }
+    None
+}
+
 /// Per-homunculus overrides in USER_AI/Types/<Name>.lua (webgui/app.js TYPE_NAMES).
 const TYPE_NAMES: [&str; 9] = [
     "Lif",
@@ -823,9 +865,31 @@ impl App {
         }
     }
 
+    /// Whether the selected "Settings for" type should list this setting (webgui `homVisible`).
+    fn type_visible(&self, name: &str) -> bool {
+        let Some(scope) = self.type_selected else {
+            return true;
+        };
+        let scope = scope.to_lowercase();
+        let s_type = classify(name, &S_TYPES);
+        let b_type = if s_type.is_some() { None } else { classify(name, &BASE_TYPES) };
+        if S_TYPES.iter().any(|(key, _)| *key == scope.as_str()) {
+            // an S keeps every base homunculus's settings visible
+            !matches!(s_type, Some(kind) if kind != scope)
+        } else {
+            if s_type.is_some() {
+                return false;
+            }
+            !matches!(b_type, Some(kind) if kind != scope)
+        }
+    }
+
     // The category is its own filter: the tab counts must ignore it, or every other category
     // reads "0" as soon as one is selected.
     fn matches(&self, option: &OptionDef, category: Option<&str>) -> bool {
+        if !self.type_visible(&option.name) {
+            return false;
+        }
         if self.unit == Unit::Homunculus {
             if let Some(id) = self.skill_filter {
                 if self.skills.for_setting(&option.name).map(|skill| skill.id) != Some(id) {
@@ -2153,28 +2217,35 @@ impl App {
                         for skill in list {
                             let active = self.skill_filter == Some(skill.id);
                             let (rect, response) = ui.allocate_exact_size(
-                                egui::vec2(22.0, 22.0),
+                                egui::vec2(28.0, 28.0),
                                 egui::Sense::click(),
                             );
+                            // Like the web GUI's .skill-btn: a 24 px icon with 2 px padding, no
+                            // frame at rest, a subtle border on hover and a primary ring when active.
                             let fill = if active {
-                                p.primary
+                                p.primary.gamma_multiply(0.15)
                             } else if response.hovered() {
                                 p.panel2
                             } else {
-                                p.btn1
+                                egui::Color32::TRANSPARENT
                             };
-                            ui.painter().rect_filled(rect, egui::Rounding::same(3.0), fill);
-                            ui.painter().rect_stroke(
-                                rect,
-                                egui::Rounding::same(3.0),
-                                egui::Stroke::new(
-                                    1.0_f32,
-                                    if active { p.primary } else { p.btn_border },
-                                ),
-                            );
+                            ui.painter().rect_filled(rect, egui::Rounding::same(4.0), fill);
+                            if active {
+                                ui.painter().rect_stroke(
+                                    rect,
+                                    egui::Rounding::same(4.0),
+                                    egui::Stroke::new(1.0_f32, p.primary),
+                                );
+                            } else if response.hovered() {
+                                ui.painter().rect_stroke(
+                                    rect,
+                                    egui::Rounding::same(4.0),
+                                    egui::Stroke::new(1.0_f32, p.btn_border),
+                                );
+                            }
                             let icon = egui::Rect::from_center_size(
                                 rect.center(),
-                                egui::vec2(18.0, 18.0),
+                                egui::vec2(24.0, 24.0),
                             );
                             ui.painter().image(
                                 texture.id(),
@@ -3315,6 +3386,36 @@ mod tests {
         }
         let version = installed_version(&root).expect("CVersion");
         assert!(version.starts_with("2."), "{version}");
+    }
+
+    #[test]
+    fn the_settings_for_type_filters_the_grid() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
+        let mut paths = BTreeMap::new();
+        for (key, file) in [("H", "H_Config.lua"), ("M", "M_Config.lua")] {
+            let path = root.join(file);
+            if !path.is_file() {
+                return;
+            }
+            paths.insert(key, path);
+        }
+        let mut app = App::new(&paths, false).unwrap();
+        // a Homunculus S shows its own settings plus every base homunculus's
+        app.type_selected = Some("Dieter");
+        assert!(app.type_visible("UseDieterLavaSlide"));
+        assert!(app.type_visible("UseLifEscape"));
+        assert!(!app.type_visible("UseEiraTwisterCutter"));
+        assert!(app.type_visible("AggroHP"));
+        // a base homunculus shows only its own and hides every S
+        app.type_selected = Some("Lif");
+        assert!(app.type_visible("UseLifEscape"));
+        assert!(!app.type_visible("UseDieterLavaSlide"));
+        assert!(!app.type_visible("UseEiraTwisterCutter"));
+        assert!(app.type_visible("AggroHP"));
+        // Global shows everything
+        app.type_selected = None;
+        assert!(app.type_visible("UseDieterLavaSlide"));
+        assert!(app.type_visible("UseEiraTwisterCutter"));
     }
 
     #[test]

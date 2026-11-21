@@ -6,31 +6,32 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 **Current release: 2.1.0**
 
-## Unreleased (branch `hero`)
+## Unreleased
 
-Server-specific fixes on top of 2.1.0; the `main` branch is unchanged.
-
-- Fixed: a Tinder Breaker cast the client watcher fails to confirm no longer clears
-  the combo window or the sphere estimate. In the live log 28 Tinders produced only
-  19 CBCs before; after the fix 14 of 14 produced a CBC, and a miss no longer forces
-  a 154 SP The One Fighter Rises refill.
-- Fixed: area skills (The One Fighter Rises, Blazing and Furious) can no longer
-  override a grapple step chosen in the same tick, nor fire while the combo window
-  is open.
-- Fixed: Eternal Quick Combo has no after-cast delay on rAthena/private servers, but
-  the AI waited 1.2 s per cycle. The private-server skill override now matches
-  rAthena, and Tinder Breaker's 500 ms reuse is tracked so the chain restart is not
-  refused. Measured: EQC to next cast 1281 ms → 281 ms, ~15% more chain starts per
+- Fixed: Eternal Quick Combo has no after-cast delay on rAthena/private servers, but the
+  AI waited 1.2 s per cycle. The private-server skill override now matches rAthena, and
+  Tinder Breaker's 500 ms reuse is tracked so the chain restart is not refused. Measured
+  on the hero client: EQC to next cast 1281 ms -> 281 ms, ~15% more chain starts per
   active minute.
-- Fixed: skill damage scoring uses base level 250 on official servers and 275 on
-  private ones (the Hero cap), instead of 275 everywhere.
-- Changed: removed helpers with no caller from `AzzyUtil.lua` (`GetSnipeSkill`,
-  `Closer`, `ClosestR`, `GetFASDirection`, `IsHiddenOnScreen`, `IsPVPFriend`,
-  `modulo`, `len`) and the `EQC skip` diagnostic log branches.
 - Fixed (harness): `azzy-harness` applies `fixtures/Types/*.lua` to the sandbox, so a
-  branch with a tuned preset (this one) still runs the generic scenarios.
-- Docs: text-only banner in three languages (`docs/banner.svg`, `.es.svg`,
-  `.pt-BR.svg`) with an unofficial-project notice, replacing the previous blue one.
+  branch or preset that changes `Types/<homunculus>.lua` still runs the generic
+  scenarios.
+- Docs: text-only banner in three languages (`docs/banner.svg`, `.es.svg`, `.pt-BR.svg`)
+  with an unofficial-project notice, replacing the previous blue one.
+
+On the `hero` branch only:
+
+- Fixed: a Tinder Breaker cast the client watcher fails to confirm no longer clears the
+  combo window or the sphere estimate. Live log: 28 Tinders produced only 19 CBCs
+  before; after the fix 14 of 14 produced a CBC, and a miss no longer forces a 154 SP
+  The One Fighter Rises refill.
+- Fixed: area skills (The One Fighter Rises, Blazing and Furious) can no longer override
+  a grapple step chosen in the same tick, nor fire while the combo window is open.
+- Fixed: skill damage scoring uses base level 250 on official servers and 275 on private
+  ones (the Hero cap), instead of 275 everywhere.
+- Changed: removed helpers with no caller from `AzzyUtil.lua` (`GetSnipeSkill`, `Closer`,
+  `ClosestR`, `GetFASDirection`, `IsHiddenOnScreen`, `IsPVPFriend`, `modulo`, `len`) and
+  the `EQC skip` diagnostic log branches.
 
 ## 2.1.0
 

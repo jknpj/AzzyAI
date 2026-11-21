@@ -61,6 +61,9 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
   edits go to `Types/<Name>.lua`; a value equal to the global one removes the override, so only
   the differences are saved. "Use global values" removes every override of that type. The file
   keeps its comments/formatting and the footer path follows the selected type.
+- The same selector **filters the grid like the web GUI**: choosing a Homunculus S lists its own
+  settings plus every base homunculus's, a base homunculus lists only its own (every S hidden),
+  and Global lists everything.
 - A config now tracks line additions/removals (`is_modified()`), so removing an override or an
   appended option still enables Apply and rewrites the file.
 - **Files** (navbar): export every configuration file (including unapplied edits) to a folder,
@@ -88,6 +91,8 @@ otherwise). It never writes anything into USER_AI.
 
 The window and the navbar use the real `webgui/azzyai.ico`, converted once to
 `data/azzyai-48.rgba` (48x48, raw RGBA) so egui can use it without an image-loading dependency.
+The executable also carries the same `.ico` as a Windows resource (`build.rs`/`winres`), so Explorer
+and the file's properties show the AzzyAI icon and version instead of a blank document.
 The **skill icons** from `webgui/img/skills` (50 PNGs) are packed once into
 `data/skill-icons.rgba` (20x20 tiles, 8 columns) with `data/skills.json` holding the ids, the
 homunculus, the names and the same `match` substrings as `webgui/skills.js`. The Homunculus tab
