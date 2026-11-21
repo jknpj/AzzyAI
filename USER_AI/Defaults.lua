@@ -188,7 +188,7 @@ TrustSkillProbe		=-1
 SkillLevelProbing	=1
 
 -- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
--- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).
+-- Selects the actor ID ranges used to tell players, monsters and summons apart.
 ServerType		=SERVER_OFFICIAL
 -- 1 = switch to SERVER_PRIVATE by itself on seeing a monster with an rAthena/Hercules ID
 -- (110000000+); official monster IDs are far below that. Otherwise, with the wrong ServerType,

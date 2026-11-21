@@ -92,14 +92,8 @@ SkillList[VANILMIRTH][HVAN_SELFDESTRUCT]=3
 --SkillInfo[id][8]=Duration (ms)
 --SkillInfo[id][9]=Reuse Delay (ms)
 
--- Official profile target: LATAM Episode 19 Isgard (4th class balance patch, 2026-10-27/29), which
--- already includes kRO's 2025-06-18 homunculus update and Homunculus S Lv250 (2026-05-28).
--- Primary source: the LATAM client data on Divine Pride (API, x-server: LATAM), fetched on 2026-10-30
--- with tools/harness/divinepride_sync.py: per-level fixed/variable cast, after-cast delay and cooldown
--- Where LATAM gives no number: SP between the lowest and highest level, Overed Boost duration and the
--- level tables of skills 8044+ (empty on Divine Pride) come from the current kRO client descriptions
--- (github.com/llchrisll/ROenglishRE) and bROWiki (browiki.org/wiki/<PT name>); ranges given as "-"
--- keep AzzyAI's values. Private overrides use rAthena Renewal.
+-- Skill timings: the official client values, pending a Pre-Renewal audit against
+-- rAthena db/pre-re/skill_db.yml (Pre-Renewal has no fixed cast time).
 SkillInfo={}
 SkillInfo[0]={"No Skill",{0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0,0}}
 -- Homunculus Skills

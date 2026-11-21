@@ -396,7 +396,6 @@ SCENARIOS = {
 	-- try again until LEARNED_SKILL_RECHECK_SECONDS have passed.
 
 	-- The official client answers some learned skills with the "not learned" filler (see
-	-- ProbeAnswerPlausible). On LATAM that came back for Lava Slide: the startup lint disabled
 	-- to be tried; the server is the only authority on its level. OldHomunType 0 keeps inherited
 	-- the same client answer for a skill the homunculus never learned: the ladder ends at 0, so the
 	-- AI stops requesting a cast the server refuses instead of resending it forever
