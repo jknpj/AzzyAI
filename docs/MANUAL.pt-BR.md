@@ -58,6 +58,8 @@ Execute `AzzyAIConfig.exe` na pasta `AI\USER_AI` instalada. Ele edita os arquivo
 pasta, mesmo quando aberto por um atalho. Confira o caminho mostrado no rodapé antes de
 salvar.
 
+![A janela de configuração do AzzyAI](native-gui.png)
+
 O app ainda não tem assinatura de código, então o SmartScreen pode mostrar "O Windows
 protegeu o computador" em um download novo (um antivírus também pode sinalizar um
 executável pequeno e pouco baixado). O código está neste repositório e o CI gera esse
@@ -95,9 +97,9 @@ configuração, os arquivos de tactics e extras, `Types\*.lua` e os arquivos de 
 os IDs de dono trocados por `<owner>`. **Help** mostra a versão e os links para a
 documentação, a web GUI e o formulário de problema.
 
-### Navegador
+### Navegador (sem Windows)
 
-Abra a [web GUI](https://jknpj.github.io/AzzyAI-webgui/).
+Sem Windows, ou prefere o navegador? Abra a [web GUI](https://jknpj.github.io/AzzyAI-webgui/).
 Escolha **AzzyAI** (não o Classic), o idioma e **File > Open USER_AI folder** para abrir a
 pasta instalada no jogo. **Help > Export diagnostics for a bug report...** monta o mesmo pacote do
 aplicativo Windows (um `.zip` com o relatório de inicialização, os logs, a configuração e os níveis de

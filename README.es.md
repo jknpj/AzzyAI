@@ -91,7 +91,7 @@ repositorio con nombre parecido o un README copiado no hace oficial una descarga
 
 ## Créditos
 
-Basado en AzzyAI de Dr. Azzy / [SpenceKonde](https://github.com/SpenceKonde/AzzyAI),
+Basado en AzzyAI de Dr. Azzy (Spence Konde, [@SpenceKonde](https://github.com/SpenceKonde/AzzyAI)),
 con contribuciones de [samufacanha2](https://github.com/samufacanha2/AzzyAI),
 [Kisaro](https://github.com/Kisaro/AzzyAI) y
 [vorpal1337](https://github.com/vorpal1337). Sitio original: [drazzy.com](http://drazzy.com/ro/ai).
