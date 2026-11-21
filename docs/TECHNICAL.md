@@ -43,7 +43,7 @@ changed, and the "Current release" line in `CHANGELOG.md`, add the changes to
 `CHANGELOG.md`, run the harness, commit, and tag the
 commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
 `USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
-`tools\build-gui.cmd` is only needed to test the app before committing. The tag run builds
+`cargo build --release -p azzy-native --manifest-path tools/Cargo.toml` is only needed to test the app before committing. The tag run builds
 `AzzyAI.zip` and publishes it as a release, using the matching `## <version>` section of
 `CHANGELOG.md` as the release body — that section is the release note, so write it for
 the player.
@@ -183,6 +183,8 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 - the homunculus still does normal attacks;
 - official/private server overrides are applied;
 - casts the server would refuse stay within `maxRefused`, also across a simulated map change (`reloadAt`).
+
+A file under `fixtures/Types/` replaces the matching `Types/<homunculus>.lua` in the sandbox, so the scenarios always exercise the generic presets even when a branch ships a tuned one.
 
 When automatic Eleanor combos are enabled, their starters wait for `AutoComboSpheres`, so Sonic Claw does not spend the spheres needed for its follow-ups. With automatic combos disabled, starters only require their normal sphere cost. New skills retain their priority and can consume spheres before a combo starts.
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.
@@ -349,7 +351,7 @@ To ensure the AI functions correctly on your server, set the `ServerType` variab
 
 With the wrong value on a private server every monster looks like a player and the homunculus never attacks. To avoid that, `AutoDetectServerType = 1` (default) switches to `SERVER_PRIVATE` by itself as soon as it sees a monster with an rAthena/Hercules ID (110000000 or more) and logs it in `AAI_ERROR`. It is skipped if the config sets `MagicNumber`/`MagicNumber2`/`MagicNumber3`.
 
-`ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026): cast times, after-cast delays, cooldowns, durations, AoE sizes and sphere costs come from the LATAM client data on Divine Pride (`cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- [--server LATAM] [--refresh]`; it needs a free API key in `DIVINEPRIDE_API_KEY` and writes a git-ignored JSON), with kRO's client text and bROWiki filling the few gaps. `ServerSkillOverrides` lists only the rAthena Renewal values that differ (a few ranges, cooldowns, durations, AoE sizes and CBC's sphere cost) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
+`ServerType` also selects the homunculus skill data. `H_SkillList.lua` holds the official values, targeting LATAM Episode 19 (Isgard, October 2026): cast times, after-cast delays, cooldowns, durations, AoE sizes and sphere costs come from the LATAM client data on Divine Pride (`cargo run --release --manifest-path tools/Cargo.toml -p divinepride-sync -- [--server LATAM] [--refresh]`; it needs a free API key in `DIVINEPRIDE_API_KEY` and writes a git-ignored JSON), with kRO's client text and bROWiki filling the few gaps. `ServerSkillOverrides` lists only the rAthena Renewal values that differ (a few ranges, cooldowns, durations, AoE sizes, CBC's sphere cost and EQC's after-cast delay) and replaces them under `SERVER_PRIVATE`. The comments above both tables record the sources, the audit date and the differences that were deliberately not copied.
 
 ### Monster Database
 `USER_AI/MobInfo.lua` lists the race, element, element level, size, boss/MVP/plant/immobile flags and attack range of every monster, the element damage table and the element of each homunculus attack skill. It is generated from rAthena Renewal (`db/re/mob_db.yml`, `attr_fix.yml`, `skill_db.yml`) by `tools/rathena-sync`. The homunculus reads a monster's ID with `GetV(V_HOMUNTYPE)`, so it uses the database without any setup; mercenaries only know monster IDs from MobID files and are not affected.

@@ -6,6 +6,17 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 **Current release: 2.1.0**
 
+## Unreleased
+
+- Fixed: Eternal Quick Combo has no after-cast delay on rAthena/private servers, but the
+  AI waited 1.2 s per cycle. The private-server skill override now matches rAthena, and
+  Tinder Breaker's 500 ms reuse is tracked so the chain restart is not refused.
+- Fixed (harness): `azzy-harness` applies `fixtures/Types/*.lua` to the sandbox, so a
+  branch or preset that changes `Types/<homunculus>.lua` still runs the generic
+  scenarios.
+- Docs: text-only banner in three languages (`docs/banner.svg`, `.es.svg`, `.pt-BR.svg`)
+  with an unofficial-project notice, replacing the previous blue one.
+
 ## 2.1.0
 
 Minor release: the desktop configuration app is now the **native Rust GUI**, shipped as

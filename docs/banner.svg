@@ -1,52 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="320" viewBox="0 0 1100 320" role="img" aria-labelledby="t d">
   <title id="t">AzzyAI for Ragnarok Online</title>
-  <desc id="d">Banner: AzzyAI, homunculus and mercenary AI for Ragnarok Online. RO LATAM and private servers, Windows app and Web GUI.</desc>
+  <desc id="d">Banner: AzzyAI, homunculus and mercenary AI for Ragnarok Online.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0a1628"/>
-      <stop offset="0.6" stop-color="#0f2a4d"/>
-      <stop offset="1" stop-color="#1a4a7a"/>
+    <linearGradient id="bg" x2="0.6" y2="1">
+      <stop stop-color="#0a1220"/><stop offset="0.55" stop-color="#16283a"/><stop offset="1" stop-color="#070d17"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#5cc8ff"/>
-      <stop offset="1" stop-color="#9b8cff"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#5cc8ff" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#5cc8ff" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.5" cy="0.35" r="0.6">
+      <stop stop-color="#d7a94c" stop-opacity="0.16"/><stop offset="1" stop-color="#d7a94c" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="gold" x2="1" y2="0">
+      <stop stop-color="#b77b2e"/><stop offset="0.5" stop-color="#ffe7a1"/><stop offset="1" stop-color="#b77b2e"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#a9c1d2" stroke-opacity="0.05"/>
+    </pattern>
   </defs>
 
-  <rect width="1200" height="280" rx="18" fill="url(#bg)"/>
-  <circle cx="930" cy="140" r="230" fill="url(#glow)"/>
+  <rect width="1100" height="320" fill="url(#bg)"/>
+  <rect width="1100" height="320" fill="url(#grid)"/>
+  <ellipse cx="720" cy="130" rx="420" ry="240" fill="url(#glow)"/>
 
-  <g stroke="#5cc8ff" stroke-opacity="0.45" stroke-width="2" fill="none">
-    <path d="M760 140 L860 70 L980 70 L1060 140"/>
-    <path d="M760 140 L860 210 L980 210 L1060 140"/>
-    <path d="M860 70 L860 210"/>
-    <path d="M980 70 L980 210"/>
-    <path d="M1060 140 L1130 140"/>
-    <path d="M700 140 L760 140"/>
-  </g>
-  <g fill="#0a1628" stroke="url(#accent)" stroke-width="3">
-    <circle cx="760" cy="140" r="14"/>
-    <circle cx="860" cy="70" r="11"/>
-    <circle cx="980" cy="70" r="11"/>
-    <circle cx="860" cy="210" r="11"/>
-    <circle cx="980" cy="210" r="11"/>
-    <circle cx="1060" cy="140" r="14"/>
-  </g>
-  <g fill="url(#accent)">
-    <circle cx="760" cy="140" r="6"/>
-    <circle cx="1060" cy="140" r="6"/>
-    <circle cx="1130" cy="140" r="9"/>
-  </g>
+  <text x="550" y="60" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="14" fill="#d9b66f" letter-spacing="3">HOMUNCULUS AI</text>
+  <text x="547" y="146" text-anchor="middle" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-1.2" fill="#f3eee2">AzzyAI</text>
+  <rect x="400" y="166" width="300" height="2.5" rx="1.2" fill="url(#gold)"/>
+  <text x="550" y="206" text-anchor="middle" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="18" fill="#a9bcc9">Smarter companions. Customizable behavior.</text>
+  <text x="550" y="234" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="14" fill="#d9b66f" letter-spacing="1.5">USER AI   -   OFFICIAL / PRIVATE</text>
+  <text x="550" y="264" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="12" fill="#7d90a0" letter-spacing="1.2">LIF  ·  AMISTR  ·  FILIR  ·  VANILMIRTH  ·  BAYERI  ·  DIETER  ·  EIRA  ·  SERA  ·  ELEANOR</text>
 
-  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
-    <text x="60" y="52" font-size="15" font-weight="600" letter-spacing="3" fill="#5cc8ff">RAGNAROK ONLINE</text>
-    <text x="58" y="132" font-size="84" font-weight="700" fill="#ffffff">AzzyAI</text>
-    <rect x="60" y="152" width="120" height="5" rx="2.5" fill="url(#accent)"/>
-    <text x="60" y="196" font-size="26" fill="#d6e6f7">Homunculus and mercenary AI</text>
-    <text x="60" y="240" font-size="17" fill="#8fb3d9">Homunculus  ·  Mercenary  ·  RO LATAM  ·  Private servers  ·  Windows app  ·  Web GUI</text>
-  </g>
+  <path d="M56 288H1044" stroke="#d7b36a" stroke-opacity="0.22"/>
+  <text x="56" y="308" font-family="Consolas, Courier New, monospace" font-size="12" fill="#7d90a0" letter-spacing="1.2">COMMUNITY HOMUNCULUS AI PROJECT</text>
+  <text x="1044" y="308" text-anchor="end" font-family="Consolas, Courier New, monospace" font-size="12" fill="#7d90a0" letter-spacing="1.2">UNOFFICIAL FAN PROJECT - NOT AFFILIATED WITH GRAVITY CO., LTD.</text>
 </svg>
