@@ -49,16 +49,26 @@ páginas de conteúdo (revisado em 17/11/2026).
   no padrão da IA (`BossAggro=1`), só receberiam reação.
 
 ### `USER_AI/H_SkillList.lua`
-- `SkillDamageBaseLevel = 275` (era 250) — o nível máximo do servidor é 275/65;
-  alinha a pontuação de dano das skills usada para escolher entre elas. Não afeta
-  as skills de esfera da Eleanor (Tinder/CBC/EQC ficam fora desse cálculo), mas
-  deixa o cálculo correto para os outros homúnculos.
+- `SkillDamageBaseLevel` fica **250** na tabela e `ApplyServerType()` sobe para **275**
+  quando `ServerType = SERVER_PRIVATE` — o nível máximo do servidor é 275/65; assim o
+  valor certo vale no Hero sem contaminar o cliente oficial. Não afeta as skills de
+  esfera da Eleanor (Tinder/CBC/EQC ficam fora desse cálculo), mas deixa o cálculo
+  correto para os outros homúnculos.
+- `ServerSkillOverrides[SERVER_PRIVATE][MH_EQC]` zera o after-cast delay
+  (`[6] = 0,0,0,0,0`): o rAthena não tem delay no EQC e o dado "oficial" (1 s) custava
+  **1,2 s** por ciclo (o `DoSkill` soma o `AutoSkillDelay`).
 
 ### `USER_AI/AI_main.lua`
 - Fallback de Sonic Claw (que trocava para Fighting) agora exige `UseEleanorSonicClaw == 1`.
 - TOFR credita **10 esferas** no sucesso confirmado (o cliente só reporta +1).
 - Quando o watcher falha em confirmar CBC/EQC, a janela de combo **não é limpa**
   (o cliente não reporta motion/SP confiável; limpar matava o EQC).
+- O mesmo vale para o **Tinder**: falso negativo do watcher não zera a janela nem a
+  estimativa de esferas. Antes, 28 Tinders viravam só 19 CBCs e cada falha forçava um
+  TOFR de 154 SP.
+- Skills de área (TOFR/Blazing) não podem sobrescrever um passo do combo escolhido no
+  mesmo tick, nem entrar enquanto a janela (`ComboSCTimeout`/`ComboSVTimeout`) está
+  aberta.
 
 ### `USER_AI/AzzyUtil.lua`
 - `GetGrappleSkill`: Tinder não reinicia enquanto a janela de combo está aberta.
@@ -66,12 +76,28 @@ páginas de conteúdo (revisado em 17/11/2026).
 - `SkillCastResult`: CBC/EQC nunca sofrem step-down de nível (confirmação unreliable).
 - `GetNewMobSkill`: TOFR não é escolhido enquanto `ComboSCTimeout`/`ComboSVTimeout`
   estão ativos — senão o `DoSkill` do TOFR zera as janelas e drena SP (154 por cast).
+- `AutoSkillCooldown` passa a rastrear o **Tinder Breaker** (500 ms de reuse); com o
+  EQC sem after-cast, o próximo Tinder era pedido cedo e recusado pelo servidor.
+- Removidos helpers sem chamador (`GetSnipeSkill`, `Closer`, `ClosestR`,
+  `GetFASDirection`, `IsHiddenOnScreen`, `IsPVPFriend`, `modulo`, `len`) e os logs
+  `EQC skip`, que só escreviam durante a janela.
 
 ## Estado
 
-A cadeia funciona com razoável consistência, mas ainda falha às vezes. A janela
-de combo é **server-side** e não está em nenhum arquivo do cliente; o `skill_db`
-do Hero Saga seria necessário para acertar os gaps de vez.
+O combo está estável. No log do cliente 1.6, **14 de 14** Tinders viraram CBC e 12
+chegaram ao EQC; o intervalo EQC → próximo cast caiu de **1281 ms para 281 ms** e o
+início de cadeia subiu ~15% por minuto ativo. O servidor aceita a próxima skill
+~250 ms depois do EQC (confirmando o after-cast zero) e o Tinder não é mais pedido
+dentro dos 500 ms de reuse.
+
+A janela de combo continua **server-side** e não está em nenhum arquivo do cliente;
+o `skill_db` do Hero Saga seria necessário para acertar os gaps com precisão total.
+
+## Harness neste branch
+
+O `azzy-harness` aplica `tools/harness/fixtures/Types/*.lua` por cima do sandbox:
+sem isso, o `Types/Eleanor.lua` deste branch (preset do servidor) fazia cinco
+cenários Eleanor falharem por rodarem com a config errada. Suíte: **141/141**.
 
 ** Não tentar de novo:** um sequenciador `SkillObject` direto no `H_Extra.lua`
 que assumia o controle total da Eleanor. Com a IA normal junto, os dois
