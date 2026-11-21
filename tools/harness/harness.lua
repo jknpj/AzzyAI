@@ -31,8 +31,6 @@ end
 -- rAthena server data (RA_SKILL, RA_HOMUN, RA_MOB), base homunculi only
 local haveRathena = pcall(dofile, HERE .. "fixtures/rathena.lua")
 if not haveRathena then RA_SKILL, RA_HOMUN, RA_MOB = nil, nil, nil end
--- damage model (see damage.lua) and the stats of the test server's max-level homunculi
-dofile(HERE .. "damage.lua")
 pcall(dofile, HERE .. "fixtures/homun_stats.lua")
 
 -- The simulated server: on private servers (rAthena) its skill data comes from RA_SKILL,
@@ -179,7 +177,6 @@ local function swing(e, t)
 	e.motion = MOTION_ATTACK
 	t.hitsTaken = (t.hitsTaken or 0) + 1
 	HarnessOnHomunAttack(e, t)
-	HarnessDamageAttack(t)
 end
 function Attack(id, target)
 	local e, t = world[id], world[target]
@@ -290,7 +287,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 				server.combo = nil
 			end
 		end
-		if id == HOMUN then HarnessDamageCast(e, kind, a, b, skill, lvl, spheresAtHit) end
 	end
 	casts[#casts + 1] = { t = now, kind = kind, skill = skill, name = name, lvl = lvl, a = a, b = b, ok = ok,
 		refused = why ~= nil, why = why, sp = e.sp }
@@ -309,101 +305,6 @@ function HarnessMonsters()
 	return r
 end
 
--- Damage model (damage.lua). Expected damage of every accepted cast and every normal attack,
--- on private-server scenarios with rAthena data. HarnessDamage is available to scenario checks.
-HarnessDamage = { totals = {}, order = {}, total = 0, unmodelled = {} }
-local dmg = HarnessDamage
-local function dmgAdd(key, amount)
-	local t = dmg.totals[key]
-	if not t then t = { damage = 0, uses = 0 }; dmg.totals[key] = t; dmg.order[#dmg.order + 1] = key end
-	t.damage, t.uses = t.damage + amount, t.uses + 1
-	dmg.total = dmg.total + amount
-end
--- monsters without rAthena data count as the test server's training dummy (azzy_training.txt):
--- a Poring set to Neutral 1 with 0 DEF, MDEF and FLEE
-local TRAINING_DUMMY = { level = 1, vit = 1, int = 0, agi = 1, def = 0, mdef = 0, flee = 0, element = "Neutral", elv = 1 }
-local function monsterStatus(m)
-	if not m.dmgStatus then m.dmgStatus = Damage.mobStatus(m.ra or TRAINING_DUMMY, m.dmgOver) end
-	return m.dmgStatus
-end
--- stats of the simulated homunculus: the scenario's `stats`, else the profile of its type
-function HarnessDamageSetup(scenarioDef)
-	dmg.start = now
-	if not (serverRathena and RA_SKILL) then return end
-	local profile = scenarioDef.stats
-	if not profile then
-		for name, p in pairs(HOMUN_PROFILES or {}) do
-			if _G[name] == scenarioDef.homuntype then profile = p end
-		end
-	end
-	if profile then dmg.hs = Damage.homunStatus(profile, scenarioDef.statusOptions) end
-end
-function HarnessDamageAttack(target)
-	if dmg.hs then dmgAdd("Normal attack", Damage.attack(dmg.hs, monsterStatus(target))) end
-end
--- monsters a skill reaches: the target and its splash area (or ground unit layout)
-local function skillTargets(ra, lvl, kind, a, b, caster)
-	local cx, cy
-	if kind == "gnd" then cx, cy = a, b
-	elseif a == caster.id then cx, cy = caster.x, caster.y
-	elseif world[a] then cx, cy = world[a].x, world[a].y end
-	local list = {}
-	if not cx then return list end
-	local area = math.max(ra.splash[math.min(lvl, #ra.splash)] or 0, ra.layout[math.min(lvl, #ra.layout)] or 0)
-	for _, m in pairs(world) do
-		if m.monster and (m.id == a or chebyshev(m, { x = cx, y = cy }) <= area) then list[#list + 1] = m end
-	end
-	return list
-end
-function HarnessDamageCast(caster, kind, a, b, skill, lvl, spheres)
-	if not dmg.hs then return end
-	local why = Damage.unmodelled(skill)
-	if why then
-		if why ~= "deals no damage" then dmg.unmodelled[skill] = why end
-		return
-	end
-	local ra = RA_SKILL[skill]
-	local targets = skillTargets(ra, lvl, kind, a, b, caster)
-	local ticks, total = Damage.ticks(skill, lvl), 0
-	for _, m in ipairs(targets) do
-		local one = Damage.skill(dmg.hs, skill, lvl, monsterStatus(m), { targets = #targets, spheres = spheres })
-		total = total + one * ticks
-	end
-	dmgAdd(ra.name, total)
-end
-local function thousands(n)
-	local s = ("%d"):format(math.floor(n))
-	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
-	return (out:gsub("^,", ""))
-end
--- printed with HARNESS_DAMAGE=1: expected totals, DPS and what each skill contributed
-function HarnessDamageReport()
-	if not dmg.hs or #dmg.order == 0 then return {} end
-	local seconds = math.max((now - dmg.start) / 1000, 0.001)
-	local out = { ("    damage: %s in %.1f s = %s DPS (expected value, rAthena %s)"):format(
-		thousands(dmg.total), seconds, thousands(dmg.total / seconds), (RATHENA_COMMIT or "?"):sub(1, 8)) }
-	local accepted, refusedCasts, spSpent = 0, 0, 0
-	for _, c in ipairs(casts) do
-		if c.ok then
-			accepted = accepted + 1
-			spSpent = spSpent + serverField(c.skill, "sp", c.lvl)
-		elseif c.refused then
-			refusedCasts = refusedCasts + 1
-		end
-	end
-	out[#out + 1] = ("    casts: %d accepted, %d refused by the server, %d SP spent"):format(accepted, refusedCasts, spSpent)
-	local keys = {}
-	for _, k in ipairs(dmg.order) do keys[#keys + 1] = k end
-	table.sort(keys, function(x, y) return dmg.totals[x].damage > dmg.totals[y].damage end)
-	for _, k in ipairs(keys) do
-		local t = dmg.totals[k]
-		out[#out + 1] = ("      %-24s x%-4d %12s  (%s per use)"):format(k, t.uses, thousands(t.damage), thousands(t.damage / t.uses))
-	end
-	for skill, why in pairs(dmg.unmodelled) do
-		out[#out + 1] = ("      not modelled: %s (%s)"):format(RA_SKILL[skill].name, why)
-	end
-	return out
-end
 
 -- a normal attack by the homunculus landed on monster t
 function HarnessOnHomunAttack(h, t)
@@ -524,7 +425,6 @@ end
 loadAI()
 -- Const_.lua turns developer traces off by default; --trace enables them for the run
 TraceAIEnabled = keepTraces and 1 or 0
-HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
 for _, entry in ipairs(sc.skills) do
 	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
@@ -701,7 +601,6 @@ for _, k in ipairs(names) do summary[#summary + 1] = k .. " x" .. counts[k] end
 print(("%-16s %s attacks=%d casts: %s"):format(scenario, #failures == 0 and "PASS" or "FAIL", attacks,
 	table.concat(summary, ", ")))
 for _, f in ipairs(failures) do print("    - " .. f) end
-if os.getenv("HARNESS_DAMAGE") == "1" then for _, line in ipairs(HarnessDamageReport()) do print(line) end end
 if os.getenv("HARNESS_TRACE") == "1" then for _, t in ipairs(traces) do print("  TRACE " .. t) end end
 if profile and aiCalls > 0 then
 	collectgarbage("collect")
