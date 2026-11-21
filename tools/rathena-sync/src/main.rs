@@ -98,7 +98,7 @@ fn usage(msg: &str) -> ExitCode {
 fn run(args: &Args) -> Result<(), String> {
     let client = fetch::Client::new()?;
     let sha = client.resolve_ref(&args.reference)?;
-    let pre = args.era == "pre";
+    let pre = true; // this build only generates the Pre-Renewal data
     let db = if pre { "pre-re" } else { "re" };
     println!("rAthena {sha} ({db})");
 
