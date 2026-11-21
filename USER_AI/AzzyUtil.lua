@@ -4075,16 +4075,6 @@ function LintSkillOptions(myid, logstring)
     -- A master list of all homunculus-specific skill options, grouped by type.
     -- { "Use" option, "Level" option (or nil), skill_constant, friendly_skill_name }
     local allSkillOptions = {
-        [BAYERI] = {
-            { "UseBayeriStahlHorn", "BayeriStahlHornLevel", MH_STAHL_HORN, "Stahl Horn" },
-            { "UseBayeriHailegeStar", "BayeriHailegeStarLevel", MH_HEILIGE_STANGE, "Heilige Stange" },
-            { "UseBayeriAngriffModus", nil, MH_ANGRIFFS_MODUS, "Angriffs Modus" },
-            { "UseBayeriGoldenPherze", nil, MH_GOLDENE_FERSE, "Goldene Ferse" },
-            { "UseBayeriSteinWand", "BayeriSteinWandLevel", MH_STEINWAND, "Stein Wand" },
-            { "UseBayeriGlanzenSpies", "BayeriGlanzenSpiesLevel", MH_GLANZEN_SPIES, "Glanzen Spies" },
-            { "UseBayeriHeiligePferd", "BayeriHeiligePferdLevel", MH_HEILIGE_PFERD, "Heilige Pferd" },
-            { "UseBayeriGoldeneTone", "BayeriGoldeneToneLevel", MH_GOLDENE_TONE, "Goldene Tone" }
-        },
         [SERA] = {
             { "UseSeraParalyze", "SeraParalyzeLevel", MH_NEEDLE_OF_PARALYZE, "Needle of Paralyze" },
             { "UseSeraPoisonMist", "SeraPoisonMistLevel", MH_POISON_MIST, "Poison Mist" },

@@ -2457,18 +2457,6 @@ function DoAutoBuffs(buffmode)
 			end
 		end
 	end
-	if UseBayeriSteinWand == buffmode and SteinWandTimeout~=-1 then
-		if GetTick() > SteinWandTimeout  then
-			if ((GetAggroCount(MyID) >= UseSteinWandSelfMob and UseSteinWandSelfMob~=0) or (GetAggroCount(OwnerID) >= UseSteinWandOwnerMob and UseSteinWandOwnerMob~=0))
-					and GetSkillInfo(MH_STEINWAND,3,BayeriSteinWandLevel) <= GetV(V_SP,MyID) then
-					DoSkill(MH_STEINWAND,BayeriSteinWandLevel,MyID,10)
-					-- the wall breaks after 4+lv hits, so retry once the reuse delay is over instead of waiting the whole duration
-					SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,9,BayeriSteinWandLevel)
-					return
-				end
-			
-		end
-	end
 	if (UseAutoMag == buffmode and MagTimeout ~=-1) then
 		if (GetTick() > MagTimeout) then
 			local reportedMercType = GetV(V_MERTYPE,MyID)
