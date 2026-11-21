@@ -4,9 +4,14 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.1.1**
+**Current release: 2.2.0**
 
-## Unreleased (Pre-Renewal branch)
+## 2.2.0
+
+Pre-Renewal release. This branch is the Pre-Renewal build of AzzyAI: the four
+original homunculi, the Pre-Renewal database, no Homunculus S and no Renewal
+damage model. See [docs/PRERENEWAL.md](docs/PRERENEWAL.md).
+
 
 The `prerenewal` branch is a separate product: AzzyAI for Pre-Renewal servers
 (episode 13.2 era). It is not "Renewal with options off": the Renewal data and
