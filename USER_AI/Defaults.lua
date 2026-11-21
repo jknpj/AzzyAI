@@ -17,8 +17,6 @@ MyPVPTact={}
 -- Basic Options
 AggroHP                  = 60
 AggroSP                  = 0
-OldHomunType			= 3
--- Set after the first successful base type detection (Homunculus S only); see GetDetectedHomunType.
 DetectedOldHomunType = nil
 NextHomunTypeProbe = 0
 UseSkillOnly			=-1 
@@ -57,56 +55,13 @@ UseKyrieOwner			= 0
 AttackSkillReserveSP  = 0 
 AutoMobMode			=1 
 AutoMobCount		=5
-AutoComboMode		=1
-AutoComboSpheres	=1
 UseAutoPushback		=0
 AutoPushbackThreshold		=2
-UseHomunSSkillChase 		= 1
-UseHomunSSkillAttack 		= 1 
 UseVanilCaprice 		= 1
 AutoSkillDelay          	= 400 
 AoEMaximizeTargets					=  0
 CastTimeRatio				= .5
-UseEiraXenoSlasher			=0 
-EiraXenoSlasherLevel		=4 
-UseEiraEraseCutter			=1
-EiraEraseCutterLevel		=4 
-UseEiraSilentBreeze		= 0
-EiraSilentBreezeLevel	=5 
-UseBayeriStahlHorn			=1
-BayeriStahlHornLevel		=5
-UseBayeriHailegeStar		=1
-BayeriHailegeStarLevel		=5
-UseBayeriSteinWand			=0
-BayeriSteinWandLevel		=5
-UseSteinWandSelfMob			=2
-UseSteinWandOwnerMob		=2
-UseSteinWandTele			=0 
-SteinWandTelePause 			=3000
-UseSeraParalyze				=1
-SeraParalyzeLevel			=5
-UseSeraPoisonMist			=0 
-SeraPoisonMistLevel			=5
-UseSeraCallLegion			=1 
-SeraCallLegionLevel			=5
-UseEleanorSonicClaw			=1
-EleanorSonicClawLevel		=5
-EleanorSilverveinLevel		=5
-EleanorMidnightLevel		=5
-UseEleanorTinderBreaker		=1
-UseDieterLavaSlide			=1 
-DieterLavaSlideLevel		=10
--- 0 = cast Poison Mist / Lava Slide as attack skills; other values use them as AoE buffs
-PoisonMistMode				=0
-LavaSlideMode				=0
-UseDieterVolcanicAsh		=0
--- 1 = Dieter also casts Volcanic Ash as an attack skill (needs UseDieterVolcanicAsh = 1 and skills allowed by the tactics), without needing the debuff tactic
-UseDieterAshAsAttack		=0
-AshMaximizeTargets			=0
 HealOwnerBreeze				=0
-PainkillerFriends			=0
-PainkillerFriendsSave		=0
-EleanorDoNotSwitchMode		=0
 
 -- Monster database (MobInfo.lua)
 UseMobInfo					=1	-- 0 = ignore the monster database
@@ -131,15 +86,6 @@ LifEscapeLevel  =5
 FilirFlitLevel  =1
 FilirAccelLevel =1
 AmiBulwarkLevel =5
-UseSeraPainkiller = 0
-
-UseBayeriAngriffModus	=0
-UseBayeriGoldenPherze	=0
-UseDieterMagmaFlow	=0
-UseDieterGraniticArmor	=0
-UseDieterPyroclastic	=0
-DieterPyroclasticLevel	=10
-UseEiraOveredBoost		=0
 
 --AutoHeal Options:
 HealSelfHP		= 50 
@@ -190,10 +136,6 @@ AutoSkillLimit		= 0
 ChaseGiveUp              = 6
 AttackGiveUp		=10 
 FollowTryPanic		=3 
-SphereTrackFactor	=2 -- Eleanor: hits counted per spirit sphere (the server gives one per 2 hits on average)
-SphereTrackInterval     = 800 -- minimum ms between estimated fighting-style hits
-EleanorComboGap         = 500 -- Eleanor: ms to wait before each combo follow-up
-EleanorComboDance       = 1 -- Eleanor: 1 = keep dancing between combo skills to cancel animations
 CastInterruptLimit      = 3 -- confirmed offensive cast interruptions before a pause; 0 disables
 CastInterruptPause      = 5000 -- temporary per-skill pause in ms
 CastInterruptUnconfirmed = 0 -- also count offensive failures without visible casting; may include refusals
@@ -205,7 +147,6 @@ UseBerserkAttack         = 0
 Berserk_SkillAlways      = 0
 Berserk_Dance            = 0
 Berserk_IgnoreMinSP      = 0
-Berserk_ComboAlways      = 0
 
 --Misc settings:
 StandbyFriending         = 1  
@@ -261,13 +202,6 @@ MagicNumber		=nil
 MagicNumber2		=nil
 MagicNumber3		=nil
 
-
-
--- Homun S stuff
-
-
-
-
 FriendAttack={}			--Set these to 1 to have homun attack 
 				--the target of a friend/owner when the friend is:
 FriendAttack[MOTION_ATTACK]=1	--Attacking normally
@@ -291,7 +225,6 @@ BasicDebuffs[MER_DECAGI]=	1
 BasicDebuffs[MA_SANDMAN]=	1
 BasicDebuffs[MA_FREEZINGTRAP]=	1
 
---Guard, Quicken, Mag, SOffensive, SDefensive, SOwnerBuff, Sight/under-owner-ground, style change, Provoke/Painkiller
 -- Guard and Quicken retry once only: a refusal there is usually "buff still active" (the official server), which retrying can't fix.
 SkillRetryLimit = {
   [1]=1, [2]=1, [3]=4, [4]=3, [5]=3, [6]=3, [7]=3, [8]=0, [9]=2, [10]=2, [11]=3, [12]=3, [13]=3
@@ -305,39 +238,8 @@ LogEnable["AAI_CLOSEST"]=0
 LogEnable["AAI_Lag"]=0
 
 -- New Homunculus S Skills Defaults
-UseEiraTwisterCutter = 0
-EiraTwisterCutterLevel = 10
-UseEiraAbsoluteZephyr = 0
-EiraAbsoluteZephyrLevel = 10
-UseEleanorBlazingAndFurious = 0
-EleanorBlazingAndFuriousLevel = 10
-UseEleanorTheOneFighterRises = 0
-EleanorTheOneFighterRisesLevel = 10
-UseSeraToxinOfMandara = 0
-SeraToxinOfMandaraLevel = 10
-UseSeraNeedleStinger = 0
-SeraNeedleStingerLevel = 10
-UseBayeriGlanzenSpies = 0
-BayeriGlanzenSpiesLevel = 10
-UseBayeriHeiligePferd = 0
-BayeriHeiligePferdLevel = 10
-UseBayeriGoldeneTone = 0
-BayeriGoldeneToneLevel = 10
-UseDieterTempering = 0
-UseDieterBlastForge = 0
--- Light of Regenerate: if the owner dies while it is active, the Eira sacrifices itself to
 -- resurrect them. Needs Loyal intimacy and drops it on every cast, so it is off by default.
-UseEiraLightOfRegene = 0
-EiraLightOfRegeneLevel = 5
-EiraLightOfRegeneOwnerHP = 100
 
--- New Eleanor Defaults
-UseEleanorTinderBreaker		=1
-EleanorTinderBreakerLevel	=5
-UseEleanorCBC				=1
-EleanorCBCLevel				=5
-UseEleanorEQC				=1
-EleanorEQCLevel				=5
 -- New Amistr Defaults
 AllowBloodlust            	=0
 AllowSBR44					=0

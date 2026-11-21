@@ -233,7 +233,7 @@ SCENARIOS = {
 				local expected = {
 					AoEFixedLevel = 1, UseBerserkMobbed = 0, UseBerserkSkill = 0,
 					UseBerserkAttack = 0, Berserk_SkillAlways = 0, Berserk_Dance = 0,
-					Berserk_IgnoreMinSP = 0, Berserk_ComboAlways = 0,
+					Berserk_IgnoreMinSP = 0,
 				}
 				for name, value in pairs(expected) do
 					assert(rawget(defaults, name) == value, "missing or incorrect fallback: " .. name)
