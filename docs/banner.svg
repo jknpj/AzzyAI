@@ -30,7 +30,7 @@
   <rect x="400" y="178" width="300" height="2.5" rx="1.2" fill="url(#accent)"/>
   <text x="550" y="218" text-anchor="middle" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="18" fill="#b6c7d9">Smarter companions. Customizable behavior.</text>
   <text x="550" y="246" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="14" fill="#8db4e0" letter-spacing="1.5">USER AI   -   OFFICIAL / PRIVATE</text>
-  <text x="550" y="268" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="12" fill="#7d93ad" letter-spacing="1.2">LIF  ·  AMISTR  ·  FILIR  ·  VANILMIRTH  ·  BAYERI  ·  DIETER  ·  EIRA  ·  SERA  ·  ELEANOR</text>
+  <text x="550" y="268" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="12" fill="#7d93ad" letter-spacing="1.2">LIF  ·  AMISTR  ·  FILIR  ·  VANILMIRTH  ·</text>
 
   <path d="M56 292H1044" stroke="#3f6fa0" stroke-opacity="0.40"/>
   <text x="56" y="312" font-family="Consolas, Courier New, monospace" font-size="12" fill="#6f87a3" letter-spacing="1.2">COMMUNITY HOMUNCULUS AI PROJECT</text>

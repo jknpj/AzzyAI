@@ -2465,7 +2465,7 @@ function GetSAtkSkill(myid)
 	local level = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if htype > 47 then -- it's a Homun S
+		if htype > 47 then
    if false then
 			end
 		end
@@ -2606,7 +2606,7 @@ function GetMobSkill(myid)
 		htype=MyHomunType
 		if htype <17 then
 			skill=0
-		else -- it's a homun s
+		else
    if false then
 			end 
 			if AutoSkillCooldown[skill]~=nil then
