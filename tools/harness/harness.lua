@@ -544,10 +544,6 @@ serverRules()
 HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
 -- like the test server's benchmark after a manual Style Change
-if sc.startStyle == "grappling" then
-	server.style = "grappling"
-	EleanorMode = GRAPPLING_MODE
-end
 for _, entry in ipairs(sc.skills) do
 	-- "MH_TOXIN_OF_MANDARA:3" = learned at level 3; no suffix = every level
 	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
@@ -655,9 +651,6 @@ for tick = 1, TICKS do
 	-- sc.incomingHitMs: an attacker the AI never sees (the test server's stationary dummy that
 	-- hits every 2 s) lands a hit on the homunculus every that many ms: damage motion for the
 	-- client, and a 50% sphere chance in grappling style
-	if sc.incomingHitMs and h.homuntype == ELEANOR and now % sc.incomingHitMs == 0 then
-		h.motion, h.damageUntil = MOTION_DAMAGE, now + 200
-	end
 	if now % 1000 == 0 then
 		h.sp = math.min(h.maxsp, h.sp + (sc.spregen or 10))
 		-- every monster attacking the homunculus lands one hit per second
