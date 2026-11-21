@@ -242,6 +242,11 @@ LintUserOptions		=1
 -- 0 = treat it as a hint only (the official client answers it wrongly): skills are tried anyway.
 -- -1 = automatic: 0 on the official server, 1 on private servers.
 TrustSkillProbe		=-1
+-- 1 = ask the client which skill levels are learned (probe) and adapt, the normal mode.
+-- 0 = never probe: always request the level set in the options/preset, capped to the skill's
+-- maximum for that homunculus, and never step it down when the server refuses. Use it on a
+-- server whose probe answers cannot be trusted.
+SkillLevelProbing	=1
 
 -- SERVER_OFFICIAL (0) or SERVER_PRIVATE (1, rAthena/Hercules). Set it in H_Config/M_Config.
 -- Also selects homunculus skill data: official = LATAM values, private = rAthena Renewal (see ServerSkillOverrides in H_SkillList).

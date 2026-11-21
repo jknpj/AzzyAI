@@ -519,7 +519,17 @@ SCENARIOS = {
 			end,
 		} },
 	bayeri = { homuntype = 49, skills = BAYERI_SKILLS, mobs = cluster,
-		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" } },
+		expect = { "Heilige Stange", "Stahl Horn", "Stein Wand", "Goldene Tone", "Angriffs Modus" },
+		checks = {
+			["skill level probing can be turned off"] = function()
+				local saved = SkillLevelProbing
+				SkillLevelProbing = 0
+				local cap = GetSkillLevelCap(MH_STAHL_HORN)
+				local level = GetCastableSkillLevel(MH_STAHL_HORN, 3)
+				SkillLevelProbing = saved
+				return cap == SkillList[BAYERI][MH_STAHL_HORN] and level == 3
+			end,
+		} },
 	-- damage-aware defence: HP drops inside the 3 s window trigger it only below DamageDangerHP;
 	-- heals and old samples do not count
 	damage_danger = { homuntype = 49, skills = BAYERI_SKILLS, mobs = single, set = { UseDamageDanger = 1 },
