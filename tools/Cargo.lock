@@ -122,14 +122,6 @@ name = "azzy-config"
 version = "0.1.0"
 
 [[package]]
-name = "azzy-gui"
-version = "0.1.0"
-dependencies = [
- "azzy-update",
- "serde_json",
-]
-
-[[package]]
 name = "azzy-harness"
 version = "0.1.0"
 dependencies = [

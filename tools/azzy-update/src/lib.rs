@@ -197,38 +197,49 @@ fn timestamp() -> String {
     format!("{secs}")
 }
 
-/// The tag of the latest GitHub release, e.g. `v2.0.1`. Falls back to the newest git tag when the
-/// repository has no releases. `None` when it has neither (404).
+/// Tag prefix of this product's releases (`main` keeps the plain `vX.Y.Z`).
+pub const RELEASE_PREFIX: &str = "pre-rev";
+
+/// The tag of the latest release of this product. Only tags carrying RELEASE_PREFIX are
+/// considered, so the Renewal releases on the same repository are never offered here; `None`
+/// when there is none.
 pub fn latest_release_tag(repo: &str) -> Result<Option<String>, String> {
     let client = reqwest::blocking::Client::builder()
         .user_agent("azzy-native")
         .timeout(std::time::Duration::from_secs(20))
         .build()
         .map_err(|e| e.to_string())?;
-    let release = format!("https://api.github.com/repos/{repo}/releases/latest");
-    let response = client.get(&release).send().map_err(|e| format!("{release}: {e}"))?;
+    let pick = |body: &str| -> Option<String> {
+        let value: serde_json::Value = serde_json::from_str(body).ok()?;
+        value
+            .as_array()?
+            .iter()
+            .filter_map(|e| {
+                e.get("tag_name")
+                    .or_else(|| e.get("name"))
+                    .and_then(|v| v.as_str())
+            })
+            .find(|tag| tag.starts_with(RELEASE_PREFIX))
+            .map(str::to_string)
+    };
+    let releases = format!("https://api.github.com/repos/{repo}/releases?per_page=50");
+    let response = client
+        .get(&releases)
+        .send()
+        .map_err(|e| format!("{releases}: {e}"))?;
     if response.status().is_success() {
-        let body = response.text().map_err(|e| format!("{release}: {e}"))?;
-        let value: serde_json::Value =
-            serde_json::from_str(&body).map_err(|e| format!("{release}: {e}"))?;
-        return Ok(value.get("tag_name").and_then(|v| v.as_str()).map(str::to_string));
+        let body = response.text().map_err(|e| format!("{releases}: {e}"))?;
+        if let Some(tag) = pick(&body) {
+            return Ok(Some(tag));
+        }
     }
-    if response.status().as_u16() != 404 {
-        return Err(format!("{release}: HTTP {}", response.status().as_u16()));
-    }
-    let tags = format!("https://api.github.com/repos/{repo}/tags?per_page=1");
+    let tags = format!("https://api.github.com/repos/{repo}/tags?per_page=100");
     let response = client.get(&tags).send().map_err(|e| format!("{tags}: {e}"))?;
     if !response.status().is_success() {
         return Err(format!("{tags}: HTTP {}", response.status().as_u16()));
     }
     let body = response.text().map_err(|e| format!("{tags}: {e}"))?;
-    let value: serde_json::Value = serde_json::from_str(&body).map_err(|e| format!("{tags}: {e}"))?;
-    Ok(value
-        .as_array()
-        .and_then(|list| list.first())
-        .and_then(|entry| entry.get("name"))
-        .and_then(|v| v.as_str())
-        .map(str::to_string))
+    Ok(pick(&body))
 }
 
 /// True when `latest` (a tag such as `v2.0.2`) sorts after `installed` (`2.0.1`). Anything that is
@@ -236,6 +247,7 @@ pub fn latest_release_tag(repo: &str) -> Result<Option<String>, String> {
 pub fn newer_version(latest: &str, installed: &str) -> bool {
     fn parts(text: &str) -> Vec<u64> {
         text.trim()
+            .trim_start_matches(RELEASE_PREFIX)
             .trim_start_matches(['v', 'V'])
             .split(['.', '-', '+'])
             .take(3)
