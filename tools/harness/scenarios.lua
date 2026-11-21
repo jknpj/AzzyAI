@@ -411,16 +411,8 @@ SCENARIOS = {
 	-- after a map change the saved level is used right away: no refused casts
 	-- the player levelled Toxin between sessions: the periodic level-up try picks it up
 
-
-	-- skill picking by SkillDamage score: Twister Cutter beats Eraser Cutter on a neutral target...
 	-- ...but not on Earth 1, which takes 90% from Wind
 	-- low SP: compared by damage per SP, so the cheap Eraser Cutter wins
-
-	-- a pack is worth her AoE: SP is saved for The One Fighter Rises instead of being spent on combo chains
-	-- a lone target only gets The One Fighter Rises when its DEF makes the combos too weak
-	-- Grappling without spheres while nothing hits her (the owner tanks): she can't start Tinder
-	-- Breaker and would never gain spheres, so she switches back to fighting style
-	-- recover spheres and switched her to fighting style against the preset
 
 	-- many monsters on screen: must keep fighting and not error out
 	-- GetBestAoECoord / GetBestAoETarget (optimized) must pick exactly what the old brute-force
@@ -1231,5 +1223,4 @@ SCENARIOS = {
 			["it is not mistaken for a homunculus"] = function() return IsHomun(MyID) == 0 end,
 		} },
 }
-
 

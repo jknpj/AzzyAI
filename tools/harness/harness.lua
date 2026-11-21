@@ -224,10 +224,7 @@ local COMBO_WINDOW = 2000
 
 -- skill.cpp skill_isNotOk_hom; filled in once the AI has defined the skill constants
 
--- sphere costs: rAthena's on private servers, AzzyAI's official SkillSphereCost (LATAM) otherwise
-
 -- battle.cpp: 50% chance per hit dealt (fighting) or taken (grappling); the harness gives
--- one sphere every second hit so runs stay reproducible
 
 -- why the server would refuse this cast, or nil. Everything but range answers "Skill failed";
 -- an out-of-range request is dropped silently (unit_skilluse_id2 returns 0)
@@ -283,7 +280,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 			end
 		end
 		if false then
-			-- spirit-sphere skills hit once per sphere left after paying their cost
 			spheresAtHit = server.spheres
 			if false then
 				server.style = server.style == "fighting" and "grappling" or "fighting"
@@ -293,7 +289,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 			else
 				server.combo = nil
 			end
-			-- skill damage counts as a hit for fighting-style spheres
 		end
 		if id == HOMUN then HarnessDamageCast(e, kind, a, b, skill, lvl, spheresAtHit) end
 	end
@@ -531,7 +526,6 @@ loadAI()
 TraceAIEnabled = keepTraces and 1 or 0
 HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
--- like the test server's benchmark after a manual Style Change
 for _, entry in ipairs(sc.skills) do
 	local name, lvl = entry:match("^([%w_]+):?(%d*)$")
 	assert(_G[name], "unknown skill constant " .. name)
@@ -637,7 +631,6 @@ for tick = 1, TICKS do
 	if h.motion == MOTION_DAMAGE and now >= (h.damageUntil or 0) then h.motion = MOTION_STAND end
 	-- sc.incomingHitMs: an attacker the AI never sees (the test server's stationary dummy that
 	-- hits every 2 s) lands a hit on the homunculus every that many ms: damage motion for the
-	-- client, and a 50% sphere chance in grappling style
 	if now % 1000 == 0 then
 		h.sp = math.min(h.maxsp, h.sp + (sc.spregen or 10))
 		-- every monster attacking the homunculus lands one hit per second

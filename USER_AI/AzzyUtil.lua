@@ -2914,7 +2914,6 @@ function GetSnipeSkill(myid)
 end
 
 -- When several skill types are usable on the same cycle, the higher priority wins.
--- Types not listed (debuff, combo, grapple, minion) are never overridden by damage skills.
 SkillTypePriority={}
 SkillTypePriority[-1]=-1
 SkillTypePriority[MAIN_ATK]=0
@@ -2929,7 +2928,6 @@ function SkillTypeOutranks(newtype,curtype)
 	return newp > curp
 end
 
--- Expected value of casting an attack skill with a SkillDamage entry on target (nil without one):
 -- ratio x monsters hit (tactics weight x element rate, as AoE counts) x DEF reduction, divided by
 -- the time the AI spends on the cast, or by its SP cost when perSP is true.
 function SkillPickScore(skill, level, target, perSP)
@@ -2971,7 +2969,6 @@ function SkillPickBySP()
 end
 
 -- Whether candidate newc ({type, skill, level}) should replace the current pick cur, both cast at
--- their level capped to levelcap. Damage skills with SkillDamage entries are compared by
 -- SkillPickScore; anything else falls back to the skill-type order.
 function PickBetterSkill(newc, cur, target, levelcap)
 	local function isDamageType(t)
@@ -3037,7 +3034,6 @@ function IsSkillReady(skill, ignoreSpheres)
 	if AutoSkillCooldown~=nil and AutoSkillCooldown[skill]~=nil and GetTick() < AutoSkillCooldown[skill] then
 		return false
 	end
-	-- without enough spirit spheres the server only answers "Skill failed"
 	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
 	if not ignoreSpheres and sphereCost ~= nil and MySpheres < sphereCost then
 		return false
@@ -3096,7 +3092,6 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 	if count < needed then
 		return false
 	end
-	-- monsters when their DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win
 	return true
 end
 
@@ -3305,7 +3300,6 @@ function DoSkill(skill,level,target,mode,targx,targy)
 	else
 		if TraceAIEnabled ~= 0 then TraceAI("DoSkill: "..skill.." level:"..level.." target:"..target.." mode:"..targetmode.." delay "..delay) end
 	end
-	-- spheres the server takes for this skill (SkillSphereCost only exists in the homunculus AI)
 	local sphereCost = SkillSphereCost and SkillSphereCost[skill]
 	if sphereCost ~= nil then
 		MySpheres = math.max(0,MySpheres - sphereCost)
@@ -4077,13 +4071,8 @@ function PickReadySkill(htype,candidates)
 	return 0,0
 end
 
--- DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win. Glanzen Spies vs Stahl Horn is
--- left to SkillPickScore (SkillDamage), which reproduces the benchmark's break-even.
--- breaks even near DEF 210 and wins from there (homun_bench.py: +3% at DEF 250, +21% at DEF 500,
 -- +51% at DEF 1000, -17% at DEF 0).
 -- With a pack her Sonic Claw chains only keep SP under the AoE's price: skipping them is +19..32%
--- Blazing And Furious hits once per sphere for about 1/7 of The One Fighter Rises per hit and costs the
--- same SP, so it only pays with a lot of spheres (the minimum is set by homun_bench.py)
 
 function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then

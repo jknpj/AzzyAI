@@ -102,7 +102,6 @@ local function skillRatio(hs, skill, lvl)
 end
 
 -- hits per use: HitCount (a negative count only splits the total into that many displayed hits);
--- Sonic Claw and Blazing And Furious set it to the spheres the homunculus has
 local function hitCount(ra, skill, lvl, ctx)
 	if SPHERE_HITS[ra.name] then return math.max(ctx and ctx.spheres or 1, 1) end
 	return ra.hits[math.min(lvl, #ra.hits)] or 1
@@ -122,7 +121,6 @@ local MAGIC_UNITS = { Poison_Mist = true }
 function Damage.unmodelled(skill)
 	local ra = RA_SKILL and RA_SKILL[skill]
 	if not ra then return "no rAthena data" end
-	-- Blazing And Furious is flagged NoDamage but attacks from castendNoDamageId: a calculateSkillRatio
 	-- means the skill deals damage
 	if ra.nodamage and not (RA_RATIO and RA_RATIO[skill]) then return "deals no damage" end
 	if ra.unit and ra.unitid and not DAMAGE_UNITS[ra.unitid] then return "its unit only applies a status" end

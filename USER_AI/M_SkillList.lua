@@ -2,7 +2,6 @@
 -- The skill lists are separated because the idiots used the same numbers for homun and merc types!
 -- Converted to Lua by Dr. Azzy from
 -- Mercenary skill list posted by Neo Saro -and-
--- Homun S skill list ganked from some pserver site.
 -- All skill list and skill info values laboriously hand entered by Dr. Azzy
 -- This may be distributed and used in AIs freely
 
@@ -63,7 +62,6 @@ HVAN_CAPRICE		= 8013
 HVAN_CHAOTIC		= 8014
 HVAN_SELFDESTRUCT	= 8016
 
---Homun S Skills
 MUTATION_BASEJOB 	= 8017
 
 SkillList={}
@@ -263,8 +261,6 @@ SkillInfo[MER_ESTIMATION]={"Sense",{7},{10},{0},{0},{0},1}
 SkillInfo[MER_KYRIE]={"Kyrie Eleison",{9,9,9,9,9},{20,20,20,25,25},{0,0,0,0,0},{0,0,0,0,0},{2000,2000,2000,2000,2000},1,{120000,120000,120000,120000,120000}}
 SkillInfo[MER_BLESSING]={"Blessing",{9,9,9,9,9},{28,32,36,40,44},{0,0,0,0,0},{0,0,0,0,0},{2000,2000,2000,2000,2000},1,{60000,80000,100000,120000,140000}}
 SkillInfo[MER_INCAGI]={"Increase Agi",{9,9,9,9,9},{18,21,24,27,30},{0,0,0,0,0},{0,0,0,0,0},{2000,2000,2000,2000,2000},1,{60000,80000,100000,120000,140000}}
-
-
 
 --SkillAOEInfo[skill]={AoE size (size on a side of the AoE - by level),Target Type (0=centered on enemy, 1=centered on caster, skill-id=special - handled in GetAOECount)), other fields for future use}
 

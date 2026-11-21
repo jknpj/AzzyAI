@@ -9,9 +9,7 @@ MainVersion="2.1"
 -- AI_main is loaded after H_Config/M_Config, so ServerType is final here
 ApplyServerType()
 
-
 -- A refused starter is ambiguous; probe the other style without changing the tracked mode.
--- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
 -- for this long, go back to fighting style to build them by attacking
 
 local function IsVanilCapriceForS(skill)
@@ -31,7 +29,6 @@ AutoSkillCooldown[HAMI_CASTLE]=0
 for _,cdskill in pairs({HLIF_AVOID,HLIF_CHANGE,HAMI_DEFENCE,HAMI_BLOODLUST,HFLI_FLEET,HFLI_SPEED}) do
 	AutoSkillCooldown[cdskill]=0
 end
--- Homun S attack skills: track reuse delay so the AI doesn't spam casts that the server rejects.
 -- ComboSCTimeout/ComboSVTimeout. Tinder Breaker is tracked: with no after-cast delay on the private
 -- server the next chain would start inside the 500 ms reuse window and be refused.
 -- Sonic Claw starts the chain but is also cast on its own, so its cooldown is tracked.
@@ -3234,7 +3231,6 @@ function AI(myid)
 		MyASAPBuffs[v],MyPosX[v],MyPosY[v],OwnerPosX[v],OwnerPosY[v],EnemyPosX[v],EnemyPosY[v],MyMotions[v],MyStates[v],MyEnemies[v]=MyASAPBuffs[v-1],MyPosX[v-1],MyPosY[v-1],OwnerPosX[v-1],OwnerPosY[v-1],EnemyPosX[v-1],EnemyPosY[v-1],MyMotions[v-1],MyStates[v-1],MyEnemies[v-1]
 	end	
 	MyPosX[1],MyPosY[1],OwnerPosX[1],OwnerPosY[1],EnemyPosX[1],EnemyPosY[1],MyMotions[1],MyStates[1],MyEnemies[1]=x,y,ox,oy,ex,ey,GetV(V_MOTION,MyID),MyState,MyEnemy
-	-- Grappling style gains spheres from damage taken. Fighting style uses throttled
 	-- attack attempts in OnATTACK_ST because some clients hide our attack animation.
 	
 	if MyState==PROVOKE_ST then
@@ -3597,7 +3593,6 @@ function AI(myid)
 		if CastSkillMode == 0 then
 			RecordOffensiveCastResult(CastSkill, CastSkillLevel, true, false)
 		end
-		-- Style Change went through (any watcher branch: it has no cast time, so the instant
 		
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
@@ -3624,7 +3619,6 @@ function AI(myid)
 		RecordOffensiveCastResult(CastSkill, CastSkillLevel, false, interruptedOffensiveCast)
 		-- Only a cast that never started can be a refused level; a broken cast was accepted.
 		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
-		-- A refused sphere skill means we had fewer spheres than we thought (DoSkill already took the
 		-- cost off the estimate): fall to one short of the cost, so it takes a few more counted
 		-- hits before the AI tries again.
 		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]

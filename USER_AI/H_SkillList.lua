@@ -1,7 +1,6 @@
 -- H_SkillList.lua	v1.50.2
 -- Converted to Lua by Dr. Azzy from
 -- Mercenary skill list posted by Neo Saro -and-
--- Homun S skill list ganked from some pserver site.
 -- All skill list and skill info values laboriously hand entered by Dr. Azzy
 -- This may be distributed and used in AIs freely
 
@@ -58,10 +57,7 @@ HVAN_CAPRICE		= 8013
 HVAN_CHAOTIC		= 8014
 HVAN_SELFDESTRUCT	= 8016
 
---Homun S Skills
 MUTATION_BASEJOB 	= 8017
-
---Homun S New Skills
 
 --SkillList[homuntype][skillid]=level
 SkillList={}
@@ -100,7 +96,6 @@ SkillList[VANILMIRTH][HVAN_SELFDESTRUCT]=3
 -- already includes kRO's 2025-06-18 homunculus update and Homunculus S Lv250 (2026-05-28).
 -- Primary source: the LATAM client data on Divine Pride (API, x-server: LATAM), fetched on 2026-10-30
 -- with tools/harness/divinepride_sync.py: per-level fixed/variable cast, after-cast delay and cooldown
--- tables, plus the Portuguese client descriptions (durations, AoE sizes, sphere costs).
 -- Where LATAM gives no number: SP between the lowest and highest level, Overed Boost duration and the
 -- level tables of skills 8044+ (empty on Divine Pride) come from the current kRO client descriptions
 -- (github.com/llchrisll/ROenglishRE) and bROWiki (browiki.org/wiki/<PT name>); ranges given as "-"
