@@ -19,7 +19,7 @@ azzy-config set H_Config.lua LavaSlideMode=1   # in place, touching only that li
 `cargo test -p azzy-config` checks the properties that matter:
 
 - **round-trip byte-identical** for the shipped `H_Config.lua`, `M_Config.lua` and
-  `Types/Dieter.lua` (including the file that has no trailing newline);
+  `Types/Amistr.lua` (including the file that has no trailing newline);
 - `set` changes only the value token, keeping the trailing comment;
 - an unknown option is not appended (a typo must not invent a key);
 - section grouping follows the `-- section` comments;

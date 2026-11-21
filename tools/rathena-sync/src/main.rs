@@ -129,7 +129,6 @@ fn run(args: &Args) -> Result<(), String> {
     if pre {
         return Ok(());
     }
-    let ratios = build_ratios(&client, &sha, &name_to_id)?;
     let homun = build_homun(&load_db(&client, &sha, "db/re/homunculus_db.yml")?, &name_to_id)?;
     let mobs = build_mobs(&mobs)?;
 
@@ -167,20 +166,6 @@ fn run(args: &Args) -> Result<(), String> {
     }
     let _ = writeln!(out, "}}");
     let _ = writeln!(out);
-    let _ = writeln!(out, "-- RA_RATIO[id]: percentage added to a skill's base 100% ratio, from SkillImpl::calculateSkillRatio");
-    let _ = writeln!(out, "-- in {SKILL_SOURCE_DIR}/*.cpp. lv = skill level, blv = the caster's base level, st = its");
-    let _ = writeln!(out, "-- status (str, agi, vit, int, dex, luk). idiv truncates like C integer division.");
-    let _ = writeln!(out, "local function idiv(a, b)");
-    let _ = writeln!(out, "\tlocal q = a / b");
-    let _ = writeln!(out, "\tif q >= 0 then return math.floor(q) end");
-    let _ = writeln!(out, "\treturn -math.floor(-q)");
-    let _ = writeln!(out, "end");
-    let _ = writeln!(out, "RA_RATIO = {{");
-    for sid in ratios.keys() {
-        let (c, lua) = &ratios[sid];
-        let _ = writeln!(out, "\t[{sid}] = function(lv, blv, st) return {lua} end, -- {c}");
-    }
-    let _ = writeln!(out, "}}");
 
     std::fs::write(fetch::fixture_path(), out)
         .map_err(|e| format!("write {}: {e}", fetch::fixture_path().display()))?;
@@ -375,116 +360,8 @@ fn ai_code(v: Option<&Value>) -> String {
 
 // ---------- calculateSkillRatio translation ----------
 
-fn build_ratios(client: &fetch::Client, sha: &str, name_to_id: &BTreeMap<String, i64>) -> Result<BTreeMap<i64, (String, String)>, String> {
-    let mut ratios = BTreeMap::new();
-    let items = client.contents(sha, SKILL_SOURCE_DIR)?;
-    for item in &items {
-        let name = item["name"].as_str().unwrap_or_default().to_string();
-        if !name.ends_with(".cpp") || name.starts_with("skill_factory") { continue; }
-        let path = item["path"].as_str().unwrap_or_default().to_string();
-        let text = client.raw(sha, &path)?;
-        let Some((sid, c_expr)) = extract_ratio(&text, name_to_id) else { continue };
-        let lua = c_to_lua(&c_expr).map_err(|e| format!("{name}: {e}"))?;
-        ratios.insert(sid, (c_expr, lua));
-    }
-    Ok(ratios)
-}
 
-fn extract_ratio(text: &str, name_to_id: &BTreeMap<String, i64>) -> Option<(i64, String)> {
-    let owner = regex::Regex::new(r"SkillImpl\w*\(\s*(MH_\w+)\s*\)").unwrap()
-        .captures(text)?;
-    let sid = *name_to_id.get(owner.get(1)?.as_str())?;
-    let body = regex::Regex::new(r"(?s)::calculateSkillRatio\([^)]*\)\s*const\s*\{(.*?)\n\}").unwrap()
-        .captures(text)?.get(1)?.as_str();
-    let adds = regex::Regex::new(r"base_skillratio\s*\+=\s*([^;]+);").unwrap();
-    let mut matches = adds.captures_iter(body);
-    let first = matches.next()?.get(1)?.as_str().to_string();
-    if matches.next().is_some() { return None; }
-    // anything besides the status_data declaration and the addition means the formula is not
-    // a single expression, and a wrong model is worse than no model
-    for line in body.lines() {
-        let l = line.trim();
-        if l.is_empty() || l.starts_with("//") || l.starts_with("const status_data") || l.starts_with("base_skillratio") {
-            continue;
-        }
-        return None;
-    }
-    Some((sid, regex::Regex::new(r"\s+").unwrap().replace_all(&first, " ").trim().to_string()))
-}
 
-/// Translates the integer arithmetic of calculateSkillRatio (numbers, + - * / and parentheses,
-/// skill_lv, status_get_lv(src) and sstatus->stat) into a Lua expression; / becomes idiv().
-fn c_to_lua(expr: &str) -> Result<String, String> {
-    let mut e = regex::Regex::new(r"status_get_lv\(\s*src\s*\)").unwrap()
-        .replace_all(expr, "blv").to_string();
-    e = regex::Regex::new(r"sstatus->(\w+)").unwrap()
-        .replace_all(&e, |c: &regex::Captures| format!("st_{}", &c[1].trim_end_matches('_')))
-        .to_string();
-    e = regex::Regex::new(r"\bskill_lv\b").unwrap().replace_all(&e, "lv").to_string();
-    e = e.replace(" ", "");
-    let mut pos = 0usize;
-    fn peek(e: &str, pos: usize) -> Option<char> { e[pos..].chars().next() }
-    fn take(e: &str, pos: &mut usize) -> char {
-        let c = e[*pos..].chars().next().unwrap();
-        *pos += c.len_utf8();
-        c
-    }
-    fn ident(e: &str, pos: &mut usize) -> String {
-        let start = *pos;
-        while *pos < e.len() && (e[*pos..].chars().next().unwrap().is_ascii_alphanumeric() || e.as_bytes()[*pos] == b'_') {
-            *pos += 1;
-        }
-        e[start..*pos].to_string()
-    }
-    fn factor(e: &str, pos: &mut usize) -> Result<String, String> {
-        let c = peek(e, *pos).ok_or("unexpected end of expression")?;
-        if c.is_ascii_digit() {
-            return Ok(ident(e, pos));
-        }
-        if c.is_ascii_alphabetic() || c == '_' {
-            let id = ident(e, pos);
-            return match id.as_str() {
-                "lv" | "blv" => Ok(id),
-                _ if id.starts_with("st_") => Ok(format!("st.{}", &id[3..])),
-                _ => Err(format!("unsupported identifier {id:?}")),
-            };
-        }
-        if c == '(' {
-            *pos += 1;
-            let inner = additive(e, pos)?;
-            if take(e, pos) != ')' { return Err("missing )".into()); }
-            return Ok(format!("({inner})"));
-        }
-        if c == '-' {
-            *pos += 1;
-            return Ok(format!("(-{})", factor(e, pos)?));
-        }
-        Err(format!("unsupported character {c:?}"))
-    }
-    fn multiplicative(e: &str, pos: &mut usize) -> Result<String, String> {
-        let mut left = factor(e, pos)?;
-        while matches!(peek(e, *pos), Some('*') | Some('/')) {
-            let op = take(e, pos);
-            let right = factor(e, pos)?;
-            left = if op == '*' { format!("({left} * {right})") } else { format!("idiv({left}, {right})") };
-        }
-        Ok(left)
-    }
-    fn additive(e: &str, pos: &mut usize) -> Result<String, String> {
-        let mut left = multiplicative(e, pos)?;
-        while matches!(peek(e, *pos), Some('+') | Some('-')) {
-            let op = take(e, pos);
-            let right = multiplicative(e, pos)?;
-            left = format!("({left} {op} {right})");
-        }
-        Ok(left)
-    }
-    let out = additive(&e, &mut pos)?;
-    if pos != e.len() {
-        return Err(format!("trailing tokens at {} in {expr:?}", &e[pos..]));
-    }
-    Ok(out)
-}
 
 // ---------- output writers ----------
 

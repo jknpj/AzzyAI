@@ -21,7 +21,7 @@ options are not shipped, so the AI cannot load them by accident.
 
 | Renewal feature | Why it is gone |
 |---|---|
-| Homunculus S (Eira, Bayeri, Sera, Dieter, Eleanor) | Introduced with Renewal. rAthena's `db/pre-re/skill_db.yml` does not even define nine of their skills (Xeno Slasher, Blast Forge, Twister Cutter, Toxin of Mandara, Heilige Pferd and others). |
+| Homunculus S (the five Renewal-only types) | Introduced with Renewal. rAthena's `db/pre-re/skill_db.yml` does not even define nine of their skills (Xeno Slasher, Blast Forge, Twister Cutter, Toxin of Mandara, Heilige Pferd and others). |
 | ~80 Homunculus S options and 13 enums | They only existed to drive the S skills and buffs. The GUIs do not show them. |
 | `SkillDamage` and `SkillDamageBaseLevel` | The Renewal damage formula adds `skill level * caster base level / divisor`, which does not exist in Pre-Renewal. |
 | Renewal monster database | Replaced by the Pre-Renewal one (see below). |

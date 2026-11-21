@@ -6,7 +6,7 @@ body:
     id: problem
     attributes:
       label: What would you like it to do?
-      description: Describe the situation in game, not only the solution. For example "Dieter keeps casting Lava Slide at Fire monsters".
+      description: Describe the situation in game, not only the solution. For example "the homunculus keeps casting a skill at Fire monsters".
     validations:
       required: true
   - type: textarea

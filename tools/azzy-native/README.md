@@ -56,7 +56,7 @@ cargo run --release --manifest-path tools/Cargo.toml -p azzy-native -- [USER_AI 
 ## Milestone 3 (in progress)
 
 - **Per-homunculus presets**: the Homunculus tab has "Settings for: Global (all homunculi) /
-  Lif / Amistr / Filir / Vanilmirth / Eira / Bayeri / Sera / Dieter / Eleanor". With a type
+  Lif / Amistr / Filir / Vanilmirth". With a type
   selected the grid shows the merged view (the type override, otherwise the global value) and
   edits go to `Types/<Name>.lua`; a value equal to the global one removes the override, so only
   the differences are saved. "Use global values" removes every override of that type. The file

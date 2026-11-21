@@ -376,7 +376,7 @@ mod tests {
             .unwrap_or_else(|| panic!("no New Homunculus S Skills section: {:?}",
                 sections.iter().map(|(n, _)| n).collect::<Vec<_>>()));
         assert_eq!(homun.1.len(), 20, "{:?}", homun.1);
-        assert!(sections.iter().all(|(name, _)| !name.starts_with("Blazing And Furious (Eleanor)")));
+        assert!(sections.iter().all(|(name, _)| !name.starts_with("a removed skill")));
     }
 
     #[test]
