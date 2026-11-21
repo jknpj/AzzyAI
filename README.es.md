@@ -59,7 +59,7 @@ Ejecuta **`AzzyAIConfig.exe`** desde la carpeta `AI\USER_AI` de tu juego: viene
 incluido en la descarga. Cambia lo que quieras y haz clic en **Apply Settings**;
 los archivos se escriben directamente.
 
-![La ventana de configuración de AzzyAI](docs/native-gui.png)
+La ventana de configuración es la misma del manual, con las opciones Pre-Renewal.
 
 **¿Sin Windows?** Usa la [configuración en el navegador](https://jknpj.github.io/AzzyAI-webgui/)
 en cualquier navegador (Linux, macOS, Android...): elige **AzzyAI** (no el Classic),

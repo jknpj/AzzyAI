@@ -58,7 +58,7 @@ Execute `AzzyAIConfig.exe` na pasta `AI\USER_AI` instalada. Ele edita os arquivo
 pasta, mesmo quando aberto por um atalho. Confira o caminho mostrado no rodapé antes de
 salvar.
 
-![A janela de configuração do AzzyAI](native-gui.png)
+A janela de configuração mostra o conjunto de opções Pre-Renewal: quatro homúnculos e sem grupos de Homúnculo S.
 
 O app ainda não tem assinatura de código, então o SmartScreen pode mostrar "O Windows
 protegeu o computador" em um download novo (um antivírus também pode sinalizar um

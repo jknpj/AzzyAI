@@ -57,7 +57,7 @@ Ejecuta `AzzyAIConfig.exe` desde la carpeta `AI\USER_AI` instalada. Edita los ar
 esa carpeta, incluso si se abre desde un acceso directo. Revisa la ruta que muestra el pie
 antes de guardar.
 
-![La ventana de configuración de AzzyAI](native-gui.png)
+La ventana de configuración muestra el conjunto de opciones Pre-Renewal: cuatro homúnculos y sin grupos de Homúnculo S.
 
 La aplicación aún no tiene firma de código, así que SmartScreen puede mostrar "Windows
 protegió tu PC" en una descarga nueva (un antivirus también puede marcar un ejecutable

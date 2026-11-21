@@ -56,7 +56,7 @@ Run `AzzyAIConfig.exe` from the installed `AI\USER_AI` folder. It edits the file
 beside its executable, even if launched from a shortcut. Check the configuration
 location shown in the footer before saving.
 
-![The AzzyAI Configuration window](native-gui.png)
+The configuration window shows the Pre-Renewal option set: four homunculi and no Homunculus S groups.
 
 The app has no code signature yet, so SmartScreen can show "Windows protected your PC"
 for a fresh download (an antivirus may also flag a small, rarely downloaded executable).
