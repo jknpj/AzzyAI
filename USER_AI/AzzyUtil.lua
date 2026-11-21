@@ -2648,7 +2648,15 @@ function GetAtkSkill(myid)
 			else
 				level=VanCapriceLevel
 			end
-		elseif	(homuntype==FILIR) then
+		elseif (homuntype==VANILMIRTH) and (UseVanilSelfDestruct~=0) then
+			skill=HVAN_SELFDESTRUCT
+			if GetTick() < AutoSkillCooldown[skill] then
+				level=0
+				skill=0
+			else
+				level=SkillList[VANILMIRTH][HVAN_SELFDESTRUCT]
+			end
+		elseif	(homuntype==FILIR) and (UseFilirMoon~=0) then
 			skill=HFLI_MOON
 			if GetTick() < AutoSkillCooldown[skill] then
 				level=0
