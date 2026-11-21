@@ -88,23 +88,9 @@ enum UpdateState {
     Failed(String),
 }
 
-/// Which type-specific settings belong to each Homunculus S and base homunculus, copied from
-/// webgui/app.js (S_TYPES/BASE_TYPES). The "Settings for" selector filters the grid with them, the
-/// same way the web GUI does: an S shows its own settings plus every base homunculus's, a base
-/// homunculus shows only its own, and Global shows everything.
-const S_TYPES: [(&str, &[&str]); 5] = [
-    ("sera", &["paralyze", "poisonmist", "painkiller", "calllegion"]),
-    (
-        "eira",
-        &["silentbreeze", "healownerbreeze", "xenoslasher", "erasercutter", "overedboost", "regene"],
-    ),
-    (
-        "eleanor",
-        &["sonicclaw", "silvervein", "midnight", "tinderbreaker", "switchmode", "spheretrackinterval"],
-    ),
-    ("bayeri", &["stahlhorn", "hailege", "goldene", "steinwand", "angriffs"]),
-    ("dieter", &["lavaslide", "magmaflow", "granitic", "pyroclastic", "volcanic"]),
-];
+/// Homunculus S is not part of this build: only the base table below exists.
+const S_TYPES: [(&str, &[&str]); 0] = [];
+
 const BASE_TYPES: [(&str, &[&str]); 4] = [
     ("lif", &["escape"]),
     ("amistr", &["bulwark", "castle", "bloodlust", "provokeowner"]),
@@ -131,17 +117,7 @@ fn classify(
 }
 
 /// Per-homunculus overrides in USER_AI/Types/<Name>.lua (webgui/app.js TYPE_NAMES).
-const TYPE_NAMES: [&str; 9] = [
-    "Lif",
-    "Amistr",
-    "Filir",
-    "Vanilmirth",
-    "Eira",
-    "Bayeri",
-    "Sera",
-    "Dieter",
-    "Eleanor",
-];
+const TYPE_NAMES: [&str; 4] = ["Lif", "Amistr", "Filir", "Vanilmirth"];
 
 struct App {
     hom: Schema,
@@ -3412,21 +3388,17 @@ mod tests {
         }
         let mut app = App::new(&paths, false).unwrap();
         // a Homunculus S shows its own settings plus every base homunculus's
-        app.type_selected = Some("Dieter");
-        assert!(app.type_visible("UseDieterLavaSlide"));
-        assert!(app.type_visible("UseLifEscape"));
-        assert!(!app.type_visible("UseEiraTwisterCutter"));
+        app.type_selected = Some("Amistr");
+        assert!(app.type_visible("AmiBulwarkLevel"));
+        assert!(!app.type_visible("UseLifEscape"));
         assert!(app.type_visible("AggroHP"));
         // a base homunculus shows only its own and hides every S
         app.type_selected = Some("Lif");
         assert!(app.type_visible("UseLifEscape"));
-        assert!(!app.type_visible("UseDieterLavaSlide"));
-        assert!(!app.type_visible("UseEiraTwisterCutter"));
         assert!(app.type_visible("AggroHP"));
         // Global shows everything
         app.type_selected = None;
-        assert!(app.type_visible("UseDieterLavaSlide"));
-        assert!(app.type_visible("UseEiraTwisterCutter"));
+        assert!(app.type_visible("AmiBulwarkLevel"));
     }
 
     #[test]
@@ -3716,7 +3688,7 @@ mod tests {
         let before_h = std::fs::read_to_string(dir.join("H_Config.lua")).unwrap();
         let mut app = App::new(&paths, true).unwrap();
         app.unit = Unit::Homunculus;
-        app.type_selected = Some("Dieter");
+        app.type_selected = Some("Amistr");
         let global_aggro = app.config().and_then(|config| config.get("AggroHP")).unwrap_or("").to_string();
 
         app.set_token("AggroHP", "77".to_string());
@@ -3868,7 +3840,7 @@ mod tests {
         app.category = None;
         app.selected = Some("AutoMobMode".into());
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
-        app.type_selected = Some("Dieter");
+        app.type_selected = Some("Amistr");
         let _ = ctx.run(input(), |ctx| app.draw(ctx));
         app.type_selected = None;
         app.skill_filter = Some(8041);
