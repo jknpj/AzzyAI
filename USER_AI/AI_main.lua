@@ -3168,19 +3168,19 @@ function AI(myid)
 		QuickenTimeout=1
 	end
 	if SOffensiveTimeout-GetTick() > 350000 then
-		logappend("AAI_ERROR","Homun S offensive timeout was "..SOffensiveTimeout.." time is "..GetTick())
+		logappend("AAI_ERROR","Offensive buff timeout was "..SOffensiveTimeout.." time is "..GetTick())
 		SOffensiveTimeout=1
 	end
 	if SDefensiveTimeout-GetTick() > 350000 then
-		logappend("AAI_ERROR","Homun S defensive timeout was "..SDefensiveTimeout.." time is "..GetTick())
+		logappend("AAI_ERROR","Defensive buff timeout was "..SDefensiveTimeout.." time is "..GetTick())
 		SDefensiveTimeout=1
 	end
 	if SOwnerBuffTimeout-GetTick() > 6000000 then
-		logappend("AAI_ERROR","Homun S owner buff timeout was "..SOwnerBuffTimeout.." time is "..GetTick())
+		logappend("AAI_ERROR","Owner buff timeout was "..SOwnerBuffTimeout.." time is "..GetTick())
 		SOwnerBuffTimeout=1
 	end
 	if SOwner2ndBuffTimeout-GetTick() > 6000000 then
-		logappend("AAI_ERROR","Homun S owner buff timeout was "..SOwner2ndBuffTimeout.." time is "..GetTick())
+		logappend("AAI_ERROR","Owner buff timeout was "..SOwner2ndBuffTimeout.." time is "..GetTick())
 		SOwner2ndBuffTimeout=1
 	end
 	if OffensiveOwnerTimeout-GetTick() > 6000000 then
