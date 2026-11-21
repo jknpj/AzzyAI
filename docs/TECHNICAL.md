@@ -231,7 +231,7 @@ alternating them on the same machine and repeating the pairs (median reported). 
 relative to the mock: the client's `GetV` is a native call, so the mock understates the cost of AI
 code that queries it. Gameplay is unchanged in every comparison below (same attacks and casts).
 
-Against the pre-2.0 AI (`classic`, CVersion 1.552), which is the state before the 2.0 rework:
+Against the pre-2.0 AI (`legacy/classic`, CVersion 1.552), which is the state before the 2.0 rework:
 
 | Scenario | 1.552 | 2.0.1 | Change |
 |---|---|---|---|

@@ -53,7 +53,7 @@ Minor release: the desktop configuration app is now the **native Rust GUI**, shi
 - New: startup check for a newer release tag, with an Update banner; offline or rate-limited runs
   stay silent.
 - Removed: the C# desktop app (`GUI/`, its build scripts and `USER_AI/AzzyAIConfig.exe`). The code
-  is preserved on the `legacy/csharp-gui` branch; the native app keeps the `AzzyAIConfig.exe` name
+  is preserved in the `v2.0.3` tag (the last release that shipped it), not in a branch; the native app keeps the `AzzyAIConfig.exe` name
   so existing shortcuts keep working.
 - The web GUI (browser) is unchanged and still shipped in `webgui/`.
 
