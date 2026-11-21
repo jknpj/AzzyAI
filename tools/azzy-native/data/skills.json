@@ -1,549 +1,555 @@
 {
-  "tile": 20,
-  "columns": 8,
-  "rows": 7,
-  "width": 160,
-  "height": 140,
-  "skills": [
-    {
-      "id": 8001,
-      "homun": "lif",
-      "name": "Healing Hands",
-      "name_pt": "Cura pelas Mãos",
-      "name_es": "Manos Sanadoras",
-      "match": [],
-      "icon": 0
-    },
-    {
-      "id": 8002,
-      "homun": "lif",
-      "name": "Urgent Escape",
-      "name_pt": "Bater em Retirada",
-      "name_es": "Escape Urgente",
-      "match": [
-        "lifescape"
-      ],
-      "icon": 1
-    },
-    {
-      "id": 8004,
-      "homun": "lif",
-      "name": "Mental Charge",
-      "name_pt": "Esforço Mental",
-      "name_es": "Carga Mental",
-      "match": [],
-      "icon": 2
-    },
-    {
-      "id": 8005,
-      "homun": "amistr",
-      "name": "Castling",
-      "name_pt": "Troca de Lugar",
-      "name_es": "Cambio de Lugar",
-      "match": [
-        "castledefend"
-      ],
-      "icon": 3
-    },
-    {
-      "id": 8006,
-      "homun": "amistr",
-      "name": "Amistr Bulwark",
-      "name_pt": "Fortaleza",
-      "name_es": "Bastión de Amistr",
-      "match": [
-        "bulwark"
-      ],
-      "icon": 4
-    },
-    {
-      "id": 8008,
-      "homun": "amistr",
-      "name": "Blood Lust",
-      "name_pt": "Desejo de Sangue",
-      "name_es": "Lujuria de Sangre",
-      "match": [
-        "bloodlust"
-      ],
-      "icon": 5
-    },
-    {
-      "id": 8009,
-      "homun": "filir",
-      "name": "Moonlight",
-      "name_pt": "Pica-Pau",
-      "name_es": "Luz de Luna",
-      "match": [],
-      "icon": 6
-    },
-    {
-      "id": 8010,
-      "homun": "filir",
-      "name": "Flitting",
-      "name_pt": "Voo Frenético",
-      "name_es": "Revoloteo",
-      "match": [
-        "filirflit"
-      ],
-      "icon": 7
-    },
-    {
-      "id": 8011,
-      "homun": "filir",
-      "name": "Accelerated Flight",
-      "name_pt": "Voo Acelerado",
-      "name_es": "Vuelo Acelerado",
-      "match": [
-        "filiraccel"
-      ],
-      "icon": 8
-    },
-    {
-      "id": 8012,
-      "homun": "filir",
-      "name": "S.B.R.44",
-      "name_pt": "S.B.R.44",
-      "name_es": "S.B.R.44",
-      "match": [
-        "sbr44"
-      ],
-      "icon": 9
-    },
-    {
-      "id": 8013,
-      "homun": "vanilmirth",
-      "name": "Caprice",
-      "name_pt": "Capricho",
-      "name_es": "Capricho",
-      "match": [],
-      "icon": 10
-    },
-    {
-      "id": 8014,
-      "homun": "vanilmirth",
-      "name": "Chaotic Blessings",
-      "name_pt": "Bênção Caótica",
-      "name_es": "Bendiciones Caóticas",
-      "match": [],
-      "icon": 11
-    },
-    {
-      "id": 8016,
-      "homun": "vanilmirth",
-      "name": "Self-Destruction",
-      "name_pt": "Bioexplosão",
-      "name_es": "Autodestrucción",
-      "match": [],
-      "icon": 12
-    },
-    {
-      "id": 8018,
-      "homun": "sera",
-      "name": "Summon Legion",
-      "name_pt": "Convocação",
-      "name_es": "Invocar a Legión",
-      "match": [
-        "calllegion"
-      ],
-      "icon": 13
-    },
-    {
-      "id": 8019,
-      "homun": "sera",
-      "name": "Needle of Paralysis",
-      "name_pt": "Ponto de Paralisia",
-      "name_es": "Aguja de Parálisis",
-      "match": [
-        "paralyze"
-      ],
-      "icon": 14
-    },
-    {
-      "id": 8020,
-      "homun": "sera",
-      "name": "Poison Mist",
-      "name_pt": "Névoa Venenosa",
-      "name_es": "Neblina Venenosa",
-      "match": [
-        "poisonmist"
-      ],
-      "icon": 15
-    },
-    {
-      "id": 8021,
-      "homun": "sera",
-      "name": "Pain Killer",
-      "name_pt": "Analgésico",
-      "name_es": "Analgésico",
-      "match": [
-        "painkiller"
-      ],
-      "icon": 16
-    },
-    {
-      "id": 8053,
-      "homun": "sera",
-      "name": "Toxin Of Mandara",
-      "name_pt": "Toxina de Mandara",
-      "name_es": "Toxina de Mandara",
-      "match": [
-        "toxinofmandara"
-      ],
-      "icon": 17
-    },
-    {
-      "id": 8054,
-      "homun": "sera",
-      "name": "Needle Stinger",
-      "name_pt": "Ferroada",
-      "name_es": "Aguijonazo",
-      "match": [
-        "needlestinger"
-      ],
-      "icon": 18
-    },
-    {
-      "id": 8022,
-      "homun": "eira",
-      "name": "Light of Regeneration",
-      "name_pt": "Luz da Vida",
-      "name_es": "Luz de Regeneración",
-      "match": [
-        "lightofregene"
-      ],
-      "icon": 19
-    },
-    {
-      "id": 8023,
-      "homun": "eira",
-      "name": "Over Boost",
-      "name_pt": "Superestimular",
-      "name_es": "Sobreimpulso",
-      "match": [
-        "overedboost"
-      ],
-      "icon": 20
-    },
-    {
-      "id": 8024,
-      "homun": "eira",
-      "name": "Eraser Cutter",
-      "name_pt": "Choque Supersônico",
-      "name_es": "Cúter Borrador",
-      "match": [
-        "erasecutter",
-        "erasercutter"
-      ],
-      "icon": 21
-    },
-    {
-      "id": 8025,
-      "homun": "eira",
-      "name": "Xeno Slasher",
-      "name_pt": "Onda Supersônica",
-      "name_es": "Xenotajo",
-      "match": [
-        "xenoslasher"
-      ],
-      "icon": 22
-    },
-    {
-      "id": 8026,
-      "homun": "eira",
-      "name": "Silent Breeze",
-      "name_pt": "Brisa da Calmaria",
-      "name_es": "Brisa Silenciosa",
-      "match": [
-        "silentbreeze",
-        "healownerbreeze"
-      ],
-      "icon": 23
-    },
-    {
-      "id": 8047,
-      "homun": "eira",
-      "name": "Twister Cutter",
-      "name_pt": "Corte Supersônico",
-      "name_es": "Tajo Supersónico",
-      "match": [
-        "twistercutter"
-      ],
-      "icon": 24
-    },
-    {
-      "id": 8048,
-      "homun": "eira",
-      "name": "Absolute Zephyr",
-      "name_pt": "Zéfiro Absoluto",
-      "name_es": "Céfiro Absoluto",
-      "match": [
-        "absolutezephyr"
-      ],
-      "icon": 25
-    },
-    {
-      "id": 8031,
-      "homun": "bayeri",
-      "name": "Stahl Horn",
-      "name_pt": "Impacto Preciso",
-      "name_es": "Cuerno de Acero",
-      "match": [
-        "stahlhorn"
-      ],
-      "icon": 26
-    },
-    {
-      "id": 8032,
-      "homun": "bayeri",
-      "name": "Goldene Ferse",
-      "name_pt": "Fúria Iluminada",
-      "name_es": "Furia Iluminada",
-      "match": [
-        "goldenpherze"
-      ],
-      "icon": 27
-    },
-    {
-      "id": 8033,
-      "homun": "bayeri",
-      "name": "Stein Wand",
-      "name_pt": "Luz Salvadora",
-      "name_es": "Báculo de Stein",
-      "match": [
-        "steinwand"
-      ],
-      "icon": 28
-    },
-    {
-      "id": 8034,
-      "homun": "bayeri",
-      "name": "Heilage Stange",
-      "name_pt": "Illuminatus",
-      "name_es": "Cetro Sagrado",
-      "match": [
-        "hailegestar"
-      ],
-      "icon": 29
-    },
-    {
-      "id": 8035,
-      "homun": "bayeri",
-      "name": "Angriffs Modus",
-      "name_pt": "Raiva Iluminada",
-      "name_es": "Modo Angriffs",
-      "match": [
-        "angriffmodus"
-      ],
-      "icon": 30
-    },
-    {
-      "id": 8056,
-      "homun": "bayeri",
-      "name": "Glanzen Spies",
-      "name_pt": "Ponta Reluzente",
-      "name_es": "Punta Reluciente",
-      "match": [
-        "glanzenspies"
-      ],
-      "icon": 31
-    },
-    {
-      "id": 8057,
-      "homun": "bayeri",
-      "name": "Heilige Pferd",
-      "name_pt": "Equitatio",
-      "name_es": "Equitatio",
-      "match": [
-        "heiligepferd"
-      ],
-      "icon": 32
-    },
-    {
-      "id": 8058,
-      "homun": "bayeri",
-      "name": "Goldene Tone",
-      "name_pt": "Couro Dourado",
-      "name_es": "Cuero Dorado",
-      "match": [
-        "goldenetone"
-      ],
-      "icon": 33
-    },
-    {
-      "id": 8039,
-      "homun": "dieter",
-      "name": "Magma Flow",
-      "name_pt": "Inundação de Magma",
-      "name_es": "Flujo de Magma",
-      "match": [
-        "magmaflow"
-      ],
-      "icon": 34
-    },
-    {
-      "id": 8040,
-      "homun": "dieter",
-      "name": "Granitic Armor",
-      "name_pt": "Armadura de Granito",
-      "name_es": "Armadura Granítica",
-      "match": [
-        "graniticarmor"
-      ],
-      "icon": 35
-    },
-    {
-      "id": 8041,
-      "homun": "dieter",
-      "name": "Lava Slide",
-      "name_pt": "Derretimento com Lava",
-      "name_es": "Deslizamiento de Lava",
-      "match": [
-        "lavaslide"
-      ],
-      "icon": 36
-    },
-    {
-      "id": 8042,
-      "homun": "dieter",
-      "name": "Pyroclastic",
-      "name_pt": "Piroclástico",
-      "name_es": "Piroclástico",
-      "match": [
-        "pyroclastic"
-      ],
-      "icon": 37
-    },
-    {
-      "id": 8043,
-      "homun": "dieter",
-      "name": "Volcanic Ash",
-      "name_pt": "Cinzas Vulcânicas",
-      "name_es": "Ceniza Volcánica",
-      "match": [
-        "volcanicash"
-      ],
-      "icon": 38
-    },
-    {
-      "id": 8044,
-      "homun": "dieter",
-      "name": "Blast Forge",
-      "name_pt": "Grande Fornalha",
-      "name_es": "Gran Forja",
-      "match": [
-        "blastforge"
-      ],
-      "icon": 39
-    },
-    {
-      "id": 8045,
-      "homun": "dieter",
-      "name": "Tempering",
-      "name_pt": "Têmpera",
-      "name_es": "Temple",
-      "match": [
-        "tempering"
-      ],
-      "icon": 40
-    },
-    {
-      "id": 8027,
-      "homun": "eleanor",
-      "name": "Style Change",
-      "name_pt": "Estilo de Luta",
-      "name_es": "Cambio de Estilo",
-      "match": [
-        "donotswitchmode"
-      ],
-      "icon": 41
-    },
-    {
-      "id": 8028,
-      "homun": "eleanor",
-      "name": "Sonic Claw",
-      "name_pt": "Garra Supersônica",
-      "name_es": "Garra Sónica",
-      "match": [
-        "sonicclaw"
-      ],
-      "icon": 42
-    },
-    {
-      "id": 8029,
-      "homun": "eleanor",
-      "name": "Silvervein Rush",
-      "name_pt": "Rastro Brilhante",
-      "name_es": "Ráfaga Trepadora",
-      "match": [
-        "silvervein"
-      ],
-      "icon": 43
-    },
-    {
-      "id": 8030,
-      "homun": "eleanor",
-      "name": "Midnight Frenzy",
-      "name_pt": "Delírio Noturno",
-      "name_es": "Frenesí de Medianoche",
-      "match": [
-        "midnight"
-      ],
-      "icon": 44
-    },
-    {
-      "id": 8036,
-      "homun": "eleanor",
-      "name": "Tinder Breaker",
-      "name_pt": "Quebra-Costelas",
-      "name_es": "Rompepiernas",
-      "match": [
-        "tinderbreaker"
-      ],
-      "icon": 45
-    },
-    {
-      "id": 8037,
-      "homun": "eleanor",
-      "name": "C.B.C : Continual Break Combo",
-      "name_pt": "Dreno Traumático",
-      "name_es": "Combo de Pausa Continua",
-      "match": [
-        "eleanorcbc"
-      ],
-      "icon": 46
-    },
-    {
-      "id": 8038,
-      "homun": "eleanor",
-      "name": "E.Q.C : Eternal Quick Combo",
-      "name_pt": "Estado Traumático",
-      "name_es": "Combo Eterno Rápido",
-      "match": [
-        "eleanoreqc"
-      ],
-      "icon": 47
-    },
-    {
-      "id": 8050,
-      "homun": "eleanor",
-      "name": "Blazing And Furious",
-      "name_pt": "Veloz e Furiosa",
-      "name_es": "Ardiente y Furioso",
-      "match": [
-        "blazingandfurious"
-      ],
-      "icon": 48
-    },
-    {
-      "id": 8051,
-      "homun": "eleanor",
-      "name": "The One Fighter Rises",
-      "name_pt": "Lutadora Ascendente",
-      "name_es": "Luchadora Ascendente",
-      "match": [
-        "theonefighterrises"
-      ],
-      "icon": 49
-    }
-  ]
+ "tile": 20,
+ "columns": 8,
+ "rows": 7,
+ "width": 160,
+ "height": 140,
+ "skills": [
+  {
+   "id": 8001,
+   "homun": "lif",
+   "name": "Healing Hands",
+   "name_pt": "Cura pelas Mãos",
+   "name_es": "Manos Sanadoras",
+   "match": [],
+   "icon": 0
+  },
+  {
+   "id": 8002,
+   "homun": "lif",
+   "name": "Urgent Escape",
+   "name_pt": "Bater em Retirada",
+   "name_es": "Escape Urgente",
+   "match": [
+    "lifescape"
+   ],
+   "icon": 1
+  },
+  {
+   "id": 8004,
+   "homun": "lif",
+   "name": "Mental Charge",
+   "name_pt": "Esforço Mental",
+   "name_es": "Carga Mental",
+   "match": [],
+   "icon": 2
+  },
+  {
+   "id": 8005,
+   "homun": "amistr",
+   "name": "Castling",
+   "name_pt": "Troca de Lugar",
+   "name_es": "Cambio de Lugar",
+   "match": [
+    "castledefend"
+   ],
+   "icon": 3
+  },
+  {
+   "id": 8006,
+   "homun": "amistr",
+   "name": "Amistr Bulwark",
+   "name_pt": "Fortaleza",
+   "name_es": "Bastión de Amistr",
+   "match": [
+    "bulwark"
+   ],
+   "icon": 4
+  },
+  {
+   "id": 8008,
+   "homun": "amistr",
+   "name": "Blood Lust",
+   "name_pt": "Desejo de Sangue",
+   "name_es": "Lujuria de Sangre",
+   "match": [
+    "bloodlust"
+   ],
+   "icon": 5
+  },
+  {
+   "id": 8009,
+   "homun": "filir",
+   "name": "Moonlight",
+   "name_pt": "Pica-Pau",
+   "name_es": "Luz de Luna",
+   "match": [
+    "usefilirmoon"
+   ],
+   "icon": 6
+  },
+  {
+   "id": 8010,
+   "homun": "filir",
+   "name": "Flitting",
+   "name_pt": "Voo Frenético",
+   "name_es": "Revoloteo",
+   "match": [
+    "filirflit"
+   ],
+   "icon": 7
+  },
+  {
+   "id": 8011,
+   "homun": "filir",
+   "name": "Accelerated Flight",
+   "name_pt": "Voo Acelerado",
+   "name_es": "Vuelo Acelerado",
+   "match": [
+    "filiraccel"
+   ],
+   "icon": 8
+  },
+  {
+   "id": 8012,
+   "homun": "filir",
+   "name": "S.B.R.44",
+   "name_pt": "S.B.R.44",
+   "name_es": "S.B.R.44",
+   "match": [
+    "sbr44"
+   ],
+   "icon": 9
+  },
+  {
+   "id": 8013,
+   "homun": "vanilmirth",
+   "name": "Caprice",
+   "name_pt": "Capricho",
+   "name_es": "Capricho",
+   "match": [
+    "vanilcaprice"
+   ],
+   "icon": 10
+  },
+  {
+   "id": 8014,
+   "homun": "vanilmirth",
+   "name": "Chaotic Blessings",
+   "name_pt": "Bênção Caótica",
+   "name_es": "Bendiciones Caóticas",
+   "match": [],
+   "icon": 11
+  },
+  {
+   "id": 8016,
+   "homun": "vanilmirth",
+   "name": "Self-Destruction",
+   "name_pt": "Bioexplosão",
+   "name_es": "Autodestrucción",
+   "match": [
+    "usevanilselfdestruct"
+   ],
+   "icon": 12
+  },
+  {
+   "id": 8018,
+   "homun": "sera",
+   "name": "Summon Legion",
+   "name_pt": "Convocação",
+   "name_es": "Invocar a Legión",
+   "match": [
+    "calllegion"
+   ],
+   "icon": 13
+  },
+  {
+   "id": 8019,
+   "homun": "sera",
+   "name": "Needle of Paralysis",
+   "name_pt": "Ponto de Paralisia",
+   "name_es": "Aguja de Parálisis",
+   "match": [
+    "paralyze"
+   ],
+   "icon": 14
+  },
+  {
+   "id": 8020,
+   "homun": "sera",
+   "name": "Poison Mist",
+   "name_pt": "Névoa Venenosa",
+   "name_es": "Neblina Venenosa",
+   "match": [
+    "poisonmist"
+   ],
+   "icon": 15
+  },
+  {
+   "id": 8021,
+   "homun": "sera",
+   "name": "Pain Killer",
+   "name_pt": "Analgésico",
+   "name_es": "Analgésico",
+   "match": [
+    "painkiller"
+   ],
+   "icon": 16
+  },
+  {
+   "id": 8053,
+   "homun": "sera",
+   "name": "Toxin Of Mandara",
+   "name_pt": "Toxina de Mandara",
+   "name_es": "Toxina de Mandara",
+   "match": [
+    "toxinofmandara"
+   ],
+   "icon": 17
+  },
+  {
+   "id": 8054,
+   "homun": "sera",
+   "name": "Needle Stinger",
+   "name_pt": "Ferroada",
+   "name_es": "Aguijonazo",
+   "match": [
+    "needlestinger"
+   ],
+   "icon": 18
+  },
+  {
+   "id": 8022,
+   "homun": "eira",
+   "name": "Light of Regeneration",
+   "name_pt": "Luz da Vida",
+   "name_es": "Luz de Regeneración",
+   "match": [
+    "lightofregene"
+   ],
+   "icon": 19
+  },
+  {
+   "id": 8023,
+   "homun": "eira",
+   "name": "Over Boost",
+   "name_pt": "Superestimular",
+   "name_es": "Sobreimpulso",
+   "match": [
+    "overedboost"
+   ],
+   "icon": 20
+  },
+  {
+   "id": 8024,
+   "homun": "eira",
+   "name": "Eraser Cutter",
+   "name_pt": "Choque Supersônico",
+   "name_es": "Cúter Borrador",
+   "match": [
+    "erasecutter",
+    "erasercutter"
+   ],
+   "icon": 21
+  },
+  {
+   "id": 8025,
+   "homun": "eira",
+   "name": "Xeno Slasher",
+   "name_pt": "Onda Supersônica",
+   "name_es": "Xenotajo",
+   "match": [
+    "xenoslasher"
+   ],
+   "icon": 22
+  },
+  {
+   "id": 8026,
+   "homun": "eira",
+   "name": "Silent Breeze",
+   "name_pt": "Brisa da Calmaria",
+   "name_es": "Brisa Silenciosa",
+   "match": [
+    "silentbreeze",
+    "healownerbreeze"
+   ],
+   "icon": 23
+  },
+  {
+   "id": 8047,
+   "homun": "eira",
+   "name": "Twister Cutter",
+   "name_pt": "Corte Supersônico",
+   "name_es": "Tajo Supersónico",
+   "match": [
+    "twistercutter"
+   ],
+   "icon": 24
+  },
+  {
+   "id": 8048,
+   "homun": "eira",
+   "name": "Absolute Zephyr",
+   "name_pt": "Zéfiro Absoluto",
+   "name_es": "Céfiro Absoluto",
+   "match": [
+    "absolutezephyr"
+   ],
+   "icon": 25
+  },
+  {
+   "id": 8031,
+   "homun": "bayeri",
+   "name": "Stahl Horn",
+   "name_pt": "Impacto Preciso",
+   "name_es": "Cuerno de Acero",
+   "match": [
+    "stahlhorn"
+   ],
+   "icon": 26
+  },
+  {
+   "id": 8032,
+   "homun": "bayeri",
+   "name": "Goldene Ferse",
+   "name_pt": "Fúria Iluminada",
+   "name_es": "Furia Iluminada",
+   "match": [
+    "goldenpherze"
+   ],
+   "icon": 27
+  },
+  {
+   "id": 8033,
+   "homun": "bayeri",
+   "name": "Stein Wand",
+   "name_pt": "Luz Salvadora",
+   "name_es": "Báculo de Stein",
+   "match": [
+    "steinwand"
+   ],
+   "icon": 28
+  },
+  {
+   "id": 8034,
+   "homun": "bayeri",
+   "name": "Heilage Stange",
+   "name_pt": "Illuminatus",
+   "name_es": "Cetro Sagrado",
+   "match": [
+    "hailegestar"
+   ],
+   "icon": 29
+  },
+  {
+   "id": 8035,
+   "homun": "bayeri",
+   "name": "Angriffs Modus",
+   "name_pt": "Raiva Iluminada",
+   "name_es": "Modo Angriffs",
+   "match": [
+    "angriffmodus"
+   ],
+   "icon": 30
+  },
+  {
+   "id": 8056,
+   "homun": "bayeri",
+   "name": "Glanzen Spies",
+   "name_pt": "Ponta Reluzente",
+   "name_es": "Punta Reluciente",
+   "match": [
+    "glanzenspies"
+   ],
+   "icon": 31
+  },
+  {
+   "id": 8057,
+   "homun": "bayeri",
+   "name": "Heilige Pferd",
+   "name_pt": "Equitatio",
+   "name_es": "Equitatio",
+   "match": [
+    "heiligepferd"
+   ],
+   "icon": 32
+  },
+  {
+   "id": 8058,
+   "homun": "bayeri",
+   "name": "Goldene Tone",
+   "name_pt": "Couro Dourado",
+   "name_es": "Cuero Dorado",
+   "match": [
+    "goldenetone"
+   ],
+   "icon": 33
+  },
+  {
+   "id": 8039,
+   "homun": "dieter",
+   "name": "Magma Flow",
+   "name_pt": "Inundação de Magma",
+   "name_es": "Flujo de Magma",
+   "match": [
+    "magmaflow"
+   ],
+   "icon": 34
+  },
+  {
+   "id": 8040,
+   "homun": "dieter",
+   "name": "Granitic Armor",
+   "name_pt": "Armadura de Granito",
+   "name_es": "Armadura Granítica",
+   "match": [
+    "graniticarmor"
+   ],
+   "icon": 35
+  },
+  {
+   "id": 8041,
+   "homun": "dieter",
+   "name": "Lava Slide",
+   "name_pt": "Derretimento com Lava",
+   "name_es": "Deslizamiento de Lava",
+   "match": [
+    "lavaslide"
+   ],
+   "icon": 36
+  },
+  {
+   "id": 8042,
+   "homun": "dieter",
+   "name": "Pyroclastic",
+   "name_pt": "Piroclástico",
+   "name_es": "Piroclástico",
+   "match": [
+    "pyroclastic"
+   ],
+   "icon": 37
+  },
+  {
+   "id": 8043,
+   "homun": "dieter",
+   "name": "Volcanic Ash",
+   "name_pt": "Cinzas Vulcânicas",
+   "name_es": "Ceniza Volcánica",
+   "match": [
+    "volcanicash"
+   ],
+   "icon": 38
+  },
+  {
+   "id": 8044,
+   "homun": "dieter",
+   "name": "Blast Forge",
+   "name_pt": "Grande Fornalha",
+   "name_es": "Gran Forja",
+   "match": [
+    "blastforge"
+   ],
+   "icon": 39
+  },
+  {
+   "id": 8045,
+   "homun": "dieter",
+   "name": "Tempering",
+   "name_pt": "Têmpera",
+   "name_es": "Temple",
+   "match": [
+    "tempering"
+   ],
+   "icon": 40
+  },
+  {
+   "id": 8027,
+   "homun": "eleanor",
+   "name": "Style Change",
+   "name_pt": "Estilo de Luta",
+   "name_es": "Cambio de Estilo",
+   "match": [
+    "donotswitchmode"
+   ],
+   "icon": 41
+  },
+  {
+   "id": 8028,
+   "homun": "eleanor",
+   "name": "Sonic Claw",
+   "name_pt": "Garra Supersônica",
+   "name_es": "Garra Sónica",
+   "match": [
+    "sonicclaw"
+   ],
+   "icon": 42
+  },
+  {
+   "id": 8029,
+   "homun": "eleanor",
+   "name": "Silvervein Rush",
+   "name_pt": "Rastro Brilhante",
+   "name_es": "Ráfaga Trepadora",
+   "match": [
+    "silvervein"
+   ],
+   "icon": 43
+  },
+  {
+   "id": 8030,
+   "homun": "eleanor",
+   "name": "Midnight Frenzy",
+   "name_pt": "Delírio Noturno",
+   "name_es": "Frenesí de Medianoche",
+   "match": [
+    "midnight"
+   ],
+   "icon": 44
+  },
+  {
+   "id": 8036,
+   "homun": "eleanor",
+   "name": "Tinder Breaker",
+   "name_pt": "Quebra-Costelas",
+   "name_es": "Rompepiernas",
+   "match": [
+    "tinderbreaker"
+   ],
+   "icon": 45
+  },
+  {
+   "id": 8037,
+   "homun": "eleanor",
+   "name": "C.B.C : Continual Break Combo",
+   "name_pt": "Dreno Traumático",
+   "name_es": "Combo de Pausa Continua",
+   "match": [
+    "eleanorcbc"
+   ],
+   "icon": 46
+  },
+  {
+   "id": 8038,
+   "homun": "eleanor",
+   "name": "E.Q.C : Eternal Quick Combo",
+   "name_pt": "Estado Traumático",
+   "name_es": "Combo Eterno Rápido",
+   "match": [
+    "eleanoreqc"
+   ],
+   "icon": 47
+  },
+  {
+   "id": 8050,
+   "homun": "eleanor",
+   "name": "Blazing And Furious",
+   "name_pt": "Veloz e Furiosa",
+   "name_es": "Ardiente y Furioso",
+   "match": [
+    "blazingandfurious"
+   ],
+   "icon": 48
+  },
+  {
+   "id": 8051,
+   "homun": "eleanor",
+   "name": "The One Fighter Rises",
+   "name_pt": "Lutadora Ascendente",
+   "name_es": "Luchadora Ascendente",
+   "match": [
+    "theonefighterrises"
+   ],
+   "icon": 49
+  }
+ ]
 }
