@@ -131,8 +131,8 @@ jobs:
 
   commit-native:
     name: Refresh the committed desktop app
-    # only real pushes to main: PRs and tags build but do not write back
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # real pushes to this branch (and main) refresh the exe; PRs and tags build only
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/hero')
     needs: [native-gui]
     runs-on: ubuntu-latest
     permissions:
@@ -165,7 +165,7 @@ jobs:
           git commit -q -m "build: refresh the committed GUI from CI [skip ci]"
           for attempt in 1 2 3; do
             if git push; then exit 0; fi
-            git pull --rebase --autostash origin main
+            git pull --rebase --autostash origin hero
           done
           echo "::error::could not push the refreshed GUI (branch protection?)"
           exit 1
