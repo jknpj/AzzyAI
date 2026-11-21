@@ -43,10 +43,9 @@ const WG_IMMOBILE: i64 = 16;
 const AGGRESSIVE_AI: [&str; 13] = ["04", "05", "08", "09", "10", "11", "12", "13", "19", "20", "21", "26", "27"];
 const IMMOBILE_AI: [&str; 3] = ["06", "10", "11"];
 
-const HOMUN_CLASSES: [(&str, &str); 9] = [
+const HOMUN_CLASSES: [(&str, &str); 4] = [
     ("LIF", "Lif"), ("AMISTR", "Amistr"), ("FILIR", "Filir"), ("VANILMIRTH", "Vanilmirth"),
-    ("EIRA", "Eira"), ("BAYERI", "Bayeri"), ("SERA", "Sera"), ("DIETER", "Dieter"), ("ELEANOR", "Eleanor"),
-];
+    ];
 
 const MOB_IDS: [i64; 21] = [
     1002, 1007, 1015, 1031, 1039, 1068, 1076, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085,

@@ -177,9 +177,9 @@ originales: **Lif, Amistr, Filir o Vanilmirth**. Cada uno compra sus propias
 habilidades con los puntos de evolución que da el juego, y las opciones siguen
 las habilidades que ha aprendido.
 
-Aquí no hay Homúnculo S: no hay combos de Eleanor, ni habilidades de área de
-Dieter, ni esbirros de Sera, ni buffs de Bayeri que configurar; las opciones
-simplemente no existen (tampoco en las GUIs). Véase
+No hay habilidades más allá de las que aprenden los cuatro originales, así que
+no hay nada extra que configurar; las opciones que las controlarían no existen
+(tampoco en las GUIs). Véase
 [PRERENEWAL.md](PRERENEWAL.md) para saber qué incluye esta versión.
 
 ## 7. Interrupciones repetidas

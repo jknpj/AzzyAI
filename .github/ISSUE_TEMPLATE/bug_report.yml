@@ -14,11 +14,6 @@ body:
     attributes:
       label: Homunculus or mercenary
       options:
-        - Eira
-        - Bayeri
-        - Sera
-        - Dieter
-        - Eleanor
         - Lif / Amistr / Filir / Vanilmirth
         - Mercenary
         - Configuration tool (Windows app or web page)

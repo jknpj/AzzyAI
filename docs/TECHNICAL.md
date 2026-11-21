@@ -200,8 +200,8 @@ Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars):
 
 ```
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml --              # static checks (below) + all scenarios
-cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- dieter sera  # only some scenarios
-cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose --trace bayeri
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- amistr_fresh  # only some scenarios
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose --trace amistr_fresi
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
@@ -278,7 +278,7 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 
 What this does not prove: the stats are hypothetical and the real DPS depends on the server (the RO LATAM homunculi are much stronger than rAthena's), so the ranking of two configurations can change with the real stats and SP; the model is validated against measured damage only for Sonic Claw and Xeno Slasher, the SP regeneration of the other homunculi is not measured (their decisions held from 30 to 400 SP/s), `AutoSkillDelay` made no difference in these runs, and none of it was run on an official server, whose skill data differ (`ServerType` stays `SERVER_OFFICIAL`). The GUIs' own defaults and `Defaults.lua` were not changed. Two corrections to the damage model came out of this work: Poison Mist's unit only applies a status (it deals no damage; later corrected: it hits with magic damage every tick) and Tinder Breaker, CBC and EQC add a flat 2,500, 4,000 and 6,000 per level after DEF and element.
 
-In a scenario, `"MH_TOXIN_OF_MANDARA:2"` means the skill is learned at Lv2; the mock server refuses casts above the learned level. `probeFiller = { "MH_LAVA_SLIDE" }` makes the simulated client answer the "not learned" filler for that skill (range + 1) and keeps `TrustSkillProbe` at the official default, which is how `dieter_official_probe_filler` reproduces the LATAM report.
+In a scenario, `"HLIF_HEAL:3"` means the skill is learned at Lv2; the mock server refuses casts above the learned level. `probeFiller = { "MH_LAVA_SLIDE" }` makes the simulated client answer the "not learned" filler for that skill (range + 1) and keeps `TrustSkillProbe` at the official default, which is how `dieter_official_probe_filler` reproduces the LATAM report.
 
 ### Learned skill levels
 

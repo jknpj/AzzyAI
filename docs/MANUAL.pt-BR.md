@@ -176,9 +176,8 @@ Esta é a versão Pre-Renewal, então o homúnculo é um dos quatro originais:
 os pontos de evolução que o jogo dá, e as opções seguem as habilidades que ele
 aprendeu.
 
-Aqui não existe Homúnculo S: não há combos da Eleanor, nem habilidades de área
-do Dieter, nem esbirros da Sera, nem buffs do Bayeri para configurar; as opções
-simplesmente não existem (nem nas GUIs). Veja [PRERENEWAL.md](PRERENEWAL.md)
+Não há habilidades além das que os quatro originais aprendem, então não há nada
+extra para configurar; as opções que as controlariam não existem (nem nas GUIs). Veja [PRERENEWAL.md](PRERENEWAL.md)
 para o que esta versão inclui.
 
 ## 7. Interrupções repetidas de cast

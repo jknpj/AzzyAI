@@ -171,9 +171,9 @@ This is the Pre-Renewal build, so the homunculus is one of the four originals:
 evolution points the game gives it, and the options follow the skills it has
 learned.
 
-There is no Homunculus S here, so there are no Eleanor combos, no Dieter area
-skills, no Sera minions and no Bayeri buffs to configure: the options simply do
-not exist (in the GUIs as well). See [PRERENEWAL.md](PRERENEWAL.md) for what
+There are no skills beyond the ones the four originals learn, so there is nothing
+extra to configure: the options that would drive them do not exist (in the GUIs as
+well). See [PRERENEWAL.md](PRERENEWAL.md) for what
 this build does and does not include.
 
 ## 7. Repeated cast interruptions

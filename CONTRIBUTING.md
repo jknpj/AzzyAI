@@ -28,8 +28,8 @@ from the repository root:
 
 ```
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml --                          # syntax check and every scenario
-cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- dieter bayeri_pferd      # only these scenarios
-cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose sera           # also print every cast
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- amistr_fresh      # only these scenarios
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose amistr_fresh           # also print every cast
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --profile crowd_dieter   # time and GetV calls per AI tick
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --globals                # globals assigned inside functions
 ```
