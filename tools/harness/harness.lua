@@ -216,10 +216,8 @@ local function runSwings(e)
 	e.nextSwing = nextAt
 end
 
--- server-side state that survives AI reloads: cooldowns, buffs and Eleanor's spheres/style/combo
 local cooldownUntil, statusUntil = {}, {}
--- rAthena starts Eleanor in fighting style (hom_spawn) and caps spheres at 10 (hom_addspiritball(hd, 10))
-local server = { spheres = 0, style = "fighting", combo = nil, comboUntil = 0, sphereHits = 0 }
+local server = {}
 HarnessServer = server
 local MAX_SPHERES = 10
 local COMBO_WINDOW = 2000
