@@ -2227,15 +2227,15 @@ impl App {
                             .skills
                             .iter()
                             .filter(|skill| {
-                                skill.homun == key
+                                skill.homun == key && self.skill_has_settings(skill.id)
                             })
                             .collect();
                         if list.is_empty() {
                             continue;
                         }
-                        ui.horizontal(|ui| {
-                            ui.spacing_mut().item_spacing = egui::vec2(3.0, 3.0);
-                            ui.label(egui::RichText::new(label).color(p.muted).size(10.0));
+                        ui.label(
+                            egui::RichText::new(label).color(p.muted).size(10.0),
+                        );
                         for skill in list {
                             let active = self.skill_filter == Some(skill.id);
                             let (rect, response) = ui.allocate_exact_size(
@@ -2279,8 +2279,7 @@ impl App {
                                 clicked = Some(if active { None } else { Some(skill.id) });
                             }
                         }
-                        });
-                        ui.add_space(10.0);
+                        ui.add_space(6.0);
                     }
                 });
             }
