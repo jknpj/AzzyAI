@@ -4,7 +4,7 @@
 
 ## How was it tested?
 
-- [ ] `cargo run --release -p azzy-harness --` passes
+- [ ] `cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml --` passes
 - [ ] I added or updated a scenario in `tools\harness\scenarios.lua` (for a behavior change)
 - [ ] Tested in game: <!-- which server and client, or "not tested in game" -->
 
