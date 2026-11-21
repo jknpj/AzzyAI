@@ -58,6 +58,10 @@ AutoMobCount		=5
 UseAutoPushback		=0
 AutoPushbackThreshold		=2
 UseVanilCaprice 		= 1
+-- 1 = Filir uses Moonlight as its attack skill; 0 = normal attacks only.
+UseFilirMoon		=1
+-- 1 = Vanilmirth may use Self Destruct (it kills the homunculus). Off by default.
+UseVanilSelfDestruct		=0
 AutoSkillDelay          	= 400 
 AoEMaximizeTargets					=  0
 CastTimeRatio				= .5

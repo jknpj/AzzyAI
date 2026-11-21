@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn loads_the_web_gui_schema() {
         let (hom, mer) = load().unwrap();
-        assert_eq!(hom.options.len(), 105);
+        assert_eq!(hom.options.len(), 107);
         assert_eq!(mer.options.len(), 78);
         let aggro = hom.get("AggroHP").expect("AggroHP");
         assert_eq!(aggro.category, "Basic Options");
