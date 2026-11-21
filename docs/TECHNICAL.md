@@ -328,6 +328,13 @@ keeps refusing at every level ends at 0 and is reported as "the server refused e
 startup report; `TrustSkillProbe = 1` trusts the probe again (the behavior before 2.0.1), `0`
 distrusts it on private servers too.
 
+`SkillLevelProbing` (AutoSkill Options in both GUIs) is the blunt switch for a server whose probe
+answers are wrong in both directions. `0` never asks the client: `GetSkillLevelCap` returns the
+skill's maximum for the unit, `DoSkill` requests the configured level as-is and `SkillCastResult`
+neither steps a level up nor down (`LintUserOptions` skips the level comparison too). The trade-off
+is that a configured level above the learned one is refused and stays refused until the player
+fixes the setting. The default is `1`, the behaviour above.
+
 Skill cooldowns are also saved in `data/H_<owner>Timeouts.lua`, so the AI doesn't recast them right after a map change, including short cooldowns such as Toxin of Mandara.
 
 The simulator follows rAthena's rules (`clif_parse_UseSkillToId_homun`, `skill_check_condition_mercenary`): homunculus/mercenary skills need **more** SP than their cost, so `DoSkill` never sends a skill at exactly its SP cost. rAthena silently lowers a level above the learned one, so the level step-down above only matters on servers that refuse such casts.
