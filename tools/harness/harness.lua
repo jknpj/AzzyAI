@@ -500,7 +500,6 @@ local function loadAI()
 			-- the simulated client answers the learned-level probe honestly unless the scenario
 			-- emulates the official answers with `probeFiller`, which also needs the official default
 			TrustSkillProbe = sc.probeFiller and -1 or 1
-			EleanorComboGap = 0 -- and the simulated server accepts follow-ups immediately
 			if sc.set then for k, v in pairs(sc.set) do _G[k] = v end end
 		end
 		return r

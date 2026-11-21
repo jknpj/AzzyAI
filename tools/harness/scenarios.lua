@@ -184,11 +184,6 @@ SCENARIOS = {
 	-- freshly made homunculus: no skills learned, little SP; it must still fight
 	amistr_fresh = { homuntype = 2, skills = {}, mobs = cluster, sp = 20, spregen = 1, minAttacks = 100,
 		checks = {
-			["only normal attacks and dancing remain"] = function()
-				return SkillAnimationDance == nil and QueueSkillAnimationDance == nil
-					and TrySkillAnimationDance == nil and IsSkillAnimationDanceEnabled == nil
-					and UseDanceAttack == 1 and EleanorComboDance == 1
-			end,
 			["attack range reuses positions until the next tick"] = function()
 				local realGetV, realRange = GetV, AttackRange
 				local savedCache = ActorPosCache
@@ -393,8 +388,6 @@ SCENARIOS = {
 	-- regression: Stein Wand used to be spammed without checking SP (the harness fails any cast without SP)
 	-- partly levelled homunculus: hard-coded Lv5 casts (Stein Wand) and configured levels above the
 	-- learned one must be lowered before casting. Unlearned Pferd has ambiguous range 1,
-	-- so it requires the same eight bounded probes as bayeri_pferd_unlearned below.
-	-- Heilige Stange is off like in bayeri_pferd: Lv2 casts in 3 s with no cooldown, so the AI would
 	-- chain it from range 9 and never get close enough for the caster-centered Pferd (or melee).
 	-- Glanzen Spies is off too, or it spends the SP the Pferd probes need.
 	-- the cheap Stange chain above, with Stange on: casts stay at the learned Lv2
@@ -427,7 +420,6 @@ SCENARIOS = {
 	-- a lone target only gets The One Fighter Rises when its DEF makes the combos too weak
 	-- Grappling without spheres while nothing hits her (the owner tanks): she can't start Tinder
 	-- Breaker and would never gain spheres, so she switches back to fighting style
-	-- UseEleanorSonicClaw=0 must also stop the grapple fallback: it used to cast Sonic Claw to
 	-- recover spheres and switched her to fighting style against the preset
 
 	-- many monsters on screen: must keep fighting and not error out

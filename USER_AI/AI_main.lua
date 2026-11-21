@@ -13,10 +13,8 @@ local nextEleanorSphereAttack = 0
 local eleanorPreferredStylePending = false
 
 -- A refused starter is ambiguous; probe the other style without changing the tracked mode.
-ELEANOR_RESYNC_RETRY_MS = 5000
 -- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
 -- for this long, go back to fighting style to build them by attacking
-ELEANOR_GRAPPLE_NO_HIT_MS = 5000
 
 local function IsVanilCapriceForS(skill)
     return skill == HVAN_CAPRICE and MyHomunType >= 17 and UseVanilCaprice ~= 0
@@ -2526,8 +2524,7 @@ function UpdateTimeoutFile()
 			end
 			return TimeoutConv(value)
 		end
-		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..conv(SOffensiveTimeout,4).."\nSDefensiveTimeout="..conv(SDefensiveTimeout,5).."\nSOwnerBuffTimeout="..conv(SOwnerBuffTimeout,6).."\nSOwner2ndBuffTimeout="..conv(SOwner2ndBuffTimeout,6).."\nGuardTimeout="..conv(GuardTimeout,1).."\nQuickenTimeout="..conv(QuickenTimeout,2).."\nOffensiveOwnerTimeout="..conv(OffensiveOwnerTimeout,11).."\nDefensiveOwnerTimeout="..conv(DefensiveOwnerTimeout,12).."\nOtherOwnerTimeout="..conv(OtherOwnerTimeout,13).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres.."\nEleanorMode="..EleanorMode)
-		OutFile:write("\nEleanorWasDead="..(EleanorWasDead or 0))
+		OutFile:write("MagTimeout="..TimeoutConv(MagTimeout).."\nSOffensiveTimeout="..conv(SOffensiveTimeout,4).."\nSDefensiveTimeout="..conv(SDefensiveTimeout,5).."\nSOwnerBuffTimeout="..conv(SOwnerBuffTimeout,6).."\nSOwner2ndBuffTimeout="..conv(SOwner2ndBuffTimeout,6).."\nGuardTimeout="..conv(GuardTimeout,1).."\nQuickenTimeout="..conv(QuickenTimeout,2).."\nOffensiveOwnerTimeout="..conv(OffensiveOwnerTimeout,11).."\nDefensiveOwnerTimeout="..conv(DefensiveOwnerTimeout,12).."\nOtherOwnerTimeout="..conv(OtherOwnerTimeout,13).."\nShouldStandby="..ShouldStandbyx.."\nRegenTick[1]="..RegenTick[1].."\nMySpheres="..MySpheres)
 		local tick=GetTick()
 		for skill,cooldown in pairs(AutoSkillCooldown) do
 			if cooldown > tick then

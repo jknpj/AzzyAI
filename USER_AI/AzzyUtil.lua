@@ -4079,16 +4079,11 @@ end
 
 -- DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win. Glanzen Spies vs Stahl Horn is
 -- left to SkillPickScore (SkillDamage), which reproduces the benchmark's break-even.
-BAYERI_PAIR_MIN_DEF = 110
-BAYERI_PACK_SKILL_FULL_COUNT = 3
 -- breaks even near DEF 210 and wins from there (homun_bench.py: +3% at DEF 250, +21% at DEF 500,
 -- +51% at DEF 1000, -17% at DEF 0).
-ELEANOR_LONE_TOFR_MIN_DEF = 220
 -- With a pack her Sonic Claw chains only keep SP under the AoE's price: skipping them is +19..32%
-ELEANOR_PACK_NO_SONIC_COUNT = 3
 -- Blazing And Furious hits once per sphere for about 1/7 of The One Fighter Rises per hit and costs the
 -- same SP, so it only pays with a lot of spheres (the minimum is set by homun_bench.py)
-ELEANOR_BLAZING_MIN_SPHERES = 6
 
 function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then
