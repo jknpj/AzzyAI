@@ -469,9 +469,6 @@ SCENARIOS = {
 				return HasMobFlag(MobInfo[1039], MOB_FLAG_MVP) and HasMobFlag(MobInfo[1039], MOB_FLAG_BOSS)
 					and HasMobFlag(MobInfo[1078], MOB_FLAG_PLANT) and not HasMobFlag(MobInfo[1002], MOB_FLAG_PLANT)
 			end,
-			["skill elements: Lava Slide fire, Heilige Stange holy"] = function()
-				return SkillElement[MH_LAVA_SLIDE] == 3 and SkillElement[MH_HEILIGE_STANGE] == 6
-			end,
 			["element table: fire on water 1 = 50%, fire on fire 2 = 0%"] = function()
 				return ElementFix[1][3][1] == 50 and ElementFix[2][3][3] == 0
 			end,

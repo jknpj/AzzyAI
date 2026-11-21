@@ -29,10 +29,6 @@ AutoSkillCooldown[HFLI_MOON]=0
 AutoSkillCooldown[HVAN_CAPRICE]=0
 AutoSkillCooldown[HVAN_CHAOTIC]=0
 AutoSkillCooldown[HLIF_HEAL]=0
-AutoSkillCooldown[MH_POISON_MIST]=0
-AutoSkillCooldown[MH_LAVA_SLIDE]=0
-AutoSkillCooldown[MH_STEINWAND]=0 	
-AutoSkillCooldown[MH_SUMMON_LEGION]=0
 AutoSkillCooldown[HAMI_CASTLE]=0
 -- Old homunculus buffs: the reuse delay can outlast the buff (rAthena Bulwark Lv5: 20 s buff,
 -- 30 s cooldown), so recasting when the buff drops only produced "Skill failed".

@@ -4016,7 +4016,6 @@ function GetHomunBaseType(myid)
 end
 
 HomunBaseNames = { [LIF] = "Lif", [AMISTR] = "Amistr", [FILIR] = "Filir", [VANILMIRTH] = "Vanilmirth" }
-HomunSNames = { [EIRA] = "Eira", [BAYERI] = "Bayeri", [SERA] = "Sera", [DIETER] = "Dieter", [ELEANOR] = "Eleanor" }
 
 ---
 -- Name used by the per-type preset file (Types/<Name>.lua): the base name for a regular
@@ -4027,7 +4026,7 @@ function GetHomunTypeName()
     if base ~= nil then
         return HomunBaseNames[base]
     end
-    return HomunSNames[MyHomunType]
+    return nil
 end
 
 ---

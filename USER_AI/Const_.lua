@@ -60,12 +60,6 @@ LIF_H2			= 13
 AMISTR_H2		= 14
 FILIR_H2		= 15
 VANILMIRTH_H2		= 16
-EIRA			= 48
-BAYERI			= 49  --because sources can't agree on correct spelling
-BEYERI			= 49
-SERA			= 50
-DIETER			= 51
-ELEANOR			= 52
 
 -- Server type (controls actor ID ranges used to tell players/monsters/summons apart)
 SERVER_OFFICIAL		= 0
@@ -282,8 +276,6 @@ SERVER_OFFICIAL         = 0
 SERVER_PRIVATE          = 1
 
 -- Eleanor Style Constants
-FIGHTING_MODE 			= 0
-GRAPPLING_MODE			= 1
 
 ---------------------------
 --Tactics (skill use)
@@ -366,14 +358,7 @@ DEBUFF_ASH_A=8043
 
 CLASS_BOTH	=-1
 CLASS_OLD	=0
-CLASS_S		=1
 CLASS_MOB	=2
-CLASS_COMBO_1 =3
-CLASS_COMBO_2 =4
-CLASS_MINION	=5
-CLASS_GRAPPLE = 6
-CLASS_GRAPPLE_1 =7
-CLASS_GRAPPLE_2 =8
 CLASS_MIN_OLD = 9
 CLASS_MIN_S = 10
 CLASS_NEW_S = 11

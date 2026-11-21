@@ -224,11 +224,6 @@ local COMBO_WINDOW = 2000
 
 -- skill.cpp skill_isNotOk_hom; filled in once the AI has defined the skill constants
 local ELEANOR_STYLE, ELEANOR_COMBO, EXCLUSIVE, COMBO_SKILLS = {}, {}, {}, {}
-local function serverRules()
-	-- skill -> the skill whose SC_COMBO it needs
-	-- skill_combo: these open a 2 s combo window while at least one sphere is left
-	EXCLUSIVE = { [MH_GOLDENE_FERSE] = MH_ANGRIFFS_MODUS, [MH_ANGRIFFS_MODUS] = MH_GOLDENE_FERSE }
-end
 
 -- sphere costs: rAthena's on private servers, AzzyAI's official SkillSphereCost (LATAM) otherwise
 
@@ -288,7 +283,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 			end
 		end
 		if id == HOMUN and e.homuntype == ELEANOR then
-			server.spheres = server.spheres - sphereCost(skill, lvl)
 			-- spirit-sphere skills hit once per sphere left after paying their cost
 			spheresAtHit = server.spheres
 			if skill == MH_BLAZING_AND_FURIOUS then server.spheres = 0 end
@@ -538,7 +532,6 @@ end
 loadAI()
 -- Const_.lua turns developer traces off by default; --trace enables them for the run
 TraceAIEnabled = keepTraces and 1 or 0
-serverRules()
 HarnessDamageSetup(sc)
 -- sc.startStyle = "grappling": the homunculus starts in that style (rAthena spawns it fighting),
 -- like the test server's benchmark after a manual Style Change
