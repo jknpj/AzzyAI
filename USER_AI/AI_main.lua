@@ -12,142 +12,11 @@ ApplyServerType()
 local nextEleanorSphereAttack = 0
 local eleanorPreferredStylePending = false
 
-function GetEleanorPreferredStyle()
-	if UseEleanorSonicClaw == 1 then return FIGHTING_MODE end
-	if UseEleanorTinderBreaker == 1 and (AutoComboMode ~= 0 or Berserk_ComboAlways == 1) then
-		return GRAPPLING_MODE
-	end
-	if UseEleanorBlazingAndFurious == 1 or UseEleanorTheOneFighterRises == 1 then
-		return FIGHTING_MODE
-	end
-	return nil
-end
-
-function ResetEleanorAfterDeath()
-	MySpheres = 0
-	ComboSCTimeout, ComboSVTimeout, ComboFollowAt = 0, 0, 0
-	CastSkill, CastSkillLevel, CastSkillMode, CastSkillState, CastSkillTime = 0, 0, 0, 0, 0
-	MySkill, MySkillLevel = 0, 0
-	MyEnemy, CommandedEnemy = 0, 0
-	MyState = IDLE_ST
-	MyAttackStanceX, MyAttackStanceY = 0, 0
-	EleanorModeResyncPending, EleanorModeResyncSkill, EleanorModeResyncEnemy = 0, 0, 0
-	EleanorModeResyncTick = 0
-	AutoSkillCastTimeout, AutoSkillTimeout = 0, 0
-	nextEleanorSphereAttack = 0
-end
-
-function HandleEleanorLifeState()
-	if MyHomunType ~= ELEANOR then return false end
-	local dead = GetV(V_HP, MyID) <= 0 or GetV(V_MOTION, MyID) == MOTION_DEAD
-	if dead then
-		if EleanorWasDead ~= 1 then
-			ResetEleanorAfterDeath()
-			EleanorWasDead = 1
-			logappend("AAI_SKILLFAIL", "Eleanor died; cleared pending casts, combos and sphere estimate")
-			UpdateTimeoutFile()
-		end
-		return true
-	end
-	if EleanorWasDead == 1 then
-		ResetEleanorAfterDeath()
-		EleanorWasDead = 0
-		-- Resurrection starts in fighting style on rAthena; later starter confirmation can resync.
-		EleanorMode = FIGHTING_MODE
-		EleanorModeChangedTick, EleanorLastHitTick = GetTick(), GetTick()
-		MyLastSP = GetV(V_SP, MyID)
-		MyStart = GetTick()
-		eleanorPreferredStylePending = true
-		logappend("AAI_SKILLFAIL", "Eleanor revived; rebuilding spheres and applying configured preferred style")
-		UpdateTimeoutFile()
-	end
-	return false
-end
-
-function ApplyEleanorPreferredStyle()
-	if not eleanorPreferredStylePending or MyHomunType ~= ELEANOR then return false end
-	local preferred = GetEleanorPreferredStyle()
-	if preferred == nil or EleanorDoNotSwitchMode == 1 or EleanorMode == preferred then
-		eleanorPreferredStylePending = false
-		return false
-	end
-	if CastSkill ~= 0 or GetTick() < AutoSkillCastTimeout then return true end
-	if GetCastableSkillLevel(MH_STYLE_CHANGE, 1) <= 0
-		or GetV(V_SP, MyID) <= GetSkillInfo(MH_STYLE_CHANGE, 3, 1) then return false end
-	eleanorPreferredStylePending = false
-	logappend("AAI_SKILLFAIL", "Eleanor applying configured preferred style "..preferred)
-	return DoSkill(MH_STYLE_CHANGE, 1, MyID, 8) ~= 0
-end
-
 -- A refused starter is ambiguous; probe the other style without changing the tracked mode.
 ELEANOR_RESYNC_RETRY_MS = 5000
 -- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
 -- for this long, go back to fighting style to build them by attacking
 ELEANOR_GRAPPLE_NO_HIT_MS = 5000
-
-function TryEleanorModeResync(skill)
-	if MyHomunType ~= ELEANOR then
-		return false
-	end
-	if EleanorModeResyncPending == 1 and skill == EleanorModeResyncSkill then
-		EleanorModeResyncPending = 0
-		return false
-	end
-	if EleanorModeResyncTick > 0 and GetTick() < EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS then
-		return false
-	end
-	local probeSkill
-	if skill == MH_SONIC_CRAW and EleanorMode == FIGHTING_MODE then
-		probeSkill = MH_TINDER_BREAKER
-	elseif skill == MH_TINDER_BREAKER and EleanorMode == GRAPPLING_MODE then
-		probeSkill = MH_SONIC_CRAW
-	end
-	if probeSkill == nil or CastSkillEnemy == nil or CastSkillEnemy == 0
-		or (probeSkill == MH_SONIC_CRAW and UseEleanorSonicClaw ~= 1)
-		or (probeSkill == MH_TINDER_BREAKER and UseEleanorTinderBreaker ~= 1) then
-		return false
-	end
-	EleanorModeResyncPending = 1
-	EleanorModeResyncTick = GetTick()
-	EleanorModeResyncSkill = probeSkill
-	EleanorModeResyncEnemy = CastSkillEnemy
-	logappend("AAI_SKILLFAIL", "Eleanor starter refused; keeping style "..EleanorMode.." until "..FormatSkill(probeSkill, 1).." confirms another style")
-	return true
-end
-
-function GetEleanorStyleProbe()
-	if MyHomunType ~= ELEANOR or EleanorModeResyncPending ~= 1 then return 0, 0 end
-	if MyEnemy == 0 or MyEnemy ~= EleanorModeResyncEnemy
-		or GetTick() >= EleanorModeResyncTick + ELEANOR_RESYNC_RETRY_MS
-		or GetV(V_MOTION, MyEnemy) == MOTION_DEAD then
-		EleanorModeResyncPending = 0
-		return 0, 0
-	end
-	local skill = EleanorModeResyncSkill
-	local enabled = skill == MH_SONIC_CRAW and UseEleanorSonicClaw or UseEleanorTinderBreaker
-	local wanted = skill == MH_SONIC_CRAW and EleanorSonicClawLevel or EleanorTinderBreakerLevel
-	local level = GetCastableSkillLevel(skill, wanted or 5)
-	if enabled ~= 1 or level <= 0 or MySpheres < math.max(SkillSphereCost[skill] or 0, AutoComboSpheres)
-		or not IsSkillReady(skill) then return 0, 0 end
-	return skill, level
-end
-
--- True when Eleanor sits in grappling style unable to start Tinder Breaker and nothing hits her
--- (the owner tanks), so she would never get the spheres back
-function EleanorShouldLeaveGrappling(availsp)
-	if MyHomunType ~= ELEANOR or EleanorMode ~= GRAPPLING_MODE or EleanorDoNotSwitchMode == 1
-		or UseEleanorSonicClaw ~= 1 or CastSkill ~= 0 then
-		return false
-	end
-	local now = GetTick()
-	if MySpheres >= math.max(1, AutoComboSpheres or 1) or ComboSCTimeout > now or ComboSVTimeout > now then
-		return false
-	end
-	if now < math.max(EleanorLastHitTick, EleanorModeChangedTick) + ELEANOR_GRAPPLE_NO_HIT_MS then
-		return false
-	end
-	return availsp - ReserveSP >= GetSkillInfo(MH_STYLE_CHANGE, 3, 1)
-end
 
 local function IsVanilCapriceForS(skill)
     return skill == HVAN_CAPRICE and MyHomunType >= 17 and UseVanilCaprice ~= 0
@@ -417,7 +286,6 @@ function	OnMOVE_CMD (x,y)
 	end
 end
 
-
 function	OnSTOP_CMD ()
 
 	if TraceAIEnabled ~= 0 then TraceAI ("OnSTOP_CMD") end
@@ -435,7 +303,6 @@ function	OnSTOP_CMD ()
 
 end
 
-
 function	OnATTACK_OBJECT_CMD (id)
 	if TraceAIEnabled ~= 0 then TraceAI ("OnATTACK_OBJECT_CMD") end
 	ResetCounters()
@@ -449,7 +316,6 @@ function	OnATTACK_OBJECT_CMD (id)
 	MyState = CHASE_ST
 	OnCHASE_ST()
 end
-
 
 function	OnATTACK_AREA_CMD (x,y)
 
@@ -479,7 +345,6 @@ function	OnPATROL_CMD (x,y)
 
 end
 
-
 function	OnHOLD_CMD ()
 
 	if TraceAIEnabled ~= 0 then TraceAI ("OnHOLD_CMD") end
@@ -492,7 +357,6 @@ function	OnHOLD_CMD ()
 	MyState = HOLD_CMD_ST
 
 end
-
 
 function	OnSKILL_OBJECT_CMD (level,skill,id)
 
@@ -528,7 +392,6 @@ function	OnSKILL_OBJECT_CMD (level,skill,id)
 		end
 	end
 end
-
 
 function	OnSKILL_AREA_CMD (level,skill,x,y)
 	ResetCounters()
@@ -569,9 +432,6 @@ function	OnFOLLOW_CMD ()
 	end
 
 end
-
-
-
 
 function	ProcessCommand (msg)
 
@@ -636,7 +496,6 @@ end
 --###############################
 --######## State Process ########
 --###############################
-
 
 function	OnIDLE_ST ()
 	-- MoveSticky: the move command pins the homunculus around the cell where it arrived
@@ -1149,7 +1008,6 @@ function OnCHASE_ST()
     return
 end
 
-
 function OnATTACK_ST()
     if TraceAIEnabled ~= 0 then TraceAI("OnATTACK_ST MyEnemy: "..MyEnemy.." MyPos "..formatpos(GetPos(MyID)).." ("..GetV(V_MOTION, MyID)..") enemypos "..formatpos(GetPos(MyEnemy)).." ("..GetV(V_MOTION, MyEnemy)..") MyTarget: "..GetV(V_TARGET, MyID)) end
     if (true == IsOutOfSight(MyID, MyEnemy)) then -- first thing's first, if enemy is gone drop it.
@@ -1335,7 +1193,7 @@ function OnATTACK_ST()
                     end
                 end
             end
-            if skilltouse[2] == MH_SONIC_CRAW and (eleanorSaveSP or EleanorPackSkipsSonicClaw(MyEnemy)) then
+            if false then
                 skilltouse = {-1, 0, 0}
             end
             if TraceAIEnabled ~= 0 then TraceAI("skill selected "..skilltouse[2]) end
@@ -1356,7 +1214,7 @@ function OnATTACK_ST()
             end
             -- ### Eleanor Grapple Tactic Fallback - END ###
             -- #################################################################
-            if skilltouse[2] == 0 and tact_skill ~= SKILL_NEVER and EleanorShouldLeaveGrappling(availsp) then
+            if false then
                 if TraceAIEnabled ~= 0 then TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style") end
                 logappend("AAI_SKILLFAIL", "Eleanor: no spheres in grappling style and no hit taken; Style Change to fighting")
                 DoSkill(MH_STYLE_CHANGE, 1, MyID, 8)
@@ -1916,9 +1774,6 @@ function OnATTACK_AREA_CMD_ST ()
 
 end
 
-
-
-
 function OnPATROL_CMD_ST ()
 
 	if TraceAIEnabled ~= 0 then TraceAI ("OnPATROL_CMD_ST") end
@@ -1946,7 +1801,6 @@ function OnPATROL_CMD_ST ()
 
 end
 
-
 -----------------------------------------------------------------------
 --IF ANYONE READING MY CODE HAS A FUCK'S CLUE WHAT THE HOLD COMMAND IS
 --OR WHAT IN THE DEVIL IT'S PURPOSE IS, PLEASE ENLIGHTEN ME! -Azzy 
@@ -1968,7 +1822,6 @@ function OnHOLD_CMD_ST ()
 		return
 	end
 
-
 	local	object = GetOwnerEnemy (MyID)
 	if (object == 0) then							
 		object = GetMyEnemy (MyID)
@@ -1980,9 +1833,6 @@ function OnHOLD_CMD_ST ()
 	MyEnemy = object
 
 end
-
-
-
 
 function OnSKILL_OBJECT_CMD_ST ()
 	if IsInAttackSight(MyID,MyEnemy,MySkill,MySkillLevel) then
@@ -2016,9 +1866,6 @@ function OnSKILL_OBJECT_CMD_ST ()
 	
 end
 
-
-
-
 function OnSKILL_AREA_CMD_ST ()
 
 	if TraceAIEnabled ~= 0 then TraceAI ("OnSKILL_AREA_CMD_ST") end
@@ -2041,12 +1888,6 @@ function OnSKILL_AREA_CMD_ST ()
 	end
 
 end
-
-
-
-
-
-
 
 function OnFOLLOW_CMD_ST ()
 	if TraceAIEnabled ~= 0 then TraceAI ("OnFOLLOW_CMD_ST") end
@@ -2106,7 +1947,6 @@ function OnFOLLOW_CMD_ST ()
 	end
 end
 
-
 --#####################################
 --### Targeting Routines start here ###
 --#####################################
@@ -2143,7 +1983,6 @@ end
 -- 0 = nonaggro
 -- -1 = tank
 -- -2 = rescue
-
 
 function	GetEnemyList (myid,aggro)
 	local owner  = OwnerID
@@ -3234,7 +3073,6 @@ function DoAutoPushback(myid)
 	return 1
 end
 
-
 --####################
 --### DoKiteAdjust ###
 --####################
@@ -3432,8 +3270,7 @@ function AI(myid)
 	if DoneInit== 0 then
 		doInit(myid)
 	end
-	if HandleEleanorLifeState() then return end
-	if AggressiveRelogTracking==1 then
+		if AggressiveRelogTracking==1 then
 		local OutFile
 		if IsHomun(MyID)==1 then
 			OutFile=io.open(AggressiveRelogPath.."H_"..OwnerID.."Time.lua","w")
@@ -4008,7 +3845,7 @@ function AI(myid)
 			and sp >= GetSkillInfo(CastSkill, 3, CastSkillLevel) then
 			interruptedOffensiveCast = true
 		end
-		local modeResynced = CastSkillMode == 0 and CastSkillState == 0 and TryEleanorModeResync(CastSkill)
+		local modeResynced = false
 		RecordOffensiveCastResult(CastSkill, CastSkillLevel, false, interruptedOffensiveCast)
 		-- Only a cast that never started can be a refused level; a broken cast was accepted.
 		SkillCastResult(CastSkill,CastSkillLevel,CastSkillState>0)
@@ -4103,8 +3940,7 @@ function AI(myid)
 	if (GetTick() < (MyStart + SpawnDelay)) then
 		return
 	end
-	if ApplyEleanorPreferredStyle() then return end
-	if GetHomunBaseType(MyID)==AMISTR and UseCastleDefend ==1 then
+		if GetHomunBaseType(MyID)==AMISTR and UseCastleDefend ==1 then
 		if CanCastle() then
 			local mytargetweight =0
 			local ownertargetweight =0

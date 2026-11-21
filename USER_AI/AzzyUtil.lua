@@ -18,12 +18,8 @@ function CellKey(x, y)
 	return (x + 2048) * 4096 + (y + 2048)
 end
 
-
-
-
 --[[
 USAGE NOTES
-
 
 HPPercent(id)
 SPPercent(id)
@@ -62,7 +58,6 @@ Assumes level 1 brandish area.
 ex:
 SkillObject(MyID,MySkillLevel,ML_BRANDISH,GetBestBrandishTarget(MyID))
 
-
 @@@@@@@@@@@@@@@@@@@@@@@
 @@@ Skill Functions @@@
 @@@@@@@@@@@@@@@@@@@@@@@
@@ -98,7 +93,6 @@ GetPushbackSkill(id)
 As GetMobSkill() only returns the ID and other perameters for the pushback skill (arrow repel or skid trap) posessed by the mercenary
 
 --]]--
-
 
 --#########################
 --### Tactics Functions ###
@@ -644,7 +638,6 @@ end
 --### Friend Functions ###
 --########################
 
-
 function IsFriend(id)
 	if (id==OwnerID) then
 		return 1
@@ -710,7 +703,6 @@ end
 --########################
 --### Monster functions###
 --########################
-
 
 function GetAggroCount(target)
 	local aggrocount=0
@@ -1573,7 +1565,6 @@ function Move(myid,x,y)
 	end
 end
 
-
 OldSkillObject=SkillObject
 function SkillObject(myid,lvl,skill,target)
 	if skill==8041 or skill==8043 or skill==8020 or skill==8025 then
@@ -1625,7 +1616,6 @@ function	GetDistance2 (id1, id2)
 	end
 	return GetDistance (x1,y1,x2,y2)
 end
-
 
 function GetDistanceRect(id1,id2)
 	local x1, y1 = GetPos (id1)
@@ -1848,11 +1838,6 @@ function	GetDistanceAPR (id1, x2,y2)
 	return math.max(math.abs(x1-x2),math.abs(y1-y2))
 end
 
-
-
-
-
-
 function BetterMoveToOwner(myid,range)
 	if (range==nil) then
 		range=1
@@ -1978,7 +1963,6 @@ function	IsOutOfSight (id1,id2)
 	end
 end
 
-
 function	IsInAttackSight (myid,target,skill,level)
 	if (skill==nil) then
 		skill=MySkill
@@ -1999,8 +1983,6 @@ function	IsInAttackSight (myid,target,skill,level)
 		return false;
 	end
 end
-
-
 
 function AttackRange(myid,skill,level)
 	if (skill==nil or level== nil) then
@@ -2057,9 +2039,6 @@ function Closer(id,ox,oy)
 	end
 	return newx,newy
 end
-
-
-
 
 -- free: the caller explicitly wants this target reached (a commanded fight), so AdjustStandPoint
 -- may pick a cell outside the owner's move bounds
@@ -2428,7 +2407,6 @@ end
 --### LUA 5.1 feature support ###   ##   ##
 --###############################   ##   ##
 
-
 function DiagonalDist(distance)
 	return math.floor(math.sqrt(distance*distance))
 end
@@ -2485,7 +2463,7 @@ function GetSAtkSkill(myid)
 	local htype
 	if MyHomunType == ELEANOR and CastSkill ~= 0 then return 0,0 end
 	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
-		local probe, level = GetEleanorStyleProbe()
+		local probe, level = nil, 0
 		if probe == MH_SONIC_CRAW then return probe, level end
 		if EleanorModeResyncPending == 1 then return 0,0 end
 	end
@@ -2549,49 +2527,11 @@ function GetSAtkSkill(myid)
 	return 0,0
 end
 
-function GetComboSkill(myid)
-	local htype
-	if CastSkill ~= 0 then return 0,0 end
-	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then return 0,0 end
-	local skill = 0
-	local level = 0
-	if (IsHomun(myid)==1) then
-		htype=MyHomunType
-		if htype==ELEANOR then
-			if EleanorMode==FIGHTING_MODE then
-				-- a follow-up sent at a monster that just died is refused by the server
-				local targetGone = MyEnemy ~= nil and MyEnemy > 0 and GetV(V_MOTION,MyEnemy) == MOTION_DEAD
-				-- Follow-ups ignore the sphere estimate: it only decides when a chain starts, and a
-				-- refused follow-up just ends the chain (the estimate is left alone)
-				if not targetGone and ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_SILVERVEIN_RUSH, true) then
-					skill=MH_SILVERVEIN_RUSH
-					if EleanorSilverveinLevel==nil then
-						level=SkillList[ELEANOR][MH_SILVERVEIN_RUSH]
-					else
-						level=EleanorSilverveinLevel
-					end
-				elseif not targetGone and ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and IsSkillReady(MH_MIDNIGHT_FRENZY, true) then
-					skill=MH_MIDNIGHT_FRENZY
-					if EleanorMidnightLevel==nil then
-						level=SkillList[ELEANOR][MH_MIDNIGHT_FRENZY]
-					else
-						level=EleanorMidnightLevel
-					end
-				end
-			end
-		end
-		if level ~=0 then
-			return skill,level
-		end
-	end
-	return 0,0
-end
-
 function GetGrappleSkill(myid)
 	local htype
 	if CastSkill ~= 0 then return 0,0 end
 	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
-		local probe, level = GetEleanorStyleProbe()
+		local probe, level = nil, 0
 		if probe == MH_TINDER_BREAKER then return probe, level end
 		if EleanorModeResyncPending == 1 then return 0,0 end
 	end
@@ -2690,7 +2630,6 @@ function GetPushbackSkill(myid)
 	end
 	return 0,0
 end
-
 
 function GetDebuffSkill(myid)
 	local skill, level = 0, 0
@@ -2827,7 +2766,6 @@ function GetMobSkill(myid)
 	end
 	return 0,0
 end
-
 
 function	GetQuickenSkill(myid)
 	local level = 0
@@ -3125,8 +3063,6 @@ function	GetOtherOwnerSkill(myid)
 	end
 end
 
-
-
 function GetHealingSkill(myid)
 	local level = 0
 	local skill = 0
@@ -3350,7 +3286,7 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 	if needed <= 1 and count > 0 then
 		needed = 0
 	end
-	if count < needed and not EleanorLoneTofrWorthIt(skill, count, target) then
+	if count < needed then
 		return false
 	end
 	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
@@ -3370,7 +3306,7 @@ function GetTargetedSkills(myid)
 	Mainatk={MAIN_ATK,s,l}
 	s,l=GetSAtkSkill(myid)
 	Satk={S_ATK,s,l}
-	s,l=GetComboSkill(myid)
+	s,l=0,0
 	ComboAtk={COMBO_ATK,s,l}
 	s,l=GetGrappleSkill(myid)
 	GrappleAtk={GRAPPLE_ATK,s,l}
@@ -3670,13 +3606,6 @@ function modtwroSend()
 	modtwROAttackTarget,modtwROMoveX,modtwROMoveY=0,0,0
 end
 
-
-
-
-
-
-
-
 -- I SHOULDNT HAVE TO CODE THIS!
 function modulo(a,b)
 	return a-math.floor(a/b)*b
@@ -3707,7 +3636,6 @@ function absunit(x)
 		return -1
 	end
 end
-
 
 -- Logging functions:
 
@@ -4464,29 +4392,6 @@ ELEANOR_PACK_NO_SONIC_COUNT = 3
 -- Blazing And Furious hits once per sphere for about 1/7 of The One Fighter Rises per hit and costs the
 -- same SP, so it only pays with a lot of spheres (the minimum is set by homun_bench.py)
 ELEANOR_BLAZING_MIN_SPHERES = 6
-function EleanorLoneTofrWorthIt(skill, count, target)
-	if MyHomunType ~= ELEANOR or skill ~= MH_THE_ONE_FIGHTER_RISES or count < 1 then
-		return false
-	end
-	local info = GetMobInfo(target)
-	return info ~= nil and info[7] ~= nil and info[7] >= ELEANOR_LONE_TOFR_MIN_DEF
-end
-
--- True when Sonic Claw should not start a chain because the pack is better served by The One Fighter Rises
-function EleanorPackSkipsSonicClaw(target)
-	if MyHomunType ~= ELEANOR or UseEleanorTheOneFighterRises ~= 1 then
-		return false
-	end
-	local lv = GetCastableSkillLevel(MH_THE_ONE_FIGHTER_RISES, EleanorTheOneFighterRisesLevel or 10)
-	if lv <= 0 then
-		return false
-	end
-	local mobmode = 0
-	if AutoMobMode == 2 then
-		mobmode = 1
-	end
-	return GetMobCount(MH_THE_ONE_FIGHTER_RISES, lv, target, mobmode) >= ELEANOR_PACK_NO_SONIC_COUNT
-end
 
 function GetNewSAtkSkill(myid)
 	if IsHomun(myid)~=1 then
