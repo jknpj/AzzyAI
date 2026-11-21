@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn loads_the_monster_database() {
         let mobs = load().unwrap();
-        assert_eq!(mobs.by_id.len(), 1004);
+        assert_eq!(mobs.by_id.len(), 2675);
         let poring = mobs.get("1002").expect("Poring");
         assert_eq!(poring.name, "Poring");
         assert_eq!(poring.level, 1);
