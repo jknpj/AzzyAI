@@ -2466,13 +2466,7 @@ function GetSAtkSkill(myid)
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
 		if htype > 47 then -- it's a Homun S
-   if htype==BAYERI and UseBayeriStahlHorn==1 then
-				skill=MH_STAHL_HORN
-				if BayeriStahlHornLevel==nil then
-					level=SkillList[BAYERI][MH_STAHL_HORN]
-				else
-					level=BayeriStahlHornLevel
-				end
+   if false then
 			end
 		end
 		if level ~=0 and IsSkillReady(skill) then
@@ -2557,15 +2551,7 @@ end
 function GetDebuffSkill(myid)
 	local skill, level = 0, 0
 	if (IsHomun(myid)==1) then
-  if MyHomunType==DIETER and UseDieterVolcanicAsh==1 then
-			skill=MH_VOLCANIC_ASH
-			level=SkillList[DIETER][MH_VOLCANIC_ASH]
-			local t = GetTick()
-			if (AshTimeout[1] < t or AshTimeout[2] < t or AshTimeout[3] < t) then
-				return skill,level
-			else 
-				return 0,0
-			end
+  if false then
 		end
 	else
 		for i,v in ipairs(DebuffSkillList) do
@@ -2621,13 +2607,7 @@ function GetMobSkill(myid)
 		if htype <17 then
 			skill=0
 		else -- it's a homun s
-   if htype==BAYERI and UseBayeriHailegeStar==1 then
-				skill=MH_HEILIGE_STANGE
-				if BayeriHailegeStarLevel==nil then
-					level=SkillList[BAYERI][MH_HEILIGE_STANGE]
-				else
-					level=BayeriHailegeStarLevel
-				end
+   if false then
 			end 
 			if AutoSkillCooldown[skill]~=nil then
 				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
@@ -2690,10 +2670,7 @@ function	GetSOffensiveSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-  if	(htype==DIETER and UseDieterMagmaFlow~=0) then
-			skill=MH_MAGMA_FLOW
-			level = SkillList[DIETER][MH_MAGMA_FLOW]
-			skillopt=UseDieterMagmaFlow
+  if false then
 		end
 		return skill,level,skillopt
 	else
@@ -2714,10 +2691,7 @@ function	GetSDefensiveSkill(myid)
 	local skillopt=0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-  if	(htype==DIETER and UseDieterGraniticArmor~=0) then
-			skill=MH_GRANITIC_ARMOR
-			level = SkillList[DIETER][MH_GRANITIC_ARMOR]
-			skillopt=UseDieterGraniticArmor
+  if false then
 		end
 		return skill,level,skillopt
 	else
@@ -2739,14 +2713,7 @@ function	GetSOwnerBuffSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-  if	(htype==DIETER and UseDieterPyroclastic~=0) then
-			skill=MH_PYROCLASTIC
-			if DieterPyroclasticLevel==nil then
-				level = SkillList[DIETER][MH_PYROCLASTIC]
-			else
-				level=DieterPyroclasticLevel
-			end
-			skillopt=UseDieterPyroclastic
+  if false then
 		end
 		return skill,level,skillopt
 	else
@@ -2768,10 +2735,7 @@ function GetSightOrAoE(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-  if (htype==SERA and PoisonMistMode~=0 and UseSeraPoisonMist==1) then
-			skill=MH_POISON_MIST
-			level = SeraPoisonMistLevel or SkillList[SERA][MH_POISON_MIST]
-			skillopt=PoisonMistMode
+  if false then
 		end
 	else
 		if MercType==2 then
@@ -2876,10 +2840,7 @@ function	GetDefensiveOwnerSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		local htype=MyHomunType
-  if htype==BAYERI and UseBayeriGoldeneTone~=0 then
-			skill = MH_GOLDENE_TONE
-			level = BayeriGoldeneToneLevel or SkillList[htype][skill]
-			skillopt = UseBayeriGoldeneTone
+  if false then
 		else
 			return 0,0,0
 		end
@@ -4142,14 +4103,7 @@ function GetSOwner2ndBuffSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-  if htype==EIRA and UseEiraLightOfRegene~=nil and UseEiraLightOfRegene~=0 then
-			skill = MH_LIGHT_OF_REGENE
-			skillopt = UseEiraLightOfRegene
-			level = math.min(EiraLightOfRegeneLevel or 5, SkillList[htype][skill] or 0)
-			if level > 0 and (GetV(V_MOTION,OwnerID)==MOTION_DEAD or HPPercent(OwnerID) > (EiraLightOfRegeneOwnerHP or 100)) then
-				-- level 0 with a valid skill means "not now"; returning 0,0,0 would disable the buff for good
-				return skill,0,skillopt
-			end
+  if false then
 		end
 	end
 	if level==0 then
@@ -4189,8 +4143,7 @@ function GetNewSAtkSkill(myid)
 		return 0,0
 	end
 	local htype=MyHomunType
- if htype==BAYERI then
-		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
+ if false then
 	end
 	return 0,0
 end
@@ -4200,8 +4153,7 @@ function GetNewMobSkill(myid,target,tact_skillclass)
 		return 0,0
 	end
 	local htype=MyHomunType
- if htype==SERA then
-		return PickReadySkill(htype,{{UseSeraToxinOfMandara,MH_TOXIN_OF_MANDARA,SeraToxinOfMandaraLevel}})
+ if false then
 	end
 	return 0,0
 end
