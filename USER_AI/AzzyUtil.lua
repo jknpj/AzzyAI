@@ -4075,15 +4075,6 @@ function LintSkillOptions(myid, logstring)
     -- A master list of all homunculus-specific skill options, grouped by type.
     -- { "Use" option, "Level" option (or nil), skill_constant, friendly_skill_name }
     local allSkillOptions = {
-        [EIRA] = {
-            { "UseEiraEraseCutter", "EiraEraseCutterLevel", MH_ERASER_CUTTER, "Eraser Cutter" },
-            { "UseEiraXenoSlasher", "EiraXenoSlasherLevel", MH_XENO_SLASHER, "Xeno Slasher" },
-            { "UseEiraSilentBreeze", "EiraSilentBreezeLevel", MH_SILENT_BREEZE, "Silent Breeze" },
-            { "UseEiraOveredBoost", nil, MH_OVERED_BOOST, "Overed Boost" },
-            { "UseEiraLightOfRegene", "EiraLightOfRegeneLevel", MH_LIGHT_OF_REGENE, "Light of Regenerate" },
-            { "UseEiraTwisterCutter", "EiraTwisterCutterLevel", MH_TWISTER_CUTTER, "Twister Cutter" },
-            { "UseEiraAbsoluteZephyr", "EiraAbsoluteZephyrLevel", MH_ABSOLUTE_ZEPHYR, "Absolute Zephyr" }
-        },
         [BAYERI] = {
             { "UseBayeriStahlHorn", "BayeriStahlHornLevel", MH_STAHL_HORN, "Stahl Horn" },
             { "UseBayeriHailegeStar", "BayeriHailegeStarLevel", MH_HEILIGE_STANGE, "Heilige Stange" },
