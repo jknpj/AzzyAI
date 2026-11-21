@@ -2461,63 +2461,18 @@ end
 
 function GetSAtkSkill(myid)
 	local htype
-	if MyHomunType == ELEANOR and CastSkill ~= 0 then return 0,0 end
-	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
-		local probe, level = nil, 0
-		if probe == MH_SONIC_CRAW then return probe, level end
-		if EleanorModeResyncPending == 1 then return 0,0 end
-	end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
 		if htype > 47 then -- it's a Homun S
-			if htype==EIRA and UseEiraEraseCutter==1 then
-				skill=MH_ERASER_CUTTER
-				if EiraEraseCutterLevel==nil then
-					level=SkillList[EIRA][MH_ERASER_CUTTER]
-				else
-					level=EiraEraseCutterLevel
-				end
-			elseif htype==BAYERI and UseBayeriStahlHorn==1 then
+   if htype==BAYERI and UseBayeriStahlHorn==1 then
 				skill=MH_STAHL_HORN
 				if BayeriStahlHornLevel==nil then
 					level=SkillList[BAYERI][MH_STAHL_HORN]
 				else
 					level=BayeriStahlHornLevel
 				end
-			elseif htype==SERA and UseSeraParalyze==1 then
-				skill=MH_NEEDLE_OF_PARALYZE
-				if SeraParalyzeLevel==nil then
-					level=SkillList[SERA][MH_NEEDLE_OF_PARALYZE]
-				else
-					level=SeraParalyzeLevel
-				end
-			elseif htype==ELEANOR and UseEleanorSonicClaw==1 and EleanorMode==FIGHTING_MODE then
-				skill=MH_SONIC_CRAW
-				if EleanorSonicClawLevel==nil then
-					level=SkillList[ELEANOR][MH_SONIC_CRAW]
-				else
-					level=EleanorSonicClawLevel
-				end
-			elseif htype==ELEANOR and UseEleanorTinderBreaker==1 and EleanorMode==GRAPPLING_MODE then
-				skill=MH_TINDER_BREAKER
-				if EleanorTinderBreakerLevel==nil then
-					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
-				else
-					level=EleanorTinderBreakerLevel
-				end
-			end
-		end
-		if htype == ELEANOR and (skill == MH_SONIC_CRAW or skill == MH_TINDER_BREAKER) then
-			local comboEnabled = AutoComboMode == 2 or Berserk_ComboAlways == 1
-			if AutoComboMode == 1 and MyEnemy ~= 0 then
-				local tactic = GetTact(TACT_SKILLCLASS, MyEnemy)
-				comboEnabled = comboEnabled or (skill == MH_SONIC_CRAW and (tactic == CLASS_COMBO_1 or tactic == CLASS_COMBO_2))
-					or (skill == MH_TINDER_BREAKER and tactic > 5)
-			end
-			if comboEnabled and MySpheres < AutoComboSpheres then
-				return 0,0
 			end
 		end
 		if level ~=0 and IsSkillReady(skill) then
@@ -2530,42 +2485,10 @@ end
 function GetGrappleSkill(myid)
 	local htype
 	if CastSkill ~= 0 then return 0,0 end
-	if MyHomunType == ELEANOR and EleanorModeResyncPending == 1 then
-		local probe, level = nil, 0
-		if probe == MH_TINDER_BREAKER then return probe, level end
-		if EleanorModeResyncPending == 1 then return 0,0 end
-	end
 	local skill = 0
 	local level = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if htype==ELEANOR and EleanorMode==GRAPPLING_MODE then
-			-- AutoComboSpheres decides when to start the chain (Tinder Breaker); a started chain only
-			-- needs the spheres the next skill costs (CBC 1, EQC 2), or the server refuses it
-			if ComboSCTimeout > GetTick() and GetTick() >= ComboFollowAt and UseEleanorCBC == 1 and IsSkillReady(MH_CBC) then
-				skill=MH_CBC
-				if EleanorCBCLevel==nil then
-					level=SkillList[ELEANOR][MH_CBC]
-				else
-					level=EleanorCBCLevel
-				end
-			elseif ComboSVTimeout > GetTick() and GetTick() >= ComboFollowAt and UseEleanorEQC == 1 and IsSkillReady(MH_EQC) then
-				skill=MH_EQC
-				if EleanorEQCLevel==nil then
-					level=SkillList[ELEANOR][MH_EQC]
-				else
-					level=EleanorEQCLevel
-				end
-			elseif MySpheres >= AutoComboSpheres and UseEleanorTinderBreaker == 1 and IsSkillReady(MH_TINDER_BREAKER)
-				and not (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
-				skill=MH_TINDER_BREAKER
-				if EleanorTinderBreakerLevel==nil then
-					level=SkillList[ELEANOR][MH_TINDER_BREAKER]
-				else
-					level=EleanorTinderBreakerLevel
-				end
-			end
-		end
 		if level ~=0 then
 			return skill,level
 		end
@@ -2634,15 +2557,7 @@ end
 function GetDebuffSkill(myid)
 	local skill, level = 0, 0
 	if (IsHomun(myid)==1) then
-		if MyHomunType==EIRA and UseEiraSilentBreeze==1 and IsSkillReady(MH_SILENT_BREEZE) then
-			skill=MH_SILENT_BREEZE
-			if EiraSilentBreezeLevel==nil then
-				level=SkillList[EIRA][MH_SILENT_BREEZE]
-			else
-				level=EiraSilentBreezeLevel
-			end
-			return skill,level
-		elseif MyHomunType==DIETER and UseDieterVolcanicAsh==1 then
+  if MyHomunType==DIETER and UseDieterVolcanicAsh==1 then
 			skill=MH_VOLCANIC_ASH
 			level=SkillList[DIETER][MH_VOLCANIC_ASH]
 			local t = GetTick()
@@ -2672,18 +2587,6 @@ end
 function GetMinionSkill(myid)
 	local level,skill=0,0
 	if (IsHomun(myid)==1) then
-		if MyHomunType==SERA and UseSeraCallLegion==1 then
-			skill=MH_SUMMON_LEGION
-			level=SeraCallLegionLevel or SkillList[SERA][MH_SUMMON_LEGION]
-			if TraceAIEnabled ~= 0 then TraceAI("GetMinionSkill "..skill..level) end
-			if AutoSkillCooldown[skill]~=nil then
-				if GetTick() < AutoSkillCooldown[skill] then -- in cooldown
-					level=0
-					skill=0
-				end
-			end
-			return skill,level
-		end
 	end
 	return 0,0
 end
@@ -2718,33 +2621,12 @@ function GetMobSkill(myid)
 		if htype <17 then
 			skill=0
 		else -- it's a homun s
-			if htype==EIRA and UseEiraXenoSlasher==1 then
-				skill=MH_XENO_SLASHER
-				if EiraXenoSlasherLevel==nil then
-					level=SkillList[EIRA][MH_XENO_SLASHER]
-				else
-					level=EiraXenoSlasherLevel
-				end
-			elseif htype==BAYERI and UseBayeriHailegeStar==1 then
+   if htype==BAYERI and UseBayeriHailegeStar==1 then
 				skill=MH_HEILIGE_STANGE
 				if BayeriHailegeStarLevel==nil then
 					level=SkillList[BAYERI][MH_HEILIGE_STANGE]
 				else
 					level=BayeriHailegeStarLevel
-				end
-			elseif htype==SERA and UseSeraPoisonMist==1 and PoisonMistMode==0 then
-				skill=MH_POISON_MIST
-				if SeraPoisonMistLevel==nil then
-					level=SkillList[SERA][MH_POISON_MIST]
-				else
-					level=SeraPoisonMistLevel
-				end
-			elseif htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode==0 then
-				skill=MH_LAVA_SLIDE
-				if DieterLavaSlideLevel==nil then
-					level=SkillList[DIETER][MH_LAVA_SLIDE]
-				else
-					level=DieterLavaSlideLevel
 				end
 			end 
 			if AutoSkillCooldown[skill]~=nil then
@@ -2808,15 +2690,7 @@ function	GetSOffensiveSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if (htype==BAYERI and UseBayeriAngriffModus~=0) then
-			skill=MH_ANGRIFFS_MODUS
-			level = SkillList[BAYERI][MH_ANGRIFFS_MODUS]
-			skillopt=UseBayeriAngriffModus
-			-- the server refuses Angriffs Modus while Goldene Ferse is up (and vice versa)
-			if UseBayeriGoldenPherze~=0 and SDefensiveTimeout > GetTick() then
-				level = 0
-			end
-		elseif	(htype==DIETER and UseDieterMagmaFlow~=0) then
+  if	(htype==DIETER and UseDieterMagmaFlow~=0) then
 			skill=MH_MAGMA_FLOW
 			level = SkillList[DIETER][MH_MAGMA_FLOW]
 			skillopt=UseDieterMagmaFlow
@@ -2840,14 +2714,7 @@ function	GetSDefensiveSkill(myid)
 	local skillopt=0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if (htype==BAYERI and UseBayeriGoldenPherze~=0) then
-			skill=MH_GOLDENE_FERSE
-			level = SkillList[BAYERI][MH_GOLDENE_FERSE]
-			skillopt=UseBayeriGoldenPherze
-			if UseBayeriAngriffModus~=0 and SOffensiveTimeout > GetTick() then
-				level = 0
-			end
-		elseif	(htype==DIETER and UseDieterGraniticArmor~=0) then
+  if	(htype==DIETER and UseDieterGraniticArmor~=0) then
 			skill=MH_GRANITIC_ARMOR
 			level = SkillList[DIETER][MH_GRANITIC_ARMOR]
 			skillopt=UseDieterGraniticArmor
@@ -2872,11 +2739,7 @@ function	GetSOwnerBuffSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if (htype==EIRA and UseEiraOveredBoost~=0) then
-			skill=MH_OVERED_BOOST
-			level = SkillList[EIRA][MH_OVERED_BOOST]
-			skillopt=UseEiraOveredBoost
-		elseif	(htype==DIETER and UseDieterPyroclastic~=0) then
+  if	(htype==DIETER and UseDieterPyroclastic~=0) then
 			skill=MH_PYROCLASTIC
 			if DieterPyroclasticLevel==nil then
 				level = SkillList[DIETER][MH_PYROCLASTIC]
@@ -2905,11 +2768,7 @@ function GetSightOrAoE(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if	(htype==DIETER and UseDieterLavaSlide==1 and LavaSlideMode~=0) then
-			skill=MH_LAVA_SLIDE
-			level = DieterLavaSlideLevel or SkillList[DIETER][MH_LAVA_SLIDE]
-			skillopt=LavaSlideMode
-		elseif (htype==SERA and PoisonMistMode~=0 and UseSeraPoisonMist==1) then
+  if (htype==SERA and PoisonMistMode~=0 and UseSeraPoisonMist==1) then
 			skill=MH_POISON_MIST
 			level = SeraPoisonMistLevel or SkillList[SERA][MH_POISON_MIST]
 			skillopt=PoisonMistMode
@@ -3017,11 +2876,7 @@ function	GetDefensiveOwnerSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		local htype=MyHomunType
-		if htype==SERA and UseSeraPainkiller~=0 then
-			skill = MH_PAIN_KILLER
-			level = SkillList[htype][skill]
-			skillopt = UseSeraPainkiller
-		elseif htype==BAYERI and UseBayeriGoldeneTone~=0 then
+  if htype==BAYERI and UseBayeriGoldeneTone~=0 then
 			skill = MH_GOLDENE_TONE
 			level = BayeriGoldeneToneLevel or SkillList[htype][skill]
 			skillopt = UseBayeriGoldeneTone
@@ -3067,15 +2922,6 @@ function GetHealingSkill(myid)
 	local level = 0
 	local skill = 0
 	if (IsHomun(myid)==1) then
-		if MyHomunType == EIRA and HealOwnerBreeze == 1 then --Handling for Eira silent breeze
-			skill=MH_SILENT_BREEZE
-			if not IsSkillReady(skill) then
-				level=0
-			else
-				level=EiraSilentBreezeLevel or SkillList[EIRA][MH_SILENT_BREEZE]
-			end
-			return skill,level
-		end
 		local homuntype=GetHomunBaseType(myid)
 		if (homuntype==LIF) then
 			skill=HLIF_HEAL
@@ -3291,12 +3137,6 @@ function ShouldUseMobSkill(skill,level,target,tact_skillclass)
 	end
 	-- Bayeri: his DEF-ignoring area skills (Heilige Stange/Pferd) only beat Stahl Horn on a pair of
 	-- monsters when their DEF is high (homun_bench.py: break-even near DEF 110); 3+ always win
-	if MyHomunType == BAYERI and (skill == MH_HEILIGE_STANGE or skill == MH_HEILIGE_PFERD) and count < BAYERI_PACK_SKILL_FULL_COUNT then
-		local info = GetMobInfo(target)
-		if info ~= nil and info[7] ~= nil and info[7] < BAYERI_PAIR_MIN_DEF then
-			return false
-		end
-	end
 	return true
 end
 
@@ -4345,11 +4185,7 @@ function GetSOwner2ndBuffSkill(myid)
 	local skillopt = 0
 	if (IsHomun(myid)==1) then
 		htype=MyHomunType
-		if	htype==DIETER and UseDieterTempering~=0 then
-			skill = MH_TEMPERING
-			level = SkillList[htype][skill]
-			skillopt = UseDieterTempering
-		elseif htype==EIRA and UseEiraLightOfRegene~=nil and UseEiraLightOfRegene~=0 then
+  if htype==EIRA and UseEiraLightOfRegene~=nil and UseEiraLightOfRegene~=0 then
 			skill = MH_LIGHT_OF_REGENE
 			skillopt = UseEiraLightOfRegene
 			level = math.min(EiraLightOfRegeneLevel or 5, SkillList[htype][skill] or 0)
@@ -4398,12 +4234,8 @@ function GetNewSAtkSkill(myid)
 		return 0,0
 	end
 	local htype=MyHomunType
-	if htype==EIRA then
-		return PickReadySkill(htype,{{UseEiraTwisterCutter,MH_TWISTER_CUTTER,EiraTwisterCutterLevel}})
-	elseif htype==BAYERI then
+ if htype==BAYERI then
 		return PickReadySkill(htype,{{UseBayeriGlanzenSpies,MH_GLANZEN_SPIES,BayeriGlanzenSpiesLevel}})
-	elseif htype==SERA then
-		return PickReadySkill(htype,{{UseSeraNeedleStinger,MH_NEEDLE_STINGER,SeraNeedleStingerLevel}})
 	end
 	return 0,0
 end
@@ -4413,30 +4245,8 @@ function GetNewMobSkill(myid,target,tact_skillclass)
 		return 0,0
 	end
 	local htype=MyHomunType
-	if htype==EIRA then
-		return PickReadySkill(htype,{{UseEiraAbsoluteZephyr,MH_ABSOLUTE_ZEPHYR,EiraAbsoluteZephyrLevel}})
-	elseif htype==SERA then
+ if htype==SERA then
 		return PickReadySkill(htype,{{UseSeraToxinOfMandara,MH_TOXIN_OF_MANDARA,SeraToxinOfMandaraLevel}})
-	elseif htype==BAYERI then
-		return PickReadySkill(htype,{{UseBayeriHeiligePferd,MH_HEILIGE_PFERD,BayeriHeiligePferdLevel}})
-	elseif htype==DIETER then
-		return PickReadySkill(htype,{{UseDieterBlastForge,MH_BLAST_FORGE,nil}})
-	elseif htype==ELEANOR then
-		local candidates = {
-			{UseEleanorTheOneFighterRises,MH_THE_ONE_FIGHTER_RISES,EleanorTheOneFighterRisesLevel},
-			{UseEleanorBlazingAndFurious,MH_BLAZING_AND_FURIOUS,EleanorBlazingAndFuriousLevel}
-		}
-		for _, candidate in ipairs(candidates) do
-			local skill = candidate[2]
-			if candidate[1] ~= nil and candidate[1] ~= 0 and IsSkillReady(skill)
-				and not IsOffensiveCastPaused(skill)
-				and not (skill == MH_BLAZING_AND_FURIOUS and (MySpheres or 0) < ELEANOR_BLAZING_MIN_SPHERES) then
-				local level = candidate[3] or SkillList[htype][skill] or 0
-				if level ~= 0 and (target == nil or ShouldUseMobSkill(skill, level, target, tact_skillclass)) then
-					return skill, level
-				end
-			end
-		end
 	end
 	return 0,0
 end
