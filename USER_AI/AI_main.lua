@@ -1169,19 +1169,11 @@ function OnATTACK_ST()
                     end
                 end
             end
-            if false then
-                skilltouse = {-1, 0, 0}
-            end
             if TraceAIEnabled ~= 0 then TraceAI("skill selected "..skilltouse[2]) end
 
             -- #################################################################
             
             -- #################################################################
-            if false then
-                if TraceAIEnabled ~= 0 then TraceAI("Eleanor: no spheres in grappling style and nothing hits her; switching to fighting style") end
-                logappend("AAI_SKILLFAIL", "Eleanor: no spheres in grappling style and no hit taken; Style Change to fighting")
-                DoSkill(MH_STYLE_CHANGE, 1, MyID, 8)
-            end
         end
         -- Now we finalize the selection
         if skilltouse[1] ~= -1 then
