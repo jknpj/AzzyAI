@@ -1,9 +1,9 @@
 {
  "tile": 20,
- "columns": 8,
- "rows": 7,
- "width": 160,
- "height": 140,
+ "columns": 4,
+ "rows": 4,
+ "width": 80,
+ "height": 80,
  "skills": [
   {
    "id": 8001,
