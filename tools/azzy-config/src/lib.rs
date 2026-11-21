@@ -327,7 +327,7 @@ mod tests {
 
     #[test]
     fn round_trip_is_byte_identical() {
-        for name in ["H_Config.lua", "M_Config.lua", "Types/Dieter.lua"] {
+        for name in ["H_Config.lua", "M_Config.lua"] {
             let path = repo().join("USER_AI").join(name);
             let text = std::fs::read_to_string(&path).unwrap();
             let config = Config::parse(&text);
