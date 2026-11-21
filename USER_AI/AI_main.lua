@@ -21,6 +21,7 @@ ResCmdList			= List.new()
 AutoSkillCooldown		= {}
 AutoSkillCooldown[HFLI_MOON]=0
 AutoSkillCooldown[HVAN_CAPRICE]=0
+AutoSkillCooldown[HVAN_SELFDESTRUCT]=0
 AutoSkillCooldown[HVAN_CHAOTIC]=0
 AutoSkillCooldown[HLIF_HEAL]=0
 AutoSkillCooldown[HAMI_CASTLE]=0

@@ -401,6 +401,18 @@ SCENARIOS = {
 	-- ...but not on Earth 1, which takes 90% from Wind
 	-- low SP: compared by damage per SP, so the cheap Eraser Cutter wins
 
+	-- UseFilirMoon = 0: the Filir never casts Moonlight, it just attacks
+	filir_moon_off = { homuntype = 3, skills = { "HFLI_MOON:5" }, mobs = cluster, minAttacks = 20,
+		set = { UseFilirMoon = 0 }, forbid = { "Moonlight" } },
+
+	-- UseVanilSelfDestruct = 1 makes the dead data reachable
+	vanil_selfdestruct = { homuntype = 4, skills = { "HVAN_SELFDESTRUCT:3" }, mobs = cluster,
+		minAttacks = 0, set = { UseVanilSelfDestruct = 1, UseVanilCaprice = 0 },
+		checks = { ["the picker offers Self Destruct when the option is on"] = function()
+			local s, l = GetAtkSkill(MyID)
+			return s == HVAN_SELFDESTRUCT and l == SkillList[VANILMIRTH][HVAN_SELFDESTRUCT]
+		end } },
+
 	-- many monsters on screen: must keep fighting and not error out
 	-- GetBestAoECoord / GetBestAoETarget (optimized) must pick exactly what the old brute-force
 	-- search picks, on 40 monsters, for ground and target-centered AoEs of several sizes
