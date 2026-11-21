@@ -117,7 +117,7 @@ Alguns recursos do navegador precisam de conexão com a internet.
 
 ### Configurações por tipo de homúnculo
 
-As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* edita o `H_Config.lua`; escolher um tipo (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edita o `Types/<Nome>.lua`, que guarda só os valores diferentes dos globais e é aplicado depois do `H_Config.lua` quando aquele homúnculo inicia. **Usar valores globais** remove os ajustes do tipo. O seletor também substitui os antigos filtros Homúnculo S / Homúnculo base: um Homúnculo S lista as habilidades próprias, um base lista só as suas, e *Global* lista tudo. Apagar o arquivo do tipo desativa o preset. O Dieter já vem com `AutoMobCount = 1`, pois todos os ataques dele são em área e o valor global 2 o deixava quase parado contra um único monstro.
+As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* edita o `H_Config.lua`; escolher um tipo (Lif, Amistr, Filir, Vanilmirth) edita `Types/<Nome>.lua`, que guarda só os valores diferentes dos globais e é aplicado depois do `H_Config.lua` quando aquele homúnculo aparece. **Usar valores globais** remove as mudanças do tipo. Apagar o arquivo do tipo desativa o preset.
 
 ## 4. Comportamento básico
 
@@ -125,12 +125,11 @@ As duas GUIs têm o seletor **Configurações de** na aba Homúnculo. *Global* e
 |---|---|
 | `ServerType` | **Official** para oficiais; **Private** para rAthena/Hercules. |
 | `UseAttackSkill` | Permite habilidades ofensivas automáticas. |
-| `UseHomunSSkillAttack` / `UseHomunSSkillChase` | Permite habilidades S ao atacar / perseguir. |
 | `AggroHP` / `AggroSP` | Porcentagem de HP/SP necessária para procurar alvos. Aumentar pode reduzir a agressividade. |
 | `SuperPassive` | Impede o combate normal; confira se ninguém está atacando. |
 | `DoNotChase` | Impede perseguir alvos. Um alvo distante pode nunca entrar no alcance. |
 | `KiteMonsters` | Permite manter distância quando as táticas também permitem. |
-| `UseDamageDanger` | Desligado por padrão. Se o homúnculo perder `DamageDangerDrop`% (30) do HP máximo em 3 s com HP abaixo de `DamageDangerHP`% (60), ele kita mesmo com `KiteMonsters` desligado, e o Bayeri usa Stein Wand. Ele só enxerga o próprio HP, não os buffs dos inimigos. |
+| `UseDamageDanger` | Desligado por padrão. Se o homúnculo perder `DamageDangerDrop`% (30) do HP máximo em 3 s com HP abaixo de `DamageDangerHP`% (60), ele kita mesmo com `KiteMonsters` desligado. Ele só enxerga o próprio HP, não os buffs dos inimigos. |
 | `UseDanceAttack` | Ativa movimento durante ataques. Pode mudar o posicionamento; não remove cooldowns. |
 | `CommandedFightStay` | Ligado por padrão. Um monstro que você mandou o homúnculo atacar é combatido até morrer ou até você dar outra ordem, mesmo que você se afaste. Use 0 para ele desistir e voltar quando o alvo sair dos limites de movimento ou o tempo limite de ataque passar. |
 | `StationaryMoveBounds` / `MobileMoveBounds` | Até que distância de você pode ir para reagir (com você parado / em movimento). Ambos vêm em 14; diminua `MobileMoveBounds` se a unidade ficar para trás quando você corre. |
@@ -151,14 +150,12 @@ Uma habilidade pode não ser escolhida por:
 - Outra habilidade disponível com pontuação maior (veja abaixo).
 - Cast, combo ou pausa temporária ainda em andamento.
 
-Eira, Bayeri e Sera comparam suas habilidades de ataque em vez de seguir uma
-lista fixa: cada ataque disponível recebe uma pontuação pelo multiplicador de
-dano, o elemento do alvo (de `MobInfo.lua`), quantos monstros atinge, a DEF do
-alvo nas habilidades que não a ignoram e o tempo de conjuração. Abaixo de 40% de
-SP a pontuação usa dano por SP, então as habilidades mais baratas ganham. Por
-exemplo, a Eira usa Absolute Zephyr ou Twister Cutter contra monstros fracos a
-Vento e Eraser Cutter contra monstros de Vento. As demais habilidades mantêm a
-ordem habitual.
+As habilidades de ataque são usadas na ordem configurada (a habilidade de ataque
+normal, depois as prioridades por tipo e as táticas), não pontuadas por dano: o
+modelo de dano Renewal que as comparava não existe no Pre-Renewal. Uma habilidade
+ainda é pulada quando o elemento do alvo derrubaria o dano abaixo de
+`SkillElementMinRate` (`MobInfo.lua`), quando o SP não basta ou quando a tática
+não permite. `SkillElementMinRate` em 0 ignora a checagem de elemento.
 
 `AutoMobMode` controla habilidades automáticas em área. `AutoMobCount` define
 a quantidade necessária; **1 pode fazer habilidades de área competirem mesmo
@@ -172,63 +169,17 @@ cooldown, cast ou interrupções do servidor. Menor nem sempre é melhor.
 O preset incluído e os valores internos de reserva da IA podem diferir; vale o
 valor do arquivo instalado.
 
-## 6. Dicas por Homúnculo S
+## 6. Homúnculos nesta versão
 
-| Homúnculo | O que conferir |
-|---|---|
-| Eira | Ative os ataques desejados, como Twister Cutter ou Absolute Zephyr. Light of Regenerate é opcional e desligada por padrão: exige lealdade, reduz intimidade ao conjurar e sacrifica Eira para ressuscitar o dono. |
-| Bayeri | **Glanzen Spies** usa um alvo; **Heilige Pferd** é centrada no Bayeri. O preset do Bayeri liga Pferd e Spies; Spies substitui Stahl Horn só quando pontua mais contra o alvo (principalmente com DEF alta); com exatamente dois monstros, Stange/Pferd só a partir de DEF 110. |
-| Sera | Toxin of Mandara e Needle Stinger têm casts que podem ser interrompidos. Mantenha o alvo no alcance e confira as pausas de falha abaixo. Pain Killer e Summon Legion têm opções próprias. |
-| Dieter | Ative ataques e buffs separadamente. Resistência ou imunidade ao fogo pode impedir a escolha de habilidades de fogo. |
-| Eleanor | Sonic Claw e a sequência de luta exigem estilo de luta; Tinder Breaker/CBC/EQC exigem agarrar. Esferas, SP e tempo do combo importam. The One Fighter Rises e Blazing And Furious são habilidades em área: seguem `AutoMobMode`/`AutoMobCount` em vez de serem usadas contra um único alvo, exceto The One Fighter Rises contra um alvo isolado com DEF 220 ou mais. Com 3+ monstros ela pula as cadeias de Sonic Claw, e Blazing And Furious só é usada com 6+ esferas. |
-| Vanilmirth | **Caprice** (herdada também pelos Homunculus S baseados em Vanilmirth) é controlada por `UseVanilCaprice` (ligada por padrão). Chaotic Blessing segue `UseAutoHeal`. Self Destruct nunca é usada automaticamente. |
-São dicas de configuração, não um ranking ou uma build ideal. As regras do
-servidor podem variar, inclusive alcance e forma de mirar habilidades.
+Esta é a versão Pre-Renewal, então o homúnculo é um dos quatro originais:
+**Lif, Amistr, Filir ou Vanilmirth**. Cada um compra as próprias habilidades com
+os pontos de evolução que o jogo dá, e as opções seguem as habilidades que ele
+aprendeu.
 
-O preset incluído usa `AutoMobCount` 2. O preset da Eira liga **Twister Cutter**
-e **Absolute Zephyr**; a IA as usa quando pontuam mais que
-Eraser Cutter ou Xeno Slasher. O preset da Sera liga **Needle Stinger** (mesma regra contra
-Needle of Paralyze) e `AutoMobCount` 1; os presets por tipo também ligam
-Spies do Bayeri e Blazing And Furious da Eleanor, e **Blast Forge** (Dieter) está
-ligada. As comparações offline são simulações, não medições em um servidor oficial.
-Todas as habilidades de ataque do Dieter são de área, então com
-`AutoMobCount` 2 ele não ataca um único monstro com elas: coloque `AutoMobCount`
-em 1 se você enfrenta principalmente um monstro por vez com o Dieter (Bayeri e
-Sera perdem dano contra monstros isolados). Os detalhes estão nas
-[notas técnicas](TECHNICAL.md#default-preset-tuning) e nas
-[tabelas de comparação](preset-tuning/README.md).
-
-### Eleanor: combos ou somente Sonic Claw
-
-Para combos, escolha **Always** ou **Tactics** em `AutoComboMode` e confira
-`AutoComboSpheres`: é o limite de esferas para **iniciar** a sequência automática,
-não uma exigência repetida em cada etapa. Um limite alto faz esperar mais.
-As novas habilidades ofensivas podem competir com o combo.
-
-Ritmo da sequência: `EleanorComboGap` (padrão 500 ms) é a espera antes de cada etapa seguinte, e `EleanorComboDance` (padrão 1) mantém o ataque com dança entre as habilidades do combo para cancelar parte da animação. Se habilidades forem recusadas, use 0 no segundo e cerca de 800 no primeiro. Ambos vão no `H_Extra.lua`.
-
-Para um experimento ofensivo só com Sonic:
-
-1. Ative `UseEleanorSonicClaw`.
-2. Coloque `AutoComboMode` em **Never** e desligue `Berserk_ComboAlways`.
-3. Desligue Tinder Breaker, CBC, EQC, Blazing And Furious e The One Fighter Rises.
-4. Coloque Eleanor em **estilo de luta** e recarregue a IA após salvar.
-
-Ataques normais e buffs habilitados continuam ativos. A IA não consegue ler o
-estilo da Eleanor: após uma troca manual de estilo ela percebe quando um
-iniciador de combo (Sonic Claw ou Tinder Breaker) é recusado e passa a seguir o
-novo estilo; outra recusa de iniciador em menos de 5 segundos é tratada como
-falta de esferas. No estilo de agarrar ela só ganha esferas ao ser atingida, então,
-sem esferas para Tinder Breaker e sem levar golpes por 5 segundos, ela volta ao
-estilo de luta; use `EleanorDoNotSwitchMode = 1` para manter o estilo escolhido.
-Se jogo e IA ainda discordarem, recarregue e teste
-novamente; os ícones de esferas não são necessariamente uma contagem exata
-em tempo real.
-
-`SphereTrackInterval` é uma opção avançada de estimativa (padrão **800 ms**),
-não um ajuste de velocidade ou cooldown. Reduza somente após confirmar
-ataques normais mais rápidos; um valor baixo demais pode causar recusas.
-Uma opção em `H_Extra.lua` prevalece sobre o valor salvo pela GUI.
+Aqui não existe Homúnculo S: não há combos da Eleanor, nem habilidades de área
+do Dieter, nem esbirros da Sera, nem buffs do Bayeri para configurar; as opções
+simplesmente não existem (nem nas GUIs). Veja [PRERENEWAL.md](PRERENEWAL.md)
+para o que esta versão inclui.
 
 ## 7. Interrupções repetidas de cast
 
@@ -295,7 +246,6 @@ Isso afeta todos os monstros com o mesmo ID de tática, não só um boneco.
 | Habilidade nova nunca aparece | Nível aprendido, ativação, SP, alcance, limite de área e habilidades concorrentes. |
 | Cast começa sempre e falha | Interrupções por dano, alcance, SP e opções de pausa; nem toda falha é interrupção. |
 | GUI não muda o jogo | Apply/exportação, pasta correta, recarga e opções em `H_Extra.lua`. |
-| Eleanor usa a sequência errada | Estilo, combos e esferas; recarregue após mudanças. |
 
 `AAIStartH.txt`, na pasta do cliente, registra o carregamento da IA do homúnculo.
 `AAI_ERROR.log` pode mostrar erros e pausas temporárias de skills ofensivas.

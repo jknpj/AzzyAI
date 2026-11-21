@@ -113,7 +113,7 @@ Some browser resources need an internet connection.
 
 ### Settings per homunculus type
 
-Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits `H_Config.lua`; choosing a type (Lif, Amistr, Filir, Vanilmirth, Eira, Bayeri, Sera, Dieter, Eleanor) edits `Types/<Name>.lua`, which only stores the values that differ from the global ones and is applied after `H_Config.lua` when that homunculus starts. **Use global values** removes the type's overrides. The selector also replaces the old Homunculus S / Base homunculus filters: a Homunculus S lists its own skill settings, a base homunculus lists only its own, and *Global* lists everything. Deleting a type file disables its preset. Dieter ships with `AutoMobCount = 1`, because all his attacks are area skills and the global value of 2 left him almost idle against a single monster.
+Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits `H_Config.lua`; choosing a type (Lif, Amistr, Filir, Vanilmirth) edits `Types/<Name>.lua`, which only stores the values that differ from the global ones and is applied after `H_Config.lua` when that homunculus starts. **Use global values** removes the type's overrides. Deleting a type file disables its preset.
 
 ## 4. Basic behavior
 
@@ -121,12 +121,11 @@ Both GUIs have a **Settings for** selector on the Homunculus tab. *Global* edits
 |---|---|
 | `ServerType` | **Official** for official servers; **Private** for rAthena/Hercules. |
 | `UseAttackSkill` | Allows automatic offensive skills. |
-| `UseHomunSSkillAttack` / `UseHomunSSkillChase` | Allows Homunculus S skills while attacking / chasing. |
 | `AggroHP` / `AggroSP` | HP/SP percentage needed to seek targets automatically. Raising these can reduce aggression. |
 | `SuperPassive` | Prevents normal combat behavior; check it if nothing attacks. |
 | `DoNotChase` | Stops chasing targets. A distant target may never enter skill range. |
 | `KiteMonsters` | Enables keeping distance when tactics also allow it. |
-| `UseDamageDanger` | Off by default. If the homunculus loses `DamageDangerDrop`% (30) of its max HP within 3 s while below `DamageDangerHP`% (60) HP, it kites away even with `KiteMonsters` off, and Bayeri casts Stein Wand. It only sees its own HP, not enemy buffs. |
+| `UseDamageDanger` | Off by default. If the homunculus loses `DamageDangerDrop`% (30) of its max HP within 3 s while below `DamageDangerHP`% (60) HP, it kites away even with `KiteMonsters` off,. It only sees its own HP, not enemy buffs. |
 | `UseDanceAttack` | Enables attack movement. It can affect positioning; it is not a skill-cooldown remover. |
 | `CommandedFightStay` | On by default. A monster you order the homunculus to attack is fought until it dies or you give another order, even if you walk away. Set to 0 to let it give up and return when the target leaves the move bounds or the attack time limit passes. |
 | `StationaryMoveBounds` / `MobileMoveBounds` | How far from you it may go to react (you standing / moving). Both are 14 by default; lower `MobileMoveBounds` if the unit gets left behind while you run. |
@@ -147,13 +146,12 @@ has learned. A skill can remain unused because of:
 - Another usable skill scoring higher (see below).
 - A pending cast, combo or temporary failure pause.
 
-Eira, Bayeri and Sera compare their attack skills instead of following a fixed
-list: each usable attack is scored by its damage ratio, the target's element
-(from `MobInfo.lua`), how many monsters it hits, the target's DEF for skills that
-don't ignore it, and its cast time. Below 40% SP the score uses damage per SP, so
-cheaper skills win. For example, Eira uses Absolute Zephyr or Twister Cutter
-against monsters weak to Wind and Eraser Cutter against Wind monsters. Other
-skills keep the usual order.
+Attack skills are used in the configured order (the usual attack skill, then the
+skill-type priorities and the tactics), not scored by damage: the Renewal damage
+model that compared them does not exist in Pre-Renewal. A skill is still skipped
+when the target's element would cut its damage below `SkillElementMinRate`
+(`MobInfo.lua`), when the SP is not enough, or when the tactics do not allow it.
+`SkillElementMinRate` at 0 ignores the element check.
 
 `AutoMobMode` controls automatic area attacks. `AutoMobCount` sets the required
 monster amount; a value of **1 can make area skills compete on a single target**.
@@ -166,61 +164,17 @@ extra wait**, not server cooldowns, cast time or interruptions. Smaller values
 are not always better. The bundled preset and the AI's built-in fallback values can
 differ; the installed file's value is what matters.
 
-## 6. Notes for each Homunculus S
+## 6. Homunculi in this build
 
-| Homunculus | What to check |
-|---|---|
-| Eira | Enable the attacks you want, such as Twister Cutter or Absolute Zephyr. Light of Regenerate is optional and disabled by default: it requires Loyal intimacy, reduces intimacy on cast, and sacrifices Eira for the owner's resurrection. |
-| Bayeri | **Glanzen Spies** is a targeted attack; **Heilige Pferd** is centered on Bayeri. The Bayeri preset enables Pferd and Spies; Spies replaces Stahl Horn only when it scores higher for the target (mostly high DEF); with exactly two monsters Stange/Pferd are used only from DEF 110. |
-| Sera | Toxin of Mandara and Needle Stinger have casts that may be interrupted. Keep the target in range and check the failure-pause options below. Pain Killer and Summon Legion have their own switches. |
-| Dieter | Enable the desired attacks/buffs individually. Fire resistance or immunity can prevent fire skills from being selected. |
-| Eleanor | Sonic Claw and the fighting chain need fighting style; Tinder Breaker/CBC/EQC need grappling style. Spheres, SP and combo timing matter. The One Fighter Rises and Blazing And Furious are area skills: they follow `AutoMobMode`/`AutoMobCount` instead of being used on a single target, except The One Fighter Rises against a lone target with DEF 220 or more. With 3+ monsters she skips Sonic Claw chains, and Blazing And Furious is only cast with 6+ spheres. |
-| Vanilmirth | **Caprice** (also inherited by Vanilmirth-based Homunculus S) is controlled by `UseVanilCaprice` (on by default). Chaotic Blessing follows `UseAutoHeal`. Self Destruct is never used automatically. |
-These are configuration tips, not a ranking or an optimal build. Server rules
-may differ, including skill ranges and targeting.
+This is the Pre-Renewal build, so the homunculus is one of the four originals:
+**Lif, Amistr, Filir or Vanilmirth**. Each one buys its own skills with the
+evolution points the game gives it, and the options follow the skills it has
+learned.
 
-The bundled preset sets `AutoMobCount` to 2. Eira's type preset enables **Twister Cutter**
-and **Absolute Zephyr**; the AI uses them when they score higher
-than Eraser Cutter or Xeno Slasher. Sera's preset enables **Needle Stinger** (same rule against
-Needle of Paralyze) and `AutoMobCount` 1; the type presets also enable Bayeri's Spies
-and Eleanor's Blazing And Furious, and **Blast Forge** (Dieter) is on. Offline comparisons
-are simulations, not measurements on an official server. Dieter's attacks are all area
-skills, so with `AutoMobCount` 2 he does not attack
-a single monster with them: set `AutoMobCount` to 1 if you mostly fight one monster
-at a time as Dieter (Bayeri and Sera then lose damage against single monsters).
-Details are in the [technical notes](TECHNICAL.md#default-preset-tuning) and the
-[comparison tables](preset-tuning/README.md).
-
-### Eleanor: combos or Sonic Claw only
-
-For combos, set `AutoComboMode` to **Always** or **Tactics** and review
-`AutoComboSpheres`: it is the sphere threshold to **start** an automatic chain,
-not a requirement repeated for every follow-up. A high threshold means waiting
-longer. New offensive skills can compete with the chain.
-
-Chain pacing: `EleanorComboGap` (default 500 ms) is the wait before each follow-up, and `EleanorComboDance` (default 1) keeps the dance attack running between combo skills to cancel part of the animation. Set the latter to 0 and the gap to about 800 if skills get refused. Both go in `H_Extra.lua`.
-
-For a Sonic-only offensive experiment:
-
-1. Enable `UseEleanorSonicClaw`.
-2. Set `AutoComboMode` to **Never** and `Berserk_ComboAlways` off.
-3. Disable Tinder Breaker, CBC, EQC, Blazing And Furious and The One Fighter Rises.
-4. Put Eleanor in **fighting style** and reload the AI after saving.
-
-Normal attacks and enabled buffs remain active. The AI cannot read Eleanor's
-style: after a manual style change it notices when a combo starter (Sonic Claw
-or Tinder Breaker) is refused and follows the new style; another refused starter
-within 5 seconds is treated as missing spheres. In grappling style she only gains
-spheres when hit, so without the spheres for Tinder Breaker and with nothing
-hitting her for 5 seconds she switches back to fighting style; set
-`EleanorDoNotSwitchMode = 1` to keep the style you chose. If the game and AI
-still disagree, reload and test again; do not assume the
-visible sphere icons are an exact real-time count.
-
-`SphereTrackInterval` is an advanced estimate setting (default **800 ms**),
-not an attack speed or cooldown setting. Reduce it only after verifying faster
-normal attacks; too short can cause refused skills. An `H_Extra.lua` override
-takes precedence over the GUI value.
+There is no Homunculus S here, so there are no Eleanor combos, no Dieter area
+skills, no Sera minions and no Bayeri buffs to configure: the options simply do
+not exist (in the GUIs as well). See [PRERENEWAL.md](PRERENEWAL.md) for what
+this build does and does not include.
 
 ## 7. Repeated cast interruptions
 
@@ -287,7 +241,6 @@ all monsters sharing the same tactics ID, not just one dummy.
 | New skill never appears | Learned level, enable switch, SP, range, area threshold and competing skills. |
 | Cast starts repeatedly but fails | Damage interruptions, range, SP and the cast-pause options; do not assume every failure is an interruption. |
 | GUI changes have no effect | Apply/export, actual game folder, reload and overrides in `H_Extra.lua`. |
-| Eleanor uses the wrong chain | Style, combo settings and spheres; reload after changes. |
 
 `AAIStartH.txt` in the client folder records homunculus AI startup.
 `AAI_ERROR.log` can show errors and temporary offensive-skill pauses.

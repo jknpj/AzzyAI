@@ -1,5 +1,12 @@
 # AzzyAI: technical reference
 
+> **Pre-Renewal build.** This document describes the AI engine, which is shared, but
+> the data and skills are the Pre-Renewal ones: the sections about `SkillDamage`,
+> the Renewal damage model, Homunculus S skill trees, the Renewal monster database
+> and the S options do not apply here. The build's own description, data sources
+> and limitations are in [PRERENEWAL.md](PRERENEWAL.md).
+
+
 [User README](../README.md) | [Português (BR)](../README.pt-BR.md) | [Español](../README.es.md) | [Changelog](../CHANGELOG.md)
 
 This document keeps the technical material previously in the README. It is

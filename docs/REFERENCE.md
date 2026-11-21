@@ -162,7 +162,6 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 |---|---|---|
 | `UseAttackSkill` | 1 | Automatic offensive skills. |
 | `UseSkillOnly` | -1 | **-1 (Chase, recommended)** uses skills while chasing and attacking. **0** only while attacking. **1** attacks only with skills, and will not use a ranged skill before it is in melee range. |
-| `UseHomunSSkillChase`, `UseHomunSSkillAttack` | 1, 1 | Allow the single-target Homunculus S skills while chasing / attacking. Turn them off when many of your skills have interruptible casts and you cannot flee. |
 | `AutoMobMode` | 2 | Area skills: 0 off; 1 counts only monsters already attacking; 2 counts every monster the area would hit. |
 | `AutoMobCount` | 2 | Monsters (weighted by the [Weight tactic](#weight)) needed before an area skill is used. 1 lets an area skill compete even on a single target. |
 | `AoEFixedLevel` | 0 | 1 = always cast area skills at the level set in the skill's `...Level` option, ignoring the tactics' skill-level settings. |
@@ -172,8 +171,6 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 | `AutoSkillLimit` | 0 | Cap on offensive skills used against one target, applied on top of the monster's skill tactic (whichever number is lower wins). 0 = no limit. The count restarts when the target changes. |
 | `AutoSkillDelay` | 200 (mercenary 400) | Extra wait, in ms, between skills, to avoid double casting. 0 removes only this wait, not cooldowns or cast time. |
 | `CastTimeRatio` | .80 | Fraction of the skill's cast time the AI expects, for your cast-time reductions. |
-| `AutoComboMode` | 2 | Combo skills (Eleanor): 0 never; 1 only for monsters whose skill class is a combo class; 2 always. |
-| `AutoComboSpheres` | 1 | Spheres needed to **start** an automatic chain. |
 | `UseVanilCaprice` | 1 | Vanilmirth: use Caprice. |
 | `LintUserOptions` | 1 | **New.** At startup, turns off skill options for skills the homunculus has not learned and lowers levels to the learned level. |
 | `TrustSkillProbe` | -1 | **New.** Whether to believe the client's answer about learned skill levels. -1 = automatic (not on the official server, yes on private servers). With the probe distrusted, a skill the client reports as not learned is still tried at the configured level and the level steps down when the server refuses it, instead of the option being disabled at startup. |
@@ -186,11 +183,6 @@ learned one at startup.
 
 | Homunculus | Attack skill options |
 |---|---|
-| Eira | `UseEiraXenoSlasher`, `UseEiraEraseCutter` (Eraser Cutter), `UseEiraTwisterCutter`, `UseEiraAbsoluteZephyr`, `UseEiraSilentBreeze` |
-| Bayeri | `UseBayeriStahlHorn`, `UseBayeriHailegeStar`, `UseBayeriGlanzenSpies`, `UseBayeriHeiligePferd` |
-| Sera | `UseSeraParalyze` (Needle of Paralyze), `UseSeraPoisonMist`, `UseSeraCallLegion`, `UseSeraToxinOfMandara`, `UseSeraNeedleStinger` |
-| Dieter | `UseDieterLavaSlide`, `UseDieterVolcanicAsh`, `UseDieterAshAsAttack`, `UseDieterBlastForge` |
-| Eleanor | `UseEleanorSonicClaw`, `EleanorSilverveinLevel`, `EleanorMidnightLevel`, `UseEleanorTinderBreaker`, `UseEleanorCBC`, `UseEleanorEQC`, `UseEleanorBlazingAndFurious`, `UseEleanorTheOneFighterRises` |
 
 Silvervein Rush and Midnight Frenzy have only a level, not a switch. Notes for choosing among
 them are in [manual section 6](MANUAL.md#6-notes-for-each-homunculus-s). `LavaSlideMode` and
@@ -212,25 +204,19 @@ A buff option takes one of these values, which say **when** the skill may be use
 | 2 | While chasing or attacking in Berserk mode |
 | 3 | As soon as possible, interrupting other actions. The current target is dropped only for Painkiller and Provoke. |
 
-For Homunculus S buffs there is no level option, because higher levels are better. For base
-homunculi there is one, because higher levels have longer cooldowns.
+Base homunculi have a level option for each buff, because higher levels have longer
+cooldowns.
 
 | Option | Default | Controls |
 |---|---|---|
 | `UseOffensiveBuff` | 3 | Flitting, Mental Charge, Weapon Quicken, Bloodlust |
 | `UseDefensiveBuff` | 3 | Amistr Bulwark, Accelerated Flight, Guard, Parrying, Urgent Escape |
 | `UseAutoSight`, `UseAutoMag` | 1, 0 (built-in) | **Mercenary only:** Sight (level 2 archer), Magnificat (level 4 archer) |
-| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 3, 3 | The Dieter skill of that name (`DieterPyroclasticLevel`, default 10) |
-| `UseDieterTempering` | 3 | **New.** Dieter's Tempering |
-| `UseEiraOveredBoost` | 0 | Eira's Overed Boost |
-| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Bayeri's Golden Ferse, Angriff Modus and Goldene Tone |
-| `UseProvokeOwner` | 0 | Provoke (mercenary) or Pain Killer (Sera) on you |
+| `UseProvokeOwner` | 0 | Provoke (mercenary) on you |
 | `DefensiveBuffOwnerMobbed` | 0 | Not used on you with fewer monsters than this on you, unless you are below 90% HP (the Weight tactic counts) |
-| `UseSeraPainkiller` | 3 | Sera's Pain Killer |
 | `UseSacrificeOwner` | 0 (built-in) | **Mercenary only:** Sacrifice on you. Works within 10 levels of the player and is unreliable because of game bugs. |
 | `UseSmartBulwark` | 0 | Amistr: cast Bulwark only if at least 120 SP remain, so Bloodlust is possible later. Ignored below 160 max SP or without Bloodlust. |
 | `AmiBulwarkLevel`, `FilirFlitLevel`, `FilirAccelLevel`, `LifEscapeLevel` | 5, 5, 5, 0 | Level of Amistr Bulwark, Filir Flitting, Filir Accelerated Flight, Lif Urgent Escape. |
-| `UseEiraLightOfRegene` | 0 | **New.** Eira sacrifices herself to resurrect you. See the [manual](MANUAL.md#6-notes-for-each-homunculus-s). |
 
 `LifEscapeLevel = 0` suppresses Urgent Escape: the AI skips the cast rather than sending
 level 0 to the server. This is safe, contrary to the original manual's warning.
@@ -250,10 +236,6 @@ level 5 when idle). Lif cannot heal itself.
 | `UseAutoPushback`, `AutoPushbackThreshold` | 0, 2 | **Mercenary only.** Push monsters off the mercenary with a pushback skill (Arrow Repel, Skid Trap) when they are this close. Must also be allowed by the Pushback tactic. |
 | `UseCastleDefend`, `CastleDefendThreshold` | 0, 4 | Amistr: use Castling when at least this many monsters (Weight counts) are on you and fewer on the Amistr. |
 | `UseCastleRoute` | 0 | Amistr: use Castling to walk you along an absolute route (needs `UseIdleWalk` 5 or 6 and `RelativeRoute` 0). |
-| `UseBayeriSteinWand` | 1 | Bayeri: Stone Wall when a big enough mob attacks you or him (buff values, 3.4). |
-| `UseSteinWandOwnerMob`, `UseSteinWandSelfMob` | 2, 2 | Monsters on you / on the Bayeri needed (Weight counts). |
-| `BayeriSteinWandLevel` | 5 | Level of Stone Wall. |
-| `UseSteinWandTele`, `SteinWandTelePause` | 0, 3000 | Cast Stone Wall right after you log in or land from a teleport, then not again. Pairs well with `DoNotChase` and Bayeri's attack skill; do not combine with `UseBayeriSteinWand`. |
 
 <a id="options-berserk"></a>
 ### 3.6 Berserk mode
@@ -271,7 +253,6 @@ options `Berzerk_*` is read anyway, and the startup log says so.
 | `Berserk_SkillAlways` | 0 | Always use offensive skills in berserk mode. |
 | `Berserk_Dance` | 0 | Dance attack in berserk mode (homunculus only). |
 | `Berserk_IgnoreMinSP` | 0 | Ignore `AttackSkillReserveSP` in berserk mode. |
-| `Berserk_ComboAlways` | 0 | Always allow combos in berserk mode. |
 
 <a id="options-kiting"></a>
 ### 3.7 Kiting
@@ -298,24 +279,7 @@ defaults were chosen empirically: change them only with a reason.
 | `SpawnDelay` | 1000 | Milliseconds it waits before acting after spawning. Needed so kill-steal protection works while teleporting. |
 | `PVPmode` | 0 | 1 = enable PVP behavior ([PVP tactics](#5-advanced-settings)). |
 | `CastInterruptLimit`, `CastInterruptPause`, `CastInterruptUnconfirmed` | 3, 5000, 0 | **New.** Pause a skill that keeps being interrupted. See the [manual](MANUAL.md#7-repeated-cast-interruptions). |
-| `SphereTrackInterval`, `SphereTrackFactor`, `EleanorComboGap`, `EleanorComboDance`, `EleanorDoNotSwitchMode` | 800, 2, 500, 1, 0 | Eleanor's sphere estimate and combo pacing. See the [manual](MANUAL.md#eleanor-combos-or-sonic-claw-only). |
-| `OldHomunType` | 2 | For a Homunculus S, what it was before: 1 Lif, 2 Amistr, 3 Filir, 4 Vanilmirth. It is detected automatically when possible and the option is only a fallback. |
 
-Eleanor does not infer a style change from a refused starter: missing spheres,
-range or timing can also cause refusals. Recovery may probe an enabled starter
-of the other style against the same target, at most once per five seconds.
-Only confirmed use changes the tracked style. Style Change also requires
-confirmation; an AI-call pause alone is not sufficient. Combo dancing is unchanged.
-On AI initialization and detected resurrection, enabled Sonic Claw selects
-Fighting as the preferred style (including when both starters are enabled);
-Tinder Breaker alone selects Grappling only when automatic combos are enabled
-(`AutoComboMode` nonzero or `Berserk_ComboAlways=1`). With combos disabled,
-enabled AoE skills prefer Fighting to build spheres through normal attacks.
-`EleanorDoNotSwitchMode=1` prevents
-automatic preference changes. Detected death clears pending casts, targets,
-combo windows and estimated spheres; resurrection rebuilds those spheres.
-The death marker survives AI reloads. If the client never reports the dead
-state, the AI cannot identify resurrection from a pause alone.
 
 ## 4. Tactics
 
@@ -392,14 +356,13 @@ always, recommended for aggressive monsters. Only matters when kiting is on.
 **Cast (`TACT_CAST`)**: `CAST_REACT` (1) treats the monster's casts on you, a friend or itself as hostile;
 `CAST_PASSIVE` (0) does not. Mostly useful to stop the unit killing summoned Geographers.
 
-**Pushback (`TACT_PUSHBACK`)**: mercenaries with a pushback skill only (the only homunculus skill with a
-pushback is Stahl Horn, which is useless for it because of its cast time). `PUSH_NEVER` (0),
+**Pushback (`TACT_PUSHBACK`)**: mercenaries with a pushback skill only. `PUSH_NEVER` (0),
 `PUSH_SELF` (1) when the mercenary is attacked, `PUSH_FRIEND` (2) when you or a friend are.
 
-**Debuff (`TACT_DEBUFF`)**: which debuff is used (mercenary, plus Eira's Silent Breeze and Dieter's
-Volcanic Ash). In the GUI choose the skill and whether to use it while attacking or chasing. In the file use
-the skill's constant: a positive one (`DEBUFF_CRASH_A`, `DEBUFF_PROVOKE_A`, `DEBUFF_SANDMAN_A`, `DEBUFF_FREEZE_A`,
-`DEBUFF_DECAGI_A`, `DEBUFF_LEXDIV_A`, `DEBUFF_BREEZE_A`, `DEBUFF_ASH_A`) while attacking, or the `_C` one
+**Debuff (`TACT_DEBUFF`)**: which mercenary debuff is used. In the GUI choose the skill and whether to
+use it while attacking or chasing. In the file use the skill's constant: a positive one (`DEBUFF_CRASH_A`,
+`DEBUFF_PROVOKE_A`, `DEBUFF_SANDMAN_A`, `DEBUFF_FREEZE_A`, `DEBUFF_DECAGI_A`, `DEBUFF_LEXDIV_A`) while
+attacking, or the `_C` one
 while chasing. `DEBUFF_ANY_A` (1) / `DEBUFF_ANY_C` (-1) use whatever the entries of `BasicDebuffs` allow.
 `DEBUFF_NEVER` (0) uses none.
 
@@ -407,16 +370,6 @@ while chasing. `DEBUFF_ANY_A` (1) / `DEBUFF_ANY_C` (-1) use whatever the entries
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `CLASS_BOTH` | -1 | Either kind. |
-| `CLASS_OLD` | 0 | Only the pre-S skills (Moonlight, Caprice). |
-| `CLASS_S` | 1 | Only Homunculus S skills. On a mercenary this means no skills at all; do not use it. |
-| `CLASS_MOB` | 2 | Use area skills even without enough monsters around. |
-| `CLASS_COMBO_1` | 3 | Eleanor combos: use the second combo skill after the first, not the third. Her combos do less damage than spamming Sonic Claw with 10 spheres, so use this only when another effect of the combo is wanted. |
-| `CLASS_COMBO_2` | 4 | Complete the combo. |
-| `CLASS_MINION` | 5 | Summon minions on this target (Sera's Call Legion). Works well with a snipe tactic: the minions kill while the unit goes elsewhere. |
-| `CLASS_GRAPPLE` | 6 | **New.** Eleanor's grappling chain: Tinder Breaker only. |
-| `CLASS_GRAPPLE_1` | 7 | **New.** Tinder Breaker, then C.B.C. |
-| `CLASS_GRAPPLE_2` | 8 | **New.** The whole chain: Tinder Breaker, C.B.C., E.Q.C. |
 
 <a id="rescue"></a>**Rescue (`TACT_RESCUE`)**: whether the unit drops everything to save you, your friends or your other
 retainer from this monster. `RESCUE_NEVER` (0), `RESCUE_FRIEND` (1) friends but not you, `RESCUE_RETAINER` (2) your other
@@ -485,16 +438,13 @@ a PVP tactic row.
 | Servers | Illegal private servers are not supported. | rAthena/Hercules can be selected with `ServerType` (tested offline and on a local rAthena only, not on every server). Follow your server's rules for custom AI. |
 | Standby key | Alt+R in one place, Alt+T in another. | Alt+T (homunculus) and Ctrl+T (mercenary), as in `A_Friends.lua`. |
 | Berserk options | Written `Berzerk`. | The working names are `UseBerserk...` and `Berserk_...`. |
-| `UseBayeriHailageStar`, `UseBayeriGoldenFerse`, `UseStienWandTele`, `FilerFlitLevel` | | `UseBayeriHailegeStar`, `UseBayeriGoldenPherze`, `UseSteinWandTele`, `FilirFlitLevel`. |
 | Route walk | `UseRouteWalk` and a `Route.lua` file. | `UseIdleWalk` 5 or 6 and `MyRoute` in `H_Extra.lua` / `M_Extra.lua`. |
-| `OldHomunType` | Set in `H_Extra.lua`; Vanilmirth detected automatically. | Set in `H_Config.lua`, as a fallback; the base type is detected from the inherited skills when one is learned. |
 | `AoEFixedLevel` | Default 1. | Default 0 in the shipped `H_Config.lua`. |
 | `AggroHP` | Default 60. | 0 in the shipped `H_Config.lua`, so it engages at any HP. |
 | `UseAutoSkill_MinSP` (SP tactic) | | `AttackSkillReserveSP`. |
 | `AutoMobMode` | Not explained. | 0 off, 1 counts attackers only, 2 counts all. |
 | PVP tactics files | `H_PVP_Tactics.lua` | `H_PVP_Tact.lua`, `M_PVP_Tact.lua` |
-| Eleanor skill classes | `CLASS_COMBO_1/2` | Plus `CLASS_GRAPPLE`, `_1`, `_2`. |
-| New options | | `ServerType`, `AutoDetectServerType`, `TrustSkillProbe`, `LintUserOptions`, `UseMobInfo` and the monster database options, `TargetPriority`, `KiteByRange`, `UseDamageDanger`, `CommandedFightStay`, `StayAwayDistance`, `StayAwayHold`, `CastInterrupt*`, the Homunculus S skill options, `Types/<Name>.lua` per-homunculus presets. |
+| New options | | `ServerType`, `AutoDetectServerType`, `TrustSkillProbe`, `LintUserOptions`, `UseMobInfo` and the monster database options, `TargetPriority`, `KiteByRange`, `UseDamageDanger`, `CommandedFightStay`, `StayAwayDistance`, `StayAwayHold`, `CastInterrupt*`, `Types/<Name>.lua` per-homunculus presets. |
 | Version history | 1.00 to 1.50 changelog. | Not repeated here. Changes since the original 1.56 are in the [changelog](../CHANGELOG.md#200). |
 
 <a id="8-homunculus-scripting-primer"></a>

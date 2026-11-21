@@ -170,7 +170,6 @@ cerca de ti.
 |---|---|---|
 | `UseAttackSkill` | 1 | Habilidades ofensivas automáticas. |
 | `UseSkillOnly` | -1 | **-1 (perseguir, recomendado)** usa habilidades al perseguir y atacar. **0** solo al atacar. **1** ataca únicamente con habilidades y no usa una habilidad de largo alcance antes de llegar al alcance cuerpo a cuerpo. |
-| `UseHomunSSkillChase`, `UseHomunSSkillAttack` | 1, 1 | Permite las habilidades de objetivo único de Homúnculo S al perseguir / atacar. Desactívalas si muchas habilidades tienen lanzamiento interrumpible y no puedes esquivar. |
 | `AutoMobMode` | 2 | Habilidades de área: 0 desactivado; 1 cuenta solo monstruos que ya están atacando; 2 cuenta todos los monstruos que alcanzaría el área. |
 | `AutoMobCount` | 2 | Monstruos (ponderados por la [táctica Weight](#weight)) necesarios para usar una habilidad de área. 1 permite que una habilidad de área compita incluso en un solo objetivo. |
 | `AoEFixedLevel` | 0 | 1 = siempre usa habilidades de área al nivel definido en la opción `...Level` de la habilidad, ignorando el nivel configurado en las tácticas. |
@@ -180,8 +179,6 @@ cerca de ti.
 | `AutoSkillLimit` | 0 | Tope de habilidades ofensivas usadas contra un objetivo, aplicado sobre la táctica de habilidad del monstruo (gana el número menor de los dos). 0 = sin límite. La cuenta se reinicia cuando cambia el objetivo. |
 | `AutoSkillDelay` | 200 (mercenario 400) | Espera adicional, en ms, entre habilidades, para evitar usos duplicados. 0 elimina solo esta espera, no la recarga ni el tiempo de lanzamiento. |
 | `CastTimeRatio` | .80 | Fracción del tiempo de lanzamiento que espera la IA, considerando tus reducciones de lanzamiento. |
-| `AutoComboMode` | 2 | Combos (Eleanor): 0 nunca; 1 solo en monstruos cuya clase de habilidad es de combo; 2 siempre. |
-| `AutoComboSpheres` | 1 | Esferas necesarias para **iniciar** una cadena automática. |
 | `UseVanilCaprice` | 1 | Vanilmirth: usar Caprice. |
 | `LintUserOptions` | 1 | **Nuevo.** Al iniciar, desactiva opciones de habilidades que el homúnculo no ha aprendido y reduce los niveles al nivel aprendido. |
 | `TrustSkillProbe` | -1 | **Nuevo.** Si debe confiar en la respuesta del cliente sobre los niveles de habilidades aprendidos. -1 = automático (no en el servidor oficial, sí en servidores privados). Con el sondeo sin confianza, una habilidad que el cliente informa como no aprendida se sigue intentando en el nivel configurado y el nivel baja cuando el servidor la rechaza, en vez de desactivar la opción al inicio. |
@@ -194,11 +191,6 @@ y `<Type><Skill>Level`. La IA no usa una habilidad por encima del nivel aprendid
 
 | Homúnculo | Opciones de habilidades ofensivas |
 |---|---|
-| Eira | `UseEiraXenoSlasher`, `UseEiraEraseCutter` (Eraser Cutter), `UseEiraTwisterCutter`, `UseEiraAbsoluteZephyr`, `UseEiraSilentBreeze` |
-| Bayeri | `UseBayeriStahlHorn`, `UseBayeriHailegeStar`, `UseBayeriGlanzenSpies`, `UseBayeriHeiligePferd` |
-| Sera | `UseSeraParalyze` (Needle of Paralyze), `UseSeraPoisonMist`, `UseSeraCallLegion`, `UseSeraToxinOfMandara`, `UseSeraNeedleStinger` |
-| Dieter | `UseDieterLavaSlide`, `UseDieterVolcanicAsh`, `UseDieterAshAsAttack`, `UseDieterBlastForge` |
-| Eleanor | `UseEleanorSonicClaw`, `EleanorSilverveinLevel`, `EleanorMidnightLevel`, `UseEleanorTinderBreaker`, `UseEleanorCBC`, `UseEleanorEQC`, `UseEleanorBlazingAndFurious`, `UseEleanorTheOneFighterRises` |
 
 **Nombres de las habilidades de homúnculo.** Los nombres en español vienen del catálogo de
 habilidades de [Latam RO](https://latam.ro/skills), con el idioma ES seleccionado. Los nombres en
@@ -219,43 +211,6 @@ portugués de Brasil vienen de Divine Pride (servidor LATAM, `pt-BR`).
 | Vanilmirth | [8013](https://www.divine-pride.net/database/skill/8013) | Capricho | Capricho |
 | Vanilmirth | [8014](https://www.divine-pride.net/database/skill/8014) | Bendiciones Caóticas | Bênção Caótica |
 | Vanilmirth | [8016](https://www.divine-pride.net/database/skill/8016) | Autodestrucción | Bioexplosão |
-| Sera | [8018](https://www.divine-pride.net/database/skill/8018) | Invocar a Legión | Convocação |
-| Sera | [8019](https://www.divine-pride.net/database/skill/8019) | Aguja de Parálisis | Ponto de Paralisia |
-| Sera | [8020](https://www.divine-pride.net/database/skill/8020) | Neblina Venenosa | Névoa Venenosa |
-| Sera | [8021](https://www.divine-pride.net/database/skill/8021) | Analgésico | Analgésico |
-| Eira | [8022](https://www.divine-pride.net/database/skill/8022) | Luz de Regeneración | Luz da Vida |
-| Eira | [8023](https://www.divine-pride.net/database/skill/8023) | Sobreimpulso | Superestimular |
-| Eira | [8024](https://www.divine-pride.net/database/skill/8024) | Cúter Borrador | Choque Supersônico |
-| Eira | [8025](https://www.divine-pride.net/database/skill/8025) | Xenotajo | Onda Supersônica |
-| Eira | [8026](https://www.divine-pride.net/database/skill/8026) | Brisa Silenciosa | Brisa da Calmaria |
-| Eleanor | [8027](https://www.divine-pride.net/database/skill/8027) | Cambio de Estilo | Estilo de Luta |
-| Eleanor | [8028](https://www.divine-pride.net/database/skill/8028) | Garra Sónica | Garra Supersônica |
-| Eleanor | [8029](https://www.divine-pride.net/database/skill/8029) | Ráfaga Trepadora | Rastro Brilhante |
-| Eleanor | [8030](https://www.divine-pride.net/database/skill/8030) | Frenesí de Medianoche | Delírio Noturno |
-| Bayeri | [8031](https://www.divine-pride.net/database/skill/8031) | Cuerno de Acero | Impacto Preciso |
-| Bayeri | [8032](https://www.divine-pride.net/database/skill/8032) | Furia Iluminada | Fúria Iluminada |
-| Bayeri | [8033](https://www.divine-pride.net/database/skill/8033) | Báculo de Stein | Luz Salvadora |
-| Bayeri | [8034](https://www.divine-pride.net/database/skill/8034) | Cetro Sagrado | Illuminatus |
-| Bayeri | [8035](https://www.divine-pride.net/database/skill/8035) | Modo Angriffs | Raiva Iluminada |
-| Eleanor | [8036](https://www.divine-pride.net/database/skill/8036) | Rompepiernas | Quebra-Costelas |
-| Eleanor | [8037](https://www.divine-pride.net/database/skill/8037) | Combo de Pausa Continua | Dreno Traumático |
-| Eleanor | [8038](https://www.divine-pride.net/database/skill/8038) | Combo Eterno Rápido | Estado Traumático |
-| Dieter | [8039](https://www.divine-pride.net/database/skill/8039) | Flujo de Magma | Inundação de Magma |
-| Dieter | [8040](https://www.divine-pride.net/database/skill/8040) | Armadura Granítica | Armadura de Granito |
-| Dieter | [8041](https://www.divine-pride.net/database/skill/8041) | Deslizamiento de Lava | Derretimento com Lava |
-| Dieter | [8042](https://www.divine-pride.net/database/skill/8042) | Piroclástico | Piroclástico |
-| Dieter | [8043](https://www.divine-pride.net/database/skill/8043) | Ceniza Volcánica | Cinzas Vulcânicas |
-| Dieter | [8044](https://www.divine-pride.net/database/skill/8044) | Gran Forja | Grande Fornalha |
-| Dieter | [8045](https://www.divine-pride.net/database/skill/8045) | Temple | Têmpera |
-| Eira | [8047](https://www.divine-pride.net/database/skill/8047) | Tajo Supersónico | Corte Supersônico |
-| Eira | [8048](https://www.divine-pride.net/database/skill/8048) | Céfiro Absoluto | Zéfiro Absoluto |
-| Eleanor | [8050](https://www.divine-pride.net/database/skill/8050) | Ardiente y Furioso | Veloz e Furiosa |
-| Eleanor | [8051](https://www.divine-pride.net/database/skill/8051) | Luchadora Ascendente | Lutadora Ascendente |
-| Sera | [8053](https://www.divine-pride.net/database/skill/8053) | Toxina de Mandara | Toxina de Mandara |
-| Sera | [8054](https://www.divine-pride.net/database/skill/8054) | Aguijonazo | Ferroada |
-| Bayeri | [8056](https://www.divine-pride.net/database/skill/8056) | Punta Reluciente | Ponta Reluzente |
-| Bayeri | [8057](https://www.divine-pride.net/database/skill/8057) | Equitatio | Equitatio |
-| Bayeri | [8058](https://www.divine-pride.net/database/skill/8058) | Cuero Dorado | Couro Dourado |
 
 Ráfaga Trepadora y Frenesí de Medianoche solo tienen nivel, no una opción de activación. Los consejos
 para elegir entre ellas están en la [sección 6 del manual](MANUAL.es.md#6-consejos-por-homúnculo-s).
@@ -285,17 +240,11 @@ Los homúnculos básicos sí la tienen, porque los niveles altos tienen recargas
 | `UseOffensiveBuff` | 3 | Flitting, Mental Charge, Weapon Quicken, Bloodlust |
 | `UseDefensiveBuff` | 3 | Amistr Bulwark, Accelerated Flight, Guard, Parrying, Urgent Escape |
 | `UseAutoSight`, `UseAutoMag` | 1, 0 (interno) | **Solo mercenario:** Sight (arquero nivel 2), Magnificat (arquero nivel 4) |
-| `UseDieterGraniticArmor`, `UseDieterMagmaFlow`, `UseDieterPyroclastic` | 0, 3, 3 | La habilidad de Dieter con ese nombre (`DieterPyroclasticLevel`, predeterminado 10) |
-| `UseDieterTempering` | 3 | **Nuevo.** Tempering de Dieter |
-| `UseEiraOveredBoost` | 0 | Overed Boost de Eira |
-| `UseBayeriGoldenPherze`, `UseBayeriAngriffModus`, `UseBayeriGoldeneTone` | 0, 3, 3 | Golden Ferse, Angriff Modus y Goldene Tone de Bayeri |
-| `UseProvokeOwner` | 0 | Provoke (mercenario) o Pain Killer (Sera) en ti |
+| `UseProvokeOwner` | 0 | Provoke (mercenario) en ti |
 | `DefensiveBuffOwnerMobbed` | 0 | No se usa en ti con menos monstruos que esto atacándote, salvo por debajo del 90% de HP (cuenta la táctica Weight) |
-| `UseSeraPainkiller` | 3 | Pain Killer de Sera |
 | `UseSacrificeOwner` | 0 (interno) | **Solo mercenario:** Sacrifice en ti. Funciona con una diferencia de hasta 10 niveles del jugador y no es fiable debido a errores del juego. |
 | `UseSmartBulwark` | 0 | Amistr: solo usa Bulwark si quedan al menos 120 SP, para permitir Bloodlust después. Se ignora por debajo de 160 SP máximo o sin Bloodlust. |
 | `AmiBulwarkLevel`, `FilirFlitLevel`, `FilirAccelLevel`, `LifEscapeLevel` | 5, 5, 5, 0 | Nivel de Amistr Bulwark, Filir Flitting, Filir Accelerated Flight, Lif Urgent Escape. |
-| `UseEiraLightOfRegene` | 0 | **Nuevo.** Eira se sacrifica para resucitarte. Véase el [manual](MANUAL.es.md#6-consejos-por-homúnculo-s). |
 
 `LifEscapeLevel = 0` desactiva Urgent Escape: la IA omite el uso en vez de enviar nivel 0 al
 servidor. Es seguro, al contrario de la advertencia del manual original. Usa un nivel aprendido
@@ -316,10 +265,6 @@ estando inactivo). Lif no puede curarse a sí misma.
 | `UseAutoPushback`, `AutoPushbackThreshold` | 0, 2 | **Solo mercenario.** Empuja a los monstruos lejos del mercenario con una habilidad de empuje (Arrow Repel, Skid Trap) cuando se acercan a esta distancia. La táctica Pushback también debe permitirlo. |
 | `UseCastleDefend`, `CastleDefendThreshold` | 0, 4 | Amistr: usa Castling cuando al menos esta cantidad de monstruos (Weight cuenta) te ataca y menos atacan al Amistr. |
 | `UseCastleRoute` | 0 | Amistr: usa Castling para moverte por una ruta absoluta (requiere `UseIdleWalk` 5 o 6 y `RelativeRoute` 0). |
-| `UseBayeriSteinWand` | 1 | Bayeri: Stone Wall cuando un grupo suficientemente grande te ataca a ti o a él (valores de buff, sección 3.4). |
-| `UseSteinWandOwnerMob`, `UseSteinWandSelfMob` | 2, 2 | Monstruos necesarios atacándote a ti / al Bayeri (Weight cuenta). |
-| `BayeriSteinWandLevel` | 5 | Nivel de Stone Wall. |
-| `UseSteinWandTele`, `SteinWandTelePause` | 0, 3000 | Usa Stone Wall justo después de conectarte o llegar de un teletransporte, y no lo repite. Combina con `DoNotChase` y la habilidad ofensiva de Bayeri; no lo combines con `UseBayeriSteinWand`. |
 
 <a id="options-berserk"></a>
 ### 3.6 Modo Berserk
@@ -338,7 +283,6 @@ avisa.
 | `Berserk_SkillAlways` | 0 | Siempre usa habilidades ofensivas en Berserk. |
 | `Berserk_Dance` | 0 | Baila al atacar en Berserk (solo homúnculo). |
 | `Berserk_IgnoreMinSP` | 0 | Ignora `AttackSkillReserveSP` en Berserk. |
-| `Berserk_ComboAlways` | 0 | Siempre permite combos en Berserk. |
 
 <a id="options-kiting"></a>
 ### 3.7 Kiting
@@ -366,25 +310,7 @@ con un motivo.
 | `SpawnDelay` | 1000 | Milisegundos que espera antes de actuar tras aparecer. Necesario para que la protección contra robo de bajas funcione al teletransportarse. |
 | `PVPmode` | 0 | 1 = activa el comportamiento PVP ([tácticas PVP](#5-advanced-settings)). |
 | `CastInterruptLimit`, `CastInterruptPause`, `CastInterruptUnconfirmed` | 3, 5000, 0 | **Nuevo.** Pausa una habilidad que sufre interrupciones repetidas. Véase el [manual](MANUAL.es.md#7-interrupciones-repetidas). |
-| `SphereTrackInterval`, `SphereTrackFactor`, `EleanorComboGap`, `EleanorComboDance`, `EleanorDoNotSwitchMode` | 800, 2, 500, 1, 0 | Estimación de esferas y ritmo de combos de Eleanor. Véase el [manual](MANUAL.es.md#eleanor-combos-o-solo-sonic-claw). |
-| `OldHomunType` | 2 | Para un Homúnculo S, el tipo anterior: 1 Lif, 2 Amistr, 3 Filir, 4 Vanilmirth. Se detecta automáticamente cuando es posible; la opción es solo un respaldo. |
 
-Eleanor no deduce un cambio de estilo por el rechazo de una habilidad inicial:
-la falta de esferas, el alcance o el timing también pueden causar rechazos.
-La recuperación puede probar una habilidad inicial habilitada del otro estilo
-contra el mismo objetivo, como máximo una vez cada cinco segundos. Solo el uso
-confirmado actualiza el estilo. Style Change también exige confirmación; una
-pausa en las llamadas de la AI no basta. El baile de combos no cambia.
-Al iniciar la AI y al detectar una resurrección, Sonic Claw habilitada prefiere
-Fighting, incluso con ambas habilidades iniciales habilitadas; solo Tinder
-Breaker prefiere Grappling solo con combos automáticos habilitados
-(`AutoComboMode` distinto de cero o `Berserk_ComboAlways=1`). Con combos
-deshabilitados, habilidades de área habilitadas prefieren Fighting para generar
-esferas con ataques normales. `EleanorDoNotSwitchMode=1` impide ese cambio
-automático. La muerte detectada limpia casts, objetivos, combos y esferas
-estimadas; la resurrección reconstruye las esferas. El marcador de muerte
-sobrevive a la recarga de la AI. Si el cliente nunca informa la muerte, una
-pausa por sí sola no permite identificar la resurrección.
 
 <a id="4-tactics"></a>
 ## 4. Tácticas
@@ -471,8 +397,8 @@ de homúnculo con empuje es Stahl Horn, inútil para ello por su tiempo de lanza
 `PUSH_NEVER` (0), `PUSH_SELF` (1) cuando atacan al mercenario, `PUSH_FRIEND` (2) cuando te atacan
 a ti o a un amigo.
 
-**Debuff (`TACT_DEBUFF`)**: qué debuff usar (mercenario, además de Silent Breeze de Eira y
-Volcanic Ash de Dieter). En la GUI, elige la habilidad y si usarla al atacar o perseguir. En el
+**Debuff (`TACT_DEBUFF`)**: qué debuff de mercenario usar. En la GUI, elige la habilidad y si usarla al
+atacar o perseguir. En el
 archivo, usa la constante de la habilidad: positiva (`DEBUFF_CRASH_A`, `DEBUFF_PROVOKE_A`,
 `DEBUFF_SANDMAN_A`, `DEBUFF_FREEZE_A`, `DEBUFF_DECAGI_A`, `DEBUFF_LEXDIV_A`, `DEBUFF_BREEZE_A`,
 `DEBUFF_ASH_A`) al atacar, o la versión `_C` al perseguir. `DEBUFF_ANY_A` (1) / `DEBUFF_ANY_C` (-1)
@@ -483,16 +409,6 @@ de habilidad de objetivo único usar.
 
 | Constante | Valor | Significado |
 |---|---|---|
-| `CLASS_BOTH` | -1 | Cualquier tipo. |
-| `CLASS_OLD` | 0 | Solo habilidades anteriores al S (Moonlight, Caprice). |
-| `CLASS_S` | 1 | Solo habilidades de Homúnculo S. En un mercenario significa ninguna habilidad; no lo uses. |
-| `CLASS_MOB` | 2 | Usa habilidades de área incluso sin suficientes monstruos cerca. |
-| `CLASS_COMBO_1` | 3 | Combos de Eleanor: usa la segunda habilidad después de la primera, pero no la tercera. Sus combos causan menos daño que repetir Sonic Claw con 10 esferas; úsalo solo si quieres otro efecto del combo. |
-| `CLASS_COMBO_2` | 4 | Completa el combo. |
-| `CLASS_MINION` | 5 | Invoca criaturas sobre este objetivo (Call Legion de Sera). Combina con una táctica snipe: las criaturas matan mientras la unidad va a otro sitio. |
-| `CLASS_GRAPPLE` | 6 | **Nuevo.** Cadena de agarre de Eleanor: solo Tinder Breaker. |
-| `CLASS_GRAPPLE_1` | 7 | **Nuevo.** Tinder Breaker y luego C.B.C. |
-| `CLASS_GRAPPLE_2` | 8 | **Nuevo.** Cadena completa: Tinder Breaker, C.B.C., E.Q.C. |
 
 <a id="rescue"></a>**Rescue (`TACT_RESCUE`)**: si la unidad abandona todo para salvarte a ti, a
 tus amigos o a tu otra unidad de este monstruo. `RESCUE_NEVER` (0), `RESCUE_FRIEND` (1) amigos,
@@ -571,15 +487,12 @@ con `KOS`, `ENEMY`, `NEUTRAL`, `FRIEND` o `ALLY` y una entrada de táctica PVP p
 | Servidores | Los servidores privados ilegales no están soportados. | rAthena/Hercules se pueden seleccionar con `ServerType` (probado solo offline y en rAthena local, no en todos los servidores). Sigue las reglas de tu servidor sobre IA personalizada. |
 | Tecla de espera | Alt+R en un pasaje, Alt+T en otro. | Alt+T (homúnculo) y Ctrl+T (mercenario), como en `A_Friends.lua`. |
 | Opciones Berserk | Escritas como `Berzerk`. | Los nombres funcionales son `UseBerserk...` y `Berserk_...`. |
-| `UseBayeriHailageStar`, `UseBayeriGoldenFerse`, `UseStienWandTele`, `FilerFlitLevel` | | `UseBayeriHailegeStar`, `UseBayeriGoldenPherze`, `UseSteinWandTele`, `FilirFlitLevel`. |
 | Recorrido de ruta | `UseRouteWalk` y un archivo `Route.lua`. | `UseIdleWalk` 5 o 6 y `MyRoute` en `H_Extra.lua` / `M_Extra.lua`. |
-| `OldHomunType` | Definido en `H_Extra.lua`; Vanilmirth detectado automáticamente. | Definido en `H_Config.lua`, como respaldo; el tipo básico se detecta por las habilidades heredadas cuando se ha aprendido una. |
 | `AoEFixedLevel` | Predeterminado 1. | Predeterminado 0 en el `H_Config.lua` distribuido. |
 | `AggroHP` | Predeterminado 60. | 0 en el `H_Config.lua` distribuido, permitiendo iniciar combate con cualquier HP. |
 | `UseAutoSkill_MinSP` (táctica SP) | | `AttackSkillReserveSP`. |
 | `AutoMobMode` | No explicado. | 0 desactivado, 1 cuenta solo atacantes, 2 cuenta todos. |
 | Archivos de tácticas PVP | `H_PVP_Tactics.lua` | `H_PVP_Tact.lua`, `M_PVP_Tact.lua` |
-| Clases de habilidad de Eleanor | `CLASS_COMBO_1/2` | Más `CLASS_GRAPPLE`, `_1`, `_2`. |
 | Nuevas opciones | | `ServerType`, `AutoDetectServerType`, `TrustSkillProbe`, `LintUserOptions`, `UseMobInfo` y opciones de la base de datos de monstruos, `TargetPriority`, `KiteByRange`, `UseDamageDanger`, `CommandedFightStay`, `StayAwayDistance`, `StayAwayHold`, `CastInterrupt*`, opciones de habilidades de Homúnculo S, ajustes por homúnculo en `Types/<Name>.lua`. |
 | Historial de versiones | Changelog de 1.00 a 1.50. | No se repite aquí. Los cambios desde el original 1.56 están en las [changelog](../CHANGELOG.md#200). |
 

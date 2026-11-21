@@ -12,7 +12,7 @@ comportamento dele numa janela ou no navegador, sem código para editar.
 
 **No jogo, isso significa:**
 
-- Ele conhece os monstros da base de dados (cerca de 2.700), então o Dieter não
+- Ele conhece os monstros da base de dados (1.004 monstros Pre-Renewal), então não
   joga Lava Slide num monstro de Fogo e não se gasta SP em plantas.
 - Ele não acorda um MVP sem querer, mas ainda defende você se um atacar.
 - Um monstro que você manda atacar é combatido até morrer, mesmo que você se afaste.
@@ -20,7 +20,7 @@ comportamento dele numa janela ou no navegador, sem código para editar.
   sofreria dano.
 - Uma habilidade que vive sendo interrompida é pausada por alguns segundos, e ele
   usa outra coisa.
-- Habilidades de Eira, Bayeri, Sera, Dieter e Eleanor, com os valores que o seu servidor usa.
+- Os quatro homúnculos originais (Lif, Amistr, Filir e Vanilmirth); esta versão não tem Homúnculo S.
 
 [Veja tudo o que esta versão acrescenta e como ela se compara ao AzzyAI original](docs/ABOUT.pt-BR.md).
 

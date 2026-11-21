@@ -6,6 +6,24 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 **Current release: 2.1.1**
 
+## Unreleased (Pre-Renewal branch)
+
+The `prerenewal` branch is a separate product: AzzyAI for Pre-Renewal servers
+(episode 13.2 era). It is not "Renewal with options off": the Renewal data and
+skills are not shipped at all.
+
+- Monster database regenerated from rAthena `db/pre-re` (`rathena-sync --era pre`):
+  1,004 monsters, the classic element table, 37 KB instead of 98 KB.
+- Homunculus S removed: skills, skill data, the ~80 options and the 13 enums only
+  they used, the per-type presets and the GUI entries. The four original
+  homunculi stay.
+- The Renewal damage model (`SkillDamage`, `SkillDamageBaseLevel`) is gone; skill
+  choice falls back to type priority and the options.
+- The web GUI lives on its own `prerenewal` branch of the `webgui` submodule:
+  105 homunculus options (was 186), 13 skills (was 50), Pre-Renewal monsters.
+- Harness: 57 scenarios (Renewal-only ones removed), all passing; native tests 30/30.
+
+
 ## 2.1.1
 
 Patch release: the desktop app writes the files by default, the learned-level probe can be turned

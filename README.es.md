@@ -12,7 +12,7 @@ ventana o en el navegador, sin código que editar.
 
 **En el juego, eso significa:**
 
-- Conoce a los monstruos de su base de datos (unos 2.700), así que Dieter no lanza
+- Conoce a los monstruos de su base de datos (1.004 monstruos Pre-Renewal), así que no lanza
   Lava Slide contra un monstruo de Fuego y no se gasta SP en plantas.
 - No despierta a un MVP sin querer, pero igual te defiende si uno ataca.
 - Un monstruo al que le ordenas atacar se combate hasta que muera, aunque te alejes.
@@ -20,7 +20,7 @@ ventana o en el navegador, sin código que editar.
   recibiría daño.
 - Una habilidad que se interrumpe una y otra vez se pausa unos segundos, y usa
   otra cosa.
-- Habilidades de Eira, Bayeri, Sera, Dieter y Eleanor, con los valores que usa tu servidor.
+- Los cuatro homúnculos originales (Lif, Amistr, Filir y Vanilmirth); esta versión no tiene Homúnculo S.
 
 [Mira todo lo que añade esta versión y cómo se compara con el AzzyAI original](docs/ABOUT.es.md).
 
