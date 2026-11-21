@@ -263,14 +263,6 @@ local function refusal(e, id, kind, skill, lvl, a, b)
 	if other and statusUntil[other] and now < statusUntil[other] then
 		return "blocked by " .. ((SkillInfo[other] and SkillInfo[other][1]) or tostring(other))
 	end
-	if e.homuntype == ELEANOR then
-		local style = ELEANOR_STYLE[skill]
-		if style and style ~= server.style then return "needs " .. style .. " style" end
-		local prev = ELEANOR_COMBO[skill]
-		if prev and (server.combo ~= prev or now > server.comboUntil) then return "no combo" end
-		local cost = sphereCost(skill, lvl)
-		if cost > server.spheres then return ("needs %d spheres, has %d"):format(cost, server.spheres) end
-	end
 	local tx, ty
 	if kind == "gnd" then tx, ty = a, b
 	elseif a ~= id and world[a] then tx, ty = world[a].x, world[a].y end
