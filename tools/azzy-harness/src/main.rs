@@ -22,7 +22,6 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-mod bench;
 
 struct Args {
     scenarios: Vec<String>,
@@ -614,9 +613,6 @@ fn check_globals(luac: &str, user_ai: &Path) {
 fn main() {
     let argv: Vec<String> = env::args().skip(1).collect();
     match argv.first().map(String::as_str) {
-        Some("bench") => std::process::exit(bench::run_homun(&argv[1..])),
-        Some("eleanor") => std::process::exit(bench::run_eleanor(&argv[1..])),
-        Some("preset-report") => std::process::exit(bench::run_preset_report(&argv[1..])),
         Some("templates-check") => std::process::exit(check_templates()),
         Some("globals") => {
             let repo = match repo_root() {
