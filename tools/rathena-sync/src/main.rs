@@ -265,7 +265,7 @@ fn build_skills(body: &[Value]) -> BTreeMap<i64, Table> {
     let mut skills: BTreeMap<i64, Table> = BTreeMap::new();
     for s in body {
         let Some(sid) = s.get_int("Id") else { continue };
-        if !(8001..8100).contains(&sid) { continue; }
+        if !(8001..8017).contains(&sid) { continue; }
         let maxlv = s.get_int("MaxLevel").unwrap_or(1).max(1) as usize;
         let req = s.get("Requires");
         let unit = s.get("Unit");
