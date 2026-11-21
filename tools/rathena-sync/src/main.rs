@@ -120,13 +120,11 @@ fn run(args: &Args) -> Result<(), String> {
     if !args.fixture_only {
         let attr = load_db(&client, &sha, &format!("db/{db}/attr_fix.yml"))?;
         write_mobinfo(&sha, db, &mobs, &skill_body, &attr)?;
+        write_webgui_mobdata(&client, &sha, db, &mobs)?;
         if pre {
-            // The GUI's mob data and the harness fixture still describe Renewal (spawn scripts and
-            // SkillImpl ratios). They are generated for `--era re` only until the pre-re versions
-            // exist; MobInfo.lua is the file the AI itself reads.
-            println!("  pre-re: only USER_AI/MobInfo.lua was written (webgui data and harness fixture pending)");
-        } else {
-            write_webgui_mobdata(&client, &sha, &mobs)?;
+            // The harness fixture still describes Renewal (SkillImpl ratios, Homunculus S trees):
+            // pre-re scenarios use the AI's own data until a pre-re damage model exists.
+            println!("  pre-re: harness fixture not written (Renewal SkillImpl ratios and S trees)");
         }
     }
     if pre {
@@ -577,7 +575,7 @@ fn write_mobinfo(sha: &str, db: &str, mob_body: &[Value], skill_body: &[Value], 
     Ok(())
 }
 
-fn write_webgui_mobdata(client: &fetch::Client, sha: &str, mob_body: &[Value]) -> Result<(), String> {
+fn write_webgui_mobdata(client: &fetch::Client, sha: &str, db: &str, mob_body: &[Value]) -> Result<(), String> {
     let dir = fetch::webgui_path();
     if !dir.is_dir() {
         println!("  {} not found, mobdata.js skipped", dir.display());
@@ -615,7 +613,7 @@ fn write_webgui_mobdata(client: &fetch::Client, sha: &str, mob_body: &[Value]) -
         r"(?m)^([^,\s/]+),[^\t]*\t(?:boss_|miniboss_)?monster\t[^\t]*\t([A-Za-z0-9_]+)\s*,"
     ).unwrap();
     let mut maps: BTreeMap<String, Vec<i64>> = BTreeMap::new();
-    let files = list_spawn_files(client, sha, "npc/re/mobs")?;
+    let files = list_spawn_files(client, sha, &format!("npc/{db}/mobs"))?;
     for path in &files {
         let text = client.raw(sha, path)?;
         for c in spawn.captures_iter(&text) {

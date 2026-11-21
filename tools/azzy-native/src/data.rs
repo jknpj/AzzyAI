@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn loads_the_web_gui_schema() {
         let (hom, mer) = load().unwrap();
-        assert_eq!(hom.options.len(), 186);
+        assert_eq!(hom.options.len(), 105);
         assert_eq!(mer.options.len(), 78);
         let aggro = hom.get("AggroHP").expect("AggroHP");
         assert_eq!(aggro.category, "Basic Options");
@@ -131,9 +131,12 @@ mod tests {
         assert!(aggro.description.contains("seek out and attack"));
         assert_eq!(hom.default_token(aggro), "60");
 
-        let lava = hom.get("LavaSlideMode").expect("LavaSlideMode");
-        let values = hom.enum_values(lava).expect("enum values");
-        assert!(values.iter().any(|(label, value)| label == "Attack" && *value == 0));
+        // Pre-Renewal: no Homunculus S options at all.
+        let mob = hom.get("AutoMobMode").expect("AutoMobMode");
+        let values = hom.enum_values(mob).expect("enum values");
+        assert!(values.iter().any(|(label, value)| label == "Aggressive" && *value == 1));
+        assert!(hom.get("UseEleanorSonicClaw").is_none());
+        assert!(hom.get("UseBayeriStahlHorn").is_none());
 
         let server = hom.get("ServerType").expect("ServerType");
         assert_eq!(server.kind, "serverType");

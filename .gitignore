@@ -23,6 +23,7 @@ tools/divinepride-sync/target/
 
 # runtime log of the native GUI (written next to the exe)
 tools/azzy-native/azzy-native.log
+azzy-native.log
 # development builds of the Rust tools; CI ships the desktop app as USER_AI/AzzyAIConfig.exe
 tools/azzy-native/azzy-native.exe
 tools/azzy-gui/azzy-gui.exe

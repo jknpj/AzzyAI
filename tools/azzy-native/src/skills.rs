@@ -195,16 +195,14 @@ mod tests {
         let skills = load().unwrap();
         assert_eq!(skills.skills.len(), 50);
         assert_eq!(skills.atlas.len(), 160 * 140 * 4);
-        let lava = skills.for_setting("UseDieterLavaSlide").expect("Lava Slide");
-        assert_eq!(lava.id, 8041);
-        assert_eq!(lava.name, "Lava Slide");
+        let bulwark = skills.for_setting("AmiBulwarkLevel").expect("Amistr Bulwark");
+        assert_eq!(bulwark.id, 8006);
+        assert_eq!(bulwark.name, "Amistr Bulwark");
         assert!(skills.for_setting("AggroHP").is_none());
-        let cutter = skills.get(8024).expect("Eraser Cutter");
-        assert_eq!(cutter.maxlv, 10);
-        assert_eq!(cutter.stats[0], 25);
-        assert_eq!(cutter.name_for(Lang::Pt), "Choque Supersônico");
-        assert!(cutter.description_for(Lang::Pt).contains("450%"));
-        let uv = skills.icon_uv(lava.icon);
+        assert_eq!(bulwark.maxlv, 5);
+        assert_eq!(bulwark.stats[0], 20);
+        assert_eq!(bulwark.name_for(Lang::Pt), "Fortaleza");
+        let uv = skills.icon_uv(bulwark.icon);
         assert!(uv.min.x >= 0.0 && uv.max.x <= 1.0);
         assert!(uv.min.y >= 0.0 && uv.max.y <= 1.0);
     }

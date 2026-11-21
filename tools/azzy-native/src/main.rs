@@ -3229,7 +3229,7 @@ mod tests {
         }
         i18n::set_lang(i18n::Lang::En);
         let mut app = App::new(&paths, false).unwrap();
-        app.selected = Some("UseDieterMagmaFlow".into());
+        app.selected = Some("AmiBulwarkLevel".into());
         let ctx = egui::Context::default();
         let input = egui::RawInput {
             screen_rect: Some(egui::Rect::from_min_size(
@@ -3246,7 +3246,7 @@ mod tests {
             }
         }
         let find = |needle: &str| texts.iter().find(|(_, text)| text.contains(needle));
-        let title = find("Magma Flow").expect("skill title");
+        let title = find("Amistr Bulwark").expect("skill title");
         let stats = find("Max level 5").expect("skill stats");
         assert!(stats.0.y > title.0.y, "stats must be under the skill name");
         // Like the web GUI's <details>, the in-game text starts collapsed...
@@ -3254,7 +3254,7 @@ mod tests {
         assert!(summary.0.y > stats.0.y, "summary must be under the stats");
         assert!(find("Max Lv").is_none(), "in-game text must start collapsed");
         // ...and the setting's own description still comes after the skill card.
-        let setting = find("Use the Dieter buff").expect("setting description");
+        let setting = find("Set this value to the level of Amistr Bulwark").expect("setting description");
         assert!(setting.0.y > summary.0.y, "setting description must follow the skill card");
         i18n::set_lang(i18n::Lang::En);
     }
@@ -3453,12 +3453,12 @@ mod tests {
             paths.insert(key, path);
         }
         let mut app = App::new(&paths, false).unwrap();
-        app.skill_filter = Some(8041); // Lava Slide
+        app.skill_filter = Some(8006); // Amistr Bulwark
         assert!(app.is_searching());
-        let lava = app.hom.get("UseDieterLavaSlide").expect("Lava Slide setting");
-        assert!(app.matches(lava, None));
+        let bulwark = app.hom.get("AmiBulwarkLevel").expect("Amistr Bulwark setting");
+        assert!(app.matches(bulwark, None));
         let aggro = app.hom.get("AggroHP").expect("AggroHP");
-        assert!(!app.matches(aggro, None), "AggroHP does not belong to Lava Slide");
+        assert!(!app.matches(aggro, None), "AggroHP does not belong to Amistr Bulwark");
         app.skill_filter = None;
         assert!(app.matches(aggro, None));
     }
@@ -3769,7 +3769,7 @@ mod tests {
         assert!(count > 5, "exported {count} files");
         assert!(export.join("H_Config.lua").is_file());
         assert!(export.join("H_Tactics.lua").is_file());
-        assert!(export.join("Types").join("Dieter.lua").is_file());
+        assert!(export.join("Types").join("Vanilmirth.lua").is_file());
 
         // change one value in the exported file, then import the folder
         let text = std::fs::read_to_string(export.join("H_Config.lua")).unwrap();
