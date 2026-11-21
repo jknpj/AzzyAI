@@ -250,11 +250,6 @@ end
 
 -- battle.cpp: 50% chance per hit dealt (fighting) or taken (grappling); the harness gives
 -- one sphere every second hit so runs stay reproducible
-local function sphereHit(style)
-	if server.style ~= style then return end
-	server.sphereHits = server.sphereHits + 1
-	if server.sphereHits % 2 == 0 then server.spheres = math.min(MAX_SPHERES, server.spheres + 1) end
-end
 
 -- why the server would refuse this cast, or nil. Everything but range answers "Skill failed";
 -- an out-of-range request is dropped silently (unit_skilluse_id2 returns 0)
@@ -331,7 +326,6 @@ local function recordCast(kind, id, lvl, skill, a, b)
 				server.combo = nil
 			end
 			-- skill damage counts as a hit for fighting-style spheres
-			if kind == "gnd" or a ~= id then sphereHit("fighting") end
 		end
 		if id == HOMUN then HarnessDamageCast(e, kind, a, b, skill, lvl, spheresAtHit) end
 	end
@@ -454,7 +448,6 @@ function HarnessOnHomunAttack(h, t)
 	if t.ra and t.target == 0 and not IMMOBILE_AI[t.ra.ai] then
 		t.target, t.motion = HOMUN, MOTION_ATTACK
 	end
-	if h.homuntype == ELEANOR then sphereHit("fighting") end
 end
 function SkillObject(id, lvl, skill, target) recordCast("obj", id, lvl, skill, target) end
 function SkillGround(id, lvl, skill, x, y) recordCast("gnd", id, lvl, skill, x, y) end
@@ -686,14 +679,12 @@ for tick = 1, TICKS do
 	-- client, and a 50% sphere chance in grappling style
 	if sc.incomingHitMs and h.homuntype == ELEANOR and now % sc.incomingHitMs == 0 then
 		h.motion, h.damageUntil = MOTION_DAMAGE, now + 200
-		sphereHit("grappling")
 	end
 	if now % 1000 == 0 then
 		h.sp = math.min(h.maxsp, h.sp + (sc.spregen or 10))
 		-- every monster attacking the homunculus lands one hit per second
 		if h.homuntype == ELEANOR then
 			for _, m in pairs(world) do
-				if m.monster and not m.dead and m.target == HOMUN then sphereHit("grappling") end
 			end
 		end
 	end
