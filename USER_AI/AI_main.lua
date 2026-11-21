@@ -9,8 +9,6 @@ MainVersion="2.1"
 -- AI_main is loaded after H_Config/M_Config, so ServerType is final here
 ApplyServerType()
 
-local nextEleanorSphereAttack = 0
-local eleanorPreferredStylePending = false
 
 -- A refused starter is ambiguous; probe the other style without changing the tracked mode.
 -- Grappling style only gains spheres from hits taken: without spheres for Tinder Breaker and no hit
@@ -1065,7 +1063,6 @@ function OnATTACK_ST()
             local TargetedSkills = GetTargetedSkills(MyID)
             if TraceAIEnabled ~= 0 then TraceAI("Begin autoskill routine") end
             local availsp = GetV(V_SP, MyID)
-            local eleanorSaveSP = false
             if BerserkMode ~= 1 or Berserk_IgnoreMinSP ~= 1 then
                 availsp = availsp - tact_sp
             end
@@ -3267,9 +3264,6 @@ function AI(myid)
 	TakenCells={} --OccupiedCellDetection 
 	local tMobID=""
 	TankMonsterCount=0
-	local seralegionCount=0
-	local seralegionActive=0
-	local seralegionBugged=0
 
 	local logActors = LogEnable["AAI_ACTORS"]==1
 	local myx, myy = x, y
