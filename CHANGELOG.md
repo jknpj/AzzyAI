@@ -4,9 +4,13 @@ Version history for AzzyAI, newest first. The technical reference (versioning
 policy, project background, tests, damage model, preset tuning and configuration
 guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-**Current release: 2.1.0**
+**Current release: 2.1.1**
 
-## Unreleased
+## 2.1.1
+
+Patch release: the desktop app writes the files by default, the learned-level probe can be turned
+off, the quickening combo no longer wastes 1.2 s per cycle on private servers, and the READMEs and
+manuals show the native app first.
 
 - New: `SkillLevelProbing` (AutoSkill Options in both GUIs, `Probe` / `Never probe`). `0` turns the
   learned-level probe off: the AI always requests the level set in the options, capped to the
