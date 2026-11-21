@@ -39,12 +39,6 @@ end
 -- ComboSCTimeout/ComboSVTimeout. Tinder Breaker is tracked: with no after-cast delay on the private
 -- server the next chain would start inside the 500 ms reuse window and be refused.
 -- Sonic Claw starts the chain but is also cast on its own, so its cooldown is tracked.
-for _,cdskill in pairs({MH_ERASER_CUTTER,MH_XENO_SLASHER,MH_STAHL_HORN,MH_HEILIGE_STANGE,MH_NEEDLE_OF_PARALYZE,
-	MH_TWISTER_CUTTER,MH_ABSOLUTE_ZEPHYR,MH_GLANZEN_SPIES,MH_HEILIGE_PFERD,MH_NEEDLE_STINGER,
-	MH_TOXIN_OF_MANDARA,MH_BLAZING_AND_FURIOUS,MH_THE_ONE_FIGHTER_RISES,MH_BLAST_FORGE,
-	MH_TINDER_BREAKER,MH_SONIC_CRAW,MH_SILENT_BREEZE,MH_GOLDENE_TONE,MH_PAIN_KILLER}) do
-	AutoSkillCooldown[cdskill]=0
-end
 -----------Config checking----------------
 
 function GetStartupLogPath()
