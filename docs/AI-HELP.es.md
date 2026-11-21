@@ -47,9 +47,7 @@ Reglas para tu respuesta:
 6. Sugiere un cambio por vez y recuérdame hacer un respaldo de la carpeta AI y
    recargar la IA en el juego antes de probar.
 
-Mi homúnculo: <Eira / Bayeri / Sera / Dieter / Eleanor / otro>
 Mi servidor: <oficial RO LATAM / privado>
-Qué está mal o qué quiero: <por ejemplo: "Dieter nunca usa Lava Slide contra grupos">
 ```
 
 ## 3. Revisa la respuesta

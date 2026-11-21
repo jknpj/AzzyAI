@@ -45,9 +45,7 @@ Rules for your answer:
 6. Suggest one change at a time, and remind me to back up the AI folder and reload
    the AI in game before testing.
 
-My homunculus: <Eira / Bayeri / Sera / Dieter / Eleanor / other>
 My server: <official RO LATAM / private>
-What is wrong or what I want: <for example: "Dieter never uses Lava Slide on a pack">
 ```
 
 ## 3. Check the answer

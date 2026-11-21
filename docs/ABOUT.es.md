@@ -17,12 +17,6 @@ que tu servidor acepta. [Abrir la figura en tamaño completo](hg-how-es.svg).
 
 | Homúnculo | Habilidades que puede usar | Conviene saber |
 |---|---|---|
-| **Eira** | Xeno Slasher, Eraser Cutter, Silent Breeze, Twister Cutter, Absolute Zephyr, Overed Boost, Light of Regenerate | Light of Regenerate es opcional y viene desactivada: requiere intimidad Leal y la reduce en cada lanzamiento. |
-| **Bayeri** | Stahl Horn, Heilige Stange, Stein Wand, Goldene Ferse, Angriffs Modus, Glanzen Spies, Heilige Pferd, Goldene Tone | El preset de Bayeri elige entre Stahl Horn, Spies y las habilidades de área según la DEF del objetivo. |
-| **Sera** | Needle of Paralyze, Poison Mist, Summon Legion, Pain Killer, Toxin of Mandara, Needle Stinger | Toxin of Mandara y Needle Stinger tienen lanzamientos que pueden interrumpirse. |
-| **Dieter** | Magma Flow, Granitic Armor, Lava Slide, Pyroclastic, Volcanic Ash, Blast Forge, Tempering | Sus ataques son de área, así que su preset ataca incluso a un solo monstruo. Las habilidades de fuego se omiten contra monstruos de Fuego. |
-| **Eleanor** | Style Change, Sonic Claw, Silvervein Rush, Midnight Frenzy, Tinder Breaker, CBC, EQC, Blazing And Furious, The One Fighter Rises | Sonic Claw requiere el estilo lucha; Tinder Breaker, CBC y EQC requieren el estilo agarre. La IA cambia de estilo por ti. |
-| **Lif, Amistr, Filir, Vanilmirth** | Sus propias habilidades, y las heredadas en un Homúnculo S | Detecta solo el tipo base de un Homúnculo S. |
 | **Mercenarios** | Tácticas, habilidades y kiting, como en el AzzyAI original | No usan la base de datos de monstruos. |
 
 Las habilidades solo funcionan si tu servidor las ofrece y el homúnculo las ha
@@ -36,14 +30,10 @@ que hace y añade lo siguiente. Esto es lo que notarías en el juego:
 | | AzzyAI original | Esta versión |
 |---|---|---|
 | **¿Qué monstruo es?** | Sin datos de monstruos. Tú escribes una fila de táctica para cada uno. | Conoce el elemento, la raza y si es jefe/MVP/planta de cada monstruo (unos 2.700), así que funciona bien con monstruos que nunca configuraste. |
-| **Habilidades y elemento** | Usa la habilidad incluso contra un monstruo que la resiste. | Omite la habilidad que haría menos de la mitad del daño (ajustable) y usa otro ataque. Dieter no lanza Lava Slide contra un monstruo de Fuego. |
 | **Habilidades de área** | Cuenta monstruos, sea cual sea su elemento. | Cuenta solo los monstruos que realmente recibirían daño y apunta a ellos, incluso cuando el de enfrente es inmune. |
 | **Plantas y hongos** | Adivina las plantas por su comportamiento (`AutoDetectPlant`). | Sabe exactamente cuáles son plantas (reciben 1 de daño de todo) y guarda el SP para los demás. |
 | **MVP** | Solo lo que pongas en las tácticas. | Por defecto no *empieza* peleas con un MVP, pero igual te defiende. Opcional: atacar siempre a los MVP. |
 | **Un lanzamiento que se interrumpe una y otra vez** | Un límite fijo de reintentos (`SkillRetryLimit`), nada más inteligente. | Pausa la habilidad unos segundos tras algunas interrupciones y usa otra cosa. |
-| **Niveles de habilidades** | La mayoría de las habilidades de Homúnculo S se detienen en el nivel 5 en su tabla. | Niveles máximos actuales (10 en la mayoría) y solo lanza niveles que el homúnculo ya aprendió. |
-| **Habilidades de Homúnculo S** | Lo básico de Eira, Bayeri, Sera, Dieter y Eleanor. | También Twister Cutter, Absolute Zephyr, Toxin of Mandara, Needle Stinger, Glanzen Spies, Heilige Pferd, Goldene Tone, Blazing And Furious, The One Fighter Rises, Blast Forge y Tempering. |
-| **Eleanor** | Cambio de estilo y combos. | También esferas según las reglas del servidor (cuánto cuesta cada habilidad), tiempos de los combos y las dos habilidades nuevas. |
 | **Los números de tu servidor** | Un único conjunto de valores. | Datos oficiales (RO LATAM, Episodio 19) o de rAthena, elegidos con `ServerType`, para que cooldowns, alcances y costos coincidan con tu servidor. |
 | **Configuración** | Aplicación Windows. | La aplicación Windows y una **página en el navegador** en English, Português y Español, con descripciones de habilidades, presets por homúnculo y sugerencia de tácticas de monstruos por mapa. |
 | **Actualizaciones** | Manuales. | La aplicación Windows actualiza la IA y los datos de monstruos por ti, sin tocar tus ajustes. |
@@ -55,7 +45,6 @@ de monstruos.
 
 ## ¿Vale la pena cambiar?
 
-**Te conviene si** juegas con Eira, Bayeri, Sera, Dieter o Eleanor, quieres
 ajustar el comportamiento sin leer código, o cazas grupos de monstruos y quieres
 que las habilidades de área se usen bien.
 
