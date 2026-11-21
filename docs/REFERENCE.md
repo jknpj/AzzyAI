@@ -172,6 +172,8 @@ The unit normally goes after monsters its [tactics](#4-tactics) allow, when they
 | `AutoSkillDelay` | 200 (mercenary 400) | Extra wait, in ms, between skills, to avoid double casting. 0 removes only this wait, not cooldowns or cast time. |
 | `CastTimeRatio` | .80 | Fraction of the skill's cast time the AI expects, for your cast-time reductions. |
 | `UseVanilCaprice` | 1 | Vanilmirth: use Caprice. |
+| `UseFilirMoon` | 1 | Filir attacks with Moonlight. 0 = normal attacks only. |
+| `UseVanilSelfDestruct` | 0 | Vanilmirth may use Self Destruct: 9x9 damage that kills the homunculus. Off by default. |
 | `LintUserOptions` | 1 | **New.** At startup, turns off skill options for skills the homunculus has not learned and lowers levels to the learned level. |
 | `TrustSkillProbe` | -1 | **New.** Whether to believe the client's answer about learned skill levels. -1 = automatic (not on the official server, yes on private servers). With the probe distrusted, a skill the client reports as not learned is still tried at the configured level and the level steps down when the server refuses it, instead of the option being disabled at startup. |
 | `SkillLevelProbing` | 1 | **New.** 1 = ask the client which skill levels are learned and adapt. 0 = never probe: always request the level set in the options (capped to the skill's maximum), and never step it down when the server refuses. Use it on a server whose probe answers cannot be trusted. |

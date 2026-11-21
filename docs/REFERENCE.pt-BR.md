@@ -178,6 +178,8 @@ perto de você.
 | `AutoSkillDelay` | 200 (mercenário 400) | Espera adicional, em ms, entre habilidades, para evitar uso duplicado. 0 remove apenas essa espera, não a recarga nem o tempo de conjuração. |
 | `CastTimeRatio` | .80 | Fração do tempo de conjuração que a IA espera, considerando suas reduções de conjuração. |
 | `UseVanilCaprice` | 1 | Vanilmirth: usar Caprice. |
+| `UseFilirMoon` | 1 | O Filir ataca com Moonlight. 0 = apenas ataques normais. |
+| `UseVanilSelfDestruct` | 0 | O Vanilmirth pode usar Self Destruct: dano 9x9 que mata o homúnculo. Desligado por padrão. |
 | `LintUserOptions` | 1 | **Novo.** Na inicialização, desativa opções de habilidades não aprendidas pelo homúnculo e reduz os níveis para o nível aprendido. |
 | `TrustSkillProbe` | -1 | **Novo.** Define se confia na resposta do cliente sobre níveis de habilidades aprendidos. -1 = automático (não no servidor oficial, sim em servidores privados). Com o sondeo sem confiança, uma habilidade que o cliente informa como não aprendida ainda é tentada no nível configurado e o nível desce quando o servidor recusa, em vez de a opção ser desativada no início. |
 | `SkillLevelProbing` | 1 | **Novo.** 1 = pergunta ao cliente quais níveis de habilidade estão aprendidos e se adapta. 0 = nunca sonda: pede sempre o nível configurado (limitado ao máximo da habilidade) e não o reduz quando o servidor recusa. Use num servidor cuja resposta ao probe não seja confiável. |

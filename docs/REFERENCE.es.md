@@ -180,6 +180,8 @@ cerca de ti.
 | `AutoSkillDelay` | 200 (mercenario 400) | Espera adicional, en ms, entre habilidades, para evitar usos duplicados. 0 elimina solo esta espera, no la recarga ni el tiempo de lanzamiento. |
 | `CastTimeRatio` | .80 | Fracción del tiempo de lanzamiento que espera la IA, considerando tus reducciones de lanzamiento. |
 | `UseVanilCaprice` | 1 | Vanilmirth: usar Caprice. |
+| `UseFilirMoon` | 1 | El Filir ataca con Moonlight. 0 = solo ataques normales. |
+| `UseVanilSelfDestruct` | 0 | El Vanilmirth puede usar Self Destruct: daño 9x9 que mata al homúnculo. Desactivado por defecto. |
 | `LintUserOptions` | 1 | **Nuevo.** Al iniciar, desactiva opciones de habilidades que el homúnculo no ha aprendido y reduce los niveles al nivel aprendido. |
 | `TrustSkillProbe` | -1 | **Nuevo.** Si debe confiar en la respuesta del cliente sobre los niveles de habilidades aprendidos. -1 = automático (no en el servidor oficial, sí en servidores privados). Con el sondeo sin confianza, una habilidad que el cliente informa como no aprendida se sigue intentando en el nivel configurado y el nivel baja cuando el servidor la rechaza, en vez de desactivar la opción al inicio. |
 | `SkillLevelProbing` | 1 | **Nuevo.** 1 = pregunta al cliente qué niveles de habilidad están aprendidos y se adapta. 0 = nunca sondea: pide siempre el nivel configurado (limitado al máximo de la habilidad) y no lo baja cuando el servidor lo rechaza. Úsalo en un servidor cuya respuesta al sondeo no sea fiable. |
