@@ -108,3 +108,17 @@ gives for the files it touches.
 ## Security
 
 Do not report vulnerabilities in a public issue. See [SECURITY.md](SECURITY.md).
+
+## GUI parity (web and Rust)
+
+`webgui/` (JavaScript) and `tools/azzy-native/` (Rust) are two front ends of the
+same `USER_AI`, reading the same generated data (`webgui/data/options.json`,
+`skills.json`). Change both in the same push:
+
+1. a setting or panel behaviour: `webgui/homSchema.js` + `app.js` and
+   `tools/azzy-native/src/{data.rs,main.rs}`;
+2. a skill link or icon: `webgui/skills.js` (`match`, `SKILL_SETTINGS`) and
+   `tools/azzy-native/src/{skills.rs,main.rs}` + `data/skills.json`;
+3. then `node webgui/tools/dump-data.js`, `cargo test -p azzy-native -p azzy-config`
+   and `cargo run -p azzy-harness -- templates-check` (templates.js is a literal
+   copy of `USER_AI/H_Config.lua` and `M_Config.lua`).
