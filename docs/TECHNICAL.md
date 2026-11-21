@@ -2,7 +2,6 @@
 
 > **Pre-Renewal build.** This document describes the AI engine, which is shared, but
 > the data and skills are the Pre-Renewal ones: the sections about `SkillDamage`,
-> the Renewal damage model, Homunculus S skill trees, the Renewal monster database
 > and the S options do not apply here. The build's own description, data sources
 > and limitations are in [PRERENEWAL.md](PRERENEWAL.md).
 
@@ -71,7 +70,6 @@ Original project website: [drazzy.com](http://drazzy.com/ro/ai).
 ## Key Features
 
 * **Server profiles:** `ServerType` selects official/private actor identification and skill data. This supports multiple server families, but individual clients and server revisions still require validation.
-* **Automatic Homunculus Base Type Detection:** The AI now automatically detects the original base type (Lif, Amistr, Filir, Vanilmirth) of a Homunculus S. This ensures inherited skills from the original form are used correctly without requiring manual configuration of `OldHomunType`.
 * **Smart Skill Configuration (Linting):** On startup, the AI intelligently validates the user's `H_Config.lua` file. It automatically disables skills that do not belong to the current homunculus type and adjusts skill levels if they are set higher than what the homunculus has actually learned. This prevents errors and simplifies configuration.
 * **Updated GUI:** Includes a new updated GUI (Thanks to [samufacanha2](https://github.com/samufacanha2/AzzyAI)).
 * **Skills updated to new max-level:** Reflects [official kRO changes](http://ro.gnjoy.com/news/notice/View.asp?BBSMode=10001&seq=6843&curpage=1).
@@ -80,37 +78,27 @@ Original project website: [drazzy.com](http://drazzy.com/ro/ai).
 ## Included Skills
 
 This includes the following skills (Thanks to [SpenceKonde](https://github.com/SpenceKonde/AzzyAI)):
-* **Eira**
     * Xeno Slasher
     * Eraser Cutter
-* **Bayeri**
     * Stahl Horn
     * Heilige Stange
-* **Sera**
     * Needle of Paralyze
     * Pain Killer
-* **Dieter**
     * Lava Slide
     * Pyroclastic
-* **Eleanor**
     * Silvervein Rush
     * Midnight Frenzy
 
 Additionally, with the arrival of 4th jobs and new homunculus skills, the following new skills have been added:
-* **Dieter**
     * Tempering (Thanks to [Kisaro](https://github.com/Kisaro/AzzyAI))
     * Blast Forge (Thanks to [vorpal1337](https://github.com/vorpal1337))
-* **Eira**
     * Twister Cutter
     * Absolute Zephyr
     * Light of Regenerate (optional autobuff, off by default: `UseEiraLightOfRegene`, `EiraLightOfRegeneLevel`, `EiraLightOfRegeneOwnerHP`). Attempts to maintain the resurrection buff; successful resurrection still depends on server conditions. It needs Loyal intimacy and lowers intimacy on every cast.
-* **Eleanor**
     * Blazing And Furious
     * The One Fighter Rises
-* **Sera**
     * Toxin Of Mandara
     * Needle Stinger
-* **Bayeri**
     * Glanzen Spies
     * Heilige Pferd
     * Goldene Tone
@@ -195,12 +183,10 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 
 A file under `fixtures/Types/` replaces the matching `Types/<homunculus>.lua` in the sandbox, so the scenarios always exercise the generic presets even when a branch ships a tuned one.
 
-When automatic Eleanor combos are enabled, their starters wait for `AutoComboSpheres`, so Sonic Claw does not spend the spheres needed for its follow-ups. With automatic combos disabled, starters only require their normal sphere cost. New skills retain their priority and can consume spheres before a combo starts.
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.
 Confirmed Style Change casts update the tracked style whether requested manually or automatically; `eleanor_manual_style` verifies a manual switch followed by the grapple chain.
 `SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the built-in default remains 400 ms (the shipped `H_Config.lua` uses 200 and `M_Config.lua` uses 400).
 
-The simulated server follows rAthena's rules (`skill_isNotOk_hom`, `unit_skilluse_id2`, `skill_check_condition_mercenary`): a cast is refused when the level isn't learned, the skill is still in cooldown (counted from the end of the cast), the target is beyond the skill range (square distance, the homunculus doesn't walk into range), Goldene Ferse and Angriffs Modus overlap, or Eleanor lacks the style, combo or spirit spheres (one sphere every second hit dealt in fighting style or taken in grappling style, at most 10; the homunculus swings once per 800 ms, however often the AI asks for an attack; costs from `SkillSphereCost`, or rAthena's on private scenarios). Eleanor's fighting-style sphere estimate credits at most one normal attack attempt per 800 ms, scaled by `SphereTrackFactor`; it does not require the client to expose her attack animation. This is an estimate, not a read of the server's sphere count; refused sphere skills correct it downward. `eleanor_hidden_motion` tests a client that hides those animations. On `SERVER_PRIVATE` scenarios its SP costs, cast times, delays, cooldowns and ranges come from rAthena's `db/re/skill_db.yml`; on official ones from AzzyAI's official profile. The rAthena data lives in `tools/harness/fixtures/rathena.lua`, generated from a pinned rAthena commit and committed so the harness needs no network. It also gives scenarios real monsters (`{ x, y, mobId }`: aggressive ones attack the owner, passive ones fight back, plants never move) and lets `rathena_skill_tree` check `SkillList`/`SkillInfo` against `db/re/homunculus_db.yml`. To move to a newer rAthena (standard library only; behind a proxy set `HTTPS_PROXY` first):
 
 ```
 cargo run --release --manifest-path tools/Cargo.toml -p rathena-sync --              # latest master
@@ -285,17 +271,9 @@ Assumptions and limits: the server's `hom_setting` makes Min-MATK equal Max-MATK
 
 | Homunculus | 1 monster | 2 | 3 | 5 | Individual settings (`Types/<Name>.lua`) |
 |---|---|---|---|---|---|
-| Eira | 126,909 (+0%) | 250,482 (+3%) | 373,183 (+2%) | 618,585 (+2%) | `UseEiraTwisterCutter` 1, `UseEiraAbsoluteZephyr` 1 |
-| Bayeri | 184,809 (+0%) | 184,809 (+0%) | 226,169 (+18%) | 390,505 (+37%) | `UseBayeriHeiligePferd` 1, `AutoMobCount` 2, `UseBayeriGlanzenSpies` 1 |
-| Sera | 219,256 (+0%) | 318,949 (+0%) | 419,754 (+0%) | 621,387 (+0%) | `UseSeraNeedleStinger` 1, `AutoMobCount` 1 |
-| Dieter | 45,841 (+464%) | 90,616 (+522%) | 135,390 (+552%) | 225,190 (+569%) | `AutoMobCount` 1, `UseDieterAshAsAttack` 0 |
-| Eleanor | 100,393 (+25%) | 120,869 (-13%) | 213,518 (+0%) | 345,750 (+0%) | `UseEleanorTheOneFighterRises` 1, `UseEleanorBlazingAndFurious` 1, `AutoMobCount` 2 |
 
 <!-- preset-table:end -->
 
-- **`AutoMobCount` 1 → 2 in the shared preset.** At 1 an area skill outranks the single-target ones even against one monster. Eira's DPS is the same but Xeno Slasher (130 SP) is replaced by Eraser Cutter (70 SP), so damage per SP goes from 1,438 to 2,670; Sera against one monster gains 14% (146,405 → 167,256 DPS). Bayeri no longer changes either way: his DEF-ignoring area skills are only cast against a target with enough DEF, so he casts Stahl Horn at 1 and 2 monsters with either value. The area skill is used when the monsters around the target number at least `AutoMobCount`.
-- **Skill choice by score.** Eira, Bayeri and Sera no longer cast a newer attack just because it is enabled. Each attack has its damage data in `SkillDamage` (`H_SkillList.lua`: rAthena's ratio at base level 250 and whether DEF applies), and among the ready skills the AI picks the highest score: ratio × element against the target × monsters hit × DEF reduction, divided by the cast time; below `SkillPickLowSPPercent` (40%) SP it divides by the SP cost instead. On private servers the 1 s after-cast delay of the newer attacks is gone (rAthena has none), and their cooldown now starts after the observed cast, so they are not retried too early. Previously, forcing the newer skill lost DPS: Twister Cutter instead of Eraser Cutter 83,372 against 122,526 DPS on one monster, Absolute Zephyr instead of Xeno Slasher 250,881 against 365,708 on three. With the score the presets enable them: Eira 126,909 on one monster and 373,183 on three, Sera with Needle Stinger and `AutoMobCount` 1 219,256 on one monster (167,256 before). Glanzen Spies is on in `Types/Bayeri.lua` and replaces Stahl Horn only where it scores higher. With the official server type the 1 s delay stays, so Xeno Slasher, Heilige Stange and Needle of Paralyze usually win.
-- **Blast Forge on** is most of Dieter's damage: turning it off costs 82-85% (90,616 → 14,577 DPS against two monsters), since it has its own cooldown next to Lava Slide. Its ground unit is priced as hitting every monster in the area on every tick, so a monster that walks out of the area earns less. Magma Flow is priced as one splash hit per cast and its in-game effect, a buff that triggers on attacks, is not modelled, so its rows (turning it off looks like +4% against three monsters) are not reliable.
 
 
 What this does not prove: the stats are hypothetical and the real DPS depends on the server (the RO LATAM homunculi are much stronger than rAthena's), so the ranking of two configurations can change with the real stats and SP; the model is validated against measured damage only for Sonic Claw and Xeno Slasher, the SP regeneration of the other homunculi is not measured (their decisions held from 30 to 400 SP/s), `AutoSkillDelay` made no difference in these runs, and none of it was run on an official server, whose skill data differ (`ServerType` stays `SERVER_OFFICIAL`). The GUIs' own defaults and `Defaults.lua` were not changed. Two corrections to the damage model came out of this work: Poison Mist's unit only applies a status (it deals no damage; later corrected: it hits with magic damage every tick) and Tinder Breaker, CBC and EQC add a flat 2,500, 4,000 and 6,000 per level after DEF and element.
@@ -315,7 +293,6 @@ The official client answers the probe in its own way: a learned skill reports it
 unlearned one reports range + 1 (or a flat 8 where the table range is off), and the client's value
 can differ from the AI's table. The LATAM client answered 8 for every level of Lava Slide, which
 the AI read as "not learned": `LintSkillOptions` disabled `UseDieterLavaSlide` at startup and
-`DoSkill` skipped the skill, so the Dieter never cast it. With `TrustSkillProbe = -1` on
 `SERVER_OFFICIAL` the probe is not trusted to rule a skill out: an enabled skill starts at the
 configured level and the step-down above is what finds the real level, so the server is the only
 authority. The level is saved, so the walk down happens once per owner. A skill that the server
@@ -362,7 +339,6 @@ With the wrong value on a private server every monster looks like a player and t
 ### Monster Database
 `USER_AI/MobInfo.lua` lists the race, element, element level, size, boss/MVP/plant/immobile flags and attack range of every monster, the element damage table and the element of each homunculus attack skill. It is generated from rAthena Renewal (`db/re/mob_db.yml`, `attr_fix.yml`, `skill_db.yml`) by `tools/rathena-sync`. The homunculus reads a monster's ID with `GetV(V_HOMUNTYPE)`, so it uses the database without any setup; mercenaries only know monster IDs from MobID files and are not affected.
 
-* **Skills by element** (`SkillElementMinRate`, default 50): an attack skill is left out when the target's element would cut its damage below this percent, and always when the target is immune or healed by it. Dieter won't cast Lava Slide on Fire monsters, for example. The AI then picks another skill or attacks normally. Poison Mist and Lava Slide used as AoE buffs (`PoisonMistMode`/`LavaSlideMode`) wait until at least one monster near you would take enough damage.
 * **Packs of mixed elements**: area skills count each monster by the damage its element lets through (an Earth 2 monster counts 1.75 against fire, a Fire 2 one 0), both to decide whether the skill is worth casting (`AutoMobCount`) and where to aim it. An area skill may still be used when the current target is immune, if the monsters around it make up for it; it is then aimed at them.
 * **Plants** (`PlantSkills`, default 0): plants and mushrooms take 1 damage from everything, so no skills are used on them and they don't count for area skills.
 * **Bosses** (`BossAggro`, default 1): the homunculus never starts a fight with an MVP (`2` = also mini-bosses), whatever the tactics say; it still defends you and itself when they attack. `0` lets the tactics decide.
