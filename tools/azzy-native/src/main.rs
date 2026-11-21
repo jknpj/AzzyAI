@@ -3669,7 +3669,7 @@ mod tests {
     #[test]
     fn type_presets_override_only_their_file() {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../USER_AI");
-        if !repo.join("Types").join("Dieter.lua").is_file() {
+        if !repo.join("Types").join("Amistr.lua").is_file() {
             return;
         }
         let dir = std::env::temp_dir().join(format!("azzy-native-types-{}", std::process::id()));
@@ -3692,22 +3692,22 @@ mod tests {
         let global_aggro = app.config().and_then(|config| config.get("AggroHP")).unwrap_or("").to_string();
 
         app.set_token("AggroHP", "77".to_string());
-        assert_eq!(app.type_configs["Dieter"].get("AggroHP"), Some("77"));
+        assert_eq!(app.type_configs["Amistr"].get("AggroHP"), Some("77"));
         assert_eq!(app.current_value("AggroHP"), Some("77"));
 
         // back to the global value -> the override line disappears
         app.set_token("AggroHP", global_aggro);
-        assert_eq!(app.type_configs["Dieter"].get("AggroHP"), None);
+        assert_eq!(app.type_configs["Amistr"].get("AggroHP"), None);
 
         // an existing override is changed in place
         app.set_token("AutoMobCount", "3".to_string());
-        assert_eq!(app.type_configs["Dieter"].get("AutoMobCount"), Some("3"));
-        assert!(app.type_configs["Dieter"].is_modified());
+        assert_eq!(app.type_configs["Amistr"].get("AutoMobCount"), Some("3"));
+        assert!(app.type_configs["Amistr"].is_modified());
         app.save();
         assert_eq!(std::fs::read_to_string(dir.join("H_Config.lua")).unwrap(), before_h);
-        let dieter = std::fs::read_to_string(dir.join("Types").join("Dieter.lua")).unwrap();
-        assert!(dieter.contains("AutoMobCount             = 3"), "{dieter}");
-        assert!(!dieter.contains("AutoMobCount             = 1"), "{dieter}");
+        let amistr = std::fs::read_to_string(dir.join("Types").join("Amistr.lua")).unwrap();
+        assert!(amistr.contains("AutoMobCount             = 3"), "{amistr}");
+        assert!(!amistr.contains("AutoMobCount             = 1"), "{amistr}");
         assert_eq!(app.changed(), 0, "a save must clear the type edits");
         let _ = std::fs::remove_dir_all(&dir);
     }

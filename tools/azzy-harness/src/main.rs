@@ -7,10 +7,10 @@
 //
 // Usage (run from the repository root):
 //     cargo run --release -p azzy-harness --                 # all checks and scenarios
-//     cargo run --release -p azzy-harness -- bayeri dieter  # only these scenarios
-//     cargo run --release -p azzy-harness -- --verbose sera
-//     cargo run --release -p azzy-harness -- --profile --ticks 3000 crowd_dieter
-//     cargo run --release -p azzy-harness -- --skip-syntax -- bayeri
+//     cargo run --release -p azzy-harness -- amistr_fresh  # only these scenarios
+//     cargo run --release -p azzy-harness -- --verbose amistr_fresh
+//     cargo run --release -p azzy-harness -- --profile --ticks 3000 amistr_fresh
+//     cargo run --release -p azzy-harness -- --skip-syntax -- amistr_fresh
 //     cargo run --release -p azzy-harness -- --globals
 //
 // The Lua interpreter comes from LUA/LUAC, then PATH (lua5.1, lua51, lua), then

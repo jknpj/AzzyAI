@@ -174,16 +174,11 @@ pub fn load() -> Result<Skills, String> {
     Ok(Skills { skills, width, height, tile, columns, atlas })
 }
 
-pub const HOMUNCULI: [(&str, &str); 9] = [
+pub const HOMUNCULI: [(&str, &str); 4] = [
     ("lif", "Lif"),
     ("amistr", "Amistr"),
     ("filir", "Filir"),
     ("vanilmirth", "Vanilmirth"),
-    ("eira", "Eira"),
-    ("bayeri", "Bayeri"),
-    ("sera", "Sera"),
-    ("dieter", "Dieter"),
-    ("eleanor", "Eleanor"),
 ];
 
 #[cfg(test)]
