@@ -489,14 +489,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "divinepride-sync"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "serde_json",
-]
-
-[[package]]
 name = "dlib"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
