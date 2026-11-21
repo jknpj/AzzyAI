@@ -353,9 +353,9 @@ const NATIVE: &[(&str, &str, &str)] = &[
         "aplicados {0} cambio(s) en {1}",
     ),
     (
-        "(pass --write to edit the files themselves)",
-        "(--write edita os próprios arquivos)",
-        "(--write edita los propios archivos)",
+        "(sandbox mode: files were written as .new; run without --new to save in place)",
+        "(modo sandbox: os arquivos foram gravados como .new; rode sem --new para gravar nos arquivos)",
+        "(modo sandbox: los archivos se escribieron como .new; ejecute sin --new para guardar en los archivos)",
     ),
     ("{0} reset to its default", "{0} voltou ao padrão", "{0} volvió al valor predeterminado"),
     (

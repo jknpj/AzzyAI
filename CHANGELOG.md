@@ -11,6 +11,9 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 - Fixed: Eternal Quick Combo has no after-cast delay on rAthena/private servers, but the
   AI waited 1.2 s per cycle. The private-server skill override now matches rAthena, and
   Tinder Breaker's 500 ms reuse is tracked so the chain restart is not refused.
+- Fixed: the desktop app saves the files by default. Before, launching it without `--write`
+  silently wrote `<file>.new` and looked like the window could not save; `--new` (or
+  `--sandbox`) now enables that mode for testing.
 - Fixed (harness): `azzy-harness` applies `fixtures/Types/*.lua` to the sandbox, so a
   branch or preset that changes `Types/<homunculus>.lua` still runs the generic
   scenarios.
