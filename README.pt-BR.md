@@ -27,7 +27,7 @@ comportamento dele numa janela ou no navegador, sem código para editar.
 Esta é uma continuação comunitária do [AzzyAI original](https://github.com/SpenceKonde/AzzyAI),
 não um produto oficial da Gravity. Ela é testada offline e num servidor rAthena
 local, não em todo cliente ou servidor oficial, então teste primeiro num monstro
-fácil. Respeite as regras do seu servidor sobre IA personalizada.
+fácil. Respeite as regras do seu servidor sobre IA janela e a páginaersonalizada.
 
 ## Instalar
 
@@ -38,7 +38,7 @@ fácil. Respeite as regras do seu servidor sobre IA personalizada.
 3. Abra a pasta descompactada e depois a pasta `USER_AI` dela. Copie **tudo o que
    está dentro** de `USER_AI` para a pasta `AI\USER_AI` do seu jogo. Não crie uma
    pasta `USER_AI` dentro de outra `USER_AI`.
-4. No jogo, digite **`/hoai`** até a mensagem dizer que a IA personalizada do
+4. No jogo, digite **`/hoai`** até a mensagem dizer que a IA janela e a páginaersonalizada do
    homúnculo está ativa (para mercenário, **`/merai`**).
 5. Invoque o homúnculo de novo, ou reconecte, para o jogo carregar os arquivos novos.
 
@@ -55,12 +55,17 @@ configurações, táticas e lista de amigos. Leia antes o
 
 ## Configurar
 
-Abra a [configuração no navegador](https://jknpj.github.io/AzzyAI-webgui/),
-escolha **AzzyAI** (não o Classic), depois **File > Open USER_AI folder** e selecione a pasta
-`AI\USER_AI` do seu jogo. Mude o que quiser e clique em **Apply**. (Prefere um
-aplicativo Windows? Execute o [AzzyAIConfig.exe](USER_AI/AzzyAIConfig.exe) dessa
-mesma pasta.) O download também inclui uma cópia offline em
-`webgui/` (abra `webgui/index.html`). Depois, recarregue a IA no jogo.
+Execute o **`AzzyAIConfig.exe`** na pasta `AI\USER_AI` do seu jogo: ele vem
+incluído na própria pasta. Mude o que quiser e clique em **Apply Settings**; os
+arquivos são gravados direto.
+
+![A janela de configuração do AzzyAI](docs/native-gui.png)
+
+**Sem Windows?** Use a [configuração no navegador](https://jknpj.github.io/AzzyAI-webgui/)
+em qualquer navegador (Linux, macOS, Android...): escolha **AzzyAI** (não o Classic),
+depois **File > Open USER_AI folder**, selecione a pasta `AI\USER_AI` do seu jogo e
+clique em **Apply**. Offline, a mesma página vem em `webgui/` (abra `webgui/index.html`).
+Depois, recarregue a IA no jogo.
 
 **Comece por estas:**
 
@@ -69,7 +74,7 @@ mesma pasta.) O download também inclui uma cópia offline em
 - Mude uma coisa por vez e recarregue a IA entre os testes.
 
 O jogo lê as configurações instaladas na própria pasta, não uma cópia na pasta de
-downloads. A página está em English, Português e Español; os nomes das opções
+downloads. A janela e a página estão em English, Português e Español; os nomes das opções
 continuam em inglês.
 
 ## Ajuda

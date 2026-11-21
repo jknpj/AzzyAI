@@ -52,11 +52,16 @@ and friend list. Read the [update checklist](docs/MANUAL.md#updates-and-backups)
 
 ## Set it up
 
-Open the [web configuration](https://jknpj.github.io/AzzyAI-webgui/) in your
-browser, choose **AzzyAI** (not Classic), then **File > Open USER_AI folder** and pick your
-game's `AI\USER_AI` folder. Change what you want and click **Apply**. (Prefer a
-Windows app? Run [AzzyAIConfig.exe](USER_AI/AzzyAIConfig.exe) from that same folder.)
-The download also includes an offline copy of the page in `webgui/` (open `webgui/index.html`).
+Run **`AzzyAIConfig.exe`** from your game's `AI\USER_AI` folder - the download
+includes it. Change what you want and click **Apply Settings**; the files are
+written in place.
+
+![The AzzyAI Configuration window](docs/native-gui.png)
+
+**No Windows?** Use the [web configuration](https://jknpj.github.io/AzzyAI-webgui/)
+in any browser (Linux, macOS, Android, ...): choose **AzzyAI** (not Classic), then
+**File > Open USER_AI folder**, pick your game's `AI\USER_AI` folder and click
+**Apply**. Offline, the same page ships in `webgui/` (open `webgui/index.html`).
 Then reload the AI in the game.
 
 **Start with these:**
@@ -66,7 +71,7 @@ Then reload the AI in the game.
 - Change one thing at a time, and reload the AI between tests.
 
 The game reads the settings installed in its own folder, not a copy in your
-downloads. The page is in English, Português and Español; the option names stay
+downloads. Both the app and the page are in English, Português and Español; the option names stay
 in English.
 
 ## Get help
