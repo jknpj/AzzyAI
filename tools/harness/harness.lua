@@ -223,7 +223,6 @@ local MAX_SPHERES = 10
 local COMBO_WINDOW = 2000
 
 -- skill.cpp skill_isNotOk_hom; filled in once the AI has defined the skill constants
-local ELEANOR_STYLE, ELEANOR_COMBO, EXCLUSIVE, COMBO_SKILLS = {}, {}, {}, {}
 
 -- sphere costs: rAthena's on private servers, AzzyAI's official SkillSphereCost (LATAM) otherwise
 
@@ -232,6 +231,7 @@ local ELEANOR_STYLE, ELEANOR_COMBO, EXCLUSIVE, COMBO_SKILLS = {}, {}, {}, {}
 
 -- why the server would refuse this cast, or nil. Everything but range answers "Skill failed";
 -- an out-of-range request is dropped silently (unit_skilluse_id2 returns 0)
+local EXCLUSIVE, COMBO_SKILLS = {}, {}
 local function refusal(e, id, kind, skill, lvl, a, b)
 	if id ~= HOMUN then return nil end
 	if not (skillKnown[skill] and lvl <= skillKnown[skill]) then return "not learned" end

@@ -3311,7 +3311,7 @@ function DoSkill(skill,level,target,mode,targx,targy)
 		MySpheres = math.max(0,MySpheres - sphereCost)
 	end
 	-- the official server refuses a combo follow-up sent while the previous skill is still playing
-	ComboFollowAt=GetTick()+(EleanorComboGap or 0)
+	ComboFollowAt=GetTick()
 	ComboSCTimeout=0
 		ComboSVTimeout=0
 	

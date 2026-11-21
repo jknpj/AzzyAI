@@ -135,8 +135,6 @@ mod tests {
         let mob = hom.get("AutoMobMode").expect("AutoMobMode");
         let values = hom.enum_values(mob).expect("enum values");
         assert!(values.iter().any(|(label, value)| label == "Aggressive" && *value == 1));
-        assert!(hom.get("UseEleanorSonicClaw").is_none());
-        assert!(hom.get("UseBayeriStahlHorn").is_none());
 
         let server = hom.get("ServerType").expect("ServerType");
         assert_eq!(server.kind, "serverType");

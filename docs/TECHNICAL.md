@@ -94,7 +94,6 @@ Additionally, with the arrival of 4th jobs and new homunculus skills, the follow
     * Blast Forge (Thanks to [vorpal1337](https://github.com/vorpal1337))
     * Twister Cutter
     * Absolute Zephyr
-    * Light of Regenerate (optional autobuff, off by default: `UseEiraLightOfRegene`, `EiraLightOfRegeneLevel`, `EiraLightOfRegeneOwnerHP`). Attempts to maintain the resurrection buff; successful resurrection still depends on server conditions. It needs Loyal intimacy and lowers intimacy on every cast.
     * Blazing And Furious
     * The One Fighter Rises
     * Toxin Of Mandara
@@ -184,8 +183,6 @@ The AI can't run outside the RO client, so `tools/harness/` contains an offline 
 A file under `fixtures/Types/` replaces the matching `Types/<homunculus>.lua` in the sandbox, so the scenarios always exercise the generic presets even when a branch ships a tuned one.
 
 Combo follow-ups wait for the previous cast's result. Dance movement pauses during the combo window, and a failed follow-up clears the chain without assuming that all spheres are gone.
-Confirmed Style Change casts update the tracked style whether requested manually or automatically; `eleanor_manual_style` verifies a manual switch followed by the grapple chain.
-`SphereTrackInterval` (advanced option in both GUIs under AutoSkill Options, default 800 ms) controls how often fighting-style attack attempts count toward the estimate. GUIs save it in `H_Config.lua`; an `H_Extra.lua` override takes precedence. Use a positive integer and a shorter interval only when the homunculus actually attacks faster; underestimating its attack delay can cause refused skills. The max-level rAthena fixture tests 100 ms attacks with a conservative 200 ms estimate interval. Both GUIs allow `AutoSkillDelay=0` to remove the extra AI margin without removing server cooldowns; the built-in default remains 400 ms (the shipped `H_Config.lua` uses 200 and `M_Config.lua` uses 400).
 
 
 ```
@@ -201,7 +198,7 @@ Run locally (needs Lua 5.1 on PATH, or `LUA`/`LUAC` env vars):
 ```
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml --              # static checks (below) + all scenarios
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- amistr_fresh  # only some scenarios
-cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose --trace amistr_fresi
+cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --verbose amistr_fresh--trace amistr_fresi
 cargo run --release -p azzy-harness --manifest-path tools/Cargo.toml -- --skip-syntax --profile crowd_bayeri --ticks 600
 ```
 
@@ -239,8 +236,6 @@ Against the 2.0.0 release (tag `v2.0.0`), which is the state before the 2.0.1 pe
 
 | Scenario | 2.0.0 | 2.0.1 | Change |
 |---|---|---|---|
-| `crowd_dieter`, 3000 ticks | 1.640 ms | **1.414 ms** | **-14%** |
-| `eleanor_pack_aoe`, 3000 ticks | 0.392 ms | **0.342 ms** | **-13%** |
 | Idle probe (20 ignored monsters, 400 ticks) | 0.248 ms | **0.149 ms** | **-40%** |
 | `GetV` per call (crowd / idle) | 220 / 43 | 219 / 42 | ~equal |
 
@@ -292,7 +287,6 @@ The AI reads the learned level of each homunculus skill with `GetV(V_SKILLATTACK
 The official client answers the probe in its own way: a learned skill reports its table range, an
 unlearned one reports range + 1 (or a flat 8 where the table range is off), and the client's value
 can differ from the AI's table. The LATAM client answered 8 for every level of Lava Slide, which
-the AI read as "not learned": `LintSkillOptions` disabled `UseDieterLavaSlide` at startup and
 `SERVER_OFFICIAL` the probe is not trusted to rule a skill out: an enabled skill starts at the
 configured level and the step-down above is what finds the real level, so the server is the only
 authority. The level is saved, so the walk down happens once per owner. A skill that the server
