@@ -310,7 +310,7 @@ mod tests {
             zip.write_all(b"LavaSlideMode = 9\n").unwrap(); // must be kept, the player edits it
             zip.start_file("AzzyAI-main/USER_AI/AzzyAIConfig.exe", options).unwrap();
             zip.write_all(b"fake exe").unwrap();
-            zip.start_file("AzzyAI-main/USER_AI/Types/Dieter.lua", options).unwrap();
+            zip.start_file("AzzyAI-main/USER_AI/Types/Amistr.lua", options).unwrap();
             zip.write_all(b"AutoMobCount = 1\n").unwrap();
             zip.start_file("AzzyAI-main/README.md", options).unwrap();
             zip.write_all(b"ignored\n").unwrap();
@@ -326,19 +326,19 @@ mod tests {
         std::fs::create_dir_all(dir.join("Types")).unwrap();
         std::fs::write(dir.join("H_Config.lua"), "LavaSlideMode = 1\n").unwrap();
         std::fs::write(dir.join("MobInfo.lua"), "-- old mob info\n").unwrap();
-        std::fs::write(dir.join("Types").join("Dieter.lua"), "AutoMobCount = 2\n").unwrap();
+        std::fs::write(dir.join("Types").join("Amistr.lua"), "AutoMobCount = 2\n").unwrap();
         std::fs::write(dir.join("AzzyAIConfig.exe"), "old exe").unwrap();
 
         let report = apply_zip(&sample_zip(), &dir, false).unwrap();
 
-        assert_eq!(report.kept, 2, "H_Config.lua and Types/Dieter.lua are kept by default");
+        assert_eq!(report.kept, 2, "H_Config.lua and Types/Amistr.lua are kept by default");
         assert_eq!(report.updated, 1, "MobInfo.lua is a shipped file");
         assert_eq!(report.added, 0);
         assert_eq!(report.staged, vec!["AzzyAIConfig.exe".to_string()]);
         assert_eq!(std::fs::read_to_string(dir.join("H_Config.lua")).unwrap(), "LavaSlideMode = 1\n");
         assert_eq!(std::fs::read_to_string(dir.join("MobInfo.lua")).unwrap(), "-- new mob info\n");
         assert_eq!(
-            std::fs::read_to_string(dir.join("Types").join("Dieter.lua")).unwrap(),
+            std::fs::read_to_string(dir.join("Types").join("Amistr.lua")).unwrap(),
             "AutoMobCount = 2\n",
             "the preset is kept unless --overwrite-presets"
         );
@@ -354,11 +354,11 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("azzy-gui-presets-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Types")).unwrap();
-        std::fs::write(dir.join("Types").join("Dieter.lua"), "AutoMobCount = 2\n").unwrap();
+        std::fs::write(dir.join("Types").join("Amistr.lua"), "AutoMobCount = 2\n").unwrap();
         let report = apply_zip(&sample_zip(), &dir, true).unwrap();
-        assert_eq!(report.updated, 1, "Types/Dieter.lua is replaced");
+        assert_eq!(report.updated, 1, "Types/Amistr.lua is replaced");
         assert_eq!(report.added, 3, "MobInfo.lua, H_Config.lua and the exe did not exist here");
-        assert_eq!(std::fs::read_to_string(dir.join("Types").join("Dieter.lua")).unwrap(), "AutoMobCount = 1\n");
+        assert_eq!(std::fs::read_to_string(dir.join("Types").join("Amistr.lua")).unwrap(), "AutoMobCount = 1\n");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
