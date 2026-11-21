@@ -11,6 +11,17 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 **AzzyAI Pre-Renewal 1.0.0** — first release of this branch. The 2.x
 sections below are the history of the AI it was forked from.
 
+- New: `UseFilirMoon` (on by default) and `UseVanilSelfDestruct` (off by default).
+  Filir's Moonlight was always used with no switch, and Self Destruct was data the
+  AI never cast; both now appear in AutoSkill Options and are linked to their skill
+  card.
+- Fixed: the pre-re web GUI listed every homunculus twice, hid five skills without
+  settings (Healing Hands, Mental Charge, Moonlight, Chaotic Blessing,
+  Self-Destruct), shipped without the skill icons, and the "Settings for" selector
+  lost its options.
+- The release job now builds the Pre-Renewal release for `pre-rev*` tags, and the
+  updater only looks at those tags.
+
 Pre-Renewal release. This branch is the Pre-Renewal build of AzzyAI: the four
 original homunculi, the Pre-Renewal database, no Homunculus S and no Renewal
 damage model. See [docs/PRERENEWAL.md](docs/PRERENEWAL.md).
