@@ -2218,7 +2218,7 @@ impl App {
                         for skill in list {
                             let active = self.skill_filter == Some(skill.id);
                             let (rect, response) = ui.allocate_exact_size(
-                                egui::vec2(28.0, 28.0),
+                                egui::vec2(30.0, 30.0),
                                 egui::Sense::click(),
                             );
                             // Like the web GUI's .skill-btn: a 24 px icon with 2 px padding, no
