@@ -107,9 +107,7 @@ function doInit(myid)
 		OutFile:close()
 	end
 	local mskill,mlevel=GetMobSkill(MyID)
-	if mskill==0 and ((MyHomunType==SERA and PoisonMistMode~=0) or (MyHomunType==DIETER and LavaSlideMode~=0)) then
-		mskill,mlevel=GetSightOrAoE(MyID)
-	end
+	
 	if mskill~=0 and mlevel~=0 and AoEReserveSP==1 and AutoMobMode~=0 then
 		ReserveSP=GetSkillInfo(mskill,3,mlevel)
 	end
@@ -893,18 +891,7 @@ function OnCHASE_ST()
         
         -- #################################################################
         -- ### Eleanor Grapple Tactic Fallback - START ###
-        if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
-            if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
-            local fallbackSkill = MH_SONIC_CRAW
-            local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
-            -- Sonic Claw costs a sphere and works only in fighting style (CHASE switches style first)
-            if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and IsSkillReady(fallbackSkill) then
-                if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
-                    if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: Selecting Sonic Claw.") end
-                    skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
-                end
-            end
-        end
+        
         -- ### Eleanor Grapple Tactic Fallback - END ###
         -- #################################################################
 
@@ -1146,10 +1133,7 @@ function OnATTACK_ST()
                             end
                             mobskill_level = math.min(v[3], mobskill_level)
                             -- Eleanor: when a pack is worth her AoE but SP is short, don't start a Sonic Claw chain (its small costs keep SP under the AoE's price)
-                            if skilltype == CLASS_NEW_MOB and MyHomunType == ELEANOR and v[2] == MH_THE_ONE_FIGHTER_RISES
-                                and availsp < GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
-                                eleanorSaveSP = true
-                            end
+                            
                             if PickBetterSkill(v, skilltouse, MyEnemy, skill_level) and availsp >= GetSkillInfo(v[2], 3, mobskill_level) and ShouldUseMobSkill(v[2], mobskill_level, MyEnemy, tact_skillclass) then
                                 skilltouse = v
                             end
@@ -1200,18 +1184,7 @@ function OnATTACK_ST()
 
             -- #################################################################
             -- ### Eleanor Grapple Tactic Fallback - START ###
-            if skilltouse[2] == 0 and MyHomunType == ELEANOR and UseEleanorSonicClaw == 1 and (tact_skillclass == CLASS_GRAPPLE or tact_skillclass == CLASS_GRAPPLE_2) then
-                if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: No grapple skill usable, checking for Sonic Claw to recover spheres.") end
-				local fallbackSkill = MH_SONIC_CRAW
-            	local fallbackLevel = EleanorSonicClawLevel or SkillList[ELEANOR][MH_SONIC_CRAW]
-                -- in ATTACK_ST nothing switches style, so only while already in fighting style
-                if availsp - ReserveSP >= GetSkillInfo(fallbackSkill, 3, fallbackLevel) and EleanorMode == FIGHTING_MODE and IsSkillReady(fallbackSkill) then
-                    if IsInAttackSight(MyID, MyEnemy, fallbackSkill, fallbackLevel) == true then
-                        if TraceAIEnabled ~= 0 then TraceAI("Eleanor Fallback: Selecting Sonic Claw.") end
-                        skilltouse = {S_ATK, fallbackSkill, fallbackLevel}
-                    end
-                end
-            end
+            
             -- ### Eleanor Grapple Tactic Fallback - END ###
             -- #################################################################
             if false then
@@ -1243,11 +1216,7 @@ function OnATTACK_ST()
         if TraceAIEnabled ~= 0 then TraceAI("Normal attack vs: "..MyEnemy) end
         -- Some clients never expose our attack motion. Estimate from attack commands, but
         -- credit at most one attempt per interval, not one per AI call or dance command.
-        if MyHomunType == ELEANOR and EleanorMode == FIGHTING_MODE and GetTick() >= nextEleanorSphereAttack then
-            nextEleanorSphereAttack = GetTick() + SphereTrackInterval
-            MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
-            UpdateTimeoutFileThrottled()
-        end
+        
     end
 
     if (MySkill ~= 0) then
@@ -1291,12 +1260,7 @@ function OnATTACK_ST()
         end
     end
     local comboPending = false
-    if EleanorComboDance ~= 1 and MyHomunType == ELEANOR and (ComboSCTimeout > GetTick() or ComboSVTimeout > GetTick()) then
-        -- only hold the dance back while the follow-up can really be cast; otherwise the window just wastes attacks
-        local nextCombo = ComboSCTimeout > GetTick() and MH_SILVERVEIN_RUSH or MH_MIDNIGHT_FRENZY
-        local lv = GetCastableSkillLevel(nextCombo, 5)
-        comboPending = lv > 0 and IsSkillReady(nextCombo, true) and GetV(V_SP,MyID) >= GetSkillInfo(nextCombo,3,lv)
-    end
+    
     if not comboPending and ((UseSkillOnly ~= 1 and UseDanceAttack == 1 and GetV(V_SP, MyID) >= DanceMinSP) or (BerserkMode == 1 and Berserk_Dance == 1) or (panicmode == 1 and Panic_UseDanceAttack == 1 and HPPercent(MyID) > FleeHP)) and (IsHomun(MyID) == 1 and MySkill == 0) and GetDistanceRect(MyEnemy, OwnerID) < 13 then
         local nx, ny = GetDanceCell(MyAttackStanceX, MyAttackStanceY, MyEnemy)
         if GetDistanceAPR(OwnerID, nx, ny) >= GetMoveBounds() then
@@ -2495,17 +2459,14 @@ function DoAutoBuffs(buffmode)
 	end
 	if UseBayeriSteinWand == buffmode and SteinWandTimeout~=-1 then
 		if GetTick() > SteinWandTimeout  then
-			if MyHomunType~=BAYERI then
-				SteinWandTimeout=-1
-			else
-				if ((GetAggroCount(MyID) >= UseSteinWandSelfMob and UseSteinWandSelfMob~=0) or (GetAggroCount(OwnerID) >= UseSteinWandOwnerMob and UseSteinWandOwnerMob~=0))
+			if ((GetAggroCount(MyID) >= UseSteinWandSelfMob and UseSteinWandSelfMob~=0) or (GetAggroCount(OwnerID) >= UseSteinWandOwnerMob and UseSteinWandOwnerMob~=0))
 					and GetSkillInfo(MH_STEINWAND,3,BayeriSteinWandLevel) <= GetV(V_SP,MyID) then
 					DoSkill(MH_STEINWAND,BayeriSteinWandLevel,MyID,10)
 					-- the wall breaks after 4+lv hits, so retry once the reuse delay is over instead of waiting the whole duration
 					SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,9,BayeriSteinWandLevel)
 					return
 				end
-			end
+			
 		end
 	end
 	if (UseAutoMag == buffmode and MagTimeout ~=-1) then
@@ -3392,22 +3353,7 @@ function AI(myid)
 	MyPosX[1],MyPosY[1],OwnerPosX[1],OwnerPosY[1],EnemyPosX[1],EnemyPosY[1],MyMotions[1],MyStates[1],MyEnemies[1]=x,y,ox,oy,ex,ey,GetV(V_MOTION,MyID),MyState,MyEnemy
 	-- Grappling style gains spheres from damage taken. Fighting style uses throttled
 	-- attack attempts in OnATTACK_ST because some clients hide our attack animation.
-	if MyHomunType == ELEANOR then
-		if MyMotions[1] == MOTION_DAMAGE or (MyEnemy ~= 0 and GetV(V_TARGET, MyEnemy) == MyID) then
-			EleanorLastHitTick = GetTick()
-		end
-		local gain = false
-		if EleanorMode == GRAPPLING_MODE then
-			gain = MyMotions[1] == MOTION_DAMAGE and MyMotions[2] ~= MOTION_DAMAGE
-		end
-		if gain then
-			local before = math.floor(MySpheres)
-			MySpheres = math.min(10, MySpheres + 1 / SphereTrackFactor)
-			if math.floor(MySpheres) ~= before then
-				UpdateTimeoutFile()
-			end
-		end
-	end
+	
 	if MyState==PROVOKE_ST then
 		MyASAPBuffs[1]=MyASAPBuffs[2]
 	else
@@ -3469,17 +3415,7 @@ function AI(myid)
 					friendIds[#friendIds + 1] = v
 				end
 				--TraceAI(v.." of type "..GetV(V_HOMUNTYPE,v).." in sight")
-				if MyHomunType == SERA then
-					local actortype = GetActorClass(v)
-					if (actortype > 2157 and actortype < 2161) then
-						seralegionCount = seralegionCount + 1
-						if GetActorMotion(v) == MOTION_STAND and GetDistanceAR(MyID, v) > 3 then
-							seralegionBugged = seralegionBugged + 1
-						else
-							seralegionActive = seralegionActive + 1
-						end
-					end
-				end
+				
 				-- DetectPrivateServer only acts on rAthena/Hercules ids (>= 110000000); checking the id
 				-- here avoids a call per actor per tick on official servers
 				if ServerType ~= SERVER_PRIVATE and v >= 110000000 then
@@ -3575,26 +3511,7 @@ function AI(myid)
 			logappend("AAI_ERROR", "Failed to load MobID from "..AggressiveRelogPath.."MobID.lua")
 		end
 	end
-	if MyHomunType==SERA then
-		for t=1,4 do
-			SeraLegionTotalHist[t+1]=SeraLegionTotalHist[t]
-			SeraLegionBugHist[t+1]=SeraLegionBugHist[t]
-		end
-		SeraLegionTotalHist[1]=seralegionCount
-		SeraLegionBugHist[1]=seralegionBugged
-		SeraLegionCount=math.max(SeraLegionTotalHist[1],SeraLegionTotalHist[2],SeraLegionTotalHist[3],SeraLegionTotalHist[4],SeraLegionTotalHist[5])
-		SeraLegionBugged=math.min(SeraLegionBugHist[1],SeraLegionBugHist[2],SeraLegionBugHist[3],SeraLegionBugHist[4],SeraLegionBugHist[5])
-		SeraLegionActive=SeraLegionCount-SeraLegionBugged
-		if SeraLegionCount==0 and GetTick() > AutoSkillTimeout and GetTick() < AutoSkillCooldown[MH_SUMMON_LEGION] then
-			--Why are we in cooldown when there are no bugs out? Cast must have failed, or something killed them. 
-			AutoSkillCooldown[MH_SUMMON_LEGION]=1
-			if TraceAIEnabled ~= 0 then TraceAI("Sera Legion: Legion cooldown canceled, bugs not present") end
-		elseif SeraLegionBugged > 2 and ServerType ~= SERVER_PRIVATE then
-			-- on rAthena a recast with the bugs alive spawns nothing, so it is never worth it
-			AutoSkillCooldown[MH_SUMMON_LEGION]=1
-			if TraceAIEnabled ~= 0 then TraceAI("Sera Legion: Legion cooldown canceled, bugs bugged") end
-		end
-	end
+	
 	if PVPmode==1 then
 		for k,v in pairs(Players) do
 			--logappend("AAI_PVP",k.." ("..GetV(V_HOMUNTYPE,k)..") Motion: "..FormatMotion(GetV(V_MOTION,k)).."Is monster? "..IsMonster(k))
@@ -3812,15 +3729,6 @@ function AI(myid)
 			EleanorModeResyncPending=0
 			EleanorModeChangedTick=GetTick()
 			UpdateTimeoutFile()
-		elseif MyHomunType == ELEANOR and (CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER) then
-			local confirmedMode = CastSkill == MH_SONIC_CRAW and FIGHTING_MODE or GRAPPLING_MODE
-			if EleanorMode ~= confirmedMode then
-				EleanorMode = confirmedMode
-				EleanorModeChangedTick = GetTick()
-				logappend("AAI_SKILLFAIL", "Eleanor style confirmed by "..FormatSkill(CastSkill, CastSkillLevel)..": "..confirmedMode)
-				UpdateTimeoutFile()
-			end
-			EleanorModeResyncPending=0
 		end
 		SkillCastResult(CastSkill,CastSkillLevel,true)
 		SkillFailCount[CastSkillMode]=0
@@ -3853,23 +3761,7 @@ function AI(myid)
 		-- cost off the estimate): fall to one short of the cost, so it takes a few more counted
 		-- hits before the AI tries again.
 		local refusedCost = SkillSphereCost and SkillSphereCost[CastSkill]
-		if MyHomunType == ELEANOR and CastSkillState == 0 and refusedCost ~= nil and refusedCost > 0 then
-			if CastSkill == MH_SONIC_CRAW or CastSkill == MH_TINDER_BREAKER then
-				ComboSCTimeout = 0
-				ComboSVTimeout = 0
-			end
-			if modeResynced then
-				MySpheres = math.min(10, MySpheres + refusedCost)
-			elseif CastSkill == MH_SILVERVEIN_RUSH or CastSkill == MH_MIDNIGHT_FRENZY or CastSkill == MH_CBC or CastSkill == MH_EQC then
-				-- Follow-ups can fail because their combo or target disappeared, not only
-				-- because of spheres. Do not erase the estimate for those failures.
-				ComboSCTimeout = 0
-				ComboSVTimeout = 0
-			else
-				MySpheres = refusedCost - 1
-			end
-			UpdateTimeoutFile()
-		end
+		
 		if CastSkillMode==0 then
 			CastSkill=0
 			CastSkillLevel=0
@@ -3958,14 +3850,7 @@ function AI(myid)
 			end
 		end
 	end
-	if MyHomunType==BAYERI and UseDamageDanger==1 and InDanger(MyID)==1 then
-		local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
-		if wandlevel ~= nil and AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
-			DoSkill(MH_STEINWAND,wandlevel,MyID)
-			if TraceAIEnabled ~= 0 then TraceAI("DamageDanger: Stein Wand") end
-			return
-		end
-	end
+	
 	local object = SelectEnemy(GetEnemyList(MyID,-2))
 	if (object~=0 and object ~= MyEnemy and MyState~=FOLLOW_ST) then
 		MyEnemy=object
@@ -4009,15 +3894,7 @@ function AI(myid)
 					break
 				end
 			elseif tactcast == CAST_REACT_STIEN then
-				if MyHomunType==BAYERI then
-					local wandlevel = BayeriSteinWandLevel or SkillList[BAYERI][MH_STEINWAND]
-					if AutoSkillTimeout < GetTick() and IsSkillReady(MH_STEINWAND) and GetSkillInfo(MH_STEINWAND,3,wandlevel) < GetV(V_SP,MyID) then
-						DoSkill(MH_STEINWAND,wandlevel,MyID)
-						if TraceAIEnabled ~= 0 then TraceAI("CAST_REACT_STIEN being enabled against target"..k.." with tactic "..tactcast) end
-					
-						return
-					end
-				end
+				
 			elseif tactcast == CAST_REACT_CASTLE then
 				if GetHomunBaseType(MyID)==AMISTR and v[2]==2 then
 					if CanCastle() then
@@ -4080,15 +3957,7 @@ function AI(myid)
 	if GetTick() < SteinWandPauseTime then
 		return
 	end
-	if UseSteinWandTele ==1 and MyHomunType==BAYERI then
-		if SteinWandPauseTime == 0 and IsSkillReady(MH_STEINWAND) then
-			DoSkill(MH_STEINWAND,BayeriSteinWandLevel,MyID)
-			-- like the buff path: retry after the reuse delay, the wall breaks long before [8] ends
-			SteinWandTimeout=AutoSkillCastTimeout+GetSkillInfo(MH_STEINWAND,9,BayeriSteinWandLevel)
-			SteinWandPauseTime=SteinWandTelePause+GetTick()
-			return
-		end
-	end
+	
 	--###STATE PROCESSES###
 	--TraceAI("SP tracking: Time: "..GetTick().." last moved: "..LastMovedTime.." last sp time "..LastSPTime)
 	if (LagReduction) then
