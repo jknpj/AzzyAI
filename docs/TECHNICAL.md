@@ -158,11 +158,13 @@ with the USER_AI folder, or put it inside USER_AI and run it without arguments:
 
 ```
 tools\target\release\azzy-native.exe USER_AI
-tools\target\release\azzy-native.exe USER_AI --write
+tools\target\release\azzy-native.exe USER_AI --new
 ```
 
-Without `--write` the Save button writes `<file>.new` instead of the file, like the previous app's
-sandbox. **Update AI from GitHub...** downloads the official `main` zip, keeps the files the player
+Save writes the files themselves. `--new` runs in sandbox mode and writes `<file>.new` instead,
+for testing a change without touching the player's configuration.
+
+**Update AI from GitHub...** downloads the official `main` zip, keeps the files the player
 edits, backs up the replaced ones under `USER_AI/backup/update-<time>/` and stages a newer
 executable as `.exe.new`; **Restart now** swaps it. The startup check compares the latest release
 tag with `CVersion` and offers an Update banner.

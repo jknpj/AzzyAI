@@ -3081,20 +3081,31 @@ fn resolve(name: &str) -> Option<PathBuf> {
     roots.into_iter().map(|root| root.join(name)).find(|c| c.is_file())
 }
 
-fn main() -> eframe::Result<()> {
-    install_panic_hook();
-    let mut write_in_place = false;
+/// Parses the command line into (USER_AI folder, write in place, show help).
+///
+/// Save writes the files by default: the app ships to players, and a silent sandbox that only
+/// writes `<file>.new` looks like the window cannot save. `--new`/`--sandbox` restores it.
+fn parse_args<I: Iterator<Item = String>>(args: I) -> (Option<PathBuf>, bool, bool) {
+    let mut write_in_place = true;
     let mut dir: Option<PathBuf> = None;
-    let mut it = std::env::args().skip(1);
-    while let Some(arg) = it.next() {
+    let mut help = false;
+    for arg in args {
         match arg.as_str() {
             "--write" => write_in_place = true,
-            "-h" | "--help" => {
-                print!("{}", include_str!("help.txt"));
-                return Ok(());
-            }
+            "--new" | "--sandbox" => write_in_place = false,
+            "-h" | "--help" => help = true,
             other => dir = Some(PathBuf::from(other)),
         }
+    }
+    (dir, write_in_place, help)
+}
+
+fn main() -> eframe::Result<()> {
+    install_panic_hook();
+    let (dir, write_in_place, help) = parse_args(std::env::args().skip(1));
+    if help {
+        print!("{}", include_str!("help.txt"));
+        return Ok(());
     }
     let base = dir.clone();
     let mut paths: BTreeMap<&'static str, PathBuf> = BTreeMap::new();
@@ -3902,5 +3913,39 @@ mod tests {
             let _ = ctx.run(input(), |ctx| app.draw(ctx));
         }
         i18n::set_lang(i18n::Lang::En);
+    }
+}
+
+#[cfg(test)]
+mod arg_tests {
+    use super::parse_args;
+    use std::path::PathBuf;
+
+    fn args(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn save_writes_in_place_by_default() {
+        let (dir, write, help) = parse_args(args(&[]).into_iter());
+        assert!(dir.is_none());
+        assert!(write, "Save must write the files unless --new is passed");
+        assert!(!help);
+    }
+
+    #[test]
+    fn new_and_sandbox_enable_the_sandbox() {
+        for flag in ["--new", "--sandbox"] {
+            let (_, write, _) = parse_args(args(&[flag]).into_iter());
+            assert!(!write, "{flag} must enable the sandbox");
+        }
+    }
+
+    #[test]
+    fn folder_and_help_are_parsed() {
+        let (dir, write, help) = parse_args(args(&["C:/x/USER_AI", "--help"]).into_iter());
+        assert_eq!(dir, Some(PathBuf::from("C:/x/USER_AI")));
+        assert!(write);
+        assert!(help);
     }
 }

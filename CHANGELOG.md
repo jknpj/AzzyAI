@@ -13,6 +13,9 @@ guide) is in [docs/TECHNICAL.md](docs/TECHNICAL.md).
   Tinder Breaker's 500 ms reuse is tracked so the chain restart is not refused. Measured
   on the hero client: EQC to next cast 1281 ms -> 281 ms, ~15% more chain starts per
   active minute.
+- Fixed: the desktop app saves the files by default. Before, launching it without `--write`
+  silently wrote `<file>.new` and looked like the window could not save; `--new` (or
+  `--sandbox`) now enables that mode for testing.
 - Fixed (harness): `azzy-harness` applies `fixtures/Types/*.lua` to the sandbox, so a
   branch or preset that changes `Types/<homunculus>.lua` still runs the generic
   scenarios.
