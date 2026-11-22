@@ -47,8 +47,8 @@ there is no second copy to keep in sync. The web page has no number of its own.
 To publish a release: change `CVersion`, the three file-check numbers if MAJOR or MINOR
 changed, and the "Current release" line in `CHANGELOG.md`, add the changes to
 `CHANGELOG.md`, run the harness, commit, and tag the
-commit `v<number>` (for example `v2.0.1`). The CI rebuilds and commits
-`USER_AI/AzzyAIConfig.exe` on every push to `main`, so a local
+commit `pre-rev<number>` (for example `pre-rev1.0.1`). The CI rebuilds and commits
+`USER_AI/AzzyAIConfig.exe` on every push to `prerenewal`, so a local
 `cargo build --release -p azzy-native --manifest-path tools/Cargo.toml` is only needed to test the app before committing. The tag run builds
 `AzzyAI.zip` and publishes it as a release, using the matching `## <version>` section of
 `CHANGELOG.md` as the release body — that section is the release note, so write it for
@@ -157,7 +157,7 @@ tools\target\release\azzy-native.exe USER_AI --new
 Save writes the files themselves. `--new` runs in sandbox mode and writes `<file>.new` instead,
 for testing a change without touching the player's configuration.
 
-**Update AI from GitHub...** downloads the official `main` zip, keeps the files the player
+**Update AI from GitHub...** downloads the official `prerenewal` zip, keeps the files the player
 edits, backs up the replaced ones under `USER_AI/backup/update-<time>/` and stages a newer
 executable as `.exe.new`; **Restart now** swaps it. The startup check compares the latest release
 tag with `CVersion` and offers an Update banner.
@@ -313,7 +313,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
   artifact: `USER_AI` (without `.pdb`) with the freshly built `AzzyAIConfig.exe`, plus `docs/`,
   `LICENSES/`, `webgui/`, the three READMEs, `CHANGELOG.md`, `NOTICE.md`, `SECURITY.md` and
   `CONTRIBUTING.md`;
-- on pushes to `main`, a follow-up job commits that build back to
+- on pushes to `prerenewal` (and `main`), a follow-up job commits that build back to
   `USER_AI/AzzyAIConfig.exe` when it changed (short `build:` commit, `[skip ci]`).
 
 Pushing a `v*` tag also publishes `AzzyAI.zip` as a GitHub release, with the matching

@@ -9,7 +9,8 @@ use std::io::Read;
 
 use std::path::{Path, PathBuf};
 
-/// Loads an update archive. The caller decides the source (the shipped one is the `main` branch
+/// Loads an update archive. The caller decides the source (the shipped one is this product's
+/// branch: `prerenewal` here, `main` on the Renewal build
 /// zip of the repository). A plain path to a local zip also works, which is handy for testing a
 /// packaged build without publishing it.
 pub fn download(url: &str) -> Result<Vec<u8>, String> {

@@ -16,7 +16,7 @@ English so they match the options shown in the tools.
 ## 2. Install and activate
 
 1. Close configuration windows and back up the game's entire `AI` folder.
-2. Download a release package when available, or the **main** branch.
+2. Download a release package when available, or the **prerenewal** branch.
 3. Put the project's `USER_AI` contents in the game's `AI\USER_AI`.
    The final path should contain `AI\USER_AI\AI.lua`, not another nested folder.
 4. Type `/hoai` in game until custom homunculus AI is selected.
@@ -74,7 +74,7 @@ everything. Click **Apply Settings** to save; **Reload** discards pending edits.
 The interface and the option descriptions are available in English, Português and
 Español; pick the language in the top bar.
 
-**Update AI from GitHub...** (top bar): downloads the official `main` branch zip and
+**Update AI from GitHub...** (top bar): downloads the official `prerenewal` branch zip and
 copies it over the destination folder shown in the window (editable, so you can update
 another installation). Your settings, tactics, extras and avoid lists are kept; with
 *Replace Types/ presets too* ticked, `Types\*.lua` are replaced as well. Replaced files

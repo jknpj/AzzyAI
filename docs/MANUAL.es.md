@@ -17,7 +17,7 @@ opciones se mantienen en inglés para coincidir con las herramientas.
 ## 2. Instalar y activar
 
 1. Cierra las ventanas de configuración y respalda toda la carpeta `AI` del juego.
-2. Descarga un paquete de release, cuando esté disponible, o la rama **main**.
+2. Descarga un paquete de release, cuando esté disponible, o la rama **prerenewal**.
 3. Coloca el contenido de `USER_AI` del proyecto en `AI\USER_AI` del juego.
    El resultado debe contener `AI\USER_AI\AI.lua`, sin otra carpeta anidada.
 4. Escribe `/hoai` hasta seleccionar la IA personalizada del homúnculo.
@@ -77,7 +77,7 @@ Haz clic en **Aplicar configuración** para guardar; **Recargar** descarta los c
 pendientes. La interfaz y las descripciones de las opciones están en inglés, portugués y
 español; elige el idioma en la barra superior.
 
-**Update AI from GitHub...** (barra superior): descarga el zip oficial de la rama `main` y
+**Update AI from GitHub...** (barra superior): descarga el zip oficial de la rama `prerenewal` y
 lo copia sobre la carpeta de destino que muestra la ventana (editable, así puedes
 actualizar otra instalación). Tu configuración, tácticas, extras y listas de avoid se
 conservan; con *Replace Types/ presets too* marcado, `Types\*.lua` también se reemplaza.

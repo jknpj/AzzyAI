@@ -19,7 +19,7 @@ results, translations and clearer docs are all welcome.
 
 ## Before you open a pull request
 
-Work from the **main** branch and open the pull request against it.
+Work from the **prerenewal** branch and open the pull request against it.
 
 You need **Rust stable** (the harness and the repository tools are Rust) and a
 **Lua 5.1** interpreter (the version inside the RO client). Put `lua5.1` and

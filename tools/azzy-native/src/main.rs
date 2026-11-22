@@ -58,8 +58,9 @@ enum Page {
 
 const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 
-/// The official source: the update always comes from the repository's `main` branch.
-const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
+/// The official source: this product's own branch. Renewal lives on `main`, and pointing
+/// the updater there would copy the Renewal AI over a Pre-Renewal installation.
+const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/prerenewal.zip";
 
 /// What happened to the running executable itself (the archive ships it under `tools/`).
 enum SelfUpdate {
@@ -1863,10 +1864,10 @@ impl App {
                 let mut url = None;
                 ui.horizontal(|ui| {
                     if ui.button(i18n::tr("Documentation")).clicked() {
-                        url = Some("https://github.com/jknpj/AzzyAI");
+                        url = Some("https://github.com/jknpj/AzzyAI/blob/prerenewal/docs/MANUAL.md");
                     }
                     if ui.button(i18n::tr("Web GUI")).clicked() {
-                        url = Some("https://jknpj.github.io/AzzyAI-webgui/");
+                        url = Some("https://jknpj.github.io/AzzyAI-webgui/prerenewal/");
                     }
                     if ui.button(i18n::tr("Report an issue")).clicked() {
                         url = Some("https://github.com/jknpj/AzzyAI/issues/new");

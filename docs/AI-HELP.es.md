@@ -33,7 +33,7 @@ Completa las tres últimas líneas:
 Me estás ayudando a configurar AzzyAI, una IA de homúnculo para Ragnarok Online
 (una continuación comunitaria del AzzyAI original).
 Lee primero los archivos adjuntos y este manual:
-https://github.com/jknpj/AzzyAI/blob/main/docs/MANUAL.es.md
+https://github.com/jknpj/AzzyAI/blob/prerenewal/docs/MANUAL.es.md
 (si no puedes abrir el enlace, avísame y pego el fragmento relevante).
 
 Reglas para tu respuesta:
