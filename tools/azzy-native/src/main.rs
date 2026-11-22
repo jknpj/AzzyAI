@@ -2198,70 +2198,110 @@ impl App {
             });
             ui.add_space(4.0);
             if let Some(texture) = self.skill_texture.as_ref() {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing = egui::vec2(3.0, 3.0);
-                    for (key, label) in skills::HOMUNCULI {
-                        let list: Vec<&skills::Skill> = self
-                            .skills
-                            .skills
-                            .iter()
-                            .filter(|skill| {
-                                skill.homun == key 
-                            })
-                            .collect();
-                        if list.is_empty() {
-                            continue;
-                        }
-                        ui.horizontal(|ui| {
-                            ui.spacing_mut().item_spacing = egui::vec2(3.0, 3.0);
-                            ui.label(egui::RichText::new(label).color(p.muted).size(10.0));
-                        for skill in list {
-                            let active = self.skill_filter == Some(skill.id);
-                            let (rect, response) = ui.allocate_exact_size(
-                                egui::vec2(30.0, 30.0),
-                                egui::Sense::click(),
-                            );
-                            // Like the web GUI's .skill-btn: a 24 px icon with 2 px padding, no
-                            // frame at rest, a subtle border on hover and a primary ring when active.
-                            let fill = if active {
-                                p.primary.gamma_multiply(0.15)
-                            } else if response.hovered() {
-                                p.panel2
-                            } else {
-                                egui::Color32::TRANSPARENT
-                            };
-                            ui.painter().rect_filled(rect, egui::Rounding::same(4.0), fill);
-                            if active {
-                                ui.painter().rect_stroke(
-                                    rect,
-                                    egui::Rounding::same(4.0),
-                                    egui::Stroke::new(1.0_f32, p.primary),
-                                );
-                            } else if response.hovered() {
-                                ui.painter().rect_stroke(
-                                    rect,
-                                    egui::Rounding::same(4.0),
-                                    egui::Stroke::new(1.0_f32, p.btn_border),
-                                );
-                            }
-                            let icon = egui::Rect::from_center_size(
-                                rect.center(),
-                                egui::vec2(24.0, 24.0),
-                            );
-                            ui.painter().image(
-                                texture.id(),
-                                icon,
-                                self.skills.icon_uv(skill.icon),
-                                egui::Color32::WHITE,
-                            );
-                            if response.on_hover_text(&skill.name).clicked() {
-                                clicked = Some(if active { None } else { Some(skill.id) });
-                            }
-                        }
-                        });
-                        ui.add_space(10.0);
+                // Like the web GUI's .skill-group flex items: one block per homunculus, and a
+                // block never splits across rows. Groups are packed into rows that fit the card.
+                let mut groups: Vec<(String, Vec<&skills::Skill>, f32)> = Vec::new();
+                for (key, label) in skills::HOMUNCULI {
+                    let list: Vec<&skills::Skill> = self
+                        .skills
+                        .skills
+                        .iter()
+                        .filter(|skill| skill.homun == key && self.skill_has_settings(skill.id))
+                        .collect();
+                    if list.is_empty() {
+                        continue;
                     }
-                });
+                    let label_w = ui.fonts(|fonts| {
+                        fonts
+                            .layout_no_wrap(
+                                label.to_string(),
+                                egui::FontId::proportional(10.0),
+                                p.muted,
+                            )
+                            .size()
+                            .x
+                    });
+                    let width = label_w + 3.0 + list.len() as f32 * 33.0;
+                    groups.push((label.to_string(), list, width));
+                }
+                let available = ui.available_width();
+                let mut rows: Vec<Vec<usize>> = Vec::new();
+                let mut row: Vec<usize> = Vec::new();
+                let mut row_w = 0.0;
+                for (index, group) in groups.iter().enumerate() {
+                    let extra = if row.is_empty() {
+                        group.2
+                    } else {
+                        group.2 + 10.0
+                    };
+                    if !row.is_empty() && row_w + extra > available {
+                        rows.push(std::mem::take(&mut row));
+                        row_w = group.2;
+                        row.push(index);
+                    } else {
+                        row_w += extra;
+                        row.push(index);
+                    }
+                }
+                if !row.is_empty() {
+                    rows.push(row);
+                }
+                for row in rows {
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing = egui::vec2(3.0, 3.0);
+                        for (position, index) in row.iter().enumerate() {
+                            if position > 0 {
+                                ui.add_space(7.0);
+                            }
+                            let (label, list, _) = &groups[*index];
+                            ui.label(egui::RichText::new(label).color(p.muted).size(10.0));
+                            for skill in list {
+                                let active = self.skill_filter == Some(skill.id);
+                                let (rect, response) = ui.allocate_exact_size(
+                                    egui::vec2(30.0, 30.0),
+                                    egui::Sense::click(),
+                                );
+                                // Like the web GUI's .skill-btn: a 24 px icon with 2 px padding,
+                                // no frame at rest, a subtle border on hover, a primary ring when
+                                // active.
+                                let fill = if active {
+                                    p.primary.gamma_multiply(0.15)
+                                } else if response.hovered() {
+                                    p.panel2
+                                } else {
+                                    egui::Color32::TRANSPARENT
+                                };
+                                ui.painter().rect_filled(rect, egui::Rounding::same(4.0), fill);
+                                if active {
+                                    ui.painter().rect_stroke(
+                                        rect,
+                                        egui::Rounding::same(4.0),
+                                        egui::Stroke::new(1.0_f32, p.primary),
+                                    );
+                                } else if response.hovered() {
+                                    ui.painter().rect_stroke(
+                                        rect,
+                                        egui::Rounding::same(4.0),
+                                        egui::Stroke::new(1.0_f32, p.btn_border),
+                                    );
+                                }
+                                let icon = egui::Rect::from_center_size(
+                                    rect.center(),
+                                    egui::vec2(24.0, 24.0),
+                                );
+                                ui.painter().image(
+                                    texture.id(),
+                                    icon,
+                                    self.skills.icon_uv(skill.icon),
+                                    egui::Color32::WHITE,
+                                );
+                                if response.on_hover_text(&skill.name).clicked() {
+                                    clicked = Some(if active { None } else { Some(skill.id) });
+                                }
+                            }
+                        }
+                    });
+                }
             }
         });
         if let Some(selection) = clicked {
