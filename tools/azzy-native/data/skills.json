@@ -1,9 +1,9 @@
 {
- "tile": 20,
+ "tile": 24,
  "columns": 8,
  "rows": 7,
- "width": 160,
- "height": 140,
+ "width": 192,
+ "height": 168,
  "skills": [
   {
    "id": 8001,
@@ -195,7 +195,7 @@
    "match": [
     "toxinofmandara"
    ],
-   "icon": 17
+   "icon": 45
   },
   {
    "id": 8054,
@@ -206,7 +206,7 @@
    "match": [
     "needlestinger"
    ],
-   "icon": 18
+   "icon": 46
   },
   {
    "id": 8022,
@@ -217,7 +217,7 @@
    "match": [
     "lightofregene"
    ],
-   "icon": 19
+   "icon": 17
   },
   {
    "id": 8023,
@@ -228,7 +228,7 @@
    "match": [
     "overedboost"
    ],
-   "icon": 20
+   "icon": 18
   },
   {
    "id": 8024,
@@ -240,7 +240,7 @@
     "erasecutter",
     "erasercutter"
    ],
-   "icon": 21
+   "icon": 19
   },
   {
    "id": 8025,
@@ -251,7 +251,7 @@
    "match": [
     "xenoslasher"
    ],
-   "icon": 22
+   "icon": 20
   },
   {
    "id": 8026,
@@ -263,7 +263,7 @@
     "silentbreeze",
     "healownerbreeze"
    ],
-   "icon": 23
+   "icon": 21
   },
   {
    "id": 8047,
@@ -274,7 +274,7 @@
    "match": [
     "twistercutter"
    ],
-   "icon": 24
+   "icon": 41
   },
   {
    "id": 8048,
@@ -285,7 +285,7 @@
    "match": [
     "absolutezephyr"
    ],
-   "icon": 25
+   "icon": 42
   },
   {
    "id": 8031,
@@ -351,7 +351,7 @@
    "match": [
     "glanzenspies"
    ],
-   "icon": 31
+   "icon": 47
   },
   {
    "id": 8057,
@@ -362,7 +362,7 @@
    "match": [
     "heiligepferd"
    ],
-   "icon": 32
+   "icon": 48
   },
   {
    "id": 8058,
@@ -373,7 +373,7 @@
    "match": [
     "goldenetone"
    ],
-   "icon": 33
+   "icon": 49
   },
   {
    "id": 8039,
@@ -461,7 +461,7 @@
    "match": [
     "donotswitchmode"
    ],
-   "icon": 41
+   "icon": 22
   },
   {
    "id": 8028,
@@ -472,7 +472,7 @@
    "match": [
     "sonicclaw"
    ],
-   "icon": 42
+   "icon": 23
   },
   {
    "id": 8029,
@@ -483,7 +483,7 @@
    "match": [
     "silvervein"
    ],
-   "icon": 43
+   "icon": 24
   },
   {
    "id": 8030,
@@ -494,7 +494,7 @@
    "match": [
     "midnight"
    ],
-   "icon": 44
+   "icon": 25
   },
   {
    "id": 8036,
@@ -505,7 +505,7 @@
    "match": [
     "tinderbreaker"
    ],
-   "icon": 45
+   "icon": 31
   },
   {
    "id": 8037,
@@ -516,7 +516,7 @@
    "match": [
     "eleanorcbc"
    ],
-   "icon": 46
+   "icon": 32
   },
   {
    "id": 8038,
@@ -527,7 +527,7 @@
    "match": [
     "eleanoreqc"
    ],
-   "icon": 47
+   "icon": 33
   },
   {
    "id": 8050,
@@ -538,7 +538,7 @@
    "match": [
     "blazingandfurious"
    ],
-   "icon": 48
+   "icon": 43
   },
   {
    "id": 8051,
@@ -549,7 +549,7 @@
    "match": [
     "theonefighterrises"
    ],
-   "icon": 49
+   "icon": 44
   }
  ]
 }
