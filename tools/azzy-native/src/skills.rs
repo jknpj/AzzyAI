@@ -189,7 +189,7 @@ mod tests {
     fn loads_the_skill_atlas_and_mapping() {
         let skills = load().unwrap();
         assert_eq!(skills.skills.len(), 13);
-        assert_eq!(skills.atlas.len(), 80 * 80 * 4);
+        assert_eq!(skills.atlas.len(), 96 * 96 * 4);
         let bulwark = skills.for_setting("AmiBulwarkLevel").expect("Amistr Bulwark");
         assert_eq!(bulwark.id, 8006);
         assert_eq!(bulwark.name, "Amistr Bulwark");
