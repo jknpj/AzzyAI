@@ -108,8 +108,9 @@ tooltip/description names the skill.
 
 ## Update check
 
-On startup the window asks GitHub for the latest release tag (`/releases/latest`, falling back to
-`/tags`) and compares it with the `CVersion` in the loaded USER_AI. When it is newer, a slim bar
+On startup the window asks GitHub for the releases and keeps the newest tag that starts with
+`pre-rev` (this product's prefix: the Renewal `vX.Y.Z` releases on the same repository are never
+offered here), then compares it with the `CVersion` in the loaded USER_AI. When it is newer, a slim bar
 under the navbar says **New version vX.Y.Z is available** and offers **Update** (opens the update
 window) and **Dismiss**. The check runs in the background: offline, rate-limited or without a
 release it stays silent and never blocks the window.

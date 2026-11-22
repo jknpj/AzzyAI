@@ -32,7 +32,7 @@ Follow your server's rules for custom AI.
 
 1. **Back up your game's `AI` folder** (copy it somewhere safe). Going back is
    just putting it back.
-2. [Download the ZIP](https://github.com/jknpj/AzzyAI/releases/latest)
+2. [Download the ZIP](https://github.com/jknpj/AzzyAI/releases?q=pre-rev&expanded=true)
    and unzip it.
 3. Open the unzipped folder, then its `USER_AI` folder. Copy **everything inside**
    `USER_AI` into your game's `AI\USER_AI` folder. Do not create a `USER_AI`

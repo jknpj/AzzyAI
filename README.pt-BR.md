@@ -33,7 +33,7 @@ fácil. Respeite as regras do seu servidor sobre IA janela e a páginaersonaliza
 
 1. **Faça backup da pasta `AI` do jogo** (copie-a para um lugar seguro). Voltar é
    só colocá-la de volta.
-2. [Baixe o ZIP](https://github.com/jknpj/AzzyAI/releases/latest)
+2. [Baixe o ZIP](https://github.com/jknpj/AzzyAI/releases?q=pre-rev&expanded=true)
    e descompacte.
 3. Abra a pasta descompactada e depois a pasta `USER_AI` dela. Copie **tudo o que
    está dentro** de `USER_AI` para a pasta `AI\USER_AI` do seu jogo. Não crie uma

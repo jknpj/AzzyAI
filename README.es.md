@@ -33,7 +33,7 @@ monstruo fácil. Respeta las reglas de tu servidor sobre IA personalizada.
 
 1. **Respalda la carpeta `AI` del juego** (cópiala a un lugar seguro). Volver
    atrás es ponerla de nuevo.
-2. [Descarga el ZIP](https://github.com/jknpj/AzzyAI/releases/latest)
+2. [Descarga el ZIP](https://github.com/jknpj/AzzyAI/releases?q=pre-rev&expanded=true)
    y descomprímelo.
 3. Abre la carpeta descomprimida y luego su carpeta `USER_AI`. Copia **todo lo que
    hay dentro** de `USER_AI` en la carpeta `AI\USER_AI` de tu juego. No crees una
