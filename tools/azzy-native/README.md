@@ -94,7 +94,7 @@ The window and the navbar use the real `webgui/azzyai.ico`, converted once to
 The executable also carries the same `.ico` as a Windows resource (`build.rs`/`winres`), so Explorer
 and the file's properties show the AzzyAI icon and version instead of a blank document.
 The **skill icons** from `webgui/img/skills` (50 PNGs) are packed once into
-`data/skill-icons.rgba` (20x20 tiles, 8 columns) with `data/skills.json` holding the ids, the
+`data/skill-icons.rgba` (24x24 tiles, 8 columns, one per `webgui/img/skills` PNG: 50 icons) with `data/skills.json` holding the ids, the
 homunculus, the names and the same `match` substrings as `webgui/skills.js`. The Homunculus tab
 has the **Homunculus skills** card (grouped by type): click a skill to show only its settings,
 click the chip to clear. The grid also shows the icon before each mapped setting name, and the

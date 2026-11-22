@@ -194,7 +194,7 @@ mod tests {
     fn loads_the_skill_atlas_and_mapping() {
         let skills = load().unwrap();
         assert_eq!(skills.skills.len(), 50);
-        assert_eq!(skills.atlas.len(), 160 * 140 * 4);
+        assert_eq!(skills.atlas.len(), 192 * 168 * 4);
         let lava = skills.for_setting("UseDieterLavaSlide").expect("Lava Slide");
         assert_eq!(lava.id, 8041);
         assert_eq!(lava.name, "Lava Slide");
