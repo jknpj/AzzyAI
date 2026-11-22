@@ -117,7 +117,7 @@ release it stays silent and never blocks the window.
 ## Updating from GitHub
 
 The navbar's **Update AI from GitHub...** button runs the same flow as the Windows app and the
-`azzy-gui` host (`tools/azzy-update`, shared by both): it downloads the `main` branch zip, keeps
+`azzy-gui` host (`tools/azzy-update`, shared by both): it downloads the `hero` branch zip, keeps
 the files the player edits (`H_Config.lua`, `M_Config.lua`, the tactics/extra files, `H_Avoid.lua`,
 `A_Friends.lua`, `Mob_ID.lua`), replaces the shipped ones after copying them to
 `USER_AI/backup/update-<timestamp>/`, and stages a newer executable as `.exe.new` (a running exe

@@ -58,8 +58,9 @@ enum Page {
 
 const EXTRA_FILES: [&str; 2] = ["H_Extra.lua", "M_Extra.lua"];
 
-/// The official source: the update always comes from the repository's `main` branch.
-const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/main.zip";
+/// The official source: this build's own branch (`hero`), so updating does not replace it
+/// with the plain Renewal build from `main`.
+const UPDATE_URL: &str = "https://github.com/jknpj/AzzyAI/archive/refs/heads/hero.zip";
 
 /// What happened to the running executable itself (the archive ships it under `tools/`).
 enum SelfUpdate {
