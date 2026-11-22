@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::cell::Cell;
 use std::sync::OnceLock;
 
 use serde_json::Value;
@@ -62,25 +62,20 @@ impl Lang {
     }
 }
 
-static CURRENT: AtomicU8 = AtomicU8::new(0);
+// The GUI is single threaded, so the language only has to be consistent within the thread that
+// draws. Keeping it thread local also keeps `cargo test` honest: every test runs in its own
+// thread and calling `set_lang` there used to change the language of the tests running in
+// parallel (the description-card tests failed at random).
+thread_local! {
+    static CURRENT: Cell<Lang> = const { Cell::new(Lang::En) };
+}
 
 pub fn lang() -> Lang {
-    match CURRENT.load(Ordering::Relaxed) {
-        1 => Lang::Pt,
-        2 => Lang::Es,
-        _ => Lang::En,
-    }
+    CURRENT.with(Cell::get)
 }
 
 pub fn set_lang(lang: Lang) {
-    CURRENT.store(
-        match lang {
-            Lang::En => 0,
-            Lang::Pt => 1,
-            Lang::Es => 2,
-        },
-        Ordering::Relaxed,
-    );
+    CURRENT.with(|current| current.set(lang));
 }
 
 struct Tables {
